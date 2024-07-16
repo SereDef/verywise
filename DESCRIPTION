@@ -1,11 +1,17 @@
 Package: verywise
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Vertex-wise statistical analysis
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: as.person(c(
+    "Serena Defina <s.defina@erasmusmc.nl> [aut]",
+    "Sander Lamballais <s.lamballaistessensohn@erasmusmc.nl> [aut]",
+    "Ryan Muetzel <r.muetzel@erasmusmc.nl> [aut, cre]"
+    ))
+Maintainer: Serena Defina <s.defina@erasmusmc.nl>
+Description: Whole-brain (hemispehere) analysis of FreeSurfer MGH format data. The package allows application of several statistical models per vertex. It can handle imputed data from specific packages (mice, mi, amelia, etc.). Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Suggests:
+    mi (>= 1.1),
+    mice (>= 3.16.0)
