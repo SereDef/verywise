@@ -4,10 +4,10 @@
 \alias{load.mgh}
 \title{Load an MGH file into memory}
 \usage{
-load.mgh(input.file)
+load.mgh(file_path)
 }
 \arguments{
-\item{input.file}{: the (full) path to the mgh file.}
+\item{file_path}{: the (full) path to the mgh file.}
 }
 \value{
 A mgh object with data and various header elements
