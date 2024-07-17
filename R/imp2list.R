@@ -1,16 +1,24 @@
-#'Convert imputation output to \code{list}
+#'@title
+#'Convert imputation output to a list of dataframes
 #'
-#'Converts known imputation objects containing datasets to a \code{list} of
-#'datasets
+#'@description
+#'Converts known imputation objects (e.g., \code{amelia}, \code{aregImpute},
+#'\code{mi}, \code{mids}, \code{missForest}) to a \code{list} of dataframes.
 #'
+#'@details
 #'This function attempts to unify imputation object formats in supplying
 #'datasets. This is done by extracting the imputed datasets from the imputation
 #'object and assembling them into a \code{list}. If an unknown object is
 #'supplied, the function will throw an error with the request to supply a list
 #'of data frames instead.
 #'
+#'This is a generic function: methods can be defined for it directly,
+#'see \code{methods(imp2list)} for a list of all available methods.
+#'
 #'@param obj The imputation object that contains the imputed datasets
-#'@return Outputs a list of imputed datasets
+#'
+#'@return A list of imputed datasets
+#'
 #'@author Sander Lamballais, 2018.
 #'@export
 

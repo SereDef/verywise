@@ -1,6 +1,6 @@
 Package: verywise
 Type: Package
-Title: Vertex-wise statistical analysis
+Title: Vertex-wise Statistical Analysis
 Version: 0.1.0
 Author: as.person(c(
     "Serena Defina <s.defina@erasmusmc.nl> [aut]",
