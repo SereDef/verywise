@@ -6,27 +6,28 @@
 \usage{
 simulate_freesurfer_data(
   path,
-  vw_resolution = 163842,
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
+  vw_resolution = 163842,
   measure = "thickness",
   hemi = "lh",
   fwhmc = "fwhm10",
   target = "fsaverage",
   vw_mean = 6.5,
   vw_sd = 0.5,
+  simulate_association = NULL,
   seed = 31081996
 )
 }
 \arguments{
 \item{path}{: Where should the data be created.}
 
-\item{vw_resolution}{: (default = 163842) data dimension (how many vertices)}
-
 \item{data_structure}{: A nested list, with top level determining the cohort/
 dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
 vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
 the number of subjects.}
+
+\item{vw_resolution}{: (default = 163842) data dimension (how many vertices)}
 
 \item{measure}{: (default = "thickness"), measure, used in file names.}
 
@@ -41,11 +42,18 @@ file names.}
 
 \item{vw_sd}{: (default = 0.5) standard deviation of the simulated vertex-wise data.}
 
+\item{simulate_association}{: (default = NULL) simulate an association in the
+format \code{beta * variable}. This is by default isolated to three regions:
+the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
+
 \item{seed}{: (default = 31081996) seed used for randomization.}
 }
 \description{
 Simulating FreeSurfer data for multiple cohorts/sites and multiple
-timepoints/sessions. The funtions emulated the folder structure output obtained
-by calling recon_all. This follows the folder names "sub-", participant ID,
+timepoints/sessions. This function emulates the folder structure output obtained
+by calling FreeSurfer recon_all command. This follows the folder names "sub-", participant ID,
 "_ses-", session ID.
+}
+\author{
+Serena Defina, 2024.
 }
