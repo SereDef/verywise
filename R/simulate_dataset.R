@@ -29,11 +29,16 @@ simulate_dataset <- function(path,
                              ),
                              seed = 31081996,
                              ...) {
+
+  # Create directory in path if it does not exist
+  if (!dir.exists(path)) dir.create(path)
+
   # Simulate phenotype data
   pheno <- simulate_long_pheno_data(
     data_structure = data_structure,
     seed = seed
   )
+  # TODO: make this also a multiple imputation object for testing
   utils::write.csv(pheno,
     file.path(path, "phenotype.csv"),
     row.names = FALSE
@@ -65,8 +70,8 @@ simulate_dataset <- function(path,
 #'
 #' @return A dataframe (in long format) with id, sex and age data.
 #'
-#' @import dplyr
 #' @importFrom stats rnorm
+#' @importFrom dplyr bind_rows
 #' @author Serena Defina, 2024.
 #'
 #' @export
@@ -94,25 +99,29 @@ simulate_long_pheno_data <- function(data_structure = list(
     n_subjects <- data_structure[[l]]$n_subjects
     sessions <- data_structure[[l]]$sessions
 
-    # Create basic dataset for session 1
-    t1 <- data.frame(
+    # Create baseline dataset (session 1)
+    baseline <- data.frame(
       id = 1:n_subjects,
       time = sessions[1],
       sex = sample(c("Male", "Female"), n_subjects, replace = TRUE),
       age = round(stats::rnorm(n_subjects, mean = 40, sd = 10), 1)
     )
 
-    if (length(sessions) > 1) {
-      for (s in seq(2:length(sessions))) {
-        t2 <- t1 %>%
-          dplyr::mutate(
-            time = sessions[s],
-            age = .data$age + round(rnorm(n_subjects, mean = s - 1, sd = 0.3), 1)
-          )
+    if (length(sessions) == 1) {
+      fake_data[[site]] <- baseline
+    } else {
+      t1 <- baseline
+      for (s in seq(2, length(sessions))) {
+        t2 <- data.frame( # NOTE: removed dependency to dplyr
+          id = baseline$id,
+          time = sessions[s],
+          sex = baseline$sex,
+          age = round(baseline$age + rnorm(n_subjects, mean = s - 1, sd = 0.3))
+        )
         t1 <- rbind(t1, t2)
       }
+      fake_data[[site]] <- t1
     }
-    fake_data[[site]] <- t1
   }
 
   long_df <- dplyr::bind_rows(fake_data, .id = "site")

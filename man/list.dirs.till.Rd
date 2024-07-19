@@ -16,7 +16,7 @@ A list of directory/sub-directory names.
 }
 \description{
 Small recursive utility to list directories given complex folder structure.
-This is used in \code{\link{make_supersubject()}} for listing all sub-directories
+This is used in \code{\link{build_supersubject}} for listing all sub-directories
 until the correct level.
 }
 \author{
