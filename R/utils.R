@@ -1,3 +1,4 @@
+# ============================= Folder navigators =============================
 #' @title
 #' List sub-directories till depth \code{n}
 #'
@@ -20,6 +21,48 @@ list.dirs.till <- function(path, n) {
   } else {
     return(res)
   }
+}
+
+# ============================== FBM operations ===============================
+#' @title
+#' Check if all row elements are 0 in FBM
+#'
+#' @description
+#' Check if all row elements in a FBM are 0. This is used to clean up the
+#' super-subject matrix in \code{\link{mask_cortex}}.
+#'
+#' @param X : the file-backed matrix (FBM) object
+#' @param n_cores : (default = 1) number of cores for parellalization
+#' @param row.ind : indicator for rows
+#' @param col.ind : indicator for columns
+#' @param row.mask : (default = NULL) specify a subset of rows
+#' @param col.mask : (default = NULL) specify a subset of columns
+#'
+#' @importFrom bigparallelr rows_along
+#' @importFrom bigparallelr cols_along
+#' @importFrom bigstatsr big_apply
+#'
+#' @author Sander Lamballais, 2018.
+#'
+#' @return A logical vector for where rows are all 0.
+#'
+fbm_row_is_0 <- function(X, n_cores = 1,
+                         row.ind = bigparallelr::rows_along(X),
+                         col.ind = bigparallelr::cols_along(X),
+                         row.mask = NULL, col.mask = NULL) {
+  # Any sub-selection?
+  if (is.numeric(row.mask)) row.mask <- as.logical(row.mask)
+  if (is.numeric(col.mask)) col.mask <- as.logical(col.mask)
+  if(!is.null(row.mask)) row.ind <- row.ind[row.mask]
+  if(!is.null(col.mask)) col.ind <- col.ind[col.mask]
+
+  bigstatsr::big_apply(X,
+                       a.FUN = function(X, ind) apply(X[row.ind[ind], col.ind], 1,
+                                                      function(q) any(q == 0)),
+                       a.combine = "c",
+                       n_cores = n_cores,
+                       ind = seq_along(row.ind))
+
 }
 
 # ============================== MGH i/o helpers ==============================

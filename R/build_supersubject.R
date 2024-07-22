@@ -14,7 +14,8 @@
 #' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param verbose : (default = TRUE)
 #'
-#' @return A Filebacked Big Matrix with vertex data for all subjects.
+#' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
+#' n_vertex * n_subject)
 
 #' @importFrom bigstatsr FBM
 #' @import doParallel
