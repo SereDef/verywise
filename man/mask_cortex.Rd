@@ -16,7 +16,7 @@ mask_cortex(ss, hemi = "lh", target = "fsaverage", n_cores = 1)
 \item{n_cores}{: (default = 1) number of cores for this operation.}
 }
 \value{
-A masked super-subject file-backed matrix (FBM).
+A (large) logical vector for cortical (or technical, i.e. vertex = 0) mask.
 }
 \description{
 Clean the super-subject matrix of the vertices that have 0 value or are not

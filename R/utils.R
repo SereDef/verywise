@@ -44,7 +44,7 @@ list.dirs.till <- function(path, n) {
 #'
 #' @author Sander Lamballais, 2018.
 #'
-#' @return A logical vector for where rows are all 0.
+#' @return A (large) logical vector for where rows are all 0.
 #'
 fbm_row_is_0 <- function(X, n_cores = 1,
                          row.ind = bigstatsr::rows_along(X),
@@ -60,9 +60,33 @@ fbm_row_is_0 <- function(X, n_cores = 1,
                        a.FUN = function(X, ind) apply(X[row.ind[ind], col.ind], 1,
                                                       function(q) any(q == 0)),
                        a.combine = "c",
-                       n_cores = n_cores,
+                       ncores = n_cores,
                        ind = seq_along(row.ind))
 
+}
+
+#' @title
+#' Define chunks of vertices for analyses
+#'
+#' @description
+#' This function takes a vector of values representing the dimension of the
+#' vertex-wise data to use (i.e. the output of \code{\link{mask_cortex}}) and
+#' splits it into chunks for speeding up parallel processing.
+#'
+#' @param iv : independent variable, i.e. the vertex-wise brain data to use.
+#' @param chunk_size : (default = 1000) how big are the chunks
+#'
+#' @author Serena Defina, 2024.
+#'
+#' @return A list of chunk start and end positions.
+#'
+make_chunk_sequence <- function(iv, chunk_size = 1000) {
+
+  cstart <- seq(1, length(iv), chunk_size)
+  cend <- cstart + chunk_size - 1
+  cend[length(cend)] <- length(iv)
+
+  chunk_seq <- list(cstart, cend)
 }
 
 # ============================== MGH i/o helpers ==============================

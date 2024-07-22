@@ -27,7 +27,7 @@ fbm_row_is_0(
 \item{col.mask}{: (default = NULL) specify a subset of columns}
 }
 \value{
-A logical vector for where rows are all 0.
+A (large) logical vector for where rows are all 0.
 }
 \description{
 Check if all row elements in a FBM are 0. This is used to clean up the
