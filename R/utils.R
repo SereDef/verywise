@@ -38,8 +38,8 @@ list.dirs.till <- function(path, n) {
 #' @param row.mask : (default = NULL) specify a subset of rows
 #' @param col.mask : (default = NULL) specify a subset of columns
 #'
-#' @importFrom bigparallelr rows_along
-#' @importFrom bigparallelr cols_along
+#' @importFrom bigstatsr rows_along
+#' @importFrom bigstatsr cols_along
 #' @importFrom bigstatsr big_apply
 #'
 #' @author Sander Lamballais, 2018.
@@ -47,8 +47,8 @@ list.dirs.till <- function(path, n) {
 #' @return A logical vector for where rows are all 0.
 #'
 fbm_row_is_0 <- function(X, n_cores = 1,
-                         row.ind = bigparallelr::rows_along(X),
-                         col.ind = bigparallelr::cols_along(X),
+                         row.ind = bigstatsr::rows_along(X),
+                         col.ind = bigstatsr::cols_along(X),
                          row.mask = NULL, col.mask = NULL) {
   # Any sub-selection?
   if (is.numeric(row.mask)) row.mask <- as.logical(row.mask)

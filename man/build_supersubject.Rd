@@ -41,7 +41,8 @@ but allows to specify manually.}
 \item{verbose}{: (default = TRUE)}
 }
 \value{
-A Filebacked Big Matrix with vertex data for all subjects.
+A Filebacked Big Matrix with vertex data for all subjects (dimensions:
+n_vertex * n_subject)
 }
 \description{
 Build "supersubject" by stacking all vertex data in one matrix
