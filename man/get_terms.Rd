@@ -19,3 +19,6 @@ A list with two elements: the fixed terms, and the model frame.
 Get the terms for the fixed effect and the model matrix for the given formula
 and dataset.
 }
+\author{
+Serena Defina, 2024.
+}
