@@ -7,17 +7,17 @@
 make_chunk_sequence(iv, chunk_size = 1000)
 }
 \arguments{
-\item{iv}{: independent variable, i.e. the vertex-wise brain data to use.}
+\item{iv}{: indices of the vertex-wise brain data to use.}
 
 \item{chunk_size}{: (default = 1000) how big are the chunks}
 }
 \value{
-A list of chunk start and end positions.
+A matrix with n_chunks rows and 2 columns (chunk start and end positions).
 }
 \description{
 This function takes a vector of values representing the dimension of the
-vertex-wise data to use (i.e. the output of \code{\link{mask_cortex}}) and
-splits it into chunks for speeding up parallel processing.
+vertex-wise data to use and splits it into chunks for speeding up parallel
+processing.
 }
 \author{
 Serena Defina, 2024.

@@ -23,6 +23,41 @@ list.dirs.till <- function(path, n) {
   }
 }
 
+
+# ============================= Modelling helpers ==============================
+
+#' @title
+#' Unpack \code{lme4} formula
+#'
+#' @description
+#' Get the terms for the fixed effect and the model matrix for the given formula
+#' and dataset.
+#'
+#' @param formula : model formula object (this should specify a LME model)
+#' @param data_list : the data, formatted as a list of datasets, as in the
+#' output of \code{\link{imp2list}}.
+#'
+#' @return A list with two elements: the fixed terms, and the model frame.
+#'
+#' @importFrom lme4 lFormula
+#'
+get_terms <- function(formula, data_list) {
+  # TODO: allow for ... arguments
+
+  # Get a dataset from list (the first)
+  dset <- data_list[[1]]
+  # Add a placeholder for vw_* outcome
+  dset[all.vars(formula)[1]] <- 999
+  # Unpack the formula
+  lf = lme4::lFormula(formula = formula, data = dset)
+  fixed_terms <- colnames(lf$X) # fixed-effects design matrix
+  # stats::model.frame does not work properly
+  model_frame <- lf$fr # A model frame containing the variables needed
+  info <- list(fixed_terms, model_frame)
+  info
+}
+
+
 # ============================== FBM operations ===============================
 #' @title
 #' Check if all row elements are 0 in FBM
@@ -42,11 +77,11 @@ list.dirs.till <- function(path, n) {
 #' @importFrom bigstatsr cols_along
 #' @importFrom bigstatsr big_apply
 #'
-#' @author Sander Lamballais, 2018.
+#' @author Serena Defina, 2024.
 #'
 #' @return A (large) logical vector for where rows are all 0.
 #'
-fbm_row_is_0 <- function(X, n_cores = 1,
+fbm_col_has_0 <- function(X, n_cores = 1,
                          row.ind = bigstatsr::rows_along(X),
                          col.ind = bigstatsr::cols_along(X),
                          row.mask = NULL, col.mask = NULL) {
@@ -57,11 +92,11 @@ fbm_row_is_0 <- function(X, n_cores = 1,
   if(!is.null(col.mask)) col.ind <- col.ind[col.mask]
 
   bigstatsr::big_apply(X,
-                       a.FUN = function(X, ind) apply(X[row.ind[ind], col.ind], 1,
-                                                      function(q) any(q == 0)),
+                       a.FUN = function(X, ind) apply(X[row.ind, col.ind[ind]], 2,
+                                                      function(q) any(q == 0e-5)),
                        a.combine = "c",
                        ncores = n_cores,
-                       ind = seq_along(row.ind))
+                       ind = seq_along(col.ind))
 
 }
 
@@ -70,15 +105,15 @@ fbm_row_is_0 <- function(X, n_cores = 1,
 #'
 #' @description
 #' This function takes a vector of values representing the dimension of the
-#' vertex-wise data to use (i.e. the output of \code{\link{mask_cortex}}) and
-#' splits it into chunks for speeding up parallel processing.
+#' vertex-wise data to use and splits it into chunks for speeding up parallel
+#' processing.
 #'
-#' @param iv : independent variable, i.e. the vertex-wise brain data to use.
+#' @param iv : indices of the vertex-wise brain data to use.
 #' @param chunk_size : (default = 1000) how big are the chunks
 #'
 #' @author Serena Defina, 2024.
 #'
-#' @return A list of chunk start and end positions.
+#' @return A matrix with n_chunks rows and 2 columns (chunk start and end positions).
 #'
 make_chunk_sequence <- function(iv, chunk_size = 1000) {
 
@@ -86,7 +121,7 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
   cend <- cstart + chunk_size - 1
   cend[length(cend)] <- length(iv)
 
-  chunk_seq <- list(cstart, cend)
+  chunk_seq <- t(rbind(cstart, cend))
 }
 
 # ============================== MGH i/o helpers ==============================

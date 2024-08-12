@@ -4,16 +4,12 @@
 \alias{mask_cortex}
 \title{Clean out vertices that are not on the cortex}
 \usage{
-mask_cortex(ss, hemi = "lh", target = "fsaverage", n_cores = 1)
+mask_cortex(hemi = "lh", target = "fsaverage")
 }
 \arguments{
-\item{ss}{: the super-subject file-backed matrix (FBM) object}
-
 \item{hemi}{: (default = "lh") hemisphere ("lh" or "rh")}
 
 \item{target}{: (default = "fsaverage")}
-
-\item{n_cores}{: (default = 1) number of cores for this operation.}
 }
 \value{
 A (large) logical vector for cortical (or technical, i.e. vertex = 0) mask.
@@ -21,5 +17,6 @@ A (large) logical vector for cortical (or technical, i.e. vertex = 0) mask.
 \description{
 Clean the super-subject matrix of the vertices that have 0 value or are not
 located on the cortex, according to FreeSurfer \code{*cortical.mask.mgh} file
-distributed in \code{inst/extdata}.
+distributed in \code{inst/extdata}. This function is used in
+\code{\link{build_supersubject}}.
 }

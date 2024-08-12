@@ -1,23 +1,30 @@
 #' @title
-#' Build "supersubject" by stacking all vertex data in one matrix
+#' Build "supersubject" by stacking all vertex data in one large file-backed
+#' matrix with dimensions n_subjects x n_vertices.
 #'
-#' @param subj_dir : path to the FreeSurfer data, expect verywise structure
-#' @param folder_id : column in phenotype file that holds ids to include in
-#' verywise folder format (e.g. "site1/sub-1_ses-01")
+#' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
+#' @param folder_id : column in phenotype file that holds the IDs of the observations
+#' to include. This also expects a verywise format (e.g. "site1/sub-1_ses-01")
 #' @param files_list : (default = \code{\link{list.dirs.till}(subj_dir, n = 2)})
-#' but allows to specify manually.
-#' @param measure : (default = "thickness"), measure, used to identify files.
+#' allows to specify manually which folders or files to include. You would typically
+#' not use this parameter, but rather use \code{folder_id} to specify which observations
+#' to include.
+#' @param measure : (default = "thickness"), vertex-wise measure, used to identify files.
 #' @param hemi : (default = "lh") hemisphere, used to identify files.
 #' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
 #' @param target : (default = "fsaverage"), used to identify files.
 #' @param backing : (default = \code{subj_dir}) location to save the matrix \code{backingfile}.
 #' @param n_cores : (default = 1) number of cores for parallel processing.
+#' @param mask : (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
+#' cortical map.
+#' @param save_rds : (default = FALSE) save the supersubject file metadata for re-use
+#' in other sessions.
 #' @param verbose : (default = TRUE)
 #'
 #' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
-#' n_vertex * n_subject)
+#' n_subjects x n_vertices)
 
-#' @importFrom bigstatsr FBM
+#' @import bigstatsr
 #' @import doParallel
 #' @import foreach
 #'
@@ -33,9 +40,10 @@ build_supersubject <- function(subj_dir,
                                target = "fsaverage",
                                backing = file.path(subj_dir,
                                                    paste0(hemi, ".", measure,
-                                                          "supersubject")),
+                                                          "supersubject.bk")),
                                n_cores = 1,
-                               # mask, dir_tmp,
+                               mask = TRUE,
+                               save_rds = FALSE, # dir_tmp,
                                verbose = TRUE) {
   # measure2 <- measure
   # if(measure2 == "w_g.pct") measure2 <- "w-g.pct"
@@ -68,25 +76,49 @@ build_supersubject <- function(subj_dir,
   # Build empty large matrix to store all vertex and subjects ------------------
 
   # Get dimensions
-  n_files <- length(mgh_files)
-  temp_mgh <- load.mgh(mgh_files[1])
+  n_files <- length(mgh_files) # Number of observations / subjects
+  n_verts <- load.mgh(mgh_files[1])$ndim1 # Number of vertices
 
+  # Mask non-cortical vertex data
+  if (mask) {
+    cortex <- mask_cortex(hemi = hemi, target = target)
+    if (length(cortex) != n_verts) stop("Length of cortical mask does not match number of vertices in the data.")
+    n_verts <- sum(cortex)
+  } else {
+    cortex <- rep(TRUE, n_verts)
+  }
+
+  file.remove(backing) # TODO: TMP
   # Initiate Filebacked Big Matrix
-  bigM <- bigstatsr::FBM(nrow = temp_mgh$ndim1, ncol = n_files, backingfile = backing)
+  # Change this: so i can access the data column by column and not row by row
+  ss <- bigstatsr::FBM(nrow = n_files, ncol = n_verts,
+                       backingfile = gsub(".bk$", "", backing),
+                       create_bk = !file.exists(backing))
 
   # Set up parallel processing
   # TODO: use bigparallelr instead?
   cl <- if(verbose) parallel::makeForkCluster(n_cores, outfile = "") else parallel::makeForkCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  utils::capture.output(pb <- utils::txtProgressBar(0, n_files, style = 3), file = "/dev/null")
+  # utils::capture.output(pb <- utils::txtProgressBar(0, n_files, style = 3), file = "/dev/null")
   i <- NULL
   foreach::foreach(i = seq_len(n_files)) %dopar% {
-    utils::setTxtProgressBar(pb, i)
-    bigM[,i] <- load.mgh(mgh_files[i])$x
-    NULL
+    # utils::setTxtProgressBar(pb, i)
+    ss[i,] <- load.mgh(mgh_files[i])$x[cortex] # Populate row with participant info
+    NULL # Don't want to return anything
   }
   parallel::stopCluster(cl)
-  # TODO: mask cortex?
-  # if (length(mask) != nrow(bigM)) stop("Length of mask does not equal number of vertices from data.")
-  bigM
+
+  if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
+
+  # empty_rows <- fbm_row_is_0(ss, n_cores = n_cores)
+  # if (any(empty_rows)) message("Additionally removing ", sum(empty_rows), " vertices with constant 0 values.")
+  # ss <- ss[cortex & !empty_rows,]
+
+  # Save output
+  if (save_rds) {
+    message("Saving supersubject matrix to .rds file.")
+    ss$save()
+  }
+
+  ss
 }

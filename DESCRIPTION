@@ -24,4 +24,5 @@ Imports:
     bigstatsr,
     doParallel,
     dplyr,
-    foreach
+    foreach,
+    lme4

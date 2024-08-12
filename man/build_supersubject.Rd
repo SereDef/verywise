@@ -2,7 +2,8 @@
 % Please edit documentation in R/build_supersubject.R
 \name{build_supersubject}
 \alias{build_supersubject}
-\title{Build "supersubject" by stacking all vertex data in one matrix}
+\title{Build "supersubject" by stacking all vertex data in one large file-backed
+matrix with dimensions n_subjects x n_vertices.}
 \usage{
 build_supersubject(
   subj_dir,
@@ -12,21 +13,25 @@ build_supersubject(
   hemi = "lh",
   fwhmc = "fwhm10",
   target = "fsaverage",
-  backing = file.path(subj_dir, paste0(hemi, ".", measure, "supersubject")),
+  backing = file.path(subj_dir, paste0(hemi, ".", measure, "supersubject.bk")),
   n_cores = 1,
+  mask = TRUE,
+  save_rds = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{subj_dir}{: path to the FreeSurfer data, expect verywise structure}
+\item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 
-\item{folder_id}{: column in phenotype file that holds ids to include in
-verywise folder format (e.g. "site1/sub-1_ses-01")}
+\item{folder_id}{: column in phenotype file that holds the IDs of the observations
+to include. This also expects a verywise format (e.g. "site1/sub-1_ses-01")}
 
 \item{files_list}{: (default = \code{\link{list.dirs.till}(subj_dir, n = 2)})
-but allows to specify manually.}
+allows to specify manually which folders or files to include. You would typically
+not use this parameter, but rather use \code{folder_id} to specify which observations
+to include.}
 
-\item{measure}{: (default = "thickness"), measure, used to identify files.}
+\item{measure}{: (default = "thickness"), vertex-wise measure, used to identify files.}
 
 \item{hemi}{: (default = "lh") hemisphere, used to identify files.}
 
@@ -38,14 +43,21 @@ but allows to specify manually.}
 
 \item{n_cores}{: (default = 1) number of cores for parallel processing.}
 
+\item{mask}{: (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
+cortical map.}
+
+\item{save_rds}{: (default = FALSE) save the supersubject file metadata for re-use
+in other sessions.}
+
 \item{verbose}{: (default = TRUE)}
 }
 \value{
 A Filebacked Big Matrix with vertex data for all subjects (dimensions:
-n_vertex * n_subject)
+n_subjects x n_vertices)
 }
 \description{
-Build "supersubject" by stacking all vertex data in one matrix
+Build "supersubject" by stacking all vertex data in one large file-backed
+matrix with dimensions n_subjects x n_vertices.
 }
 \author{
 Serena Defina, 2024.
