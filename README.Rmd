@@ -32,12 +32,12 @@ Multiple testing correction is currently achieved using MCZ simulations from Fre
 
 You can install the development version of `verywise` from [GitHub](https://github.com/) with:
 
-``` {r intall}
+``` {r install, eval = FALSE}
 # install.packages("devtools")
 devtools::install_github("SereDef/verywise")
 ```
 
-```{r library}
+```{r load, eval = FALSE}
 # Load it up
 library(verywise)
 ```
@@ -47,22 +47,22 @@ library(verywise)
 You need FreeSurfer installed and a phenotype file that follows verywise structure. 
 
 ## Data poor? Simulate yourself some data, son
-```{r simualte}
+```{r simualte, eval = FALSE}
 
 # Simulate FreeSurfer and phenotype dataset
-simulate_data(subj_dir = "/VeryWiseUserUser/SimulatedExample")
+simulate_data(subj_dir = "./VeryWiseUserUser/SimulatedExample")
 
 ```
 
 ## Basic use
 
-```{r lmm}
+```{r lmm, eval = FALSE}
 
 # Run linear mixed model
 run_vw_lmm(vw_thickness ~ sex * age + site + (1|id), # model formula
-           subj_dir = "/VeryWiseUserUser/SimulatedExample", # Data location
+           subj_dir = "./VeryWiseUserUser/SimulatedExample", # Data location
            hemi = "lh", # left hemisphere
-           n_cores = 4 # Number of cores for parallel processing
+           n_cores = 1 # Number of cores for parallel processing
            )
 
 ```
