@@ -2,13 +2,20 @@ Package: verywise
 Type: Package
 Title: Vertex-wise Statistical Analysis
 Version: 0.1.0
-Author: as.person(c(
-    "Serena Defina <s.defina@erasmusmc.nl> [aut]",
-    "Sander Lamballais <s.lamballaistessensohn@erasmusmc.nl> [aut]",
-    "Ryan Muetzel <r.muetzel@erasmusmc.nl> [aut, cre]"
-    ))
+Authors@R: c(
+    person("Serena", "Defina", 
+            email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
+            comment = c(ORCID = " 0000-0003-3344-6597")),
+    person("Sander", "Lamballais", 
+           email = "s.lamballaistessensohn@erasmusmc.n", role = "aut"),
+    person("Ryan", "Muetzel", 
+           email = "r.muetzel@erasmusmc.nl", role = c("aut", "fnd"))
+           )
 Maintainer: Serena Defina <s.defina@erasmusmc.nl>
-Description: Whole-brain (hemispehere) analysis of FreeSurfer MGH format data. The package allows application of several statistical models per vertex. It can handle imputed data from specific packages (mice, mi, amelia, etc.). Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
+Description: Whole-brain analysis of FreeSurfer MGH format data. The package allows 
+  application of several statistical models per vertex, including linear mixed models. 
+  It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
+  Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
