@@ -29,7 +29,6 @@ simulate_dataset <- function(path,
                              ),
                              seed = 31081996,
                              ...) {
-
   # Create directory in path if it does not exist
   if (!dir.exists(path)) dir.create(path)
 
@@ -87,7 +86,6 @@ simulate_long_pheno_data <- function(data_structure = list(
                                        )
                                      ),
                                      seed = 31081996) {
-
   cat("Creating phenotype file...\n")
   set.seed(seed)
 

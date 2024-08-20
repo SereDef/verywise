@@ -46,7 +46,6 @@ structure.
 ## Data poor? Simulate yourself some data, son
 
 ``` r
-
 # Simulate FreeSurfer and phenotype dataset
 simulate_data(subj_dir = "./VeryWiseUserUser/SimulatedExample")
 ```
@@ -54,11 +53,10 @@ simulate_data(subj_dir = "./VeryWiseUserUser/SimulatedExample")
 ## Basic use
 
 ``` r
-
 # Run linear mixed model
-run_vw_lmm(vw_thickness ~ sex * age + site + (1|id), # model formula
-           subj_dir = "./VeryWiseUserUser/SimulatedExample", # Data location
-           hemi = "lh", # left hemisphere
-           n_cores = 1 # Number of cores for parallel processing
-           )
+run_vw_lmm(vw_thickness ~ sex * age + site + (1 | id), # model formula
+  subj_dir = "./VeryWiseUserUser/SimulatedExample", # Data location
+  hemi = "lh", # left hemisphere
+  n_cores = 1 # Number of cores for parallel processing
+)
 ```

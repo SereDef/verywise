@@ -39,9 +39,8 @@ run_vw_lmm <- function(formula, # model formula
                        n_cores = 1,
                        model = "lme4::lmer" # "stats::lm"
 ) {
-
   # Read phenotype data (if not already loaded) ================================
-  if (is.null(pheno) & !exists("pheno")){
+  if (is.null(pheno) & !exists("pheno")) {
     pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
   } else if (is.character(pheno) & file.exists(pheno)) {
     pheno <- utils::read.csv(pheno)
@@ -51,33 +50,39 @@ run_vw_lmm <- function(formula, # model formula
   data_list <- imp2list(pheno)
 
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(subj_dir, paste0(hemi, ".", measure,
-                                             "supersubject.rds"))
+  ss_file_name <- file.path(subj_dir, paste0(
+    hemi, ".", measure,
+    "supersubject.rds"
+  ))
   if (file.exists(ss_file_name)) {
     message("Reading super-subject file from: ", ss_file_name)
 
     ss <- bigstatsr::big_attach(ss_file_name)
-
   } else {
     message("Building super-subject...")
 
     ss <- build_supersubject(subj_dir,
-                             folder_id = pheno$folder_id,
-                             files_list = list.dirs.till(subj_dir, n = 2),
-                             measure = measure,
-                             hemi = hemi,
-                             fwhmc = paste0("fwhm",fwhm),
-                             target = target,
-                             n_cores = n_cores,
-                             mask = TRUE,
-                             save_rds = TRUE)
+      folder_id = pheno$folder_id,
+      files_list = list.dirs.till(subj_dir, n = 2),
+      measure = measure,
+      hemi = hemi,
+      fwhmc = paste0("fwhm", fwhm),
+      target = target,
+      n_cores = n_cores,
+      mask = TRUE,
+      save_rds = TRUE
+    )
   }
 
   # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
-  if (sum(problem_verts) > 0) { message("Removing ", sum(problem_verts),
-                                        " vertices that contained 0 values.") }
+  if (sum(problem_verts) > 0) {
+    message(
+      "Removing ", sum(problem_verts),
+      " vertices that contained 0 values."
+    )
+  }
   good_verts <- which(!problem_verts)
 
   # Prepare chunk sequence =====================================================
@@ -95,12 +100,14 @@ run_vw_lmm <- function(formula, # model formula
   # Number of participants*timepoint (long format)
   n_obs <- nrow(model_info[[2]]) # nrow(data_list[[1]])
   # Number of (imputed) datasets
-  m = length(data_list)
+  m <- length(data_list)
 
   # Prepare FBM output =========================================================
-  res_bk_names = c("coef","se","t","p","resid")
-  res_bk_paths <- file.path(subj_dir,
-                            paste(hemi, measure, res_bk_names, sep="."))
+  res_bk_names <- c("coef", "se", "t", "p", "resid")
+  res_bk_paths <- file.path(
+    subj_dir,
+    paste(hemi, measure, res_bk_names, sep = ".")
+  )
 
   # Coefficients
   c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[1])
@@ -119,17 +126,18 @@ run_vw_lmm <- function(formula, # model formula
   on.exit(parallel::stopCluster(cl))
 
   utils::capture.output(pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3),
-                        file = "/dev/null")
+    file = "/dev/null"
+  )
 
   i <- NULL
-  foreach::foreach (i = seq_along(chunk_seq[,1]), .combine = "c") %dopar% {
+  foreach::foreach(i = seq_along(chunk_seq[, 1]), .combine = "c") %dopar% {
     utils::setTxtProgressBar(pb, i)
 
-    id <- good_verts[chunk_seq[i,1]:chunk_seq[i,2]]
+    id <- good_verts[chunk_seq[i, 1]:chunk_seq[i, 2]]
 
     Y <- ss[, id]
 
-    parallel::parLapply(cl, 1:ncol(Y), function(v){
+    parallel::parLapply(cl, 1:ncol(Y), function(v) {
       # Fetch brain data
       y <- Y[, v]
 
@@ -149,10 +157,10 @@ run_vw_lmm <- function(formula, # model formula
         se[[i]] <<- as.matrix(sqrt(diag(as.matrix(stats::vcov(fit)))))
         resid[[i]] <<- stats::residuals(fit)
         # TODO: implement stack of interest?
-        pval[[i]] <<- as.matrix(car::Anova(fit, type=3)[,"Pr(>Chisq)"]) # -log10()
+        pval[[i]] <<- as.matrix(car::Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
       })
 
-      out_stats = vw_pool(qhat = qhat, se = se, m = m, fe_n = fe_n)
+      out_stats <- vw_pool(qhat = qhat, se = se, m = m, fe_n = fe_n)
       # Average residuals across imputed datasets. TODO: pool this instead?
       out_stats$resid <- as.matrix(colMeans(do.call(rbind, resid)))
 

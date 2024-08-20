@@ -38,9 +38,13 @@ build_supersubject <- function(subj_dir,
                                hemi = "lh",
                                fwhmc = "fwhm10",
                                target = "fsaverage",
-                               backing = file.path(subj_dir,
-                                                   paste0(hemi, ".", measure,
-                                                          "supersubject.bk")),
+                               backing = file.path(
+                                 subj_dir,
+                                 paste0(
+                                   hemi, ".", measure,
+                                   "supersubject.bk"
+                                 )
+                               ),
                                n_cores = 1,
                                mask = TRUE,
                                save_rds = FALSE, # dir_tmp,
@@ -53,12 +57,16 @@ build_supersubject <- function(subj_dir,
   # Select only the ids in phenotype dataframe
   files_list <- files_list[unlist(lapply(folder_id, grep, files_list))]
   # Make sure the order of ids is the same as in the phenotype dataframe
-  if (!identical(folder_id, gsub(paste0(subj_dir,'/'), '', files_list))) {
+  if (!identical(folder_id, gsub(paste0(subj_dir, "/"), "", files_list))) {
     warning("Participant order is not correct!")
   }
 
-  mgh_file_name <- paste0(hemi, ".", measure,
-                          if (fwhmc != "") {paste0(".", fwhmc)}, ".", target, ".mgh")
+  mgh_file_name <- paste0(
+    hemi, ".", measure,
+    if (fwhmc != "") {
+      paste0(".", fwhmc)
+    }, ".", target, ".mgh"
+  )
 
   mgh_files <- file.path(files_list, "surf", mgh_file_name)
 
@@ -91,19 +99,21 @@ build_supersubject <- function(subj_dir,
   file.remove(backing) # TODO: TMP
   # Initiate Filebacked Big Matrix
   # Change this: so i can access the data column by column and not row by row
-  ss <- bigstatsr::FBM(nrow = n_files, ncol = n_verts,
-                       backingfile = gsub(".bk$", "", backing),
-                       create_bk = !file.exists(backing))
+  ss <- bigstatsr::FBM(
+    nrow = n_files, ncol = n_verts,
+    backingfile = gsub(".bk$", "", backing),
+    create_bk = !file.exists(backing)
+  )
 
   # Set up parallel processing
   # TODO: use bigparallelr instead?
-  cl <- if(verbose) parallel::makeForkCluster(n_cores, outfile = "") else parallel::makeForkCluster(n_cores)
+  cl <- if (verbose) parallel::makeForkCluster(n_cores, outfile = "") else parallel::makeForkCluster(n_cores)
   doParallel::registerDoParallel(cl)
   # utils::capture.output(pb <- utils::txtProgressBar(0, n_files, style = 3), file = "/dev/null")
   i <- NULL
   foreach::foreach(i = seq_len(n_files)) %dopar% {
     # utils::setTxtProgressBar(pb, i)
-    ss[i,] <- load.mgh(mgh_files[i])$x[cortex] # Populate row with participant info
+    ss[i, ] <- load.mgh(mgh_files[i])$x[cortex] # Populate row with participant info
     NULL # Don't want to return anything
   }
   parallel::stopCluster(cl)

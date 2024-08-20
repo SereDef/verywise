@@ -1,4 +1,3 @@
-
 #' @title
 #' Clean out vertices that are not on the cortex
 #'
@@ -15,9 +14,10 @@
 #'
 mask_cortex <- function(hemi = "lh", target = "fsaverage") {
   # Load mask file
-  mask_file <- file.path(system.file("extdata", package = "verywise"), "cortex_mask",
-                         paste0(hemi, ".", target, ".cortex.mask.mgh"))
+  mask_file <- file.path(
+    system.file("extdata", package = "verywise"), "cortex_mask",
+    paste0(hemi, ".", target, ".cortex.mask.mgh")
+  )
   # Turn into logical vector
   mask <- as.logical(load.mgh(mask_file)$x) # TRUE where cortex
-
 }

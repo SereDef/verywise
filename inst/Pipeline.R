@@ -1,6 +1,6 @@
 library(verywise)
 
-# Simulate FreSurfer and phenotype dataset
+# Simulate FreeSurfer and phenotype dataset
 # simulate_data(subj_dir)
 
 # Run analysis
