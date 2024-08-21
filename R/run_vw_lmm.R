@@ -15,9 +15,7 @@
 #' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
-#' @import utils
 #' @import bigstatsr
-#' @import parallel
 #' @import foreach
 #' @import lme4
 #' @import stats
@@ -40,7 +38,7 @@ run_vw_lmm <- function(formula, # model formula
                        model = "lme4::lmer" # "stats::lm"
 ) {
   # Read phenotype data (if not already loaded) ================================
-  if (is.null(pheno) & !exists("pheno")) {
+  if (is.null(pheno) & !exists("pheno", mode="list", envir=globalenv())) {
     pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
   } else if (is.character(pheno) & file.exists(pheno)) {
     pheno <- utils::read.csv(pheno)
@@ -109,6 +107,11 @@ run_vw_lmm <- function(formula, # model formula
     paste(hemi, measure, res_bk_names, sep = ".")
   )
 
+  # TMP: remove files if they exist
+  for (bk in res_bk_paths) {
+    if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
+  }
+
   # Coefficients
   c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[1])
   # Standard errors
@@ -121,43 +124,48 @@ run_vw_lmm <- function(formula, # model formula
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
 
   # Parallel loop per chunk  ===================================================
+  message("Running analyses...\n")
+
   cl <- parallel::makeForkCluster(n_cores, outfile = "")
   doParallel::registerDoParallel(cl)
   on.exit(parallel::stopCluster(cl))
 
-  utils::capture.output(pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3),
-    file = "/dev/null"
-  )
+  # utils::capture.output(
+  # pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3)
+  # , file = "/dev/null")
 
-  i <- NULL
-  foreach::foreach(i = seq_along(chunk_seq[, 1]), .combine = "c") %dopar% {
-    utils::setTxtProgressBar(pb, i)
+  chunk <- NULL
+  # lapply(1:nrow(chunk_seq), function(chunk) {
+  # parallel::parLapply(cl, 1:nrow(chunk_seq), function(chunk) {
+  foreach::foreach(chunk = 1:nrow(chunk_seq), .combine = "c") %dopar% {
+    # utils::setTxtProgressBar(pb, chunk)
 
-    id <- good_verts[chunk_seq[i, 1]:chunk_seq[i, 2]]
+    id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
 
     Y <- ss[, id]
 
-    parallel::parLapply(cl, 1:ncol(Y), function(v) {
+    lapply(1:ncol(Y), function(vertex) { # TODO: fix nested parallelisation here
+    # parallel::parLapply(cl, 1:ncol(Y), function(vertex) {
       # Fetch brain data
-      y <- Y[, v]
+      y <- Y[, vertex]
 
       # Empty list for storing results
       qhat <- se <- pval <- resid <- vector(mode = "list", length = m)
 
       # Loop through imputed datasets
-      lapply(seq_along(data_list), function(i) {
-        dset <- data_list[[i]]
+      lapply(seq_along(data_list), function(imp) {
+        dset <- data_list[[imp]]
         dset[all.vars(formula)[1]] <- y
 
-        fit <- lme4::lmer(formula = formula, data = dset)
+        fit <- suppressMessages(lme4::lmer(formula = formula, data = dset))
         # coef(fit)$id is a matrix of effects by random variable?
-        qhat[[i]] <<- as.matrix(lme4::fixef(fit))
+        qhat[[imp]] <<- as.matrix(lme4::fixef(fit))
         # lme4::ranef(fit) to extract random effects (these should sum to 0)
         # lme4::VarCorr(fit)  # estimated variances, SDs, and correlations between the random-effects terms
-        se[[i]] <<- as.matrix(sqrt(diag(as.matrix(stats::vcov(fit)))))
-        resid[[i]] <<- stats::residuals(fit)
+        se[[imp]] <<- as.matrix(sqrt(diag(as.matrix(stats::vcov(fit)))))
+        resid[[imp]] <<- stats::residuals(fit)
         # TODO: implement stack of interest?
-        pval[[i]] <<- as.matrix(car::Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
+        pval[[imp]] <<- as.matrix(car::Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
       })
 
       out_stats <- vw_pool(qhat = qhat, se = se, m = m, fe_n = fe_n)
@@ -165,11 +173,11 @@ run_vw_lmm <- function(formula, # model formula
       out_stats$resid <- as.matrix(colMeans(do.call(rbind, resid)))
 
       # Write results to their respective FBM
-      c_vw[, y] <<- out_stats$coef
-      s_vw[, y] <<- out_stats$se
-      t_vw[, y] <<- out_stats$t
-      p_vw[, y] <<- -1 * log10(out_stats$p)
-      r_vw[, y] <<- out_stats$resid # ("+", res) / length(res)
+      c_vw[, vertex] <<- out_stats$coef
+      s_vw[, vertex] <<- out_stats$se
+      t_vw[, vertex] <<- out_stats$t
+      p_vw[, vertex] <<- -1 * log10(out_stats$p)
+      r_vw[, vertex] <<- out_stats$resid # ("+", res) / length(res)
 
       NULL
     })
@@ -183,5 +191,6 @@ run_vw_lmm <- function(formula, # model formula
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
+  message("\nAll done!\n")
   return(out)
 }
