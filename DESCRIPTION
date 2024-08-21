@@ -1,6 +1,6 @@
 Package: verywise
 Type: Package
-Title: Vertex-wise Statistical Analysis
+Title: Vertex-wise Statistical Analysis of Neuroimaging data
 Version: 0.1.0
 Authors@R: c(
     person("Serena", "Defina", 
@@ -11,7 +11,6 @@ Authors@R: c(
     person("Ryan", "Muetzel", 
            email = "r.muetzel@erasmusmc.nl", role = c("aut", "fnd"))
            )
-Maintainer: Serena Defina <s.defina@erasmusmc.nl>
 Description: Whole-brain analysis of FreeSurfer MGH format data. The package allows 
   application of several statistical models per vertex, including linear mixed models. 
   It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
@@ -35,4 +34,5 @@ Imports:
     dplyr,
     foreach,
     lme4
+SystemRequirements: FreeSurfer
 Config/testthat/edition: 3
