@@ -126,18 +126,36 @@ run_vw_lmm <- function(formula, # model formula
   # Parallel loop per chunk  ===================================================
   message("Running analyses...\n")
 
-  cl <- parallel::makeForkCluster(n_cores, outfile = "")
-  doParallel::registerDoParallel(cl)
-  on.exit(parallel::stopCluster(cl))
+  future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
+  # if (n_cores >= parallelly::availableCores(omit = 1)) { warning("Uff, slow down kid")}
+  # future::plan(
+  #   list(
+  #     future::tweak(
+  #       future::multisession,
+  #       workers = 2),
+  #     future::tweak(
+  #       future::multisession,
+  #       workers = 4)
+  #   )
+  # ) # 8 cores in total
+
+  # cl <- parallel::makeForkCluster(n_cores, outfile = "")
+  # doParallel::registerDoParallel(cl)
+  # on.exit(parallel::stopCluster(cl))
 
   # utils::capture.output(
   # pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3)
   # , file = "/dev/null")
+  p <- progressr::progressor(along = 1:nrow(chunk_seq))
 
-  chunk <- NULL
   # lapply(1:nrow(chunk_seq), function(chunk) {
   # parallel::parLapply(cl, 1:nrow(chunk_seq), function(chunk) {
-  foreach::foreach(chunk = 1:nrow(chunk_seq), .combine = "c") %dopar% {
+  # chunk <- NULL
+  # foreach::foreach(chunk = 1:nrow(chunk_seq), .combine = "c") %dopar% {
+  # future.apply::future_lapply(1:nrow(chunk_seq), function(chunk){
+  furrr::future_walk(1:nrow(chunk_seq), function(chunk) {
+    # Progress bar
+    p()
     # utils::setTxtProgressBar(pb, chunk)
 
     id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
@@ -181,16 +199,13 @@ run_vw_lmm <- function(formula, # model formula
 
       NULL
     })
-
-    NULL
-  }
-
-  parallel::stopCluster(cl)
-  on.exit(invisible(NULL))
+    # NULL
+  })
+  # on.exit(invisible(NULL))
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
-  message("\nAll done!\n")
+  message("All done!")
   return(out)
 }
