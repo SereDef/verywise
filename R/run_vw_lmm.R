@@ -185,7 +185,8 @@ run_vw_lmm <- function(formula, # model formula
                               m = m, fe_n = fe_n)
       # Average residuals across imputed datasets.
       # TODO: pool this instead?
-      pooled_stats$resid <- as.matrix(colMeans(do.call(rbind, resid)))
+      pooled_stats$resid <- as.matrix(colMeans(do.call(rbind,
+                                                       lapply(out_stats, `[[`, 2))))
 
       # Write results to their respective FBM
       c_vw[, vertex] <<- pooled_stats$coef
