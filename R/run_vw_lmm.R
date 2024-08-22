@@ -126,8 +126,16 @@ run_vw_lmm <- function(formula, # model formula
   # Parallel loop per chunk  ===================================================
   message("Running analyses...\n")
 
+  # Check number of cores
+  if (n_cores > parallelly::availableCores()) {
+    warning("You only have access to ", parallelly::availableCores(), " cores. ",
+            parallelly::availableCores(omit = 1), " will be used.")
+    n_cores <- parallelly::availableCores(omit = 1)
+  } else if (n_cores >= parallelly::availableCores(omit = 1)) {
+    warning("You are using ", n_cores, " cores, but you only have ",
+            parallelly::availableCores(), " in total, other processes may get slower.")
+  }
   future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
-  # if (n_cores >= parallelly::availableCores(omit = 1)) { warning("Uff, slow down kid")}
   # future::plan(
   #   list(
   #     future::tweak(
@@ -139,34 +147,29 @@ run_vw_lmm <- function(formula, # model formula
   #   )
   # ) # 8 cores in total
 
-  # cl <- parallel::makeForkCluster(n_cores, outfile = "")
-  # doParallel::registerDoParallel(cl)
-  # on.exit(parallel::stopCluster(cl))
-
   # utils::capture.output(
   # pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3)
   # , file = "/dev/null")
   if (requireNamespace("progressr", quietly = TRUE)) {
+    progressr::handlers(global = TRUE)
     p <- progressr::progressor(along = 1:nrow(chunk_seq))
-    }
-  # lapply(1:nrow(chunk_seq), function(chunk) {
-  # parallel::parLapply(cl, 1:nrow(chunk_seq), function(chunk) {
-  # chunk <- NULL
-  # foreach::foreach(chunk = 1:nrow(chunk_seq), .combine = "c") %dopar% {
-  # future.apply::future_lapply(1:nrow(chunk_seq), function(chunk){
-  furrr::future_walk(1:nrow(chunk_seq), function(chunk) {
-    # Progress bar
-    if (requireNamespace("progressr", quietly = TRUE)) p()
-    # utils::setTxtProgressBar(pb, chunk)
+  }
 
-    id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
+  # Don't do chucking to avoid nested parallel processes that would require
+  # more involved future::plan spec or force an even number
+  # furrr::future_walk(1:nrow(chunk_seq), function(chunk) {
+  #   # Progress bar
+  #   if (requireNamespace("progressr", quietly = TRUE)) p()
+  #   # utils::setTxtProgressBar(pb, chunk)
+  #
+  #   id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
+  #
+  #   Y <- ss[, id]
 
-    Y <- ss[, id]
-
-    lapply(1:ncol(Y), function(vertex) { # TODO: fix nested parallelisation here
+  furrr::future_walk(good_verts, function(vertex) { # 1:ncol(Y)
     # parallel::parLapply(cl, 1:ncol(Y), function(vertex) {
       # Fetch brain data
-      y <- Y[, vertex]
+      y <- ss[, vertex] # Y
 
       # Empty list for storing results
       qhat <- se <- pval <- resid <- vector(mode = "list", length = m)
@@ -197,11 +200,9 @@ run_vw_lmm <- function(formula, # model formula
       t_vw[, vertex] <<- out_stats$t
       p_vw[, vertex] <<- -1 * log10(out_stats$p)
       r_vw[, vertex] <<- out_stats$resid # ("+", res) / length(res)
-
-      NULL
-    })
-    # NULL
   })
+    # NULL
+  # })
   # on.exit(invisible(NULL))
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
