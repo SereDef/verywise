@@ -13,6 +13,7 @@
 #' @param fwhm : (default = 10) full-width half maximum value
 #' @param target : (default = "fsaverage") template on which to register vertex-wise data.
 #' @param n_cores : (default = 1) number of cores for parallel processing.
+#' @param seed : (default = 3108) random seed.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
 #' @importFrom lme4 lmer
@@ -35,6 +36,7 @@ run_vw_lmm <- function(formula, # model formula
                        fwhm = 10,
                        target = "fsaverage",
                        n_cores = 1,
+                       seed = 3108,
                        model = "lme4::lmer" # "stats::lm"
 ) {
   # Read phenotype data (if not already loaded) ================================
@@ -83,9 +85,6 @@ run_vw_lmm <- function(formula, # model formula
   }
   good_verts <- which(!problem_verts)
 
-  # Prepare chunk sequence =====================================================
-  chunk_seq <- make_chunk_sequence(good_verts)
-
   # Unpack model ===============================================================
   model_info <- get_terms(formula, data_list)
 
@@ -123,7 +122,10 @@ run_vw_lmm <- function(formula, # model formula
   # Residuals
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
 
-  # Parallel loop per chunk  ===================================================
+  # Prepare chunk sequence =====================================================
+  # chunk_seq <- make_chunk_sequence(good_verts)
+
+  # Parallel analyses ==========================================================
   message("Running analyses...\n")
 
   # Check number of cores
@@ -135,6 +137,7 @@ run_vw_lmm <- function(formula, # model formula
     warning("You are using ", n_cores, " cores, but you only have ",
             parallelly::availableCores(), " in total, other processes may get slower.")
   }
+
   future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
   # future::plan(
   #   list(
@@ -152,7 +155,7 @@ run_vw_lmm <- function(formula, # model formula
   # , file = "/dev/null")
   if (requireNamespace("progressr", quietly = TRUE)) {
     progressr::handlers(global = TRUE)
-    p <- progressr::progressor(along = 1:nrow(chunk_seq))
+    p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
   }
 
   # Don't do chucking to avoid nested parallel processes that would require
@@ -165,9 +168,11 @@ run_vw_lmm <- function(formula, # model formula
   #   id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
   #
   #   Y <- ss[, id]
+  set.seed(seed)
 
   furrr::future_walk(good_verts, function(vertex) { # 1:ncol(Y)
     # parallel::parLapply(cl, 1:ncol(Y), function(vertex) {
+      p()
       # Fetch brain data
       y <- ss[, vertex] # Y
 
@@ -200,7 +205,9 @@ run_vw_lmm <- function(formula, # model formula
       t_vw[, vertex] <<- out_stats$t
       p_vw[, vertex] <<- -1 * log10(out_stats$p)
       r_vw[, vertex] <<- out_stats$resid # ("+", res) / length(res)
-  })
+  },
+  .options = furrr_options(seed = TRUE),
+  .progress = TRUE)
     # NULL
   # })
   # on.exit(invisible(NULL))
