@@ -97,6 +97,9 @@ run_vw_lmm <- function(formula, # model formula
   fe_n <- length(fixed_terms)
   # Number of participants*timepoint (long format)
   n_obs <- nrow(model_info[[2]]) # nrow(data_list[[1]])
+  if (n_obs != nrow(ss)) {
+    stop("qualquadra non cosa")
+  }
   # Number of (imputed) datasets
   m <- length(data_list)
 
@@ -193,6 +196,7 @@ run_vw_lmm <- function(formula, # model formula
       s_vw[, vertex] <<- pooled_stats$se
       t_vw[, vertex] <<- pooled_stats$t
       p_vw[, vertex] <<- -1 * log10(pooled_stats$p)
+      message("now residuals")
       r_vw[, vertex] <<- pooled_stats$resid # ("+", res) / length(res)
   },
   .options = furrr::furrr_options(seed = TRUE),
