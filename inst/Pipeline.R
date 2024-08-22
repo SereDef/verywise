@@ -4,7 +4,8 @@ library(verywise)
 # simulate_data(subj_dir)
 
 # Run analysis
-run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+           # pheno = "/Users/Serena/Desktop/Infant2adult/Package/try/phenotype.csv",
            subj_dir = "/Users/Serena/Desktop/Infant2adult/Package/try",
            hemi = "lh",
            n_cores = 1)

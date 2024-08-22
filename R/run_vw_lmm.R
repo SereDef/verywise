@@ -15,17 +15,17 @@
 #' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
-#' @import bigstatsr
-#' @import foreach
-#' @import lme4
-#' @import stats
-#' @importFrom doParallel registerDoParallel
+#' @importFrom lme4 lmer
+#' @importFrom lme4 fixef
+#' @importFrom stats vcov
+#' @importFrom stats residuals
 #' @importFrom car Anova
 #'
 #' @return A list of file-backed matrices containig pooled coefficients, SEs,
 #' t- and p- values and residuals.
 #'
 #' @author Serena Defina, 2024.
+#' @export
 #'
 run_vw_lmm <- function(formula, # model formula
                        pheno = NULL,
@@ -146,8 +146,9 @@ run_vw_lmm <- function(formula, # model formula
   # utils::capture.output(
   # pb <- utils::txtProgressBar(0, nrow(chunk_seq), style = 3)
   # , file = "/dev/null")
-  p <- progressr::progressor(along = 1:nrow(chunk_seq))
-
+  if (requireNamespace("progressr", quietly = TRUE)) {
+    p <- progressr::progressor(along = 1:nrow(chunk_seq))
+    }
   # lapply(1:nrow(chunk_seq), function(chunk) {
   # parallel::parLapply(cl, 1:nrow(chunk_seq), function(chunk) {
   # chunk <- NULL
@@ -155,7 +156,7 @@ run_vw_lmm <- function(formula, # model formula
   # future.apply::future_lapply(1:nrow(chunk_seq), function(chunk){
   furrr::future_walk(1:nrow(chunk_seq), function(chunk) {
     # Progress bar
-    p()
+    if (requireNamespace("progressr", quietly = TRUE)) p()
     # utils::setTxtProgressBar(pb, chunk)
 
     id <- good_verts[chunk_seq[chunk, 1]:chunk_seq[chunk, 2]]
@@ -175,15 +176,15 @@ run_vw_lmm <- function(formula, # model formula
         dset <- data_list[[imp]]
         dset[all.vars(formula)[1]] <- y
 
-        fit <- suppressMessages(lme4::lmer(formula = formula, data = dset))
+        fit <- suppressMessages(lmer(formula = formula, data = dset))
         # coef(fit)$id is a matrix of effects by random variable?
-        qhat[[imp]] <<- as.matrix(lme4::fixef(fit))
+        qhat[[imp]] <<- as.matrix(fixef(fit))
         # lme4::ranef(fit) to extract random effects (these should sum to 0)
         # lme4::VarCorr(fit)  # estimated variances, SDs, and correlations between the random-effects terms
-        se[[imp]] <<- as.matrix(sqrt(diag(as.matrix(stats::vcov(fit)))))
-        resid[[imp]] <<- stats::residuals(fit)
+        se[[imp]] <<- as.matrix(sqrt(diag(as.matrix(vcov(fit)))))
+        resid[[imp]] <<- residuals(fit)
         # TODO: implement stack of interest?
-        pval[[imp]] <<- as.matrix(car::Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
+        pval[[imp]] <<- as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
       })
 
       out_stats <- vw_pool(qhat = qhat, se = se, m = m, fe_n = fe_n)
