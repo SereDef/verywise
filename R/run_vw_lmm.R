@@ -39,10 +39,14 @@ run_vw_lmm <- function(formula, # model formula
     pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
   } else if (is.character(pheno) & file.exists(pheno)) {
     pheno <- utils::read.csv(pheno)
+  } else  if (exists("pheno", mode="list", envir=globalenv())) {
+    pheno <- get(pheno, envir = globalenv())
+  } else {
+    stop("Provide phenotype data pls.")
   }
 
   # Transform to list of dataframes (imputed and single datasets alike)
-  data_list <- imp2list(pheno)
+  data_list <- list(pheno, pheno) # imp2list(pheno)
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(subj_dir, paste0(
@@ -168,7 +172,7 @@ run_vw_lmm <- function(formula, # model formula
   set.seed(seed)
 
   furrr::future_walk(good_verts, function(vertex) {
-      # p()
+      p()
       # Fetch brain data
       y <- ss[, vertex] # Y
 
@@ -176,8 +180,8 @@ run_vw_lmm <- function(formula, # model formula
       out_stats <- lapply(data_list, single_lmm, y = y, formula = formula)
 
       # Pool results
-      to_pool <- do.call(rbind, lapply(out_stats, `[[`, "stats"))
-      pooled_stats <- vw_pool(qhat = to_pool["qhat"], se = to_pool["se"],
+      to_pool <- do.call(rbind, lapply(out_stats, `[[`, 1))
+      pooled_stats <- vw_pool(qhat = to_pool[,"qhat"], se = to_pool[,"se"],
                               m = m, fe_n = fe_n)
       # Average residuals across imputed datasets.
       # TODO: pool this instead?
