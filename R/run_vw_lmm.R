@@ -206,7 +206,7 @@ run_vw_lmm <- function(formula, # model formula
       p_vw[, vertex] <<- -1 * log10(out_stats$p)
       r_vw[, vertex] <<- out_stats$resid # ("+", res) / length(res)
   },
-  .options = furrr_options(seed = TRUE),
+  .options = furrr::furrr_options(seed = TRUE),
   .progress = TRUE)
     # NULL
   # })
