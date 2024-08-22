@@ -16,11 +16,6 @@
 #' @param seed : (default = 3108) random seed.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
-#' @importFrom lme4 lmer
-#' @importFrom lme4 fixef
-#' @importFrom stats vcov
-#' @importFrom stats residuals
-#' @importFrom car Anova
 #'
 #' @return A list of file-backed matrices containig pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -29,8 +24,8 @@
 #' @export
 #'
 run_vw_lmm <- function(formula, # model formula
-                       pheno = NULL,
                        subj_dir,
+                       pheno = NULL,
                        hemi = "lh",
                        measure = gsub("vw_", "", all.vars(formula)[1]),
                        fwhm = 10,
@@ -58,6 +53,8 @@ run_vw_lmm <- function(formula, # model formula
     message("Reading super-subject file from: ", ss_file_name)
 
     ss <- bigstatsr::big_attach(ss_file_name)
+    # filter it
+
   } else {
     message("Building super-subject...")
 
@@ -170,51 +167,82 @@ run_vw_lmm <- function(formula, # model formula
   #   Y <- ss[, id]
   set.seed(seed)
 
-  furrr::future_walk(good_verts, function(vertex) { # 1:ncol(Y)
-    # parallel::parLapply(cl, 1:ncol(Y), function(vertex) {
-      p()
+  furrr::future_walk(good_verts, function(vertex) {
+      # p()
       # Fetch brain data
       y <- ss[, vertex] # Y
 
-      # Empty list for storing results
-      qhat <- se <- pval <- resid <- vector(mode = "list", length = m)
+      # Loop through imputed datasets and run analyses
+      out_stats <- lapply(data_list, single_lmm, y = y, formula = formula)
 
-      # Loop through imputed datasets
-      lapply(seq_along(data_list), function(imp) {
-        dset <- data_list[[imp]]
-        dset[all.vars(formula)[1]] <- y
-
-        fit <- suppressMessages(lmer(formula = formula, data = dset))
-        # coef(fit)$id is a matrix of effects by random variable?
-        qhat[[imp]] <<- as.matrix(fixef(fit))
-        # lme4::ranef(fit) to extract random effects (these should sum to 0)
-        # lme4::VarCorr(fit)  # estimated variances, SDs, and correlations between the random-effects terms
-        se[[imp]] <<- as.matrix(sqrt(diag(as.matrix(vcov(fit)))))
-        resid[[imp]] <<- residuals(fit)
-        # TODO: implement stack of interest?
-        pval[[imp]] <<- as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # -log10()
-      })
-
-      out_stats <- vw_pool(qhat = qhat, se = se, m = m, fe_n = fe_n)
-      # Average residuals across imputed datasets. TODO: pool this instead?
-      out_stats$resid <- as.matrix(colMeans(do.call(rbind, resid)))
+      # Pool results
+      to_pool <- do.call(rbind, lapply(out_stats, `[[`, "stats"))
+      pooled_stats <- vw_pool(qhat = to_pool["qhat"], se = to_pool["se"],
+                              m = m, fe_n = fe_n)
+      # Average residuals across imputed datasets.
+      # TODO: pool this instead?
+      pooled_stats$resid <- as.matrix(colMeans(do.call(rbind, resid)))
 
       # Write results to their respective FBM
-      c_vw[, vertex] <<- out_stats$coef
-      s_vw[, vertex] <<- out_stats$se
-      t_vw[, vertex] <<- out_stats$t
-      p_vw[, vertex] <<- -1 * log10(out_stats$p)
-      r_vw[, vertex] <<- out_stats$resid # ("+", res) / length(res)
+      c_vw[, vertex] <<- pooled_stats$coef
+      s_vw[, vertex] <<- pooled_stats$se
+      t_vw[, vertex] <<- pooled_stats$t
+      p_vw[, vertex] <<- -1 * log10(pooled_stats$p)
+      r_vw[, vertex] <<- pooled_stats$resid # ("+", res) / length(res)
   },
   .options = furrr::furrr_options(seed = TRUE),
   .progress = TRUE)
-    # NULL
-  # })
-  # on.exit(invisible(NULL))
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
   message("All done!")
   return(out)
+}
+
+#' Run a single \code{lme4::lmer} model and extract stats
+#'
+#' @param imp : dataset (containing the phenotype data)
+#' @param y : vertex outcome (from supersubject)
+#' @param formula : formula describing the model
+#'
+#' @details
+#' No additional parameters are currently passed to the \code{lme4::lmer} call
+#' P-values are estimated using \code{car::Anova(., type = 3)} at the moment
+#'
+#' @return A list with two elements: "stats" (a dataframe with estimate, SE and p-value)
+#' and "resid" a vector of redisuals for the given model
+#'
+#' @importFrom lme4 lmer
+#' @importFrom lme4 fixef
+#' @importFrom stats vcov
+#' @importFrom stats residuals
+#' @importFrom car Anova
+#'
+#' @export
+#'
+single_lmm <- function(imp, y, formula) {
+  # Add (vertex) outcome to (single) dataset
+  imp[all.vars(formula)[1]] <- y
+
+  # Fit linear mixed model using `lme4::lmer`
+  fit <- suppressMessages(lmer(formula = formula, data = imp))
+
+  # coef(fit)$id # A matrix of effects by random variable
+  # lme4::ranef(fit) # extract random effects (these should sum to 0)
+  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
+
+  stats <- data.frame(
+    "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
+    "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))), # corresponding standard errors
+    "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests
+    # TODO: check pbkrtest:: Kenward-Roger and Satterthwaite Based estimation
+    # TODO: ask Bing: why type 3 and not 2
+    # -log10() ?
+    # TODO: implement stack of interest?
+  )
+
+  resid <- residuals(fit)
+
+  return(list(stats, resid))
 }
