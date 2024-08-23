@@ -18,10 +18,11 @@
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
 #'
-#' @return A list of file-backed matrices containig pooled coefficients, SEs,
+#' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
 #'
 #' @author Serena Defina, 2024.
+#'
 #' @export
 #'
 run_vw_lmm <- function(formula, # model formula
@@ -137,13 +138,15 @@ run_vw_lmm <- function(formula, # model formula
   message("Running analyses...\n")
 
   # Check number of cores
-  if (n_cores > parallelly::availableCores()) {
-    warning("You only have access to ", parallelly::availableCores(), " cores. ",
-            parallelly::availableCores(omit = 1), " will be used.")
-    n_cores <- parallelly::availableCores(omit = 1)
-  } else if (n_cores >= parallelly::availableCores(omit = 1)) {
-    warning("You are using ", n_cores, " cores, but you only have ",
-            parallelly::availableCores(), " in total, other processes may get slower.")
+  if (requireNamespace("parallelly", quietly = TRUE)){
+    if (n_cores > parallelly::availableCores()) {
+      warning("You only have access to ", parallelly::availableCores(), " cores. ",
+              parallelly::availableCores(omit = 1), " will be used.")
+      n_cores <- parallelly::availableCores(omit = 1)
+    } else if (n_cores >= parallelly::availableCores(omit = 1)) {
+      warning("You are using ", n_cores, " cores, but you only have ",
+              parallelly::availableCores(), " in total, other processes may get slower.")
+    }
   }
 
   future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
@@ -187,13 +190,7 @@ run_vw_lmm <- function(formula, # model formula
       out_stats <- lapply(data_list, single_lmm, y = y, formula = formula)
 
       # Pool results
-      to_pool <- do.call(rbind, lapply(out_stats, `[[`, 1))
-      pooled_stats <- vw_pool(qhat = to_pool[,"qhat"], se = to_pool[,"se"],
-                              m = m, fe_n = fe_n)
-      # Average residuals across imputed datasets.
-      # TODO: pool this instead?
-      pooled_stats$resid <- as.matrix(colMeans(do.call(rbind,
-                                                       lapply(out_stats, `[[`, 2))))
+      pooled_stats <- vw_pool(out_stats, m = m)
 
       # Write results to their respective FBM
       c_vw[, vertex] <<- pooled_stats$coef
@@ -213,22 +210,30 @@ run_vw_lmm <- function(formula, # model formula
   return(out)
 }
 
+#' @title
 #' Run a single \code{lme4::lmer} model and extract stats
 #'
-#' @param imp : dataset (containing the phenotype data)
-#' @param y : vertex outcome (from supersubject)
-#' @param formula : formula describing the model
+#' @param imp : The phenotype dataset (in verywise format).
+#' @param y : A vector of outcome values (i.e. a single vertex from the
+#' supersubject matrix).
+#' @param formula : R formula describing the linear mixed model (using \code{lme4} notation)
 #'
 #' @details
 #' No additional parameters are currently passed to the \code{lme4::lmer} call
 #' P-values are estimated using \code{car::Anova(., type = 3)} at the moment
 #'
-#' @return A list with two elements: "stats" (a dataframe with estimate, SE and p-value)
-#' and "resid" a vector of redisuals for the given model
+#' @return A list with two elements:
+#' \enumerate{
+#' \item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
+#' fixed effect term)
+#' \item \code{"resid"}: a vector of residuals for the given model.
+#' \item \code{"df"}: residual degrees of freedom for the give model.
+#' }
 #'
 #' @importFrom lme4 lmer
 #' @importFrom lme4 fixef
 #' @importFrom stats vcov
+#' @importFrom stats df.residual
 #' @importFrom stats residuals
 #' @importFrom car Anova
 #'
@@ -245,6 +250,7 @@ single_lmm <- function(imp, y, formula) {
   # lme4::ranef(fit) # extract random effects (these should sum to 0)
   # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
 
+  # Extract estimates, standard errors and p-values
   stats <- data.frame(
     "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
     "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))), # corresponding standard errors
@@ -254,8 +260,17 @@ single_lmm <- function(imp, y, formula) {
     # -log10() ?
     # TODO: implement stack of interest?
   )
+  # Save row.names (i.e. terms) as a column so these can be grouped later
+  stats <- data.frame("term" = row.names(stats), stats, row.names=NULL)
 
+  # Also extract model residuals for smoothness estimation
   resid <- residuals(fit)
 
-  return(list(stats, resid))
+  # Finally, extract residual degrees of freedom for Barnard-Rubin adjustment
+  # Normally, this would be the number of independent observation minus the
+  # number of fitted parameters, but not exactly what is done here.
+  # Following the `broom.mixed` package approach, which `mice::pool` relies on
+  df <- df.residual(fit)
+
+  return(list(stats, resid, df))
 }

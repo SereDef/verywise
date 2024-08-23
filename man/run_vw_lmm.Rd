@@ -6,22 +6,23 @@
 \usage{
 run_vw_lmm(
   formula,
-  pheno = NULL,
   subj_dir,
+  pheno = NULL,
   hemi = "lh",
   measure = gsub("vw_", "", all.vars(formula)[1]),
   fwhm = 10,
   target = "fsaverage",
   n_cores = 1,
+  seed = 3108,
   model = "lme4::lmer"
 )
 }
 \arguments{
 \item{formula}{: model formula object (this should specify a LME model)}
 
-\item{pheno}{: the phenotype data or a path to the data file.}
-
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
+
+\item{pheno}{: the phenotype data or a path to the data file.}
 
 \item{hemi}{: (default = "lh") hemisphere.}
 
@@ -34,14 +35,17 @@ this should be the same as specified in formula}
 
 \item{n_cores}{: (default = 1) number of cores for parallel processing.}
 
+\item{seed}{: (default = 3108) random seed.}
+
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
 }
 \value{
-A list of file-backed matrices containig pooled coefficients, SEs,
+A list of file-backed matrices containing pooled coefficients, SEs,
 t- and p- values and residuals.
 }
 \description{
-This is is the main function in v0 of verywise runs main analyses.
+This is is the main function in v0 of \code{verywise}.
+It runs the \code{\link{single_lmm}} function across vertices in a single hemisphere.
 }
 \author{
 Serena Defina, 2024.

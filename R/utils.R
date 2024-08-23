@@ -59,69 +59,6 @@ get_terms <- function(formula, data_list) {
   info
 }
 
-#' @title
-#' Pool model output across imputed datasets
-#'
-#' @description
-#' This is a rewrite of mice::pool wrote by Sander to allow for multiple outcomes.
-#' This was based on old distributions of mice and may be soon rewritten to take
-#' broom and tidy models formats (like mice > 3 does). This is currently used inside
-#' \code{\link{run_vw_lmm}}
-#'
-#' @param qhat : a matrix with estimates for the fixed effects
-#' @param se : a matrix with standard errors of the fixed effects
-#' @param m : number of imputed datasets
-#' @param fe_n : number of fixed effect terms
-#'
-#' @importFrom stats pt
-#'
-#' @return A list containing the pooled coefficients, SEs, t- and p- values.
-#'
-#' @author Sander Lamballais, 2018.
-#'
-vw_pool <- function(qhat, se, m, fe_n) {
-  # Mean coefficients
-  qbar <- Reduce("+", qhat) / m
-  qhat2 <- array(unlist(qhat), dim = c(fe_n, m))
-  # Mean squared SE
-  um <- Reduce("+", lapply(se, `^`, 2)) / m
-
-  # Invert sign, why?
-  e <- sweep(qhat2, c(1, 2), qbar, `-`)
-  # Estimate variance ?
-  bm <- apply(e^2, c(1, 2), sum) / (m - 1 + 1e-100) # eps <- 1e-100 ?
-
-  # Calculate the total variance
-  t <- um + (1 + 1 / m) * bm
-
-  se2 <- sqrt(t)
-  tval <- qbar / se2
-
-  # The degrees of freedom in the complete-data analysis.
-  dfcom <- 1e+07 # Large sample assumed
-
-  # mice::barnard.rubin() -------------------------
-
-  # Proportion of total variance due to missingness
-  lambda <- (1 + 1 / m) * (bm / t)
-  lambda[lambda < 1e-04] <- 1e-04
-
-  dfold <- (m - 1 + 1e-04) / lambda^2
-  dfobs <- (dfcom + 1) / (dfcom + 3) * dfcom * (1 - lambda)
-  df <- dfold * dfobs / (dfold + dfobs)
-
-  # P values
-  pval <- 2 * stats::pt(-abs(tval), df = df)
-
-  list(
-    "coef" = qbar,
-    "se" = se2,
-    "t" = tval,
-    "p" = pval
-  )
-}
-
-
 # ============================== FBM operations ===============================
 #' @title
 #' Check if all row elements are 0 in FBM
