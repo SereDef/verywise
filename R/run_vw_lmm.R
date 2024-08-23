@@ -2,7 +2,8 @@
 #' Run vertex-wise linear mixed model using \code{lme4::lmer()}
 #'
 #' @description
-#' This is is the main function in v0 of verywise runs main analyses.
+#' This is is the main function in v0 of \code{verywise}.
+#' It runs the \code{\link{single_lmm}} function across vertices in a single hemisphere.
 #'
 #' @param formula : model formula object (this should specify a LME model)
 #' @param pheno : the phenotype data or a path to the data file.
@@ -35,15 +36,18 @@ run_vw_lmm <- function(formula, # model formula
                        model = "lme4::lmer" # "stats::lm"
 ) {
   # Read phenotype data (if not already loaded) ================================
-  if (is.null(pheno) & !exists("pheno", mode="list", envir=globalenv())) {
-    pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
+  if (is.null(pheno)) {
+    if (exists("pheno", mode="list", envir=globalenv())) {
+      pheno <- get("pheno", envir = globalenv())
+    } else if (file.exists(file.path(subj_dir, "phenotype.csv"))){
+      pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
+    } else {
+      stop("Provide phenotype data pls.")
+    }
   } else if (is.character(pheno) & file.exists(pheno)) {
     pheno <- utils::read.csv(pheno)
-  } else  if (exists("pheno", mode="list", envir=globalenv())) {
-    pheno <- get(pheno, envir = globalenv())
-  } else {
-    stop("Provide phenotype data pls.")
   }
+
 
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- list(pheno, pheno) # imp2list(pheno)
