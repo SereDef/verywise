@@ -51,7 +51,7 @@ run_vw_lmm <- function(formula, # model formula
 
 
   # Transform to list of dataframes (imputed and single datasets alike)
-  data_list <- list(pheno, pheno) # imp2list(pheno)
+  data_list <- imp2list(pheno)
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(subj_dir, paste0(
@@ -187,7 +187,8 @@ run_vw_lmm <- function(formula, # model formula
       y <- ss[, vertex] # Y
 
       # Loop through imputed datasets and run analyses
-      out_stats <- lapply(data_list, single_lmm, y = y, formula = formula)
+      out_stats <- lapply(data_list, single_lmm, y = y, formula = formula,
+                          pvalues = (m == 1))
 
       # Pool results
       pooled_stats <- vw_pool(out_stats, m = m)
@@ -197,11 +198,10 @@ run_vw_lmm <- function(formula, # model formula
       s_vw[, vertex] <<- pooled_stats$se
       t_vw[, vertex] <<- pooled_stats$t
       p_vw[, vertex] <<- -1 * log10(pooled_stats$p)
-      message("now residuals")
       r_vw[, vertex] <<- pooled_stats$resid # ("+", res) / length(res)
   },
-  .options = furrr::furrr_options(seed = TRUE),
-  .progress = TRUE)
+  .options = furrr::furrr_options(seed = TRUE))
+  # .progress = TRUE)
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
@@ -217,29 +217,35 @@ run_vw_lmm <- function(formula, # model formula
 #' @param y : A vector of outcome values (i.e. a single vertex from the
 #' supersubject matrix).
 #' @param formula : R formula describing the linear mixed model (using \code{lme4} notation)
+#' @param pvalues : (default : TRUE) whether to include p-values computed using the
+#' *t-as-z* approach (see Details).
 #'
 #' @details
 #' No additional parameters are currently passed to the \code{lme4::lmer} call
-#' P-values are estimated using \code{car::Anova(., type = 3)} at the moment
+#' P-values are estimated using the *t-as-z* approach at the moment. This is known
+#' to the anti-conservative for small sample sizes. However we preferred a
+#' relatively lenient (and computationally inexpensive) solution at this stage.
+#' We will be addressing Type I error mores strictly at the cluster forming stage.
 #'
 #' @return A list with two elements:
 #' \enumerate{
 #' \item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
 #' fixed effect term)
 #' \item \code{"resid"}: a vector of residuals for the given model.
-#' \item \code{"df"}: residual degrees of freedom for the give model.
+# #' \item \code{"df"}: residual degrees of freedom for the give model.
 #' }
 #'
 #' @importFrom lme4 lmer
 #' @importFrom lme4 fixef
 #' @importFrom stats vcov
-#' @importFrom stats df.residual
+#' @importFrom stats pnorm
 #' @importFrom stats residuals
-#' @importFrom car Anova
+# #' @importFrom stats df.residual
+# #' @importFrom car Anova
 #'
 #' @export
 #'
-single_lmm <- function(imp, y, formula) {
+single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Add (vertex) outcome to (single) dataset
   imp[all.vars(formula)[1]] <- y
 
@@ -254,12 +260,19 @@ single_lmm <- function(imp, y, formula) {
   stats <- data.frame(
     "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
     "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))), # corresponding standard errors
-    "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests
-    # TODO: check pbkrtest:: Kenward-Roger and Satterthwaite Based estimation
-    # TODO: ask Bing: why type 3 and not 2
-    # -log10() ?
-    # TODO: implement stack of interest?
   )
+  # "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests
+  # TODO: check pbkrtest:: Kenward-Roger and Satterthwaite Based estimation
+  # TODO: ask Bing: why type 3 and not 2
+  # -log10() ?
+  # TODO: implement stack of interest?
+
+  # Calculate p-values using t-as-z method
+  if (pvalues){
+    stats$tval <- stats$qhat/stats$se
+    stats$pval <- 2 * (1 - pnorm(abs(stats$tval)))
+  }
+
   # Save row.names (i.e. terms) as a column so these can be grouped later
   stats <- data.frame("term" = row.names(stats), stats, row.names=NULL)
 
@@ -270,7 +283,7 @@ single_lmm <- function(imp, y, formula) {
   # Normally, this would be the number of independent observation minus the
   # number of fitted parameters, but not exactly what is done here.
   # Following the `broom.mixed` package approach, which `mice::pool` relies on
-  df <- df.residual(fit)
+  # df <- df.residual(fit)
 
-  return(list(stats, resid, df))
+  return(list(stats, resid)) # , df
 }

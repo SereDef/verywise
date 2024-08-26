@@ -9,9 +9,13 @@
 #' complete data model, and computes relevant statistics, following Rubin's
 #' rules (Rubin, 1987, p. 76).
 #'
-#' The degrees of freedom calculation for the pooled estimates uses the
-#' Barnard-Rubin adjustment for "small" samples (<= 100.000), see
-#' \code{\link{barnard.rubin}} helper.
+# #' The degrees of freedom calculation for the pooled estimates uses the
+# #' Barnard-Rubin adjustment for "small" samples (<= 100.000), see
+# #' \code{\link{barnard.rubin}} helper.
+#' P-values are estimated using the *t-as-z* approach at the moment. This is known
+#' to the anti-conservative for small sample sizes. However we preferred a
+#' relatively lenient (and computationally inexpensive) solution at this stage.
+#' We will be addressing Type I error mores strictly at the cluster forming stage.
 #'
 #' The residuals of the model are currently simply averaged across imputed
 #' datasets, for lack of a better idea of how to combine them.
@@ -22,7 +26,7 @@
 #' \item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
 #' fixed effect term)
 #' \item \code{"resid"}: a vector of residuals for the given model.
-#' \item \code{"df"}: residual degrees of freedom for the give model.
+# #' \item \code{"df"}: residual degrees of freedom for the give model.
 #' }
 #' @param m : Number of imputed dataset (to avoid recomputing it)
 #'
@@ -42,13 +46,19 @@
 #'
 vw_pool <- function(out_stats, m) {
 
+  if (m == 1) {
+    stats <- append(as.list(out_stats[[1]]), out_stats[[2]])
+    names(stats) <- c("coef","se","t","p","resid")
+    return(stats)
+  }
+
   # Extract estimates, standard errors and p-values
   model_output <- do.call(rbind, lapply(out_stats, `[[`, 1))
 
   # Residual degrees of freedom (assumed equal across imputations)
-  dfcom <- out_stats[[1]][[3]]
+  # dfcom <- out_stats[[1]][[3]]
   # If sample is large enough, do not perform Barnard-Rubin adjustment
-  dfcom <- ifelse(dfcom > 1e+05, Inf, dfcom)
+  # dfcom <- ifelse(dfcom > 1e+05, Inf, dfcom)
 
   # Pool model output
   pooled_stats <- model_output %>%
@@ -63,12 +73,12 @@ vw_pool <- function(out_stats, m) {
       b = stats::var(.data$qhat),
       # Calculate the total variance
       t = .data$ubar + (1 + 1 / .data$m) * .data$b,
-      # Model degrees of freedom
-      dfcom = dfcom,
       # Proportion of total variance due to missingness
       lambda = (1 + 1 / .data$m) * .data$b / .data$t,
+      # Model degrees of freedom
+      # dfcom = dfcom,
       # Barnard-Rubin adjusted degrees of freedom
-      df = barnard.rubin(.data$lambda, .data$m, .data$dfcom),
+      # df = barnard.rubin(.data$lambda, .data$m, .data$dfcom),
       # Relative increase in variance due to non-response
       # riv = (1 + 1 / .data$m) * .data$b / .data$ubar,
       # Fraction of missing information
@@ -82,7 +92,8 @@ vw_pool <- function(out_stats, m) {
   # Pooled test statistics
   tval = coef / se
   # Pooled p-values
-  pval = 2 * pt(-abs(tval), df = pooled_stats$df)
+  pval <- 2 * (1 - pnorm(abs(tval))) # t-as-z approach
+  # pval = 2 * pt(-abs(tval), df = pooled_stats$df)
 
   # Average residuals across imputed datasets
   resid <- as.matrix(colMeans(do.call(rbind, lapply(out_stats, `[[`, 2))))
