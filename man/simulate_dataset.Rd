@@ -8,23 +8,43 @@ simulate_dataset(
   path,
   data_structure = list(cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 10),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 20)),
+  simulate_association = 0.05 * pheno$age,
+  overwrite = TRUE,
   seed = 31081996,
   ...
 )
 }
 \arguments{
-\item{path}{: Where should the dataset be created.}
+\item{path}{Where should the dataset be created.}
 
-\item{data_structure}{: A nested list, with top level determining the cohort/
+\item{data_structure}{A nested list, with top level determining the cohort/
 dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
+vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
-\item{seed}{: (default = 31081996) seed used for randomization.}
+\item{simulate_association}{(default = NULL) simulate an association in the
+format \code{beta * variable}. This is by default isolated to three regions:
+the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 
-\item{...}{: Other arguments to be passed to \code{\link{simulate_freesurfer_data}}}
+\item{overwrite}{(default = TRUE) whether phenotype file should be overwitten.}
+
+\item{seed}{(default = 31081996) seed used for randomization.}
+
+\item{...}{Other arguments to be passed to \code{\link{simulate_freesurfer_data}}}
 }
 \description{
 Simulating a dataset with multiple cohorts/sites and multiple
-timepoints/sessions.
+timepoints/sessions. This generates:
+\itemize{
+\item a \code{pheno} data.frame with participant sex and age mock-data, saved
+as "phenotype.csv" file in the \code{path} directory.
+\item the FreeSurfer data saved as .mgh files organised in a verywise folder
+structure.
+}
+}
+\seealso{
+\code{\link{simulate_freesurfer_data}}, \code{\link{simulate_long_pheno_data}}
+}
+\author{
+Serena Defina, 2024.
 }

@@ -13,7 +13,6 @@ elements:
 \item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
 fixed effect term)
 \item \code{"resid"}: a vector of residuals for the given model.
-\item \code{"df"}: residual degrees of freedom for the give model.
 }}
 
 \item{m}{: Number of imputed dataset (to avoid recomputing it)}
@@ -29,9 +28,10 @@ The function was largely taken from \code{mice::pool()} and
 complete data model, and computes relevant statistics, following Rubin's
 rules (Rubin, 1987, p. 76).
 
-The degrees of freedom calculation for the pooled estimates uses the
-Barnard-Rubin adjustment for "small" samples (<= 100.000), see
-\code{\link{barnard.rubin}} helper.
+P-values are estimated using the *t-as-z* approach at the moment. This is known
+to the anti-conservative for small sample sizes. However we preferred a
+relatively lenient (and computationally inexpensive) solution at this stage.
+We will be addressing Type I error mores strictly at the cluster forming stage.
 
 The residuals of the model are currently simply averaged across imputed
 datasets, for lack of a better idea of how to combine them.

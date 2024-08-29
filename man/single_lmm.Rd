@@ -4,7 +4,7 @@
 \alias{single_lmm}
 \title{Run a single \code{lme4::lmer} model and extract stats}
 \usage{
-single_lmm(imp, y, formula)
+single_lmm(imp, y, formula, pvalues = TRUE)
 }
 \arguments{
 \item{imp}{: The phenotype dataset (in verywise format).}
@@ -13,6 +13,9 @@ single_lmm(imp, y, formula)
 supersubject matrix).}
 
 \item{formula}{: R formula describing the linear mixed model (using \code{lme4} notation)}
+
+\item{pvalues}{: (default : TRUE) whether to include p-values computed using the
+*t-as-z* approach (see Details).}
 }
 \value{
 A list with two elements:
@@ -20,7 +23,6 @@ A list with two elements:
 \item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
 fixed effect term)
 \item \code{"resid"}: a vector of residuals for the given model.
-\item \code{"df"}: residual degrees of freedom for the give model.
 }
 }
 \description{
@@ -28,5 +30,8 @@ Run a single \code{lme4::lmer} model and extract stats
 }
 \details{
 No additional parameters are currently passed to the \code{lme4::lmer} call
-P-values are estimated using \code{car::Anova(., type = 3)} at the moment
+P-values are estimated using the *t-as-z* approach at the moment. This is known
+to the anti-conservative for small sample sizes. However we preferred a
+relatively lenient (and computationally inexpensive) solution at this stage.
+We will be addressing Type I error mores strictly at the cluster forming stage.
 }

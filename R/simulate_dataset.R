@@ -3,17 +3,24 @@
 #'
 #' @description
 #' Simulating a dataset with multiple cohorts/sites and multiple
-#' timepoints/sessions.
+#' timepoints/sessions. This generates:
+#' \itemize{
+#' \item a \code{pheno} data.frame with participant sex and age mock-data, saved
+#' as "phenotype.csv" file in the \code{path} directory.
+#' \item the FreeSurfer data saved as .mgh files organised in a verywise folder
+#' structure.
+#' }
 #'
-#' @param path : Where should the dataset be created.
-#' @param data_structure : A nested list, with top level determining the cohort/
-#' dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-#' vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
-#' the number of subjects.
-#' @param seed : (default = 31081996) seed used for randomization.
-#' @param ... : Other arguments to be passed to \code{\link{simulate_freesurfer_data}}
+#' @param path Where should the dataset be created.
+#' @param overwrite (default = TRUE) whether phenotype file should be overwitten.
+#' @param ... Other arguments to be passed to \code{\link{simulate_freesurfer_data}}
+#' @inheritParams simulate_freesurfer_data
 #'
-#' @importFrom utils write.csv
+#' @seealso
+#' \code{\link{simulate_freesurfer_data}}, \code{\link{simulate_long_pheno_data}}
+#'
+#' @author Serena Defina, 2024.
+#'
 #' @export
 #'
 simulate_dataset <- function(path,
@@ -27,27 +34,45 @@ simulate_dataset <- function(path,
                                  "n_subjects" = 20
                                )
                              ),
+                             simulate_association =  0.05 * pheno$age,
+                             overwrite = TRUE,
                              seed = 31081996,
                              ...) {
+
   # Create directory in path if it does not exist
   if (!dir.exists(path)) dir.create(path)
 
-  # Simulate phenotype data
-  pheno <- simulate_long_pheno_data(
-    data_structure = data_structure,
-    seed = seed
-  )
-  # TODO: make this also a multiple imputation object for testing
-  utils::write.csv(pheno,
-    file.path(path, "phenotype.csv"),
-    row.names = FALSE
-  )
+  pheno_file_path <- file.path(path, "phenotype.csv")
+
+  if (!overwrite & file.exists(pheno_file_path)) {
+    message("Re-using existing phenotype file created on: ",
+            file.info(pheno_file_path)[,"mtime"])
+    pheno <- utils::read.csv(pheno_file_path)
+
+  } else {
+    if (overwrite & file.exists(pheno_file_path)) {
+      message("Overwriting existing phenotype file created on: ",
+            file.info(pheno_file_path)[,"mtime"])
+    }
+
+    # Simulate phenotype data
+    pheno <- simulate_long_pheno_data(
+      data_structure = data_structure,
+      seed = seed
+    )
+
+    # TODO: make this also a multiple imputation object for testing
+    utils::write.csv(pheno,
+                     file = pheno_file_path,
+                     row.names = FALSE
+    )
+  }
 
   # Simulate FreeSurfer data to match
   simulate_freesurfer_data(
     path = path,
     data_structure = data_structure,
-    simulate_association = 0.05 * pheno$age,
+    simulate_association = simulate_association,
     seed = seed,
     ...
   )
@@ -58,19 +83,13 @@ simulate_dataset <- function(path,
 #' Simulate phenotype data
 #'
 #' @description
-#' Simulating phenotype data for multiple cohorts/sites and multiple
-#' timepoints/sessions.
+#' Simulating phenotype data (in the long format) for multiple cohorts/sites and
+#' multiple timepoints/sessions.
 #'
-#' @param data_structure : A nested list, with top level determining the cohort/
-#' dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-#' vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
-#' the number of subjects.
-#' @param seed : (default = 31081996) seed used for randomization.
+#' @inheritParams simulate_freesurfer_data
 #'
 #' @return A dataframe (in long format) with id, sex and age data.
 #'
-#' @importFrom stats rnorm
-#' @importFrom dplyr bind_rows
 #' @author Serena Defina, 2024.
 #'
 #' @export
@@ -86,6 +105,7 @@ simulate_long_pheno_data <- function(data_structure = list(
                                        )
                                      ),
                                      seed = 31081996) {
+
   cat("Creating phenotype file...\n")
   set.seed(seed)
 
@@ -114,7 +134,7 @@ simulate_long_pheno_data <- function(data_structure = list(
           id = baseline$id,
           time = sessions[s],
           sex = baseline$sex,
-          age = round(baseline$age + rnorm(n_subjects, mean = s - 1, sd = 0.3))
+          age = round(baseline$age + stats::rnorm(n_subjects, mean = s - 1, sd = 0.3))
         )
         t1 <- rbind(t1, t2)
       }
@@ -144,26 +164,26 @@ simulate_long_pheno_data <- function(data_structure = list(
 #' by calling FreeSurfer recon_all command. This follows the folder names "sub-", participant ID,
 #' "_ses-", session ID.
 #'
-#' @param path : Where should the data be created.
-#' @param data_structure : A nested list, with top level determining the cohort/
+#' @param path Where should the data be created.
+#' @param data_structure A nested list, with top level determining the cohort/
 #' dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-#' vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
+#' vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 #' the number of subjects.
-#' @param vw_resolution : (default = 163842) data dimension (how many vertices)
-#' @param measure : (default = "thickness"), measure, used in file names.
-#' @param hemi : (default = "lh") hemisphere, used in file names.
-#' @param fwhmc : (default = "fwhm10") full-width half maximum value, used in
+#' @param vw_resolution (default = 163842) data dimension (how many vertices)
+#' @param measure (default = "thickness"), measure, used in file names.
+#' @param hemi (default = "lh") hemisphere, used in file names.
+#' @param fwhmc (default = "fwhm10") full-width half maximum value, used in
 #' file names.
-#' @param target : (default = "fsaverage"), used in file names.
-#' @param vw_mean : (default = 6.5) mean of the simulated vertex-wise data.
-#' @param vw_sd : (default = 0.5) standard deviation of the simulated vertex-wise data.
-#' @param simulate_association : (default = NULL) simulate an association in the
+#' @param target (default = "fsaverage"), used in file names.
+#' @param vw_mean (default = 6.5) mean of the simulated vertex-wise data.
+#' @param vw_sd (default = 0.5) standard deviation of the simulated vertex-wise data.
+#' @param simulate_association (default = NULL) simulate an association in the
 #' format \code{beta * variable}. This is by default isolated to three regions:
 #' the superior temporal gyrus, precentral gyrus and middle temporal gyrus.
-#' @param seed : (default = 31081996) seed used for randomization.
+#' @param seed (default = 31081996) seed used for randomization.
 #'
-#' @importFrom stats rnorm
 #' @author Serena Defina, 2024.
+#'
 #' @export
 #'
 simulate_freesurfer_data <- function(path,

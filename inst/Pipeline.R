@@ -3,12 +3,18 @@ library(verywise)
 # Simulate FreeSurfer and phenotype dataset
 # simulate_data(subj_dir)
 
+
+remove.packages("verywise")
+.rs.restartR()
+devtools::install()
+library(verywise)
+library(profvis)
+
 # Run analysis
-out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-           # pheno = "/Users/Serena/Desktop/Infant2adult/Package/try/phenotype.csv",
-           subj_dir = "/Users/Serena/Desktop/Infant2adult/Package/try",
-           hemi = "lh",
-           n_cores = 1)
+profvis(out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                          subj_dir = "/Users/Serena/Desktop/Infant2adult/Package/try",
+                          hemi = "lh",
+                          n_cores = 10))
 
 # ------------------------------------------------------------------------------
 # margs <- c(quote(lme4::lmer()), # qdecr_decon(lme4::lmer()), # ??

@@ -11,19 +11,19 @@ simulate_long_pheno_data(
 )
 }
 \arguments{
-\item{data_structure}{: A nested list, with top level determining the cohort/
+\item{data_structure}{A nested list, with top level determining the cohort/
 dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
+vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
-\item{seed}{: (default = 31081996) seed used for randomization.}
+\item{seed}{(default = 31081996) seed used for randomization.}
 }
 \value{
 A dataframe (in long format) with id, sex and age data.
 }
 \description{
-Simulating phenotype data for multiple cohorts/sites and multiple
-timepoints/sessions.
+Simulating phenotype data (in the long format) for multiple cohorts/sites and
+multiple timepoints/sessions.
 }
 \author{
 Serena Defina, 2024.

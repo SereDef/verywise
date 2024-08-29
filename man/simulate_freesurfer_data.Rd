@@ -20,33 +20,33 @@ simulate_freesurfer_data(
 )
 }
 \arguments{
-\item{path}{: Where should the data be created.}
+\item{path}{Where should the data be created.}
 
-\item{data_structure}{: A nested list, with top level determining the cohort/
+\item{data_structure}{A nested list, with top level determining the cohort/
 dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: aninteger indicating
+vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
-\item{vw_resolution}{: (default = 163842) data dimension (how many vertices)}
+\item{vw_resolution}{(default = 163842) data dimension (how many vertices)}
 
-\item{measure}{: (default = "thickness"), measure, used in file names.}
+\item{measure}{(default = "thickness"), measure, used in file names.}
 
-\item{hemi}{: (default = "lh") hemisphere, used in file names.}
+\item{hemi}{(default = "lh") hemisphere, used in file names.}
 
-\item{fwhmc}{: (default = "fwhm10") full-width half maximum value, used in
+\item{fwhmc}{(default = "fwhm10") full-width half maximum value, used in
 file names.}
 
-\item{target}{: (default = "fsaverage"), used in file names.}
+\item{target}{(default = "fsaverage"), used in file names.}
 
-\item{vw_mean}{: (default = 6.5) mean of the simulated vertex-wise data.}
+\item{vw_mean}{(default = 6.5) mean of the simulated vertex-wise data.}
 
-\item{vw_sd}{: (default = 0.5) standard deviation of the simulated vertex-wise data.}
+\item{vw_sd}{(default = 0.5) standard deviation of the simulated vertex-wise data.}
 
-\item{simulate_association}{: (default = NULL) simulate an association in the
+\item{simulate_association}{(default = NULL) simulate an association in the
 format \code{beta * variable}. This is by default isolated to three regions:
 the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 
-\item{seed}{: (default = 31081996) seed used for randomization.}
+\item{seed}{(default = 31081996) seed used for randomization.}
 }
 \description{
 Simulating FreeSurfer data for multiple cohorts/sites and multiple
