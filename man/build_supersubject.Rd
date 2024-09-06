@@ -14,7 +14,6 @@ build_supersubject(
   fwhmc = "fwhm10",
   target = "fsaverage",
   backing = file.path(subj_dir, paste0(hemi, ".", measure, "supersubject.bk")),
-  n_cores = 1,
   mask = TRUE,
   save_rds = FALSE,
   verbose = TRUE
@@ -40,8 +39,6 @@ to include.}
 \item{target}{: (default = "fsaverage"), used to identify files.}
 
 \item{backing}{: (default = \code{subj_dir}) location to save the matrix \code{backingfile}.}
-
-\item{n_cores}{: (default = 1) number of cores for parallel processing.}
 
 \item{mask}{: (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
 cortical map.}

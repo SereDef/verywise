@@ -10,6 +10,30 @@ devtools::install()
 library(verywise)
 library(profvis)
 
+# Check number of cores
+if (requireNamespace("parallelly", quietly = TRUE)){
+  if (n_cores > parallelly::availableCores()) {
+    warning("You only have access to ", parallelly::availableCores(), " cores. ",
+            parallelly::availableCores(omit = 1), " will be used.")
+    n_cores <- parallelly::availableCores(omit = 1)
+  } else if (n_cores >= parallelly::availableCores(omit = 1)) {
+    warning("You are using ", n_cores, " cores, but you only have ",
+            parallelly::availableCores(), " in total, other processes may get slower.")
+  }
+}
+
+future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
+# future::plan(
+#   list(
+#     future::tweak(
+#       future::multisession,
+#       workers = 2),
+#     future::tweak(
+#       future::multisession,
+#       workers = 4)
+#   )
+# ) # 8 cores in total
+
 # Run analysis
 profvis(out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
                           subj_dir = "/Users/Serena/Desktop/Infant2adult/Package/try",

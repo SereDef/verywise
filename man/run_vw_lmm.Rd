@@ -8,13 +8,9 @@ run_vw_lmm(
   formula,
   subj_dir,
   pheno = NULL,
-  hemi = "lh",
-  measure = gsub("vw_", "", all.vars(formula)[1]),
-  fwhm = 10,
-  target = "fsaverage",
-  n_cores = 1,
+  hemi = c("both", "lh", "rh"),
   seed = 3108,
-  model = "lme4::lmer"
+  ...
 )
 }
 \arguments{
@@ -24,20 +20,19 @@ run_vw_lmm(
 
 \item{pheno}{: the phenotype data or a path to the data file.}
 
-\item{hemi}{: (default = "lh") hemisphere.}
-
-\item{measure}{: (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
-this should be the same as specified in formula}
-
-\item{fwhm}{: (default = 10) full-width half maximum value}
-
-\item{target}{: (default = "fsaverage") template on which to register vertex-wise data.}
-
-\item{n_cores}{: (default = 1) number of cores for parallel processing.}
+\item{hemi}{: (default = "both") which hemispheres to run.}
 
 \item{seed}{: (default = 3108) random seed.}
 
-\item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
+\item{...}{
+  Arguments passed on to \code{\link[=hemi_vw_lmm]{hemi_vw_lmm}}
+  \describe{
+    \item{\code{measure}}{: (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
+this should be the same as specified in formula}
+    \item{\code{fwhm}}{: (default = 10) full-width half maximum value}
+    \item{\code{target}}{: (default = "fsaverage") template on which to register vertex-wise data.}
+    \item{\code{model}}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
+  }}
 }
 \value{
 A list of file-backed matrices containing pooled coefficients, SEs,
@@ -45,7 +40,7 @@ t- and p- values and residuals.
 }
 \description{
 This is is the main function in v0 of \code{verywise}.
-It runs the \code{\link{single_lmm}} function across vertices in a single hemisphere.
+It runs the \code{\link{single_lmm}} function across all vertices.
 }
 \author{
 Serena Defina, 2024.

@@ -14,7 +14,6 @@
 #' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
 #' @param target : (default = "fsaverage"), used to identify files.
 #' @param backing : (default = \code{subj_dir}) location to save the matrix \code{backingfile}.
-#' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param mask : (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
 #' cortical map.
 #' @param save_rds : (default = FALSE) save the supersubject file metadata for re-use
@@ -45,7 +44,6 @@ build_supersubject <- function(subj_dir,
                                    "supersubject.bk"
                                  )
                                ),
-                               n_cores = 1,
                                mask = TRUE,
                                save_rds = FALSE, # dir_tmp,
                                verbose = TRUE) {
@@ -104,25 +102,25 @@ build_supersubject <- function(subj_dir,
     backingfile = gsub(".bk$", "", backing),
     create_bk = !file.exists(backing)
   )
+  message("Building super-subject...\n")
 
-  # Set up parallel processing
-  # TODO: use bigparallelr instead?
-  cl <- if (verbose) parallel::makeForkCluster(n_cores, outfile = "") else parallel::makeForkCluster(n_cores)
-  doParallel::registerDoParallel(cl)
-  # utils::capture.output(pb <- utils::txtProgressBar(0, n_files, style = 3), file = "/dev/null")
-  i <- NULL
-  foreach::foreach(i = seq_len(n_files)) %dopar% {
-    # utils::setTxtProgressBar(pb, i)
-    ss[i, ] <- load.mgh(mgh_files[i])$x[cortex] # Populate row with participant info
-    NULL # Don't want to return anything
+  if (requireNamespace("progressr", quietly = TRUE)) {
+    progressr::handlers(global = TRUE)
+    p <- progressr::progressor(steps = n_files)
   }
-  parallel::stopCluster(cl)
+
+  # Populate rows with participant info
+  furrr::future_walk(seq_len(n_files), function(vertex) {
+
+    if (requireNamespace("progressr", quietly = TRUE)) { p() }
+
+    ss[vertex, ] <- load.mgh(mgh_files[vertex])$x[cortex]
+
+  },
+  .options = furrr::furrr_options(seed = TRUE))
+  # .progress = TRUE)
 
   if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
-
-  # empty_rows <- fbm_row_is_0(ss, n_cores = n_cores)
-  # if (any(empty_rows)) message("Additionally removing ", sum(empty_rows), " vertices with constant 0 values.")
-  # ss <- ss[cortex & !empty_rows,]
 
   # Save output
   if (save_rds) {
