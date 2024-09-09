@@ -1,9 +1,25 @@
-library(verywise)
+subj_dir = "/Users/Serena/Desktop/Infant2adult/tinydata"
+
+# library(verywise)
 
 # Simulate FreeSurfer and phenotype dataset
-# simulate_data(subj_dir)
 
+# n_subs = 25 # * 2 cohorts * 2 timepoints * 2 hemispheres = 200 files
+# n_vert = 100
+#
+# data_structure = list("cohort1" = list("sessions" = c("01",'02'), "n_subjects" = n_subs),
+#                       "cohort2" = list("sessions" = c("01",'02'), "n_subjects" = n_subs))
+#
+# simulate_dataset(path = subj_dir,
+#                  data_structure = data_structure,
+#                  vw_resolution = n_vert,
+#                  hemi = "lh")
+# simulate_dataset(path = subj_dir,
+#                  data_structure = data_structure,
+#                  vw_resolution = n_vert,
+#                  hemi = "rh")
 
+# ==============================================================================
 remove.packages("verywise")
 .rs.restartR()
 devtools::install()
@@ -11,34 +27,46 @@ library(verywise)
 library(profvis)
 
 # Check number of cores
-if (requireNamespace("parallelly", quietly = TRUE)){
-  if (n_cores > parallelly::availableCores()) {
-    warning("You only have access to ", parallelly::availableCores(), " cores. ",
-            parallelly::availableCores(omit = 1), " will be used.")
-    n_cores <- parallelly::availableCores(omit = 1)
-  } else if (n_cores >= parallelly::availableCores(omit = 1)) {
-    warning("You are using ", n_cores, " cores, but you only have ",
-            parallelly::availableCores(), " in total, other processes may get slower.")
-  }
-}
+# if (requireNamespace("parallelly", quietly = TRUE)){
+#   if (n_cores > parallelly::availableCores()) {
+#     warning("You only have access to ", parallelly::availableCores(), " cores. ",
+#             parallelly::availableCores(omit = 1), " will be used.")
+#     n_cores <- parallelly::availableCores(omit = 1)
+#   } else if (n_cores >= parallelly::availableCores(omit = 1)) {
+#     warning("You are using ", n_cores, " cores, but you only have ",
+#             parallelly::availableCores(), " in total, other processes may get slower.")
+#   }
+# }
+#
 
-future::plan("multisession", workers = n_cores) # Should let the user do it instead..?
+future::plan("multisession", workers = 8) # Should let the user do it instead..?
 # future::plan(
 #   list(
 #     future::tweak(
-#       future::multisession,
+#       future::multicore,
 #       workers = 2),
 #     future::tweak(
 #       future::multisession,
-#       workers = 4)
+#       workers = 2)
 #   )
 # ) # 8 cores in total
 
+# pheno = read.csv(file.path(subj_dir, "phenotype.csv"))
+#
+# data_list = imp2list(pheno)
+# m = length(data_list)
+#
+# out_stats <- lapply(data_list, single_lmm, y = rnorm(nrow(pheno), 6.5, 0.3),
+#                     formula = vw_thickness ~ sex * age + site + (1|id),
+#                     pvalues = (m == 1))
+# verywise:::vw_pool(out_stats, 1)
+
 # Run analysis
-profvis(out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-                          subj_dir = "/Users/Serena/Desktop/Infant2adult/Package/try",
-                          hemi = "lh",
-                          n_cores = 10))
+out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                  subj_dir = subj_dir,
+                  # pheno = pheno,
+                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
+)
 
 # ------------------------------------------------------------------------------
 # margs <- c(quote(lme4::lmer()), # qdecr_decon(lme4::lmer()), # ??

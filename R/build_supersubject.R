@@ -55,7 +55,8 @@ build_supersubject <- function(subj_dir,
   # Select only the ids in phenotype dataframe
   files_list <- files_list[unlist(lapply(folder_id, grep, files_list))]
   # Make sure the order of ids is the same as in the phenotype dataframe
-  if (!identical(folder_id, gsub(paste0(subj_dir, "/"), "", files_list))) {
+  if (!identical(folder_id, gsub(paste0(normalizePath(subj_dir), "/"), "",
+                                 files_list))) {
     warning("Participant order is not correct!")
   }
 
@@ -120,7 +121,7 @@ build_supersubject <- function(subj_dir,
   .options = furrr::furrr_options(seed = TRUE),
   .progress = TRUE)
 
-  if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
+  # if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
 
   # Save output
   if (save_rds) {

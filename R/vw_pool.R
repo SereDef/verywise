@@ -47,13 +47,15 @@
 vw_pool <- function(out_stats, m) {
 
   if (m == 1) {
-    stats <- append(as.list(out_stats[[1]]), out_stats[[2]])
+    # Just reformat output (no pooling needed)
+    stats <- append(as.list(out_stats[[1]]$stats[-1]), # only values (no term names)
+                    list("r" = as.vector(out_stats[[1]]$resid)))
     names(stats) <- c("coef","se","t","p","resid")
     return(stats)
   }
 
   # Extract estimates, standard errors and p-values
-  model_output <- do.call(rbind, lapply(out_stats, `[[`, 1))
+  model_output <- do.call(rbind, lapply(out_stats, `[[`, 1)) # stats data.frame
 
   # Residual degrees of freedom (assumed equal across imputations)
   # dfcom <- out_stats[[1]][[3]]

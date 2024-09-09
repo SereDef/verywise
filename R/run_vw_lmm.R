@@ -48,8 +48,8 @@ run_vw_lmm <- function(formula, # model formula
   set.seed(seed)
 
   if (hemi == "both") {
-    furrr::future_walk(c("lh","rh"), function(h) {
-      message("Hemisphere: ", h, "\n")
+    out <- furrr::future_map(c("lh","rh"), function(h) {
+
       hemi_vw_lmm(formula = formula,
                   subj_dir = subj_dir,
                   data_list = data_list,
@@ -59,14 +59,15 @@ run_vw_lmm <- function(formula, # model formula
       .options = furrr::furrr_options(seed = TRUE))
 
   } else {
-    hemi_vw_lmm(formula = formula,
+    out <- hemi_vw_lmm(formula = formula,
                 subj_dir = subj_dir,
                 data_list = data_list,
                 hemi = hemi,
                 seed = seed,
                 ...)
   }
-
+  message("All done!")
+  out
 }
 
 #' @title
@@ -127,7 +128,7 @@ hemi_vw_lmm <- function(formula, # model formula
       fwhmc = paste0("fwhm", fwhm),
       target = target,
       mask = apply_cortical_mask,
-      save_rds = TRUE
+      save_rds = FALSE
     )
   }
 
@@ -205,7 +206,6 @@ hemi_vw_lmm <- function(formula, # model formula
 
     y <- ss[, vertex]
 
-    message ("ok now")
     # Loop through imputed datasets and run analyses
     out_stats <- lapply(data_list, single_lmm, y = y, formula = formula,
                         pvalues = (m == 1))
@@ -219,6 +219,7 @@ hemi_vw_lmm <- function(formula, # model formula
     t_vw[, vertex] <<- pooled_stats$t
     p_vw[, vertex] <<- -1 * log10(pooled_stats$p)
     r_vw[, vertex] <<- pooled_stats$resid # ("+", res) / length(res)
+
   },
   .options = furrr::furrr_options(seed = TRUE),
   .progress = TRUE)
@@ -226,7 +227,6 @@ hemi_vw_lmm <- function(formula, # model formula
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
-  message("All done!")
   return(out)
 }
 
@@ -269,7 +269,6 @@ single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Add (vertex) outcome to (single) dataset
   imp[all.vars(formula)[1]] <- y
 
-  message("running this")
   # Fit linear mixed model using `lme4::lmer`
   fit <- suppressMessages(lmer(formula = formula, data = imp))
 
@@ -280,8 +279,9 @@ single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Extract estimates, standard errors and p-values
   stats <- data.frame(
     "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
-    "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))), # corresponding standard errors
+    "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))) # corresponding standard errors
   )
+
   # "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests
   # TODO: check pbkrtest:: Kenward-Roger and Satterthwaite Based estimation
   # TODO: ask Bing: why type 3 and not 2
@@ -306,5 +306,5 @@ single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Following the `broom.mixed` package approach, which `mice::pool` relies on
   # df <- df.residual(fit)
 
-  return(list(stats, resid)) # , df
+ return(list("stats" = stats, "resid" = resid)) # , df
 }

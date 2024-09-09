@@ -13,7 +13,7 @@ build_supersubject(
   hemi = "lh",
   fwhmc = "fwhm10",
   target = "fsaverage",
-  backing = file.path(subj_dir, paste0(hemi, ".", measure, "supersubject.bk")),
+  backing = file.path(subj_dir, paste0(hemi, ".", measure, ".supersubject.bk")),
   mask = TRUE,
   save_rds = FALSE,
   verbose = TRUE
