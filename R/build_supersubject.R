@@ -41,7 +41,7 @@ build_supersubject <- function(subj_dir,
                                  subj_dir,
                                  paste0(
                                    hemi, ".", measure,
-                                   "supersubject.bk"
+                                   ".supersubject.bk"
                                  )
                                ),
                                mask = TRUE,
@@ -94,7 +94,7 @@ build_supersubject <- function(subj_dir,
     cortex <- rep(TRUE, n_verts)
   }
 
-  file.remove(backing) # TODO: TMP
+  if (file.exists(backing)) file.remove(backing) # TODO: TMP
   # Initiate Filebacked Big Matrix
   # Change this: so i can access the data column by column and not row by row
   ss <- bigstatsr::FBM(
