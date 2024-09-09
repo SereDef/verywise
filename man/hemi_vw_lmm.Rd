@@ -13,6 +13,7 @@ hemi_vw_lmm(
   fwhm = 10,
   target = "fsaverage",
   seed = 3108,
+  apply_cortical_mask = TRUE,
   model = "lme4::lmer"
 )
 }
@@ -33,6 +34,8 @@ this should be the same as specified in formula}
 \item{target}{: (default = "fsaverage") template on which to register vertex-wise data.}
 
 \item{seed}{: (default = 3108) random seed.}
+
+\item{apply_cortical_mask}{: (default = TRUE) remove vertices that are not on the cortex.}
 
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
 }

@@ -42,7 +42,7 @@ run_vw_lmm <- function(formula, # model formula
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno)
 
-  hemi <- match.call(hemi)
+  hemi <- match.arg(hemi)
 
   set.seed(seed)
 
@@ -83,6 +83,7 @@ run_vw_lmm <- function(formula, # model formula
 #' @param fwhm : (default = 10) full-width half maximum value
 #' @param target : (default = "fsaverage") template on which to register vertex-wise data.
 #' @param seed : (default = 3108) random seed.
+#' @param apply_cortical_mask : (default = TRUE) remove vertices that are not on the cortex.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
@@ -100,6 +101,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         fwhm = 10,
                         target = "fsaverage",
                         seed = 3108,
+                        apply_cortical_mask = TRUE,
                         model = "lme4::lmer" # "stats::lm"
 ) {
 
@@ -124,7 +126,7 @@ hemi_vw_lmm <- function(formula, # model formula
       hemi = hemi,
       fwhmc = paste0("fwhm", fwhm),
       target = target,
-      mask = TRUE,
+      mask = apply_cortical_mask,
       save_rds = TRUE
     )
   }
