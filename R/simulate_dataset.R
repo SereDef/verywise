@@ -206,7 +206,7 @@ simulate_freesurfer_data <- function(path,
                                      vw_sd = 0.5,
                                      simulate_association = NULL,
                                      seed = 31081996) {
-  cat("Creating FreeSurfer dataset...\n")
+  cat("Creating FreeSurfer dataset (", hemi,") ...\n")
   set.seed(seed)
 
   # TODO: check path exists and create directory if not
