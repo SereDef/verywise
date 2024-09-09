@@ -118,7 +118,6 @@ hemi_vw_lmm <- function(formula, # model formula
     ss <- bigstatsr::big_attach(ss_file_name)
 
   } else {
-    message("Building super-subject (", hemi, ") ...")
 
     ss <- build_supersubject(subj_dir,
       folder_id = data_list[[1]]$folder_id,

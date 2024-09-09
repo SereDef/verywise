@@ -102,10 +102,10 @@ build_supersubject <- function(subj_dir,
     backingfile = gsub(".bk$", "", backing),
     create_bk = !file.exists(backing)
   )
-  message("Building super-subject...\n")
+  message("Building super-subject (", hemi, ") ...")
 
   if (requireNamespace("progressr", quietly = TRUE)) {
-    progressr::handlers(global = TRUE)
+    # progressr::handlers(global = TRUE)
     p <- progressr::progressor(steps = n_files)
   }
 
