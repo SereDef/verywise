@@ -104,21 +104,21 @@ build_supersubject <- function(subj_dir,
   )
   message("Building super-subject (", hemi, ") ...")
 
-  if (requireNamespace("progressr", quietly = TRUE)) {
-    # progressr::handlers(global = TRUE)
-    p <- progressr::progressor(steps = n_files)
-  }
+  # if (requireNamespace("progressr", quietly = TRUE)) {
+  #   # progressr::handlers(global = TRUE)
+  #   p <- progressr::progressor(steps = n_files)
+  # }
 
   # Populate rows with participant info
   furrr::future_walk(seq_len(n_files), function(vertex) {
 
-    if (requireNamespace("progressr", quietly = TRUE)) { p() }
+    # if (requireNamespace("progressr", quietly = TRUE)) { p() }
 
     ss[vertex, ] <- load.mgh(mgh_files[vertex])$x[cortex]
 
   },
-  .options = furrr::furrr_options(seed = TRUE))
-  # .progress = TRUE)
+  .options = furrr::furrr_options(seed = TRUE),
+  .progress = TRUE)
 
   if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
 

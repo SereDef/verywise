@@ -109,7 +109,7 @@ hemi_vw_lmm <- function(formula, # model formula
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(subj_dir, paste0(
     hemi, ".", measure,
-    "supersubject.rds"
+    ".supersubject.rds"
   ))
 
   if (file.exists(ss_file_name)) {
@@ -188,10 +188,10 @@ hemi_vw_lmm <- function(formula, # model formula
   # Parallel analyses ==========================================================
   message("Running analyses...\n")
 
-  if (requireNamespace("progressr", quietly = TRUE)) {
-    # progressr::handlers(global = TRUE)
-    p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
-  }
+  # if (requireNamespace("progressr", quietly = TRUE)) {
+  #   # progressr::handlers(global = TRUE)
+  #   p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
+  # }
 
   # Don't do chucking to avoid nested parallel processes that would require
   # more involved future::plan spec
@@ -200,7 +200,7 @@ hemi_vw_lmm <- function(formula, # model formula
 
   furrr::future_walk(good_verts, function(vertex) {
 
-    if (requireNamespace("progressr", quietly = TRUE)) { p() }
+    # if (requireNamespace("progressr", quietly = TRUE)) { p() }
     # Fetch brain data
 
     y <- ss[, vertex]
@@ -219,8 +219,8 @@ hemi_vw_lmm <- function(formula, # model formula
     p_vw[, vertex] <<- -1 * log10(pooled_stats$p)
     r_vw[, vertex] <<- pooled_stats$resid # ("+", res) / length(res)
   },
-  .options = furrr::furrr_options(seed = TRUE))
-  # .progress = TRUE)
+  .options = furrr::furrr_options(seed = TRUE),
+  .progress = TRUE)
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
