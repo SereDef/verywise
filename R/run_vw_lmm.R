@@ -31,6 +31,7 @@ run_vw_lmm <- function(formula, # model formula
     if (exists("pheno", mode="list", envir=globalenv())) {
       pheno <- get("pheno", envir = globalenv())
     } else if (file.exists(file.path(subj_dir, "phenotype.csv"))){
+      message("Reading phenotype file from subject directory folder.")
       pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
     } else {
       stop("Provide phenotype data pls.")
