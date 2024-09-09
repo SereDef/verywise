@@ -205,6 +205,7 @@ hemi_vw_lmm <- function(formula, # model formula
 
     y <- ss[, vertex]
 
+    message ("ok now")
     # Loop through imputed datasets and run analyses
     out_stats <- lapply(data_list, single_lmm, y = y, formula = formula,
                         pvalues = (m == 1))
@@ -268,6 +269,7 @@ single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Add (vertex) outcome to (single) dataset
   imp[all.vars(formula)[1]] <- y
 
+  message("running this")
   # Fit linear mixed model using `lme4::lmer`
   fit <- suppressMessages(lmer(formula = formula, data = imp))
 
