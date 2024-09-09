@@ -189,7 +189,7 @@ hemi_vw_lmm <- function(formula, # model formula
   message("Running analyses...\n")
 
   if (requireNamespace("progressr", quietly = TRUE)) {
-    progressr::handlers(global = TRUE)
+    # progressr::handlers(global = TRUE)
     p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
   }
 
