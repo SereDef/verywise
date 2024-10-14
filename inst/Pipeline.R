@@ -1,10 +1,9 @@
-subj_dir = "/Users/Serena/Desktop/Infant2adult/tinydata"
-
 # library(verywise)
-
-# Simulate FreeSurfer and phenotype dataset
-
-# n_subs = 25 # * 2 cohorts * 2 timepoints * 2 hemispheres = 200 files
+#
+# # Simulate FreeSurfer and phenotype dataset
+# subj_dir = "/Users/Serena/Desktop/Packages/verywise/inst/extdata/example_data"
+#
+# n_subs = 5 # * 2 cohorts * 2 timepoints * 2 hemispheres = 40 files
 # n_vert = 100
 #
 # data_structure = list("cohort1" = list("sessions" = c("01",'02'), "n_subjects" = n_subs),

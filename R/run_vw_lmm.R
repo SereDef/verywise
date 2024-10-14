@@ -221,6 +221,25 @@ hemi_vw_lmm <- function(formula, # model formula
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
+  # ## Part 5: Post-processing
+  # vw$post <- list()
+  #
+  # # Some stack stuff
+  # vw$stack <- qdecr_make_stack(vw, vw$model$so[1:4], mcz_thr)
+  #
+  # # Split all coefficients into separate files and save them in the final directory
+  # message2("Converting coefficients, p-values, etc to .mgh format", verbose = verbose)
+  # qdecr_move(vw$results[1:4], vw$stack, vw$model$so[1:4])
+  #
+  # # Save out the residuals
+  # message2("Converting residual data to .mgh format", verbose = verbose)
+  # vw$post$eres <- sub(".bk$", ".mgh", vw$results$residuals$backingfile)
+  # bsfbm2mgh(vw$results$residuals, vw$post$eres)
+  # if (clean_up_bm){
+  #   on.exit(if (file.exists(vw$post$eres)) file.remove(vw$post$eres),
+  #           add = TRUE)
+  # }
+
   return(out)
 }
 
