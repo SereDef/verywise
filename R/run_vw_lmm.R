@@ -43,29 +43,23 @@ run_vw_lmm <- function(formula, # model formula
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno)
 
+  # Determine hemisphere(s)
   hemi <- match.arg(hemi)
+  if (hemi == "both") { hemis <- c("lh","rh") } else { hemis <- as.vector(hemi) }
 
   set.seed(seed)
 
-  if (hemi == "both") {
-    out <- furrr::future_map(c("lh","rh"), function(h) {
+  # out <- furrr::future_map(c("lh","rh"), function(h) {
+  out <- lapply(hemis, function(h) {
 
       hemi_vw_lmm(formula = formula,
                   subj_dir = subj_dir,
                   data_list = data_list,
                   hemi = h,
                   seed = seed,
-                  ...)},
-      .options = furrr::furrr_options(seed = TRUE))
+                  ...)
+    })
 
-  } else {
-    out <- hemi_vw_lmm(formula = formula,
-                subj_dir = subj_dir,
-                data_list = data_list,
-                hemi = hemi,
-                seed = seed,
-                ...)
-  }
   message("All done!")
   out
 }
