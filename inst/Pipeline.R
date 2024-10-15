@@ -18,12 +18,21 @@
 #                  vw_resolution = n_vert,
 #                  hemi = "rh")
 
+# Run analysis
+out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                  subj_dir = subj_dir,
+                  # pheno = pheno,
+                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
+)
+
+
 # ==============================================================================
 remove.packages("verywise")
 .rs.restartR()
 devtools::install()
 library(verywise)
 library(profvis)
+
 
 # Check number of cores
 # if (requireNamespace("parallelly", quietly = TRUE)){

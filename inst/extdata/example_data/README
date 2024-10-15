@@ -1,0 +1,7 @@
+This is a very small example datasets with simulated brain (i.e. cortical thickness)
+and phenotype files.
+The datasets was constructed using the verywise::simulate_dataset() function and
+it contains two cohorts with 5 subjects each, and 2 measurements per subject
+(a total of 40 .mgh files = 5 subjects x 2 cohorts x 2 timepoints x 2 hemispheres)
+The phenotype.csv file contains 20 rows (5 subjects x 2 cohorts x 2 timepoints) and
+6 columns ("site", "id", "time", "sex", "age", and "folder_id")

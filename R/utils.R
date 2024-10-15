@@ -215,12 +215,15 @@ save.mgh <- function(vol, file_name) {
   MRI.BITMAP <- 5
   MRI.TENSOR <- 6
   slices <- c(1:256)
+
   fid <- file(file_name, open = "wb", blocking = TRUE)
   on.exit(close(fid))
+
   width <- vol$ndim1
   height <- vol$ndim2
   depth <- vol$ndim3
   nframes <- vol$nframes
+
   writeBin(as.integer(1), fid, size = 4, endian = "big")
   writeBin(as.integer(width), fid, size = 4, endian = "big")
   writeBin(as.integer(height), fid, size = 4, endian = "big")
@@ -235,9 +238,9 @@ save.mgh <- function(vol, file_name) {
   writeBin(as.integer(rep.int(0, unused.space.size)), fid, size = 1)
   bpv <- 4
   nelts <- width * height
+
   writeBin(vol$x, fid, size = 4, endian = "big")
 }
-
 
 
 # ???? =========================================================================
