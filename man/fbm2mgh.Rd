@@ -18,4 +18,5 @@ Save file backed matrix (FBM) to MGH file
 }
 \author{
 Sander Lamballais, 2018.
+Modified version of save_mgh.m (by Heath Pardoe, 09/12/2013)
 }

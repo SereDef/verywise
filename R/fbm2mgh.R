@@ -2,7 +2,7 @@
 #' Save file backed matrix (FBM) to MGH file
 #'
 #' @author Sander Lamballais, 2018.
-#' @Note Modified version of save_mgh.m (by Heath Pardoe, 09/12/2013)
+#' Modified version of save_mgh.m (by Heath Pardoe, 09/12/2013)
 #'
 #' @param fbm a file backed matrix
 #' @param fname file name to be used to save out the data

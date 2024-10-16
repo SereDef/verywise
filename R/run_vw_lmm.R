@@ -77,11 +77,22 @@ run_vw_lmm <- function(formula, # model formula
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
 #' @param outp_dir : output path, where do you want results to be stored. If none is
 #' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
+#' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
 #' @param hemi : (default = "both") hemispheres to run.
 #' @param measure : (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
 #' this should be the same as specified in formula
 #' @param fwhm : (default = 10) full-width half maximum value
 #' @param target : (default = "fsaverage") template on which to register vertex-wise data.
+#' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
+#' Any of the following are accepted (equivalent values separate by `/`):
+#'  * 13 / 1.3 / 0.05,
+#'  * 20 / 2.0 / 0.01,
+#'. * 23 / 2.3 / 0.005,
+#'  * 30 / 3.0 / 0.001, \* default
+#'  * 33 / 3.3 / 0.0005,
+#'  * 40 / 4.0 / 0.0001.
+#' @param cwp_thr : (default = 0.025, when both hemispheres are ran, else 0.05)
+#' the cluster-wise p-value threshold on top of all corrections.
 #' @param seed : (default = 3108) random seed.
 #' @param apply_cortical_mask : (default = TRUE) remove vertices that are not on the cortex.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
@@ -97,10 +108,13 @@ hemi_vw_lmm <- function(formula, # model formula
                         data_list,
                         subj_dir,
                         outp_dir = NULL,
+                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
                         hemi,
                         measure = gsub("vw_", "", all.vars(formula)[1]),
                         fwhm = 10,
                         target = "fsaverage",
+                        mcz_thr = 30,
+                        cwp_thr = 0.025,
                         seed = 3108,
                         apply_cortical_mask = TRUE,
                         model = "lme4::lmer" # "stats::lm"
@@ -231,14 +245,8 @@ hemi_vw_lmm <- function(formula, # model formula
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- res_bk_names # c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
-  # ## Part 5: Post-processing
-  # vw$post <- list()
-  #
-  # # Some stack stuff
-  # vw$stack <- qdecr_make_stack(vw, vw$model$so[1:4], mcz_thr)
-  #
-  #
-  #
+  # Post-processing ============================================================
+
   # Save the stack names (i.e. fixed terms) to a lookup file
   stack_ids <- data.frame('stack_number' = 1:(length(fixed_terms)),
                           'stack_name' = fixed_terms)
@@ -249,27 +257,63 @@ hemi_vw_lmm <- function(formula, # model formula
   message("Converting coefficients, SEs, t- and p-values to .mgh format")
 
   results_grid <- expand.grid(stack_ids$stack_number, # how many terms
-                    res_bk_names[-length(res_bk_names)]) # all statistics but the residuals
+                    res_bk_names[-length(res_bk_names)]) # all statistics except the residuals
 
-  res_mgh_paths <- file.path(
+  stats_mgh_paths <- file.path(
     outp_dir,
-    paste(hemi, measure, paste0("stack",results_grid[,1]), results_grid[,2], "mgh", sep = ".")
+    paste(hemi, paste0("stack",results_grid[,1]), results_grid[,2], "mgh", sep = ".")
   )
 
-  apply(results_grid, 1, function(grid_row) {
-    fbm2mgh(fbm = out[[ grid_row[2] ]],
-            fname = res_mgh_paths[ as.integer(grid_row[1]) ],
-            filter = as.integer(grid_row[1])) }
-    )
+  lapply(seq_len(nrow(results_grid)), function(grid_row) {
+    fbm2mgh(fbm = out[[ results_grid[grid_row, 2] ]],
+            fname = stats_mgh_paths[grid_row],
+            filter = as.integer(results_grid[grid_row, 1]))
+    })
 
   message("Converting residuals to .mgh format\n")
+  resid_mgh_path <- file.path(outp_dir, paste(hemi, "residuals.mgh", sep = "."))
   fbm2mgh(fbm = out[[ res_bk_names[length(res_bk_names)] ]],
-          fname = file.path(outp_dir, paste(hemi, measure, "residuals.mgh", sep = ".")))
+          fname = resid_mgh_path)
 
   # Remove temporary matrices files
   # clean_up_bm
   for (bk in res_bk_paths) {
     if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
+  }
+
+  if (FS_HOME=="") {
+    message("NO FREESURFER INSTALLATION: cannot compute the clusters atm")
+  } else {
+
+  # Estimate full-width half maximum (using FreeSurfer)
+  message("Estimating data smoothness for multiple testing correction.")
+
+  fwhm <- estimate_fwhm(outp_dir = outp_dir,
+                        hemi = hemi,
+                        resid_file = resid_mgh_path,
+                        mask = good_verts,
+                        target = target)
+  if (fwhm > 30) {
+    message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
+    fwhm <- 30
+  } else if (fwhm < 1) {
+    message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
+    fwhm <- 1
+  }
+
+  message("Clusterwise correction")
+
+  for ( stack_n in seq_along(fixed_terms) ){
+    # message2("\n", verbose = verbose)
+    compute_clusters(outp_dir = outp_dir,
+                     hemi = hemi,
+                     term_number = stack_n,
+                     fwhm = fwhm,
+                     FS_HOME = FS_HOME,
+                     mcz_thr = mcz_thr,
+                     cwp_thr = cwp_thr,
+                     mask = file.path(outp_dir, "finalMask.mgh"))
+    }
   }
 
   return(out)
