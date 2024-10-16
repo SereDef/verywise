@@ -8,9 +8,9 @@
 #' @param formula : model formula object (this should specify a LME model)
 #' @param pheno : the phenotype data or a path to the data file.
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
+#' @inheritParams hemi_vw_lmm outp_dir
 #' @param hemi : (default = "both") which hemispheres to run.
-#' @param seed : (default = 3108) random seed.
-#' @inheritDotParams hemi_vw_lmm measure fwhm target model
+#' @inheritDotParams hemi_vw_lmm outp_dir seed measure fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
