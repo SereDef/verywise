@@ -24,7 +24,7 @@ Suggests:
     parallelly (>= 1.38.0),
     progressr (>= 0.14.0)
 RoxygenNote: 7.3.2
-URL: https://github.com/SereDef/verywise
+URL: https://github.com/SereDef/verywise, https://seredef.github.io/verywise/
 BugReports: https://github.com/SereDef/verywise/issues
 Depends: 
     R (>= 2.10)
@@ -39,3 +39,4 @@ Imports:
     magrittr,
     rlang
 SystemRequirements: FreeSurfer
+Config/Needs/website: rmarkdown

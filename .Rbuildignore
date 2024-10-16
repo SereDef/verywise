@@ -4,3 +4,8 @@
 ^\.Rproj\.user$
 ^README\.Rmd$
 ^inst/Pipeline$
+^vignettes/articles$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

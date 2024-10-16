@@ -1,0 +1,14 @@
+---
+title: "Formatting data for `verywise`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(verywise)
+```
