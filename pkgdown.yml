@@ -1,0 +1,13 @@
+pandoc: 3.1.11
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  articles/00-installation-sys-requirements: 00-installation-sys-requirements.html
+  articles/01-format-data: 01-format-data.html
+  articles/02-simulate-data: 02-simulate-data.html
+  articles/03-run-vw-lmm: 03-run-vw-lmm.html
+  articles/04-visualize-results: 04-visualize-results.html
+last_built: 2024-10-17T09:30Z
+urls:
+  reference: https://seredef.github.io/verywise/reference
+  article: https://seredef.github.io/verywise/articles
