@@ -58,8 +58,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Installation and system requirements</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Installation and system requirements</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/00-installation-sys-requirements.Rmd" class="external-link"><code>vignettes/articles/00-installation-sys-requirements.Rmd</code></a></small>
@@ -68,12 +67,43 @@
 
     
     
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>You can install the development version of <code>verywise</code> from
+<a href="https://github.com/" class="external-link">GitHub</a>. Note that you may need to
+install the <a href="https://devtools.r-lib.org/" class="external-link"><code>devtools</code>
+package</a> first (if it is not already installed).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install devtools (if not there yet)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'devtools'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install verywise</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"SereDef/verywise"</span><span class="op">)</span></span></code></pre></div>
+<p>This will also download some other R packages that are needed, so
+give it a minute. Finally, you can attach the package to make it easier
+to use, like so:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SereDef/verywise" class="external-link">verywise</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Welcome, verywise user!</span></span>
 <span><span class="co">#&gt; This is version: 0.1.0</span></span>
 <span><span class="co">#&gt; For questions, issues, and bug reports, please see https://github.com/SereDef/verywise</span></span></code></pre></div>
-  </main>
+<div class="section level3">
+<h3 id="system-and-software-requirements">System and software requirements<a class="anchor" aria-label="anchor" href="#system-and-software-requirements"></a>
+</h3>
+<p>In order for <code>verywise</code> to run smoothly, you will need: -
+<strong><code>R</code></strong> (&gt; 4.1) installed (dah). - A
+<strong>Unix system</strong>: <code>verywise</code> works on Mac and on
+most Linux distributions, but <em>not on Windows</em>. This is because
+we currently rely on functions from the <a href="https://surfer.nmr.mgh.harvard.edu/" class="external-link">FreeSurfer suite</a> which
+require Unix/Mac. Getting <code>verywise</code> to work on Windows is
+not a strong priority for us. - <a href="https://surfer.nmr.mgh.harvard.edu/" class="external-link"><strong>Freesurfer</strong></a>
+installed.</p>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
