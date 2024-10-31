@@ -8,9 +8,11 @@
 #' @param formula : model formula object (this should specify a LME model)
 #' @param pheno : the phenotype data or a path to the data file.
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
-#' @inheritParams hemi_vw_lmm outp_dir
+#' @param outp_dir : output path, where do you want results to be stored. If none is
+#' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
 #' @param hemi : (default = "both") which hemispheres to run.
-#' @inheritDotParams hemi_vw_lmm outp_dir seed measure fwhm target model
+#' @param seed : (default = 3108) random seed.
+#' @inheritDotParams hemi_vw_lmm measure fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -21,6 +23,7 @@
 #'
 run_vw_lmm <- function(formula, # model formula
                        subj_dir,
+                       outp_dir = NULL,
                        pheno = NULL,
                        hemi = c("both", "lh","rh"),
                        seed = 3108,
@@ -54,6 +57,7 @@ run_vw_lmm <- function(formula, # model formula
 
       hemi_vw_lmm(formula = formula,
                   subj_dir = subj_dir,
+                  outp_dir = outp_dir,
                   data_list = data_list,
                   hemi = h,
                   seed = seed,

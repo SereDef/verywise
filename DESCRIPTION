@@ -7,9 +7,13 @@ Authors@R: c(
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
             comment = c(ORCID = " 0000-0003-3344-6597")),
     person("Sander", "Lamballais", 
-           email = "s.lamballaistessensohn@erasmusmc.n", role = "aut"),
+           email = "s.lamballaistessensohn@erasmusmc.nl", role = "aut"),
+    person("Bing", "Xu", 
+           email = "b.xu@erasmusmc.nl", role = "ctb"),
+    person("Annet", "Dijkzeul", 
+           email = "j.dijkzeul@erasmusmc.nl", role = "ctb"),
     person("Ryan", "Muetzel", 
-           email = "r.muetzel@erasmusmc.nl", role = c("aut", "fnd"))
+           email = "r.muetzel@erasmusmc.nl", role = c("ctb", "fnd"))
            )
 Description: Whole-brain analysis of FreeSurfer MGH format data. The package allows 
   application of several statistical models per vertex, including linear mixed models. 
@@ -27,7 +31,7 @@ RoxygenNote: 7.3.2
 URL: https://github.com/SereDef/verywise, https://seredef.github.io/verywise/
 BugReports: https://github.com/SereDef/verywise/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1)
 Imports: 
     bigstatsr,
     doParallel,

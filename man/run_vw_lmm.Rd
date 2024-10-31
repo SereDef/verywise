@@ -7,6 +7,7 @@
 run_vw_lmm(
   formula,
   subj_dir,
+  outp_dir = NULL,
   pheno = NULL,
   hemi = c("both", "lh", "rh"),
   seed = 3108,
@@ -17,6 +18,9 @@ run_vw_lmm(
 \item{formula}{: model formula object (this should specify a LME model)}
 
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
+
+\item{outp_dir}{: output path, where do you want results to be stored. If none is
+provided by the user, a "results" sub-directory will created inside \code{subj_dir}.}
 
 \item{pheno}{: the phenotype data or a path to the data file.}
 

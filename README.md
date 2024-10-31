@@ -1,7 +1,7 @@
 
-# **`verywise`**
+# **`verywise`** <a href="https://seredef.github.io/verywise/"><img src="man/figures/logo.png" align="right" height="139" alt="verywise website" /></a>
 
-## vertex-wise, whole-brain linear mixed models
+### vertex-wise, whole-brain linear mixed models
 
 <!-- badges: start -->
 
