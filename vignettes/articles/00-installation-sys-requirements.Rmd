@@ -13,8 +13,7 @@ knitr::opts_chunk$set(
 
 You can install the development version of `verywise` from [GitHub](https://github.com/). Note that you may need to install the [`devtools` package](https://devtools.r-lib.org/) first (if it is not already installed).
 
-
-``` {r install, eval = FALSE}
+```{r install, eval = FALSE}
 # Install devtools (if not there yet)
 if (!requireNamespace("devtools"))
   install.packages('devtools')
@@ -23,15 +22,16 @@ if (!requireNamespace("devtools"))
 devtools::install_github("SereDef/verywise")
 ```
 
-This will also download some other R packages that are needed, so give it a minute. 
-Finally, you can attach the package to make it easier to use, like so:
+This will also download some other R packages that are needed, so give it a minute. Finally, you can attach the package to make it easier to use, like so:
 
 ```{r setup}
 library(verywise)
 ```
 
-### System and software requirements
+## System and software requirements
+
 In order for `verywise` to run smoothly, you will need:
- - **`R`** (> 4.1) installed (dah).
- - A **Unix system**: `verywise` works on Mac and on most Linux distributions, but *not on Windows*. This is because we currently rely on functions from the [FreeSurfer suite](https://surfer.nmr.mgh.harvard.edu/) which require Unix/Mac. Getting `verywise` to work on Windows is not a strong priority for us.
- - [**Freesurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.
+
+-   **`R`** (version \>= **4.1**) installed (*dah*).
+-   A **Unix system**: `verywise` works on Mac and on most Linux distributions, but <ins>*not on Windows*</ins>. This is because we currently rely on functions from the [FreeSurfer suite](https://surfer.nmr.mgh.harvard.edu/) which require Unix/Mac. Getting `verywise` to work on Windows is not a strong priority for us.
+-   [**Freesurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.

@@ -52,3 +52,8 @@ run_vw_lmm(
   pheno = phenotype, # An R object already in memory or path to file 
 )
 ```
+
+## Visualization
+
+To quickly inspect and plot your results you can use our interactive
+application, [BrainMapp](https://github.com/SereDef/brainmapp)
