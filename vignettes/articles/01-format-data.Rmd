@@ -20,6 +20,8 @@ In this article we describe how the software expects the input data directory to
 Here is an example of a typical `verywise` input directory:
 
 ```{r, echo = FALSE}
+#| fig.alt: >
+#|   Example of a verywise input directory structure.
 knitr::include_graphics("01-folder-structure.png", dpi=200)
 ```
 
@@ -43,6 +45,8 @@ So your brain data is all sorted, but you will also need to prepare a "phenotype
 Either way, it should it should look something like this: 
 
 ```{r, echo = FALSE}
+#| fig.alt: >
+#|   Example of a phenotype data frame.
 knitr::include_graphics("01-pheno-structure.png", dpi=200)
 ```
 So this should be in the *"long format"* with different timepoints/groups stacked row-wise. 

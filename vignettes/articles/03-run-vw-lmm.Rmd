@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 library(verywise)
 ```
 
-```{r lmm}
+```{r lmm, eval=FALSE}
 # Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
