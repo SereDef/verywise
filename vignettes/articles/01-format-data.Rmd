@@ -1,6 +1,7 @@
 ---
-title: "Formatting data for `verywise`"
+title: "Getting ready, step 2: formatting input data"
 author: "Serena Defina"
+date: "`r Sys.Date()`"
 ---
 
 ```{r, include = FALSE}
@@ -10,14 +11,28 @@ knitr::opts_chunk$set(
 )
 ```
 
-## The data folder structure
+`verywise` was developed to handle complex datasets, with *multiple cohorts/sites* as well as *repeated neuro-imaging measures*. 
 
-`verywise` was developed to handle complex datasets, with multiple cohorts/sites and repeated neuroimaging measures. In order to do so, we enforce some conventions. The data directory folder is expected to have a similar structure to that pictured below:
+In this article we describe how the software expects the input data directory to look like, and what pre-processing steps are necessary to get both your **neuro-imaging** data and your **phenotype** data ready for analysis.
+
+## A `verywise` input directory structure
+
+Here is an example of a typical `verywise` input directory:
 
 ```{r, echo = FALSE}
-knitr::include_graphics("01-folder-structure.png")
+knitr::include_graphics("01-folder-structure.png", dpi=300)
 ```
 
-## Brain data
+This is also what you will see if you use our data simulation functions. The phenotype file does not need to be inside the same folder as the neuroimaging data, but we placed it in there to keep things tidy.
 
-## Phenotype data
+If you have more than one neuroimaging site (or "cohort" or dataset, however you want to call it), then each site should have it's own folder. Inside each site folder you should have one sub-folder for each individual measurement (or "session"). These sub-folders should follow the [BIDS convention](https://bids.neuroimaging.io/), so for example: `sub-47_ses-03` will have the 3rd measurement of subject #47. This will be done automatically by FreeSurfer (see next session)
+
+## Preparing your brain data
+
+To obtain brain surface data, you should first run your subjects through FreeSurfer, using the following command:
+```
+recon-all -s <subject-id> -qcache
+```
+Don't forget the `-qcache` flag! Full instructions can be found [here](https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/QdecGroupAnalysis_freeview), under the header “pre-smoothed fsaverage surfaces”.
+
+## Preparing your phenotype data

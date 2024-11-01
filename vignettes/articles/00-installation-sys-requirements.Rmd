@@ -1,5 +1,7 @@
 ---
-title: "Installation and system requirements"
+title: "Getting ready, step 1: Installation and system requirements"
+author: "Serena Defina"
+date: "`r Sys.Date()`"
 ---
 
 ```{r, include = FALSE}
@@ -11,7 +13,9 @@ knitr::opts_chunk$set(
 
 ## Installation
 
-You can install the development version of `verywise` from [GitHub](https://github.com/). Note that you may need to install the [`devtools` package](https://devtools.r-lib.org/) first (if it is not already installed).
+You can install the development version of `verywise` from [GitHub](https://github.com/). 
+
+<ins>Note</ins>: you may need to install the [`devtools` package](https://devtools.r-lib.org/) first (if it is not already installed).
 
 ```{r install, eval = FALSE}
 # Install devtools (if not there yet)
@@ -22,7 +26,9 @@ if (!requireNamespace("devtools"))
 devtools::install_github("SereDef/verywise")
 ```
 
-This will also download some other R packages that are needed, so give it a minute. Finally, you can attach the package to make it easier to use, like so:
+This will also download some other R packages that are needed, so give it a little minute. 
+
+Finally, you can attach the package to make it easier to use, like so:
 
 ```{r setup}
 library(verywise)
@@ -32,6 +38,10 @@ library(verywise)
 
 In order for `verywise` to run smoothly, you will need:
 
--   **`R`** (version \>= **4.1**) installed (*dah*).
--   A **Unix system**: `verywise` works on Mac and on most Linux distributions, but <ins>*not on Windows*</ins>. This is because we currently rely on functions from the [FreeSurfer suite](https://surfer.nmr.mgh.harvard.edu/) which require Unix/Mac. Getting `verywise` to work on Windows is not a strong priority for us.
--   [**Freesurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.
+-   **`R`** (version \>= **4.1**) installed (*Dah!*).
+-   A **Unix system**: `verywise` works on Mac and on most Linux distributions, but <ins>*not on Windows*</ins>. This is because we currently rely on functions from the FreeSurfer suite which require Unix/Mac.
+-   [**FreeSurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.
+
+### Installing and setting up FreeSurfer
+
+TODO
