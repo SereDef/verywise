@@ -25,7 +25,7 @@ library(verywise)
 ## Only generate the brain data 
 If you have a phenotype dataset already, but you are missing some FreeSurfer data, you can call the following function:
 
-```{r simualte brain, eval = FALSE}
+```{r simulate brain, eval = FALSE}
 # Simulate FreeSurfer dataset
 my_dataset_structure = list("cohort1" = list("sessions" = c("01", "02"),
                                              "n_subjects" = 100),
@@ -53,7 +53,7 @@ TODO
 
 ## Only generate the phenotype data
 On the other hand, if you already have some surfaces but you would like a phenotype to go with it you can use:
-```{r simualte, eval = FALSE}
+```{r simulate pheno, eval = FALSE}
 # Simulate phenotype dataset
 simulate_long_pheno_data(data_structure = my_dataset_structure,
                          seed = my_random_seed)
@@ -62,7 +62,7 @@ This will generate a minimum "long format" dataframe with the variables you need
 
 ## Alright, all in one go now
 
-```{r simualte, eval = FALSE}
+```{r simulate everything, eval = FALSE}
 # Simulate FreeSurfer and phenotype dataset
 simulate_data(path = "./VeryWiseUser/SimulatedExample", 
               data_structure = my_dataset_structure,
