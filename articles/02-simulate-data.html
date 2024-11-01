@@ -5,12 +5,18 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Simulating data • verywise</title>
+<title>Optional: simulating data • verywise</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Simulating data">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Optional: simulating data">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -35,9 +41,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Getting ready, step 1: Installation and system requirements</a></li>
     <li><a class="dropdown-item" href="../articles/01-format-data.html">Getting ready, step 2: formatting input data</a></li>
-    <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Simulating data</a></li>
+    <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
-    <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` result maps</a></li>
+    <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
   </ul>
 </li>
       </ul>
@@ -58,8 +64,11 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Simulating data</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Optional: simulating data</h1>
+                        <h4 data-toc-skip class="author">Serena
+Defina</h4>
             
+            <h4 data-toc-skip class="date">2024-11-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/02-simulate-data.Rmd" class="external-link"><code>vignettes/articles/02-simulate-data.Rmd</code></a></small>
       <div class="d-none name"><code>02-simulate-data.Rmd</code></div>
@@ -71,9 +80,11 @@
 <h2 id="data-poor-simulate-yourself-some-data-son">Data poor? Simulate yourself some data, son<a class="anchor" aria-label="anchor" href="#data-poor-simulate-yourself-some-data-son"></a>
 </h2>
 <p>If you are eager to get started with <code>verywise</code> but do not
-have access to a dataset, you can generate both a FreeSurfer
-nuro-imaging dataset and a phenotype file to go with it. The dataset
-will be have a <em>verywise structure</em>.</p>
+have access to a dataset (yet), you can generate both a set of
+ready-made FreeSurfer surface data files and a phenotype file to go with
+it.</p>
+<p>The simulated dataset will already be saved into a
+<code>verywise</code> structure.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SereDef/verywise" class="external-link">verywise</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Welcome, verywise user!</span></span>
@@ -81,19 +92,68 @@ will be have a <em>verywise structure</em>.</p>
 <span><span class="co">#&gt; For questions, issues, and bug reports, please see https://github.com/SereDef/verywise</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="all-in-one-go">All in one go<a class="anchor" aria-label="anchor" href="#all-in-one-go"></a>
+<h2 id="only-generate-the-brain-data">Only generate the brain data<a class="anchor" aria-label="anchor" href="#only-generate-the-brain-data"></a>
 </h2>
+<p>If you have a phenotype dataset already, but you are missing some
+FreeSurfer data, you can call the following function:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Simulate FreeSurfer dataset</span></span>
+<span><span class="va">my_dataset_structure</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"cohort1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"sessions"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>,</span>
+<span>                                             <span class="st">"n_subjects"</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
+<span>                            <span class="st">"cohort2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"sessions"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>,</span>
+<span>                                             <span class="st">"n_subjects"</span> <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span>                            <span class="op">)</span></span>
+<span><span class="va">my_random_seed</span> <span class="op">=</span> <span class="fl">1984</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/simulate_freesurfer_data.html">simulate_freesurfer_data</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"./VeryWiseUser/SimulatedExample"</span>,</span>
+<span>                         data_structure <span class="op">=</span> <span class="va">my_dataset_structure</span>,</span>
+<span>                         vw_resolution <span class="op">=</span> <span class="fl">163842</span>,</span>
+<span>                         measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
+<span>                         hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
+<span>                         fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
+<span>                         target <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>                         vw_mean <span class="op">=</span> <span class="fl">6.5</span>,</span>
+<span>                         vw_sd <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                         simulate_association <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                         seed <span class="op">=</span> <span class="va">my_random_seed</span><span class="op">)</span></span></code></pre></div>
+<p>In this example, we are going to generate 500 left hemisphere
+(<code>"lh"</code>) thickness maps. These maps belong to 250 fictional
+subjects, who all underwent 2 MRI sessions (<code>"01"</code> and
+<code>"02"</code>) and belong to two cohorts (<code>"cohort1"</code> and
+<code>"cohort2"</code>). The resolution of these fake surface maps is
+<code>163842</code> vertices (corresponding to the most detailed
+FreeSurfer template <code>"fsaverage"</code>), and they will have an
+overall mean of <code>6.5</code> (mm thickness) and a standard deviation
+of <code>0.5</code>.</p>
+<p>You can also use the function to specify a simulated association with
+a variable of your choice. TODO</p>
+</div>
+<div class="section level2">
+<h2 id="only-generate-the-phenotype-data">Only generate the phenotype data<a class="anchor" aria-label="anchor" href="#only-generate-the-phenotype-data"></a>
+</h2>
+<p>On the other hand, if you already have some surfaces but you would
+like a phenotype to go with it you can use:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Simulate phenotype dataset</span></span>
+<span><span class="fu"><a href="../reference/simulate_long_pheno_data.html">simulate_long_pheno_data</a></span><span class="op">(</span>data_structure <span class="op">=</span> <span class="va">my_dataset_structure</span>,</span>
+<span>                         seed <span class="op">=</span> <span class="va">my_random_seed</span><span class="op">)</span></span></code></pre></div>
+<p>This will generate a minimum “long format” dataframe with the
+variables you need, as well as simulated “sex” and “age” of the
+sample.</p>
+</div>
+<div class="section level2">
+<h2 id="alright-all-in-one-go-now">Alright, all in one go now<a class="anchor" aria-label="anchor" href="#alright-all-in-one-go-now"></a>
+</h2>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate FreeSurfer and phenotype dataset</span></span>
-<span><span class="fu">simulate_data</span><span class="op">(</span>subj_dir <span class="op">=</span> <span class="st">"./VeryWiseUserUser/SimulatedExample"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="only-brain-data">Only brain data<a class="anchor" aria-label="anchor" href="#only-brain-data"></a>
-</h2>
-</div>
-<div class="section level2">
-<h2 id="only-generate-phenotype-file">Only generate phenotype file<a class="anchor" aria-label="anchor" href="#only-generate-phenotype-file"></a>
-</h2>
+<span><span class="fu">simulate_data</span><span class="op">(</span>path <span class="op">=</span> <span class="st">"./VeryWiseUser/SimulatedExample"</span>, </span>
+<span>              data_structure <span class="op">=</span> <span class="va">my_dataset_structure</span>,</span>
+<span>              simulate_association <span class="op">=</span>  <span class="fl">0.05</span> <span class="op">*</span> <span class="va">pheno</span><span class="op">$</span><span class="va">age</span>,</span>
+<span>              overwrite <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>              seed <span class="op">=</span> <span class="va">my_random_seed</span><span class="op">)</span></span></code></pre></div>
+<p>This will call <code><a href="../reference/simulate_long_pheno_data.html">simulate_long_pheno_data()</a></code> and
+<code><a href="../reference/simulate_freesurfer_data.html">simulate_freesurfer_data()</a></code> to give you everything you need
+to play around with <code>verywise</code> model fitting.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
