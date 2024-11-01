@@ -53,7 +53,17 @@ run_vw_lmm(
 )
 ```
 
+You can find more info and tutorials
+[here](https://seredef.github.io/verywise/index.html).
+
 ## Visualization
 
 To quickly inspect and plot your results you can use our interactive
 application, [BrainMapp](https://github.com/SereDef/brainmapp)
+
+## Note
+
+This is a spin-off of the (more stable)
+[`QDECR`](https://www.qdecr.com/) package.
+
+All feedback and contributions are **very welcome!**.
