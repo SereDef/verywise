@@ -1,5 +1,6 @@
 ---
 title: "Formatting data for `verywise`"
+author: "Serena Defina"
 ---
 
 ```{r, include = FALSE}
@@ -13,7 +14,10 @@ knitr::opts_chunk$set(
 
 `verywise` was developed to handle complex datasets, with multiple cohorts/sites and repeated neuroimaging measures. In order to do so, we enforce some conventions. The data directory folder is expected to have a similar structure to that pictured below:
 
-<img src=https://github.com/SereDef/verywise/blob/master/man/figures/01-folder-structure.png
-width=50%/>
+```{r, echo = FALSE}
+knitr::include_graphics("01-folder-structure.png")
+```
 
 ## Brain data
+
+## Phenotype data
