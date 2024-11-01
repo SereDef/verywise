@@ -49,7 +49,7 @@ So this should be in the *"long format"* with different timepoints/groups stacke
 
 The **`folder_id`** column is important because it is used to link the phenotype to the correct brain data file.
 
-...TODO
+... TODO
 
 Note that the phenotype file/data object can also be an **imputed dataset**.
 `verywise` currently supports several mi dataset formats, including the outputs of mice, mi, amelia... TODO
