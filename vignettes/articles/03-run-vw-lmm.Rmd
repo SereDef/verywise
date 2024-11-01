@@ -1,5 +1,7 @@
 ---
 title: "Running vertex-wise linear mixed models"
+author: "Serena Defina"
+date: "`r Sys.Date()`"
 ---
 
 ```{r, include = FALSE}
@@ -12,3 +14,16 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(verywise)
 ```
+
+```{r lmm}
+# Run a linear mixed model
+run_vw_lmm(
+  formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
+  subj_dir = "./VeryWiseUserUser/SimulatedExample", # Neuro-imaging data location
+  hemi = "both", # (default) which hemispheres to run
+  pheno = phenotype, # An R object already in memory or a path to file 
+  ...
+)
+```
+
+TODO
