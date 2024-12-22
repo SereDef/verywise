@@ -11,6 +11,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/as.mgh.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/barnard.rubin.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_supersubject.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/check_pheno_obj.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/compute_clusters.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/estimate_fwhm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/fbm2mgh.html</loc></url>
@@ -21,6 +22,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/index.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/list.dirs.till.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/load.mgh.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/load_pheno_file.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/make_chunk_sequence.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/mask_cortex.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pipe.html</loc></url>
