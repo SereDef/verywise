@@ -6,9 +6,9 @@
 \usage{
 run_vw_lmm(
   formula,
+  pheno,
   subj_dir,
   outp_dir = NULL,
-  pheno = NULL,
   hemi = c("both", "lh", "rh"),
   seed = 3108,
   ...
@@ -17,12 +17,14 @@ run_vw_lmm(
 \arguments{
 \item{formula}{: model formula object (this should specify a LME model)}
 
+\item{pheno}{: the phenotype data object or a string containing a file path. If
+the specified file is not found \code{verywise} will look for it inside the subj_dir
+folder before throwing an error. Supported file extensions are: rds, csv, txt and sav.}
+
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 
 \item{outp_dir}{: output path, where do you want results to be stored. If none is
 provided by the user, a "results" sub-directory will created inside \code{subj_dir}.}
-
-\item{pheno}{: the phenotype data or a path to the data file.}
 
 \item{hemi}{: (default = "both") which hemispheres to run.}
 
@@ -44,7 +46,7 @@ t- and p- values and residuals.
 }
 \description{
 This is is the main function in v0 of \code{verywise}.
-It runs the \code{\link{single_lmm}} function across all vertices.
+It checks the user inputs and runs the \code{\link{single_lmm}} function across all vertices.
 }
 \author{
 Serena Defina, 2024.

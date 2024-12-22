@@ -3,10 +3,12 @@
 #'
 #' @description
 #' This is is the main function in v0 of \code{verywise}.
-#' It runs the \code{\link{single_lmm}} function across all vertices.
+#' It checks the user inputs and runs the \code{\link{single_lmm}} function across all vertices.
 #'
 #' @param formula : model formula object (this should specify a LME model)
-#' @param pheno : the phenotype data or a path to the data file.
+#' @param pheno : the phenotype data object or a string containing a file path. If
+#' the specified file is not found \code{verywise} will look for it inside the subj_dir
+#' folder before throwing an error. Supported file extensions are: rds, csv, txt and sav.
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
 #' @param outp_dir : output path, where do you want results to be stored. If none is
 #' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
@@ -21,34 +23,43 @@
 #'
 #' @export
 #'
-run_vw_lmm <- function(formula, # model formula
+run_vw_lmm <- function(formula,
+                       pheno,
                        subj_dir,
                        outp_dir = NULL,
-                       pheno = NULL,
                        hemi = c("both", "lh","rh"),
                        seed = 3108,
                        ...
 ) {
   # Read phenotype data (if not already loaded) ================================
-  if (is.null(pheno)) {
-    if (exists("pheno", mode="list", envir=globalenv())) {
-      pheno <- get("pheno", envir = globalenv())
-    } else if (file.exists(file.path(subj_dir, "phenotype.csv"))){
-      message("Reading phenotype file from subject directory folder.")
-      pheno <- utils::read.csv(file.path(subj_dir, "phenotype.csv"))
-    } else {
-      stop("Provide phenotype data pls.")
-    }
-  } else if (is.character(pheno) & file.exists(pheno)) {
-    pheno <- utils::read.csv(pheno)
+
+  if (is.character(pheno)) {
+    pheno <- load_pheno_file(pheno, subj_dir)
+  } else {
+    # Capture the name of the object
+    obj_name <- deparse(substitute(pheno))
+    pheno <- check_pheno_obj(obj_name)
   }
 
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno)
 
-  # Determine hemisphere(s)
+  # TODO: Check the structure of input dataset
+  # Check that id is present
+  # "folder_id" needs to be present
+  # check that is in long format
+  # check the the formula are columns in dataset
+
+  # Determine hemisphere(s) ====================================================
   hemi <- match.arg(hemi)
   if (hemi == "both") { hemis <- c("lh","rh") } else { hemis <- as.vector(hemi) }
+
+  # Check paths ================================================================
+  # TODO
+  # subj_dir has the folders it needs
+  # measure = gsub("vw_", "", all.vars(formula)[1]) is present in the folder
+
+  # Run analyses ===============================================================
 
   set.seed(seed)
 
@@ -67,6 +78,7 @@ run_vw_lmm <- function(formula, # model formula
   names(out) <- hemis
 
   message("All done!")
+
   out
 }
 

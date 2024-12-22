@@ -2,7 +2,7 @@
 % Please edit documentation in R/imp2list.R
 \name{imp2list}
 \alias{imp2list}
-\title{Convert imputation output to a list of dataframes}
+\title{Convert imputation object to a list of dataframes}
 \usage{
 imp2list(obj)
 }

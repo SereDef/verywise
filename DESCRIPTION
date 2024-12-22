@@ -23,6 +23,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Suggests:
+    haven,
     mi (>= 1.1),
     mice (>= 3.16.0),
     parallelly (>= 1.38.0),

@@ -1,5 +1,5 @@
 #' @title
-#' Convert imputation output to a list of dataframes
+#' Convert imputation object to a list of dataframes
 #'
 #' @description
 #' Converts known imputation objects (e.g., \code{amelia}, \code{aregImpute},
