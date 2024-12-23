@@ -59,6 +59,7 @@
 <span>  cwp_thr <span class="op">=</span> <span class="fl">0.025</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  apply_cortical_mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"lme4::lmer"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -127,6 +128,11 @@ the cluster-wise p-value threshold on top of all corrections.</p></dd>
 
 <dt id="arg-apply-cortical-mask">apply_cortical_mask<a class="anchor" aria-label="anchor" href="#arg-apply-cortical-mask"></a></dt>
 <dd><p>: (default = TRUE) remove vertices that are not on the cortex.</p></dd>
+
+
+<dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
+<dd><p>: (default = TRUE) save the super-subject matrix as an rds file for
+quicker processing in the future.</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
