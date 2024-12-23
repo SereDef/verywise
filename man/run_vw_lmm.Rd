@@ -17,9 +17,8 @@ run_vw_lmm(
 \arguments{
 \item{formula}{: model formula object (this should specify a LME model)}
 
-\item{pheno}{: the phenotype data object or a string containing a file path. If
-the specified file is not found \code{verywise} will look for it inside the subj_dir
-folder before throwing an error. Supported file extensions are: rds, csv, txt and sav.}
+\item{pheno}{: the phenotype data object (already loaded in the global environment) or
+a string containing a file path. Supported file extensions are: rds, csv, txt and sav.}
 
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 

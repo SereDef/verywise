@@ -6,9 +6,8 @@
 #' It checks the user inputs and runs the \code{\link{single_lmm}} function across all vertices.
 #'
 #' @param formula : model formula object (this should specify a LME model)
-#' @param pheno : the phenotype data object or a string containing a file path. If
-#' the specified file is not found \code{verywise} will look for it inside the subj_dir
-#' folder before throwing an error. Supported file extensions are: rds, csv, txt and sav.
+#' @param pheno : the phenotype data object (already loaded in the global environment) or
+#' a string containing a file path. Supported file extensions are: rds, csv, txt and sav.
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
 #' @param outp_dir : output path, where do you want results to be stored. If none is
 #' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
@@ -33,13 +32,12 @@ run_vw_lmm <- function(formula,
 ) {
   # Read phenotype data (if not already loaded) ================================
 
-  if (is.character(pheno)) {
-    pheno <- load_pheno_file(pheno, subj_dir)
-  } else {
-    # Capture the name of the object
-    obj_name <- deparse(substitute(pheno))
-    pheno <- check_pheno_obj(obj_name)
-  }
+  if (is.character(pheno)) pheno <- load_pheno_file(pheno)
+  # } else {
+  #   # Capture the name of the object
+  #   obj_name <- deparse(substitute(pheno))
+  #   pheno <- check_pheno_obj(obj_name)
+  # }
 
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno)
@@ -111,6 +109,8 @@ run_vw_lmm <- function(formula,
 #' the cluster-wise p-value threshold on top of all corrections.
 #' @param seed : (default = 3108) random seed.
 #' @param apply_cortical_mask : (default = TRUE) remove vertices that are not on the cortex.
+#' @param save_ss : (default = TRUE) save the super-subject matrix as an rds file for
+#' quicker processing in the future.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
@@ -133,14 +133,12 @@ hemi_vw_lmm <- function(formula, # model formula
                         cwp_thr = 0.025,
                         seed = 3108,
                         apply_cortical_mask = TRUE,
+                        save_ss = TRUE,
                         model = "lme4::lmer" # "stats::lm"
 ) {
 
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(subj_dir, paste0(
-    hemi, ".", measure,
-    ".supersubject.rds"
-  ))
+  ss_file_name <- file.path(subj_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
 
   if (file.exists(ss_file_name)) {
     message("Reading super-subject file from: ", ss_file_name)
@@ -150,14 +148,14 @@ hemi_vw_lmm <- function(formula, # model formula
   } else {
 
     ss <- build_supersubject(subj_dir,
-      folder_id = data_list[[1]]$folder_id,
-      files_list = list.dirs.till(subj_dir, n = 2),
-      measure = measure,
-      hemi = hemi,
-      fwhmc = paste0("fwhm", fwhm),
-      target = target,
-      mask = apply_cortical_mask,
-      save_rds = FALSE
+                             folder_id = data_list[[1]]$folder_id,
+                             files_list = list.dirs.till(subj_dir, n = 2),
+                             measure = measure,
+                             hemi = hemi,
+                             fwhmc = paste0("fwhm", fwhm),
+                             target = target,
+                             mask = apply_cortical_mask,
+                             save_rds = save_ss
     )
   }
 
@@ -165,10 +163,7 @@ hemi_vw_lmm <- function(formula, # model formula
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
   if (sum(problem_verts) > 0) {
-    message(
-      "Removing ", sum(problem_verts),
-      " vertices that contained 0 values."
-    )
+    message("Removing ", sum(problem_verts)," vertices that contained 0 values.")
   }
   good_verts <- which(!problem_verts)
 
@@ -203,6 +198,7 @@ hemi_vw_lmm <- function(formula, # model formula
 
   # TMP: remove files if they exist
   for (bk in res_bk_paths) {
+    warning("Overwriting results")
     if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
   }
 

@@ -4,12 +4,10 @@
 \alias{load_pheno_file}
 \title{Load "phenotype" file into R based on its extension}
 \usage{
-load_pheno_file(pheno_str, subj_dir)
+load_pheno_file(pheno_str)
 }
 \arguments{
 \item{pheno_str}{A character string specifying the file path.}
-
-\item{subj_dir}{A character string specifying the folder when FreeSurfer data is.}
 }
 \value{
 A data frame containing the loaded data
@@ -20,6 +18,4 @@ Takes a path to a file and reads it into memory.
 \details{
 The function checks if the file exists, identifies the file extension, and
 loads the data accordingly. Supported file types: .csv, .rds, .sav, and .txt.
-If the specified file is not found \code{verywise} will look for it inside the
-\code{subj_dir} folder before throwing an error.
 }

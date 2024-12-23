@@ -18,6 +18,7 @@ hemi_vw_lmm(
   cwp_thr = 0.025,
   seed = 3108,
   apply_cortical_mask = TRUE,
+  save_ss = TRUE,
   model = "lme4::lmer"
 )
 }
@@ -57,6 +58,9 @@ the cluster-wise p-value threshold on top of all corrections.}
 \item{seed}{: (default = 3108) random seed.}
 
 \item{apply_cortical_mask}{: (default = TRUE) remove vertices that are not on the cortex.}
+
+\item{save_ss}{: (default = TRUE) save the super-subject matrix as an rds file for
+quicker processing in the future.}
 
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
 }

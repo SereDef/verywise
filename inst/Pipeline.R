@@ -1,7 +1,7 @@
 # library(verywise)
 #
 # # Simulate FreeSurfer and phenotype dataset
-# subj_dir = "/Users/Serena/Desktop/Packages/verywise/inst/extdata/example_data"
+subj_dir = "/Users/Serena/Desktop/Packages/verywise/inst/extdata/example_data"
 #
 # n_subs = 5 # * 2 cohorts * 2 timepoints * 2 hemispheres = 40 files
 # n_vert = 100
@@ -19,20 +19,50 @@
 #                  hemi = "rh")
 
 # Run analysis
-out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-                  subj_dir = subj_dir,
-                  # pheno = pheno,
-                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
-)
-
-
-# ==============================================================================
-remove.packages("verywise")
-.rs.restartR()
-devtools::install()
+#remove.packages("verywise")
+#.rs.restartR()
+#devtools::install()
 library(verywise)
 library(profvis)
 
+profvis({
+  future::plan('multicore', workers=2)
+  out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                    subj_dir = subj_dir,
+                    pheno = file.path(subj_dir, 'phenotype.csv'),
+                    apply_cortical_mask = FALSE # 100 vertices, do not have mask
+  )
+})
+
+
+future::plan('sequential')
+
+start = Sys.time()
+out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                  subj_dir = subj_dir,
+                  pheno = file.path(subj_dir, 'phenotype.csv'),
+                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
+)
+end = Sys.time()
+
+end - start
+
+library(future)
+
+plan(list(
+ sequential,
+ tweak(multicore, workers = I(4))
+))
+
+start = Sys.time()
+out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                  subj_dir = subj_dir,
+                  pheno = file.path(subj_dir, 'phenotype.csv'),
+                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
+)
+end = Sys.time()
+
+end - start
 
 # Check number of cores
 # if (requireNamespace("parallelly", quietly = TRUE)){

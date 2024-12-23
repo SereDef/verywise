@@ -7,27 +7,22 @@
 #' @details
 #' The function checks if the file exists, identifies the file extension, and
 #' loads the data accordingly. Supported file types: .csv, .rds, .sav, and .txt.
-#' If the specified file is not found \code{verywise} will look for it inside the
-#' \code{subj_dir} folder before throwing an error.
 #'
 #' @param pheno_str A character string specifying the file path.
-#' @param subj_dir A character string specifying the folder when FreeSurfer data is.
 #'
 #' @return A data frame containing the loaded data
 #'
-load_pheno_file <- function(pheno_str, subj_dir) {
+load_pheno_file <- function(pheno_str) {
 
   # Check that specified file exists
-  if (!file.exists(pheno_str)) {
-    # Check if the file was in subj_dir
-    if (file.exists(file.path(subj_dir, pheno_str))) {
-      message("Reading phenotype file `", pheno_str, "` from subject directory folder.")
-      pheno_str <- file.path(subj_dir, pheno_str)
-    } else { stop(paste0(pheno_str, " file not found.")) }
-  }
+  if (!file.exists(pheno_str)) stop(paste0(pheno_str, " file not found."))
 
   # Extract file extension
-  get_extension <- function(file) strsplit(basename(file), split="\\.")[[1]][-1]
+  get_extension <- function(file) {
+    file_name_vect <- strsplit(basename(file), split="\\.")[[1]] # split by "."
+    file_extension <- file_name_vect[length(file_name_vect)] # pick last element
+    return(file_extension)
+  }
   file_extension <- get_extension(pheno_str)
 
   # Load the file based on its extension
