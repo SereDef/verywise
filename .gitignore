@@ -6,5 +6,5 @@
 .httr-oauth
 .DS_Store
 .quarto
-inst/Pipeline.R
+./inst/*
 docs
