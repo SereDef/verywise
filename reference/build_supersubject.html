@@ -59,6 +59,7 @@ matrix with dimensions n_subjects x n_vertices.</p>
 <span>  backing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">subj_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">hemi</span>, <span class="st">"."</span>, <span class="va">measure</span>, <span class="st">".supersubject.bk"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  save_rds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">cluster</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -111,6 +112,10 @@ cortical map.</p></dd>
 <dt id="arg-save-rds">save_rds<a class="anchor" aria-label="anchor" href="#arg-save-rds"></a></dt>
 <dd><p>: (default = FALSE) save the supersubject file metadata for re-use
 in other sessions.</p></dd>
+
+
+<dt id="arg-cluster">cluster<a class="anchor" aria-label="anchor" href="#arg-cluster"></a></dt>
+<dd><p>: the parallel cluster</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

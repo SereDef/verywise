@@ -55,6 +55,8 @@ It checks the user inputs and runs the <code><a href="single_lmm.html">single_lm
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  hemi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"lh"</span>, <span class="st">"rh"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  FS_HOME <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -87,6 +89,14 @@ provided by the user, a "results" sub-directory will created inside <code>subj_d
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>: (default = 3108) random seed.</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>: (default = 1) number of cores for parallel processing.</p></dd>
+
+
+<dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
+<dd><p>: FreeSurfer directory, i.e. <code>$FREESURFER_HOME</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
