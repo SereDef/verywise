@@ -11,6 +11,8 @@ run_vw_lmm(
   outp_dir = NULL,
   hemi = c("both", "lh", "rh"),
   seed = 3108,
+  n_cores = 1,
+  FS_HOME = "",
   ...
 )
 }
@@ -28,6 +30,10 @@ provided by the user, a "results" sub-directory will created inside \code{subj_d
 \item{hemi}{: (default = "both") which hemispheres to run.}
 
 \item{seed}{: (default = 3108) random seed.}
+
+\item{n_cores}{: (default = 1) number of cores for parallel processing.}
+
+\item{FS_HOME}{: FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.}
 
 \item{...}{
   Arguments passed on to \code{\link[=hemi_vw_lmm]{hemi_vw_lmm}}

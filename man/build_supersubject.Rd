@@ -16,6 +16,7 @@ build_supersubject(
   backing = file.path(subj_dir, paste0(hemi, ".", measure, ".supersubject.bk")),
   mask = TRUE,
   save_rds = FALSE,
+  cluster,
   verbose = TRUE
 )
 }
@@ -45,6 +46,8 @@ cortical map.}
 
 \item{save_rds}{: (default = FALSE) save the supersubject file metadata for re-use
 in other sessions.}
+
+\item{cluster}{: the parallel cluster}
 
 \item{verbose}{: (default = TRUE)}
 }

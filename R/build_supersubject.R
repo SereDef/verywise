@@ -18,14 +18,13 @@
 #' cortical map.
 #' @param save_rds : (default = FALSE) save the supersubject file metadata for re-use
 #' in other sessions.
+#' @param cluster : the parallel cluster
 #' @param verbose : (default = TRUE)
 #'
 #' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
 #' n_subjects x n_vertices)
 
 #' @import bigstatsr
-#' @import doParallel
-#' @import foreach
 #'
 #' @author Serena Defina, 2024.
 #' @export
@@ -46,6 +45,7 @@ build_supersubject <- function(subj_dir,
                                ),
                                mask = TRUE,
                                save_rds = FALSE, # dir_tmp,
+                               cluster,
                                verbose = TRUE) {
   # measure2 <- measure
   # if(measure2 == "w_g.pct") measure2 <- "w-g.pct"
@@ -99,7 +99,8 @@ build_supersubject <- function(subj_dir,
   # Initiate Filebacked Big Matrix
   # Change this: so i can access the data column by column and not row by row
   ss <- bigstatsr::FBM(
-    nrow = n_files, ncol = n_verts,
+    nrow = n_files+1,
+    ncol = n_verts,
     backingfile = gsub(".bk$", "", backing),
     create_bk = !file.exists(backing)
   )
@@ -110,16 +111,20 @@ build_supersubject <- function(subj_dir,
   #   p <- progressr::progressor(steps = n_files)
   # }
 
+  # use the first row as vertex index
+  ss[1, ] <- seq_len(n_verts)
+
   # Populate rows with participant info
-  furrr::future_walk(seq_len(n_files), function(vertex) {
+  # furrr::future_walk(seq_len(n_files), function(subj) {
+  parallel::parLapply(cluster, seq_len(n_files), function(subj) {
 
     # if (requireNamespace("progressr", quietly = TRUE)) { p() }
 
-    ss[vertex, ] <- load.mgh(mgh_files[vertex])$x[cortex]
+    ss[(subj+1), ] <- load.mgh(mgh_files[subj])$x[cortex]
 
-  },
-  .options = furrr::furrr_options(seed = TRUE),
-  .progress = TRUE)
+  })
+  # .options = furrr::furrr_options(seed = TRUE),
+  # .progress = TRUE)
 
   # if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
 
@@ -129,5 +134,5 @@ build_supersubject <- function(subj_dir,
     ss$save()
   }
 
-  ss
+  return(ss)
 }

@@ -1,68 +1,71 @@
-# library(verywise)
-#
-# # Simulate FreeSurfer and phenotype dataset
-subj_dir = "/Users/Serena/Desktop/Packages/verywise/inst/extdata/example_data"
-#
-# n_subs = 5 # * 2 cohorts * 2 timepoints * 2 hemispheres = 40 files
-# n_vert = 100
-#
-# data_structure = list("cohort1" = list("sessions" = c("01",'02'), "n_subjects" = n_subs),
-#                       "cohort2" = list("sessions" = c("01",'02'), "n_subjects" = n_subs))
-#
-# simulate_dataset(path = subj_dir,
-#                  data_structure = data_structure,
-#                  vw_resolution = n_vert,
-#                  hemi = "lh")
-# simulate_dataset(path = subj_dir,
-#                  data_structure = data_structure,
-#                  vw_resolution = n_vert,
-#                  hemi = "rh")
+# remove.packages("verywise")
+# .rs.restartR()
+# devtools::install()
 
-# Run analysis
-#remove.packages("verywise")
-#.rs.restartR()
-#devtools::install()
+
+# performance profiling
 library(verywise)
 library(profvis)
 
-profvis({
-  future::plan('multicore', workers=2)
-  out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-                    subj_dir = subj_dir,
-                    pheno = file.path(subj_dir, 'phenotype.csv'),
-                    apply_cortical_mask = FALSE # 100 vertices, do not have mask
-  )
-})
+profile_performance <- function(n_subs=10, n_vert=100, n_cores=1,
+                                simulate = TRUE,
+                                subj_dir = "/Users/Serena/Desktop/Packages/sym_data") {
+
+  if (simulate) {
+    # Simulate dataset
+    # n_files = n_subs * 2 cohorts * 2 timepoints * 2 hemispheres
+    data_structure = list("cohort1" = list("sessions" = c("01",'02'), "n_subjects" = n_subs),
+                        "cohort2" = list("sessions" = c("01",'02'), "n_subjects" = n_subs))
+    for (hemi in c('lh','rh')) {
+      simulate_dataset(path = subj_dir,
+                       data_structure = data_structure,
+                       vw_resolution = n_vert,
+                       hemi = hemi)
+      }
+  }
+
+  start_time = Sys.time()
+  perf <- profvis({
+    out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+                      subj_dir = subj_dir,
+                      pheno = file.path(subj_dir, 'phenotype.csv'),
+                      n_cores = n_cores,
+                      save_ss = FALSE,
+                      apply_cortical_mask = FALSE) # 100 vertices, do not have mask
+    })
+
+  end_time = Sys.time()
+
+  # clean-up
+  file.remove(list.files(subj_dir, '*.bk', full.names=TRUE))
+  unlink(file.path(subj_dir, "results"), recursive = TRUE)
+
+  print(end_time - start_time)
+
+  return(list('pf'=perf, 't'=end_time - start_time))
+}
 
 
-future::plan('sequential')
-
-start = Sys.time()
+subj_dir = "/Users/Serena/Desktop/Packages/sym_data"
 out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
                   subj_dir = subj_dir,
                   pheno = file.path(subj_dir, 'phenotype.csv'),
-                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
-)
-end = Sys.time()
+                  n_cores = 1,
+                  save_ss = FALSE,
+                  apply_cortical_mask = FALSE)
 
-end - start
+p1 <- profile_performance(n_subs=4, n_vert=100, n_cores=1)
+p2 <- profile_performance(n_subs=4, n_vert=100, n_cores=2)
+p4 <- profile_performance(n_subs=4, n_vert=100, n_cores=4)
+p8 <- profile_performance(n_subs=4, n_vert=100, n_cores=8)
 
-library(future)
 
-plan(list(
- sequential,
- tweak(multicore, workers = I(4))
-))
+p1 <- profile_performance(n_subs=10, n_vert=10000, n_cores=1)
+p2 <- profile_performance(n_subs=10, n_vert=10000, n_cores=2)
+p4 <- profile_performance(n_subs=10, n_vert=10000, n_cores=4)
+p8 <- profile_performance(n_subs=1000, n_vert=100000, n_cores=8)
 
-start = Sys.time()
-out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-                  subj_dir = subj_dir,
-                  pheno = file.path(subj_dir, 'phenotype.csv'),
-                  apply_cortical_mask = FALSE # 100 vertices, do not have mask
-)
-end = Sys.time()
-
-end - start
+p8 <- profile_performance(n_subs=1000, n_vert=100000, n_cores=8, simulate=FALSE)
 
 # Check number of cores
 # if (requireNamespace("parallelly", quietly = TRUE)){
