@@ -52,7 +52,9 @@ out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
                   pheno = file.path(subj_dir, 'phenotype.csv'),
                   n_cores = 1,
                   save_ss = FALSE,
+                  FS_HOME = '/Applications/freesurfer/7.4.1',
                   apply_cortical_mask = FALSE)
+
 
 p1 <- profile_performance(n_subs=4, n_vert=100, n_cores=1)
 p2 <- profile_performance(n_subs=4, n_vert=100, n_cores=2)

@@ -84,6 +84,7 @@ run_vw_lmm <- function(formula,
                   hemi = h,
                   seed = seed,
                   cluster = cluster,
+                  FS_HOME = FS_HOME,
                   ...)
     })
 
@@ -343,35 +344,39 @@ hemi_vw_lmm <- function(formula, # model formula
     message("NO FREESURFER INSTALLATION: cannot compute the clusters atm")
   } else {
 
-  # Estimate full-width half maximum (using FreeSurfer)
-  message("Estimating data smoothness for multiple testing correction.")
+    # Set up FreeSurfer
+    Sys.setenv(FREESURFER_HOME = FS_HOME)
+    system(paste0("source ",FS_HOME,"/SetUpFreeSurfer.sh"))
 
-  fwhm <- estimate_fwhm(outp_dir = outp_dir,
-                        hemi = hemi,
-                        resid_file = resid_mgh_path,
-                        mask = good_verts,
-                        target = target)
-  if (fwhm > 30) {
-    message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
-    fwhm <- 30
-  } else if (fwhm < 1) {
-    message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
-    fwhm <- 1
-  }
+    # Estimate full-width half maximum (using FreeSurfer)
+    message("Estimating data smoothness for multiple testing correction.")
 
-  message("Clusterwise correction")
-
-  for ( stack_n in seq_along(fixed_terms) ){
-    # message2("\n", verbose = verbose)
-    compute_clusters(outp_dir = outp_dir,
-                     hemi = hemi,
-                     term_number = stack_n,
-                     fwhm = fwhm,
-                     FS_HOME = FS_HOME,
-                     mcz_thr = mcz_thr,
-                     cwp_thr = cwp_thr,
-                     mask = file.path(outp_dir, "finalMask.mgh"))
+    fwhm <- estimate_fwhm(outp_dir = outp_dir,
+                          hemi = hemi,
+                          resid_file = resid_mgh_path,
+                          mask = good_verts,
+                          target = target)
+    if (fwhm > 30) {
+      message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
+      fwhm <- 30
+    } else if (fwhm < 1) {
+      message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
+      fwhm <- 1
     }
+
+    message("Clusterwise correction")
+
+    for ( stack_n in seq_along(fixed_terms) ){
+      # message2("\n", verbose = verbose)
+      compute_clusters(outp_dir = outp_dir,
+                       hemi = hemi,
+                       term_number = stack_n,
+                       fwhm = fwhm,
+                       FS_HOME = FS_HOME,
+                       mcz_thr = mcz_thr,
+                       cwp_thr = cwp_thr,
+                       mask = file.path(outp_dir, "finalMask.mgh"))
+      }
   }
 
   return(out)

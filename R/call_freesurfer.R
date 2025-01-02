@@ -21,10 +21,14 @@ estimate_fwhm <- function(outp_dir,
                           resid_file,
                           mask = NULL,
                           target = "fsaverage",
-                          verbose = FALSE) {
+                          verbose = FALSE #, # FS_HOME = ""
+                          ) {
 
   fwhm_estim_path <- file.path(outp_dir, "fwhm.dat")
   final_mask_path <- file.path(outp_dir, "finalMask.mgh")
+
+  # Sys.setenv(FREESURFER_HOME = FS_HOME)
+  # system(paste0("source ",FS_HOME,"/SetUpFreeSurfer.sh"))
 
   cmd_str <- paste("mris_fwhm",
                    "--i", resid_file,

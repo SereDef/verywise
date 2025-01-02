@@ -16,7 +16,7 @@ GLOBALS <- new.env()
 
   if (FS_HOME == "") {
     packageStartupMessage("ATTENTION! I could not find a FreeSurfer installation.",
-    "This is currently necessary for computing significant clusters.")
+    " This is currently necessary for computing significant clusters.")
   } else {
     assign('FS_HOME', FS_HOME, GLOBALS)
     packageStartupMessage(paste("FS_HOME:", FS_HOME))
