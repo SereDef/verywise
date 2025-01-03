@@ -12,7 +12,7 @@ run_vw_lmm(
   hemi = c("both", "lh", "rh"),
   seed = 3108,
   n_cores = 1,
-  FS_HOME = "",
+  FS_HOME = Sys.getenv("FREESURFER_HOME"),
   ...
 )
 }

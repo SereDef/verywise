@@ -9,7 +9,7 @@ hemi_vw_lmm(
   data_list,
   subj_dir,
   outp_dir = NULL,
-  FS_HOME = Sys.getenv("FREESURFER_HOME"),
+  FS_HOME = "",
   hemi,
   measure = gsub("vw_", "", all.vars(formula)[1]),
   fwhm = 10,

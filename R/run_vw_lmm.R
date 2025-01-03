@@ -31,7 +31,7 @@ run_vw_lmm <- function(formula,
                        hemi = c("both", "lh","rh"),
                        seed = 3108,
                        n_cores = 1,
-                       FS_HOME = "",
+                       FS_HOME = Sys.getenv("FREESURFER_HOME"),
                        ...
 ) {
 
@@ -141,7 +141,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         data_list,
                         subj_dir,
                         outp_dir = NULL,
-                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
+                        FS_HOME = "",
                         hemi,
                         measure = gsub("vw_", "", all.vars(formula)[1]),
                         fwhm = 10,
@@ -245,18 +245,6 @@ hemi_vw_lmm <- function(formula, # model formula
 
   set.seed(seed)
 
-  # foreach::foreach (i = seq_along(chunk_seq[,1]), .combine = "c") %dopar% {
-  #   utils::setTxtProgressBar(pb, i)
-  #
-  #   chunk_ids <- good_verts[chunk_seq[i,1]:chunk_seq[i,2]]
-  #
-  #   ss_chunk <- ss[, chunk_ids]
-  #
-  #   parallel::parLapply(cl, 1:ncol(Y), function(v){
-  # Fetch brain data
-  #  y <- Y[, v]
-  #future.apply::future_apply(ss, MARGIN = 2, function(vertex) {
-
   parallel::parCapply(cluster, ss, function(vertex) {
 
     # I use the first element of the ss matrix as index
@@ -273,10 +261,6 @@ hemi_vw_lmm <- function(formula, # model formula
 
       return(NULL)
     }
-   #furrr::future_walk(good_verts, function(vertex) {
-
-    # if (requireNamespace("progressr", quietly = TRUE)) { p() }
-    # Fetch brain data
 
     # Loop through imputed datasets and run analyses
     out_stats <- lapply(data_list, single_lmm, y = vertex, formula = formula,
@@ -294,13 +278,7 @@ hemi_vw_lmm <- function(formula, # model formula
 
     NULL
   })
-  # i = seq_len(ncol(ss)) #
-  # future.chunk.size=1000,
-  # future.seed = TRUE
-  # .options = furrr::furrr_options(seed = TRUE,
-  #                                chunk_size = 1000),
-  # .progress = TRUE)
-  # )
+
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- res_bk_names # c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
 
@@ -340,44 +318,50 @@ hemi_vw_lmm <- function(formula, # model formula
     if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
   }
 
-  if (FS_HOME=="") {
-    message("NO FREESURFER INSTALLATION: cannot compute the clusters atm")
-  } else {
+  # Set up the necessary FreeSurfer global variables
+  if (Sys.getenv("FREESURFER_HOME") == "") {
 
-    # Set up FreeSurfer
+    if (is.null(FS_HOME) | FS_HOME == "") stop("FREESURFER_HOME needs to be specified or set up.")
+
     Sys.setenv(FREESURFER_HOME = FS_HOME)
-    system(paste0("source ",FS_HOME,"/SetUpFreeSurfer.sh"))
-
-    # Estimate full-width half maximum (using FreeSurfer)
-    message("Estimating data smoothness for multiple testing correction.")
-
-    fwhm <- estimate_fwhm(outp_dir = outp_dir,
-                          hemi = hemi,
-                          resid_file = resid_mgh_path,
-                          mask = good_verts,
-                          target = target)
-    if (fwhm > 30) {
-      message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
-      fwhm <- 30
-    } else if (fwhm < 1) {
-      message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
-      fwhm <- 1
-    }
-
-    message("Clusterwise correction")
-
-    for ( stack_n in seq_along(fixed_terms) ){
-      # message2("\n", verbose = verbose)
-      compute_clusters(outp_dir = outp_dir,
-                       hemi = hemi,
-                       term_number = stack_n,
-                       fwhm = fwhm,
-                       FS_HOME = FS_HOME,
-                       mcz_thr = mcz_thr,
-                       cwp_thr = cwp_thr,
-                       mask = file.path(outp_dir, "finalMask.mgh"))
-      }
+    system(paste("source", file.path(FS_HOME,"SetUpFreeSurfer.sh")))
   }
+  if (Sys.getenv("SUBJECTS_DIR") == "") Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME,'subjects'))
+  # Add $FREESURFER_HOME/bin to $PATH (if not there already) so that FreeSurfer
+  # commands can also be called from RStudio
+  if (!grepl(file.path(FS_HOME, "bin"), Sys.getenv("PATH"))) {
+    Sys.setenv(PATH=paste(Sys.getenv("PATH"), file.path(FS_HOME,"bin"), sep=":"))
+  }
+
+  # Estimate full-width half maximum (using FreeSurfer)
+  message("Estimating data smoothness for multiple testing correction.")
+
+  fwhm <- estimate_fwhm(outp_dir = outp_dir,
+                        hemi = hemi,
+                        resid_file = resid_mgh_path,
+                        mask = good_verts,
+                        target = target)
+  if (fwhm > 30) {
+    message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
+    fwhm <- 30
+  } else if (fwhm < 1) {
+    message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
+    fwhm <- 1
+  }
+
+  message("Clusterwise correction")
+
+  for ( stack_n in seq_along(fixed_terms) ){
+    # message2("\n", verbose = verbose)
+    compute_clusters(outp_dir = outp_dir,
+                     hemi = hemi,
+                     term_number = stack_n,
+                     fwhm = fwhm,
+                     FS_HOME = FS_HOME,
+                     mcz_thr = mcz_thr,
+                     cwp_thr = cwp_thr,
+                     mask = file.path(outp_dir, "finalMask.mgh"))
+    }
 
   return(out)
 }

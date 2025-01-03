@@ -27,9 +27,6 @@ estimate_fwhm <- function(outp_dir,
   fwhm_estim_path <- file.path(outp_dir, "fwhm.dat")
   final_mask_path <- file.path(outp_dir, "finalMask.mgh")
 
-  # Sys.setenv(FREESURFER_HOME = FS_HOME)
-  # system(paste0("source ",FS_HOME,"/SetUpFreeSurfer.sh"))
-
   cmd_str <- paste("mris_fwhm",
                    "--i", resid_file,
                    "--hemi", hemi,
@@ -44,7 +41,11 @@ estimate_fwhm <- function(outp_dir,
   # message2(verbose = verbose, cmdStr)
   system(cmd_str, ignore.stdout = !verbose)
 
-  fwhm <- round(utils::read.table(fwhm_estim_path))
+  tryCatch({fwhm <- round(utils::read.table(fwhm_estim_path))},
+           error = function(e) {
+             message("mris_fwhm command not running correctly")
+             # Choose a return value in case of error
+             NA} )
 
   return(fwhm)
 }
@@ -132,3 +133,5 @@ compute_clusters <- function(outp_dir,
 
   NULL
 }
+
+
