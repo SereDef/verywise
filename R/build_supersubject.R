@@ -96,8 +96,9 @@ build_supersubject <- function(subj_dir,
   }
 
   if (file.exists(backing)) file.remove(backing) # TODO: TMP
+
   # Initiate Filebacked Big Matrix
-  # Change this: so i can access the data column by column and not row by row
+  # Change this: so I can access the data column by column and not row by row
   ss <- bigstatsr::FBM(
     nrow = n_files+1,
     ncol = n_verts,
@@ -115,7 +116,6 @@ build_supersubject <- function(subj_dir,
   ss[1, ] <- seq_len(n_verts)
 
   # Populate rows with participant info
-  # furrr::future_walk(seq_len(n_files), function(subj) {
   parallel::parLapply(cluster, seq_len(n_files), function(subj) {
 
     # if (requireNamespace("progressr", quietly = TRUE)) { p() }
@@ -123,8 +123,6 @@ build_supersubject <- function(subj_dir,
     ss[(subj+1), ] <- load.mgh(mgh_files[subj])$x[cortex]
 
   })
-  # .options = furrr::furrr_options(seed = TRUE),
-  # .progress = TRUE)
 
   # if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
 

@@ -9,7 +9,7 @@ library(profvis)
 
 profile_performance <- function(n_subs=10, n_vert=100, n_cores=1,
                                 simulate = TRUE,
-                                subj_dir = "/Users/Serena/Desktop/Packages/sym_data") {
+                                subj_dir = "/Users/Serena/Desktop/sym_data") {
 
   if (simulate) {
     # Simulate dataset
@@ -30,6 +30,7 @@ profile_performance <- function(n_subs=10, n_vert=100, n_cores=1,
                       subj_dir = subj_dir,
                       pheno = file.path(subj_dir, 'phenotype.csv'),
                       n_cores = n_cores,
+                      FS_HOME = '/Applications/freesurfer/7.4.1',
                       save_ss = FALSE,
                       apply_cortical_mask = FALSE) # 100 vertices, do not have mask
     })
@@ -46,14 +47,14 @@ profile_performance <- function(n_subs=10, n_vert=100, n_cores=1,
 }
 
 
-subj_dir = "/Users/Serena/Desktop/Packages/sym_data"
-out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
-                  subj_dir = subj_dir,
-                  pheno = file.path(subj_dir, 'phenotype.csv'),
-                  n_cores = 1,
-                  save_ss = FALSE,
-                  FS_HOME = '/Applications/freesurfer/7.4.1',
-                  apply_cortical_mask = FALSE)
+# subj_dir = "/Users/Serena/Desktop/Packages/sym_data"
+# out <- run_vw_lmm(formula = vw_thickness ~ sex * age + site + (1|id),
+#                   subj_dir = subj_dir,
+#                   pheno = file.path(subj_dir, 'phenotype.csv'),
+#                   n_cores = 1,
+#                   save_ss = FALSE,
+#                   FS_HOME = '/Applications/freesurfer/7.4.1',
+#                   apply_cortical_mask = FALSE)
 
 
 p1 <- profile_performance(n_subs=4, n_vert=100, n_cores=1)
@@ -65,9 +66,10 @@ p8 <- profile_performance(n_subs=4, n_vert=100, n_cores=8)
 p1 <- profile_performance(n_subs=10, n_vert=10000, n_cores=1)
 p2 <- profile_performance(n_subs=10, n_vert=10000, n_cores=2)
 p4 <- profile_performance(n_subs=10, n_vert=10000, n_cores=4)
-p8 <- profile_performance(n_subs=1000, n_vert=100000, n_cores=8)
 
-p8 <- profile_performance(n_subs=1000, n_vert=100000, n_cores=8, simulate=FALSE)
+p8 <- profile_performance(n_subs=100, n_vert=163842, n_cores=8)
+
+# p8 <- profile_performance(n_subs=1000, n_vert=100000, n_cores=8, simulate=FALSE)
 
 # Check number of cores
 # if (requireNamespace("parallelly", quietly = TRUE)){
