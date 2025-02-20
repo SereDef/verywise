@@ -15,7 +15,7 @@ Authors@R: c(
     person("Ryan", "Muetzel", 
            email = "r.muetzel@erasmusmc.nl", role = c("ctb", "fnd"))
            )
-Description: Whole-brain analysis of FreeSurfer MGH format data. The package allows 
+Description: Whole-brain surface analysis of FreeSurfer MGH format data. The package allows 
   application of several statistical models per vertex, including linear mixed models. 
   It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
   Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
