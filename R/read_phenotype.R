@@ -9,10 +9,13 @@
 #' loads the data accordingly. Supported file types: .csv, .rds, .sav, and .txt.
 #'
 #' @param pheno_str A character string specifying the file path.
+#' @param verbose (default = TRUE).
 #'
 #' @return A data frame containing the loaded data
 #'
-load_pheno_file <- function(pheno_str) {
+load_pheno_file <- function(pheno_str, verbose=TRUE) {
+
+  if (verbose) message('Loading phenotype file...')
 
   # Check that specified file exists
   if (!file.exists(pheno_str)) stop(paste0(pheno_str, " file not found."))

@@ -25,7 +25,7 @@ a string containing a file path. Supported file extensions are: rds, csv, txt an
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 
 \item{outp_dir}{: output path, where do you want results to be stored. If none is
-provided by the user, a "results" sub-directory will created inside \code{subj_dir}.}
+provided by the user, a "results" sub-directory will be created inside \code{subj_dir}.}
 
 \item{hemi}{: (default = "both") which hemispheres to run.}
 
