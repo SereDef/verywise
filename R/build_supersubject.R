@@ -54,6 +54,8 @@ build_supersubject <- function(subj_dir,
 
   # Select only the ids in phenotype dataframe
   files_list <- files_list[unlist(lapply(folder_id, grep, files_list))]
+  message(length(files_list),"/",length(folder_id), 'observations found.')
+
   # Make sure the order of ids is the same as in the phenotype dataframe
   if (!identical(folder_id, gsub(paste0(normalizePath(subj_dir), "/"), "",
                                  files_list))) {

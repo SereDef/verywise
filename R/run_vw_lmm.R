@@ -15,7 +15,7 @@
 #' @param seed : (default = 3108) random seed.
 #' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
-#' @inheritDotParams hemi_vw_lmm measure fwhm target model
+#' @inheritDotParams hemi_vw_lmm measure fwhm target model folder_id
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -43,19 +43,22 @@ run_vw_lmm <- function(formula,
 
   # Read phenotype data (if not already loaded) ================================
 
-  if (is.character(pheno)) pheno <- load_pheno_file(pheno)
-  # } else {
+  if (is.character(pheno)) { pheno <- load_pheno_file(pheno)
+  } else {
+    stop("Only files are supported at the moment")
   #   # Capture the name of the object
   #   obj_name <- deparse(substitute(pheno))
   #   pheno <- check_pheno_obj(obj_name)
-  # }
+  }
 
   # Transform to list of dataframes (imputed and single datasets alike)
+  message("Checking and preparing phenotype dataset...")
   data_list <- imp2list(pheno)
 
+  # Check that "folder_id" column is present
+  if (! fodler_id %in% names(data_list[[1]])) stop("Incorrect folder id.")
+
   # TODO: Check the structure of input dataset
-  # Check that id is present
-  # "folder_id" needs to be present
   # check that is in long format
   # check the the formula are columns in dataset
 
@@ -67,6 +70,7 @@ run_vw_lmm <- function(formula,
 
   set.seed(seed)
 
+  message("Preparing parallel clusters...")
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type= "FORK")
   on.exit({
@@ -76,6 +80,8 @@ run_vw_lmm <- function(formula,
 
   # Run analysis in each hemisphere (in sequence)
   out <- lapply(hemis, function(h) {
+
+    message("Hemisphere", h, "...")
 
       hemi_vw_lmm(formula = formula,
                   subj_dir = subj_dir,
@@ -108,6 +114,8 @@ run_vw_lmm <- function(formula,
 #' @param outp_dir : output path, where do you want results to be stored. If none is
 #' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
+#' @param folder_id : (default = "folder_id") the name of the column in pheno that
+#' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param hemi : (default = "both") hemispheres to run.
 #' @param measure : (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
 #' this should be the same as specified in formula
@@ -142,6 +150,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         subj_dir,
                         outp_dir = NULL,
                         FS_HOME = "",
+                        folder_id = 'folder_id',
                         hemi,
                         measure = gsub("vw_", "", all.vars(formula)[1]),
                         fwhm = 10,
@@ -156,7 +165,7 @@ hemi_vw_lmm <- function(formula, # model formula
 ) {
 
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(subj_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
+  ss_file_name <- file.path(outp_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
 
   if (file.exists(ss_file_name)) {
     message("Reading super-subject file from: ", ss_file_name)
@@ -166,17 +175,22 @@ hemi_vw_lmm <- function(formula, # model formula
   } else {
 
     ss <- build_supersubject(subj_dir,
-                             folder_id = data_list[[1]]$folder_id,
+                             folder_id = data_list[[1]][folder_id],
                              files_list = list.dirs.till(subj_dir, n = 2),
                              measure = measure,
                              hemi = hemi,
+                             backing = file.path(outp_dir,
+                                                 paste0(hemi, ".", measure,
+                                                        ".supersubject.bk")),
                              fwhmc = paste0("fwhm", fwhm),
                              target = target,
                              mask = apply_cortical_mask,
                              save_rds = save_ss,
                              cluster = cluster
     )
-  }# Additionally check that there are no vertices that contain any 0s. These may be
+  }
+
+  # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
   if (sum(problem_verts) > 0) {
