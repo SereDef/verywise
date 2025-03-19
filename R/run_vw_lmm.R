@@ -56,7 +56,7 @@ run_vw_lmm <- function(formula,
   data_list <- imp2list(pheno)
 
   # Check that "folder_id" column is present
-  if (! fodler_id %in% names(data_list[[1]])) stop("Incorrect folder id.")
+  if (! folder_id %in% names(data_list[[1]])) stop("Incorrect folder id.")
 
   # TODO: Check the structure of input dataset
   # check that is in long format
@@ -150,7 +150,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         subj_dir,
                         outp_dir = NULL,
                         FS_HOME = "",
-                        folder_id = 'folder_id',
+                        folder_id = "folder_id",
                         hemi,
                         measure = gsub("vw_", "", all.vars(formula)[1]),
                         fwhm = 10,
