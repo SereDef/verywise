@@ -15,7 +15,9 @@
 #' @param seed : (default = 3108) random seed.
 #' @param n_cores : (default = 1) number of cores for parallel processing.
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
-#' @inheritDotParams hemi_vw_lmm measure fwhm target model folder_id
+#' @param folder_id : (default = "folder_id") the name of the column in pheno that
+#' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
+#' @inheritDotParams hemi_vw_lmm measure fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -32,6 +34,7 @@ run_vw_lmm <- function(formula,
                        seed = 3108,
                        n_cores = 1,
                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
+                       folder_id = "folder_id",
                        ...
 ) {
 
