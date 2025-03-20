@@ -13,6 +13,8 @@ run_vw_lmm(
   seed = 3108,
   n_cores = 1,
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
+  folder_id = "folder_id",
+  verbose = TRUE,
   ...
 )
 }
@@ -34,6 +36,11 @@ provided by the user, a "results" sub-directory will be created inside \code{sub
 \item{n_cores}{: (default = 1) number of cores for parallel processing.}
 
 \item{FS_HOME}{: FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.}
+
+\item{folder_id}{: (default = "folder_id") the name of the column in pheno that
+contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").}
+
+\item{verbose}{: (default = TRUE)}
 
 \item{...}{
   Arguments passed on to \code{\link[=hemi_vw_lmm]{hemi_vw_lmm}}

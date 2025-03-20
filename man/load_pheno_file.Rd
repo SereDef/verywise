@@ -4,10 +4,12 @@
 \alias{load_pheno_file}
 \title{Load "phenotype" file into R based on its extension}
 \usage{
-load_pheno_file(pheno_str)
+load_pheno_file(pheno_str, verbose = TRUE)
 }
 \arguments{
 \item{pheno_str}{A character string specifying the file path.}
+
+\item{verbose}{(default = TRUE).}
 }
 \value{
 A data frame containing the loaded data

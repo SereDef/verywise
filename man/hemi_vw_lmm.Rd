@@ -10,6 +10,7 @@ hemi_vw_lmm(
   subj_dir,
   outp_dir = NULL,
   FS_HOME = "",
+  folder_id = "folder_id",
   hemi,
   measure = gsub("vw_", "", all.vars(formula)[1]),
   fwhm = 10,
@@ -37,6 +38,9 @@ pre-processed) data, this expects a verywise structure.}
 provided by the user, a "results" sub-directory will created inside \code{subj_dir}.}
 
 \item{FS_HOME}{: FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.}
+
+\item{folder_id}{: (default = "folder_id") the name of the column in pheno that
+contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").}
 
 \item{hemi}{: (default = "both") hemispheres to run.}
 

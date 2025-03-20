@@ -17,6 +17,7 @@
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
+#' @param verbose : (default = TRUE)
 #' @inheritDotParams hemi_vw_lmm measure fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
@@ -35,6 +36,7 @@ run_vw_lmm <- function(formula,
                        n_cores = 1,
                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
                        folder_id = "folder_id",
+                       verbose = TRUE,
                        ...
 ) {
 
@@ -55,7 +57,7 @@ run_vw_lmm <- function(formula,
   }
 
   # Transform to list of dataframes (imputed and single datasets alike)
-  message("Checking and preparing phenotype dataset...")
+  vw_message("Checking and preparing phenotype dataset...", verbose=verbose)
   data_list <- imp2list(pheno)
 
   # Check that "folder_id" column is present
@@ -73,7 +75,7 @@ run_vw_lmm <- function(formula,
 
   set.seed(seed)
 
-  message("Preparing parallel clusters...")
+  vw_message("Preparing", n_cores, "parallel clusters...", verbose=verbose)
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type= "FORK")
   on.exit({
@@ -84,18 +86,20 @@ run_vw_lmm <- function(formula,
   # Run analysis in each hemisphere (in sequence)
   out <- lapply(hemis, function(h) {
 
-    message("Hemisphere", h, "...")
+    if (h == "lh") { hemi_name <- "Left"} else { hemi_name <- "Right" }
 
-      hemi_vw_lmm(formula = formula,
-                  subj_dir = subj_dir,
-                  outp_dir = outp_dir,
-                  data_list = data_list,
-                  folder_id = fodler_id,
-                  hemi = h,
-                  seed = seed,
-                  cluster = cluster,
-                  FS_HOME = FS_HOME,
-                  ...)
+    vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose=verbose)
+
+    hemi_vw_lmm(formula = formula,
+                subj_dir = subj_dir,
+                outp_dir = outp_dir,
+                data_list = data_list,
+                folder_id = folder_id,
+                hemi = h,
+                seed = seed,
+                cluster = cluster,
+                FS_HOME = FS_HOME,
+                ...)
     })
 
   names(out) <- hemis
