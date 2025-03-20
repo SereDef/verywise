@@ -57,6 +57,8 @@ It checks the user inputs and runs the <code><a href="single_lmm.html">single_lm
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  FS_HOME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"FREESURFER_HOME"</span><span class="op">)</span>,</span>
+<span>  folder_id <span class="op">=</span> <span class="st">"folder_id"</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -97,6 +99,15 @@ provided by the user, a "results" sub-directory will be created inside <code>sub
 
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
 <dd><p>: FreeSurfer directory, i.e. <code>$FREESURFER_HOME</code>.</p></dd>
+
+
+<dt id="arg-folder-id">folder_id<a class="anchor" aria-label="anchor" href="#arg-folder-id"></a></dt>
+<dd><p>: (default = "folder_id") the name of the column in pheno that
+contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>: (default = TRUE)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

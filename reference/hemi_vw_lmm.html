@@ -51,6 +51,7 @@
 <span>  <span class="va">subj_dir</span>,</span>
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  FS_HOME <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  folder_id <span class="op">=</span> <span class="st">"folder_id"</span>,</span>
 <span>  <span class="va">hemi</span>,</span>
 <span>  measure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"vw_"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/allnames.html" class="external-link">all.vars</a></span><span class="op">(</span><span class="va">formula</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>  fwhm <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -91,6 +92,11 @@ provided by the user, a "results" sub-directory will created inside <code>subj_d
 
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
 <dd><p>: FreeSurfer directory, i.e. <code>$FREESURFER_HOME</code>.</p></dd>
+
+
+<dt id="arg-folder-id">folder_id<a class="anchor" aria-label="anchor" href="#arg-folder-id"></a></dt>
+<dd><p>: (default = "folder_id") the name of the column in pheno that
+contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").</p></dd>
 
 
 <dt id="arg-hemi">hemi<a class="anchor" aria-label="anchor" href="#arg-hemi"></a></dt>
