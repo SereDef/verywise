@@ -11,6 +11,7 @@
 #' @param pheno_str A character string specifying the file path.
 #' @param verbose (default = TRUE).
 #'
+#' @export
 #' @return A data frame containing the loaded data
 #'
 load_pheno_file <- function(pheno_str, verbose=TRUE) {

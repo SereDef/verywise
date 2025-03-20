@@ -15,6 +15,7 @@
 #'
 list.dirs.till <- function(path, n) {
   res <- list.dirs(path, recursive = FALSE)
+
   if (n > 1) {
     add <- list.dirs.till(res, n - 1)
     return(add)
@@ -22,6 +23,7 @@ list.dirs.till <- function(path, n) {
     return(res)
   }
 }
+
 
 # ============================= Pretty messages ================================
 

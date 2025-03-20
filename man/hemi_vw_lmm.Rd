@@ -21,7 +21,8 @@ hemi_vw_lmm(
   apply_cortical_mask = TRUE,
   save_ss = TRUE,
   model = "lme4::lmer",
-  cluster
+  cluster,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -73,6 +74,8 @@ quicker processing in the future.}
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
 
 \item{cluster}{: the parallel cluster}
+
+\item{verbose}{: (default = TRUE)}
 }
 \value{
 A list of file-backed matrices containing pooled coefficients, SEs,

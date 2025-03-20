@@ -7,13 +7,15 @@ matrix with dimensions n_subjects x n_vertices.}
 \usage{
 build_supersubject(
   subj_dir,
-  folder_id,
-  files_list = list.dirs.till(subj_dir, n = 2),
+  folder_ids,
+  outp_dir,
   measure = "thickness",
   hemi = "lh",
   fwhmc = "fwhm10",
   target = "fsaverage",
-  backing = file.path(subj_dir, paste0(hemi, ".", measure, ".supersubject.bk")),
+  backing = file.path(outp_dir, paste(hemi, measure, target, "supersubject.bk", sep =
+    ".")),
+  error_cutoff = 20,
   mask = TRUE,
   save_rds = FALSE,
   cluster,
@@ -23,13 +25,11 @@ build_supersubject(
 \arguments{
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 
-\item{folder_id}{: column in phenotype file that holds the IDs of the observations
-to include. This also expects a verywise format (e.g. "site1/sub-1_ses-01")}
+\item{folder_ids}{: the vector of observations to include. This holds the relative
+path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").}
 
-\item{files_list}{: (default = \code{\link{list.dirs.till}(subj_dir, n = 2)})
-allows to specify manually which folders or files to include. You would typically
-not use this parameter, but rather use \code{folder_id} to specify which observations
-to include.}
+\item{outp_dir}{: output path, where logs, backing files and the matrix itself
+(if `save_rds == TRUE`) will be stored.}
 
 \item{measure}{: (default = "thickness"), vertex-wise measure, used to identify files.}
 
@@ -40,6 +40,10 @@ to include.}
 \item{target}{: (default = "fsaverage"), used to identify files.}
 
 \item{backing}{: (default = \code{subj_dir}) location to save the matrix \code{backingfile}.}
+
+\item{error_cutoff}{: (default = 20) how many missing directories or brain surface files
+for the function to stop with an error. If < `error_cutoff` directories/files are not
+found a warning is thrown and missing files are registered in the `issues.log` file.}
 
 \item{mask}{: (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
 cortical map.}

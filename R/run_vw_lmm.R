@@ -61,9 +61,9 @@ run_vw_lmm <- function(formula,
   data_list <- imp2list(pheno)
 
   # Check that "folder_id" column is present
-  if (! folder_id %in% names(data_list[[1]])) stop("Incorrect folder id.")
-
-  # TODO: Check the structure of input dataset
+  if (! folder_id %in% names(data_list[[1]])) stop("Folder ID '", folder_id, "' not found in data.")
+  # TODO:
+  # Check there are no duplicates in folder_id
   # check that is in long format
   # check the the formula are columns in dataset
 
@@ -75,11 +75,12 @@ run_vw_lmm <- function(formula,
 
   set.seed(seed)
 
-  vw_message("Preparing", n_cores, "parallel clusters...", verbose=verbose)
+  if (n_cores > 1 ) vw_message("Preparing cluster of ", n_cores, " workers...",
+                               verbose=verbose)
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type= "FORK")
   on.exit({
-    message("All done! :)")
+    message(pretty_message("All done! :)"))
     parallel::stopCluster(cluster)
   })
 
@@ -90,15 +91,16 @@ run_vw_lmm <- function(formula,
 
     vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose=verbose)
 
-    hemi_vw_lmm(formula = formula,
+    hemi_vw_lmm(hemi = h,
+                formula = formula,
                 subj_dir = subj_dir,
                 outp_dir = outp_dir,
                 data_list = data_list,
                 folder_id = folder_id,
-                hemi = h,
                 seed = seed,
                 cluster = cluster,
                 FS_HOME = FS_HOME,
+                verbose = verbose,
                 ...)
     })
 
@@ -145,6 +147,7 @@ run_vw_lmm <- function(formula,
 #' quicker processing in the future.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #' @param cluster : the parallel cluster
+#' @param verbose : (default = TRUE)
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -169,27 +172,25 @@ hemi_vw_lmm <- function(formula, # model formula
                         apply_cortical_mask = TRUE,
                         save_ss = TRUE,
                         model = "lme4::lmer", # "stats::lm"
-                        cluster
+                        cluster,
+                        verbose = TRUE
 ) {
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(outp_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
 
   if (file.exists(ss_file_name)) {
-    message("Reading super-subject file from: ", ss_file_name)
+    vw_message("Reading super-subject file from: ", ss_file_name, verbose=verbose)
 
     ss <- bigstatsr::big_attach(ss_file_name)
 
   } else {
 
-    ss <- build_supersubject(subj_dir,
-                             folder_id = data_list[[1]][folder_id],
-                             files_list = list.dirs.till(subj_dir, n = 2),
+    ss <- build_supersubject(subj_dir = subj_dir,
+                             folder_ids = data_list[[1]][, folder_id],
+                             outp_dir = outp_dir,
                              measure = measure,
                              hemi = hemi,
-                             backing = file.path(outp_dir,
-                                                 paste0(hemi, ".", measure,
-                                                        ".supersubject.bk")),
                              fwhmc = paste0("fwhm", fwhm),
                              target = target,
                              mask = apply_cortical_mask,
@@ -198,15 +199,19 @@ hemi_vw_lmm <- function(formula, # model formula
     )
   }
 
+  vw_message("Cleaning super-subject matrix...", verbose=verbose)
   # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
   if (sum(problem_verts) > 0) {
-    message("Removing ", sum(problem_verts)," vertices that contained 0 values.")
+    vw_message("Ignoring ", sum(problem_verts)," vertices that contained 0 values.",
+               verbose=verbose)
   }
   good_verts <- which(!problem_verts)
 
   # Unpack model ===============================================================
+  vw_message("Statistical model preparation...", verbose=verbose)
+
   model_info <- get_terms(formula, data_list)
 
   fixed_terms <- model_info[[1]]
@@ -258,7 +263,7 @@ hemi_vw_lmm <- function(formula, # model formula
   # chunk_seq <- make_chunk_sequence(good_verts)
 
   # Parallel analyses ==========================================================
-  message("\nRunning analyses...\n")
+  vw_message("Running analyses...", verbose=verbose)
 
   # if (requireNamespace("progressr", quietly = TRUE)) {
   #   # progressr::handlers(global = TRUE)
@@ -313,7 +318,8 @@ hemi_vw_lmm <- function(formula, # model formula
                      sep = "\t", row.names = FALSE)
 
   # Split all coefficients into separate files and save them in the final directory
-  message("Converting coefficients, SEs, t- and p-values to .mgh format")
+  vw_message("Converting coefficients, SEs, t- and p-values to .mgh format...",
+             verbose=verbose)
 
   results_grid <- expand.grid(stack_ids$stack_number, # how many terms
                     res_bk_names[-length(res_bk_names)]) # all statistics except the residuals
@@ -329,7 +335,7 @@ hemi_vw_lmm <- function(formula, # model formula
             filter = as.integer(results_grid[grid_row, 1]))
     })
 
-  message("\nConverting residuals to .mgh format\n")
+  vw_message("Converting residuals to .mgh format...", verbose=verbose)
   resid_mgh_path <- file.path(outp_dir, paste(hemi, "residuals.mgh", sep = "."))
   fbm2mgh(fbm = out[[ res_bk_names[length(res_bk_names)] ]],
           fname = resid_mgh_path)
@@ -356,7 +362,8 @@ hemi_vw_lmm <- function(formula, # model formula
   }
 
   # Estimate full-width half maximum (using FreeSurfer)
-  message("Estimating data smoothness for multiple testing correction.")
+  vw_message("Estimating data smoothness for multiple testing correction...",
+             verbose=verbose)
 
   fwhm <- estimate_fwhm(outp_dir = outp_dir,
                         hemi = hemi,
@@ -364,14 +371,16 @@ hemi_vw_lmm <- function(formula, # model formula
                         mask = good_verts,
                         target = target)
   if (fwhm > 30) {
-    message(paste0("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30."))
+    vw_message("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30.",
+               verbose=verbose)
     fwhm <- 30
   } else if (fwhm < 1) {
-    message(paste0("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1."))
+    vw_message("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1.",
+               verbose=verbose)
     fwhm <- 1
   }
 
-  message("Clusterwise correction")
+  vw_message("Clusterwise correction...", verbose=verbose)
 
   for ( stack_n in seq_along(fixed_terms) ){
     # message2("\n", verbose = verbose)
