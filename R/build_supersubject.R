@@ -7,15 +7,15 @@
 #' path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").
 #' @param outp_dir : output path, where logs, backing files and the matrix itself
 #' (if `save_rds == TRUE`) will be stored.
+#' @param measure : vertex-wise measure, used to identify files.
+#' @param hemi : hemisphere, used to identify files.
+#' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
+#' @param target : (default = "fsaverage"), used to identify files.
+#' @param backing : (default = `outp_dir`) location to save the matrix \code{backingfile}.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
 #' for the function to stop with an error. If < `error_cutoff` directories/files are not
 #' found a warning is thrown and missing files are registered in the `issues.log` file.
-#' @param measure : (default = "thickness"), vertex-wise measure, used to identify files.
-#' @param hemi : (default = "lh") hemisphere, used to identify files.
-#' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
-#' @param target : (default = "fsaverage"), used to identify files.
-#' @param backing : (default = \code{subj_dir}) location to save the matrix \code{backingfile}.
-#' @param mask : (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
+#' @param mask : (default = TRUE) only keep cortical vertices, according to FreeSurfer
 #' cortical map.
 #' @param save_rds : (default = FALSE) save the supersubject file metadata for re-use
 #' in other sessions.
@@ -33,8 +33,8 @@
 build_supersubject <- function(subj_dir,
                                folder_ids,
                                outp_dir,
-                               measure = "thickness",
-                               hemi = "lh",
+                               measure,
+                               hemi,
                                fwhmc = "fwhm10",
                                target = "fsaverage",
                                backing = file.path(
@@ -69,6 +69,7 @@ build_supersubject <- function(subj_dir,
 
     # If many observations are missing, the folder id may be mispecified
     if (length(folders_not_found) > error_cutoff) {
+      message(folders_not_found[1])
       stop(length(folders_not_found), " observations specified in phenotype were
            not found in `subj_dir`. Is your `folder_id` correctly specified?")
     }

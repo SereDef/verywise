@@ -9,8 +9,8 @@ build_supersubject(
   subj_dir,
   folder_ids,
   outp_dir,
-  measure = "thickness",
-  hemi = "lh",
+  measure,
+  hemi,
   fwhmc = "fwhm10",
   target = "fsaverage",
   backing = file.path(outp_dir, paste(hemi, measure, target, "supersubject.bk", sep =
@@ -31,21 +31,21 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 \item{outp_dir}{: output path, where logs, backing files and the matrix itself
 (if `save_rds == TRUE`) will be stored.}
 
-\item{measure}{: (default = "thickness"), vertex-wise measure, used to identify files.}
+\item{measure}{: vertex-wise measure, used to identify files.}
 
-\item{hemi}{: (default = "lh") hemisphere, used to identify files.}
+\item{hemi}{: hemisphere, used to identify files.}
 
 \item{fwhmc}{: (default = "fwhm10") full-width half maximum value, used to identify files.}
 
 \item{target}{: (default = "fsaverage"), used to identify files.}
 
-\item{backing}{: (default = \code{subj_dir}) location to save the matrix \code{backingfile}.}
+\item{backing}{: (default = `outp_dir`) location to save the matrix \code{backingfile}.}
 
 \item{error_cutoff}{: (default = 20) how many missing directories or brain surface files
 for the function to stop with an error. If < `error_cutoff` directories/files are not
 found a warning is thrown and missing files are registered in the `issues.log` file.}
 
-\item{mask}{: (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
+\item{mask}{: (default = TRUE) only keep cortical vertices, according to FreeSurfer
 cortical map.}
 
 \item{save_rds}{: (default = FALSE) save the supersubject file metadata for re-use
