@@ -57,6 +57,8 @@ build_supersubject <- function(subj_dir,
   # files_list = list.dirs.till(subj_dir, n = 2)
   # files_list <- files_list[unlist(lapply(folder_ids, grep, files_list))]
   folder_list <- file.path(subj_dir, folder_ids)
+  message(subj_dir)
+  message(folder_list[1])
 
   log_file <- file.path(outp_dir, "issues.log")
 
