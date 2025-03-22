@@ -52,8 +52,8 @@ matrix with dimensions n_subjects x n_vertices.</p>
 <span>  <span class="va">subj_dir</span>,</span>
 <span>  <span class="va">folder_ids</span>,</span>
 <span>  <span class="va">outp_dir</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
-<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
+<span>  <span class="va">measure</span>,</span>
+<span>  <span class="va">hemi</span>,</span>
 <span>  fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
 <span>  target <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
 <span>  backing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outp_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">hemi</span>, <span class="va">measure</span>, <span class="va">target</span>, <span class="st">"supersubject.bk"</span>, sep <span class="op">=</span></span>
@@ -85,11 +85,11 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
-<dd><p>: (default = "thickness"), vertex-wise measure, used to identify files.</p></dd>
+<dd><p>: vertex-wise measure, used to identify files.</p></dd>
 
 
 <dt id="arg-hemi">hemi<a class="anchor" aria-label="anchor" href="#arg-hemi"></a></dt>
-<dd><p>: (default = "lh") hemisphere, used to identify files.</p></dd>
+<dd><p>: hemisphere, used to identify files.</p></dd>
 
 
 <dt id="arg-fwhmc">fwhmc<a class="anchor" aria-label="anchor" href="#arg-fwhmc"></a></dt>
@@ -101,7 +101,7 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 
 <dt id="arg-backing">backing<a class="anchor" aria-label="anchor" href="#arg-backing"></a></dt>
-<dd><p>: (default = <code>subj_dir</code>) location to save the matrix <code>backingfile</code>.</p></dd>
+<dd><p>: (default = `outp_dir`) location to save the matrix <code>backingfile</code>.</p></dd>
 
 
 <dt id="arg-error-cutoff">error_cutoff<a class="anchor" aria-label="anchor" href="#arg-error-cutoff"></a></dt>
@@ -111,7 +111,7 @@ found a warning is thrown and missing files are registered in the `issues.log` f
 
 
 <dt id="arg-mask">mask<a class="anchor" aria-label="anchor" href="#arg-mask"></a></dt>
-<dd><p>: (dafault = TRUE) only keep cortical vertices, according to FreeSurfer
+<dd><p>: (default = TRUE) only keep cortical vertices, according to FreeSurfer
 cortical map.</p></dd>
 
 
