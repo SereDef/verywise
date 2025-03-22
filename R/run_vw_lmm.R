@@ -91,8 +91,6 @@ run_vw_lmm <- function(formula,
 
     vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose=verbose)
 
-    message('run_vw_lmm: ', subj_dir)
-
     hemi_vw_lmm(hemi = h,
                 formula = formula,
                 subj_dir = subj_dir,
@@ -187,8 +185,6 @@ hemi_vw_lmm <- function(formula, # model formula
     ss <- bigstatsr::big_attach(ss_file_name)
 
   } else {
-
-    message('hemi_vw_lmm: ', subj_dir)
 
     ss <- build_supersubject(subj_dir = subj_dir,
                              folder_ids = data_list[[1]][, folder_id],
