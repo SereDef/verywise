@@ -57,7 +57,7 @@ build_supersubject <- function(subj_dir,
   # files_list = list.dirs.till(subj_dir, n = 2)
   # files_list <- files_list[unlist(lapply(folder_ids, grep, files_list))]
   folder_list <- file.path(subj_dir, folder_ids)
-  message(subj_dir)
+  message('build_supersubject: ', subj_dir, '-')
   message(folder_list[1])
 
   log_file <- file.path(outp_dir, "issues.log")
@@ -71,7 +71,6 @@ build_supersubject <- function(subj_dir,
 
     # If many observations are missing, the folder id may be mispecified
     if (length(folders_not_found) > error_cutoff) {
-      message(folders_not_found[1])
       stop(length(folders_not_found), " observations specified in phenotype were
            not found in `subj_dir`. Is your `folder_id` correctly specified?")
     }
