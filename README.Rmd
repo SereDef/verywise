@@ -60,10 +60,15 @@ You can find more info and tutorials [here](https://seredef.github.io/verywise/i
 
 ## Visualization 
 
-To quickly inspect and plot your results you can use our interactive application, [BrainMapp](https://github.com/SereDef/brainmapp)
+To inspect and plot your results you can use our interactive web application, [verywiseWIZard](https://github.com/SereDef/verywise-wizard). You can run this locally or try it out [here](https://seredef-verywise-wizard.share.connect.posit.cloud/).
 
 ## Note
 
 This is a spin-off of the (more stable) [`QDECR`](https://www.qdecr.com/) package.
+
+## Funders  
+<img src="man/figures/funders.png" align="right" height="100" alt="Funders" />
+
+This work was supported by the *FLAG-ERA* grant [**Infant2Adult**](https://www.infant2adult.com/home) and by The Netherlands Organization for Health Research and Development (ZonMw, grant number 16080606). 
 
 All feedback and contributions are **very welcome!**.
