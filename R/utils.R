@@ -185,11 +185,13 @@ fbm_col_has_0 <- function(X, n_cores = 1,
 #' @return A matrix with n_chunks rows and 2 columns (chunk start and end positions).
 #'
 make_chunk_sequence <- function(iv, chunk_size = 1000) {
-  cstart <- seq(1, length(iv), chunk_size)
-  cend <- cstart + chunk_size - 1
-  cend[length(cend)] <- length(iv)
+  # cstart <- seq(1, length(iv), chunk_size)
+  # cend <- cstart + chunk_size - 1
+  # cend[length(cend)] <- length(iv)
+  #
+  # chunk_seq <- t(rbind(cstart, cend))
 
-  chunk_seq <- t(rbind(cstart, cend))
+  chunk_seq <- split(iv, ceiling(seq_along(iv) / chunk_size))
 }
 
 # ============================== MGH i/o helpers ==============================

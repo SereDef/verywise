@@ -1,0 +1,25 @@
+Cortical masks for all fsaverage templates:
+- fsaverage = 163842 vertices,
+- fsaverage6 = 40962,
+- fsaverage5 = 10242,
+- fsaverage4 = 2562,
+- fsaverage3 = 642,
+The rds files contain logical vectors derived from the corresponding
+'[h]l.cortex.mask.label' file distributed with FreeSurfer (version 7.4.1).
+
+Code to generate them:
+
+```{r}
+freesurfer_home = "/Applications/freesurfer/7.4.1"
+outp_path = "/Users/Serena/Desktop/Packages/verywise/inst/extdata/cortex_mask/"
+
+for (target in paste0('fsaverage', c('','6','5','4','3'))){
+  for (h in c('lh','rh')) {
+    verywise:::create_cortex_mask(
+                        freesurfer_home=freesurfer_home,
+                        fsaverage_template=target,
+                        hemi=h,
+                        outp_path=outp_path)
+  }
+}
+```

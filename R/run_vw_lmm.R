@@ -75,15 +75,6 @@ run_vw_lmm <- function(formula,
 
   set.seed(seed)
 
-  if (n_cores > 1 ) vw_message("Preparing cluster of ", n_cores, " workers...",
-                               verbose=verbose)
-  # Set up parallel processing
-  cluster <- parallel::makeCluster(n_cores, type= "FORK")
-  on.exit({
-    message(pretty_message("All done! :)"))
-    parallel::stopCluster(cluster)
-  })
-
   # Run analysis in each hemisphere (in sequence)
   out <- lapply(hemis, function(h) {
 
@@ -98,7 +89,8 @@ run_vw_lmm <- function(formula,
                 data_list = data_list,
                 folder_id = folder_id,
                 seed = seed,
-                cluster = cluster,
+                # cluster = cluster,
+                n_cores = n_cores,
                 FS_HOME = FS_HOME,
                 verbose = verbose,
                 ...)
@@ -146,13 +138,16 @@ run_vw_lmm <- function(formula,
 #' @param save_ss : (default = TRUE) save the super-subject matrix as an rds file for
 #' quicker processing in the future.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
-#' @param cluster : the parallel cluster
+#' @param n_cores : the parallel cluster
 #' @param verbose : (default = TRUE)
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
 #'
 #' @author Serena Defina, 2024.
+#'
+#' @importFrom foreach foreach
+#' @importFrom foreach %dopar%
 #'
 #' @export
 #'
@@ -172,7 +167,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         apply_cortical_mask = TRUE,
                         save_ss = TRUE,
                         model = "lme4::lmer", # "stats::lm"
-                        cluster,
+                        n_cores,
                         verbose = TRUE
 ) {
 
@@ -191,15 +186,16 @@ hemi_vw_lmm <- function(formula, # model formula
                              outp_dir = outp_dir,
                              measure = measure,
                              hemi = hemi,
+                             n_cores = n_cores,
                              fwhmc = paste0("fwhm", fwhm),
                              target = target,
-                             mask = apply_cortical_mask,
+                             # mask = apply_cortical_mask,
                              save_rds = save_ss,
-                             cluster = cluster
     )
   }
 
   vw_message("Cleaning super-subject matrix...", verbose=verbose)
+  # TODO: mask cortex
   # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
@@ -207,7 +203,10 @@ hemi_vw_lmm <- function(formula, # model formula
     vw_message("Ignoring ", sum(problem_verts)," vertices that contained 0 values.",
                verbose=verbose)
   }
-  good_verts <- which(!problem_verts)
+
+  is_cortex <- mask_cortex(hemi = hemi, target = target)
+
+  good_verts <- which(!problem_verts & is_cortex)
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...", verbose=verbose)
@@ -217,14 +216,11 @@ hemi_vw_lmm <- function(formula, # model formula
   fixed_terms <- model_info[[1]]
 
   # Number of vertices
-  vw_n <- length(good_verts) # ncol(ss)
+  vw_n <- length(is_cortex) # length(good_verts) # ncol(ss)
   # Number of terms (excluding the ranloaddom!?)
   fe_n <- length(fixed_terms)
   # Number of participants*timepoint (long format)
   n_obs <- nrow(model_info[[2]]) # nrow(data_list[[1]])
-  # if (n_obs != nrow(ss)-1) {
-  #   stop("qualquadra non cosa")
-  # }
   # Number of (imputed) datasets
   m <- length(data_list)
 
@@ -245,6 +241,12 @@ hemi_vw_lmm <- function(formula, # model formula
     # warning("Overwriting results")
     if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
   }
+  # Remove temporary matrices files after computations are done
+  on.exit({
+    for (bk in res_bk_paths) {
+      if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
+    }
+  })
 
   # Coefficients
   c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[1])
@@ -256,55 +258,61 @@ hemi_vw_lmm <- function(formula, # model formula
   p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, backingfile = res_bk_paths[4])
   # Residuals
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
-  # TODO: Error log
-
 
   # Prepare chunk sequence =====================================================
-  # chunk_seq <- make_chunk_sequence(good_verts)
+  chunk_seq <- make_chunk_sequence(good_verts, chunk_size=1000)
 
   # Parallel analyses ==========================================================
   vw_message("Running analyses...", verbose=verbose)
-
+  vw_message("Dimentions: ", n_obs, "observations x",
+             length(good_verts), "/", vw_n, "vertices", verbose=verbose)
   # if (requireNamespace("progressr", quietly = TRUE)) {
   #   # progressr::handlers(global = TRUE)
   #   p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
   # }
 
   set.seed(seed)
+  if (n_cores > 1 ) vw_message("Preparing cluster of ", n_cores, " workers...",
+                               verbose=verbose)
+  # Set up parallel processing
+  cluster <- parallel::makeCluster(n_cores, type = "FORK")
+  doParallel::registerDoParallel(cluster)
+  on.exit({
+    message(pretty_message("All done! :)"))
+    parallel::stopCluster(cluster)
+  }, add = TRUE)
 
-  parallel::parCapply(cluster, ss, function(vertex) {
+  chunk = NULL
+  foreach::foreach(chunk = chunk_seq, .packages = c("bigstatsr")) %dopar% {
+    for (v in chunk) {
 
-    # I use the first element of the ss matrix as index
-    i <- vertex[1]
-    vertex <- vertex[-1]
 
-    if (any(vertex == 0)) { # if there are any 0 values exit
+      vertex <- ss[, v] # ss should not get copied n_cores times because it is a memory map
 
-      c_vw[, i] <<- NA
-      s_vw[, i] <<- NA
-      t_vw[, i] <<- NA
-      p_vw[, i] <<- NA
-      r_vw[, i] <<- NA
+      if (any(vertex == 0)) {
+        c_vw[, v] <- NA
+        s_vw[, v] <- NA
+        t_vw[, v] <- NA
+        p_vw[, v] <- NA
+        r_vw[, v] <- NA
+        next
+        # TODO: log errors
+      }
+      # Loop through imputed datasets and run analyses
+      out_stats <- lapply(data_list, single_lmm, y = vertex, formula = formula,
+                          pvalues = (m == 1))
 
-      return(NULL)
+      # Pool results
+      pooled_stats <- vw_pool(out_stats, m = m)
+
+      # Write results to their respective FBM
+      c_vw[, v] <- pooled_stats$coef
+      s_vw[, v] <- pooled_stats$se
+      t_vw[, v] <- pooled_stats$t
+      p_vw[, v] <- -1 * log10(pooled_stats$p)
+      r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
     }
-
-    # Loop through imputed datasets and run analyses
-    out_stats <- lapply(data_list, single_lmm, y = vertex, formula = formula,
-                        pvalues = (m == 1))
-
-    # Pool results
-    pooled_stats <- vw_pool(out_stats, m = m)
-
-    # Write results to their respective FBM
-    c_vw[, i] <<- pooled_stats$coef
-    s_vw[, i] <<- pooled_stats$se
-    t_vw[, i] <<- pooled_stats$t
-    p_vw[, i] <<- -1 * log10(pooled_stats$p)
-    r_vw[, i] <<- pooled_stats$resid # ("+", res) / length(res)
-
-    NULL
-  })
+  }
 
   out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
   names(out) <- res_bk_names # c("coefficients", "standard_errors", "t_values", "p_values", "residuals")
@@ -339,12 +347,6 @@ hemi_vw_lmm <- function(formula, # model formula
   resid_mgh_path <- file.path(outp_dir, paste(hemi, "residuals.mgh", sep = "."))
   fbm2mgh(fbm = out[[ res_bk_names[length(res_bk_names)] ]],
           fname = resid_mgh_path)
-
-  # Remove temporary matrices files
-  # clean_up_bm
-  for (bk in res_bk_paths) {
-    if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
-  }
 
   # Set up the necessary FreeSurfer global variables
   if (Sys.getenv("FREESURFER_HOME") == "") {

@@ -21,7 +21,7 @@ hemi_vw_lmm(
   apply_cortical_mask = TRUE,
   save_ss = TRUE,
   model = "lme4::lmer",
-  cluster,
+  n_cores,
   verbose = TRUE
 )
 }
@@ -73,7 +73,7 @@ quicker processing in the future.}
 
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
 
-\item{cluster}{: the parallel cluster}
+\item{n_cores}{: the parallel cluster}
 
 \item{verbose}{: (default = TRUE)}
 }

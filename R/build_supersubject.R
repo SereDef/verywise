@@ -9,17 +9,17 @@
 #' (if `save_rds == TRUE`) will be stored.
 #' @param measure : vertex-wise measure, used to identify files.
 #' @param hemi : hemisphere, used to identify files.
+#' @param n_cores : number of cores for the parallel cluster
 #' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
 #' @param target : (default = "fsaverage"), used to identify files.
 #' @param backing : (default = `outp_dir`) location to save the matrix \code{backingfile}.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
 #' for the function to stop with an error. If < `error_cutoff` directories/files are not
 #' found a warning is thrown and missing files are registered in the `issues.log` file.
-#' @param mask : (default = TRUE) only keep cortical vertices, according to FreeSurfer
-#' cortical map.
+# #' @param mask : (default = TRUE) only keep cortical vertices, according to FreeSurfer
+# #' cortical map.
 #' @param save_rds : (default = FALSE) save the supersubject file metadata for re-use
 #' in other sessions.
-#' @param cluster : the parallel cluster
 #' @param verbose : (default = TRUE)
 #'
 #' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
@@ -35,17 +35,13 @@ build_supersubject <- function(subj_dir,
                                outp_dir,
                                measure,
                                hemi,
+                               n_cores,
                                fwhmc = "fwhm10",
                                target = "fsaverage",
-                               backing = file.path(
-                                 outp_dir,
-                                 paste(hemi, measure, target, "supersubject.bk",
-                                       sep=".")
-                                 ),
+                               backing,
                                error_cutoff = 20,
-                               mask = TRUE,
+                               # mask = TRUE,
                                save_rds = FALSE, # dir_tmp,
-                               cluster,
                                verbose = TRUE) {
 
   # TODO: check measure names! measure2 <- measure
@@ -57,8 +53,7 @@ build_supersubject <- function(subj_dir,
   # files_list = list.dirs.till(subj_dir, n = 2)
   # files_list <- files_list[unlist(lapply(folder_ids, grep, files_list))]
   folder_list <- file.path(subj_dir, folder_ids)
-
-  log_file <- file.path(outp_dir, "issues.log")
+  log_file <- file.path(outp_dir, paste0(hemi,".", measure,".issues.log"))
 
   # Check that the locations in phenotype exist ----------------
   folders_found <- folder_list[dir.exists(folder_list)]
@@ -85,7 +80,7 @@ build_supersubject <- function(subj_dir,
   mgh_file_name <- paste0(
     hemi, ".", measure,
     if (fwhmc != "") { paste0(".", fwhmc)},
-    ".", target, ".mgh"
+    ".fsaverage.mgh" # TODO: handle other low-resolution registrations?
   )
 
   mgh_files <- file.path(folders_found, "surf", mgh_file_name)
@@ -112,58 +107,101 @@ build_supersubject <- function(subj_dir,
                  files_not_found, "\n"), log_file)
   }
 
-  vw_message(length(files_found), " observations found.", verbose=verbose)
+  vw_message(length(files_found),"/",length(folder_ids)," observations found.", verbose=verbose)
 
   # Build empty large matrix to store all vertex and subjects ------------------
 
   # Get dimensions
   n_files <- length(files_found) # Number of observations / subjects
-  n_verts <- load.mgh(files_found[1])$ndim1 # Number of vertices
+  # n_verts <- load.mgh(files_found[1])$ndim1 # Number of vertices
+  n_verts <- switch(target,
+                    fsaverage = 163842,
+                    fsaverage6 = 40962,
+                    fsaverage5 = 10242,
+                    fsaverage4 = 2562,
+                    fsaverage3 = 642)
 
-  # TODO: low resolution version with other fsaverage options
-
-  vw_message("Applying cortical mask...", verbose=verbose)
-
-  # Mask non-cortical vertex data
-  if (mask) {
-    cortex <- mask_cortex(hemi = hemi, target = target)
-    if (length(cortex) != n_verts) stop("Length of cortical mask does not match number of vertices in the data.")
-    n_verts <- sum(cortex)
-  } else {
-    cortex <- rep(TRUE, n_verts)
+  if (target != 'fsaverage') {
+    vw_message('Warining: downsampling vertices induces (small) registration errors.',
+               'This is fine for model tuning but, in the final analysis,',
+               'we reccommend using the high resolution `fsaverage` template.',
+               verbose=TRUE)
   }
 
-  if (file.exists(backing)) file.remove(backing) # TODO: TMP
+  # Mask non-cortical vertex data
+  # vw_message("Applying cortical mask...", verbose=verbose)
+  # if (mask) {
+  #   is_cortex <- mask_cortex(hemi = hemi, target = target)
+  #   if (length(is_cortex) != n_verts) stop("Length of cortical mask does not match number of vertices in the data.")
+  #   n_verts <- sum(is_cortex)
+  #   vw_message(n_verts, '/',length(is_cortex), 'vertices in cortex.', verbose=verbose)
+  # } else {
+  #   is_cortex <- rep(TRUE, n_verts)
+  # }
+
+  # Define backing file for matrix
+  if (missing(backing)) {
+    backing <- file.path(outp_dir, paste(hemi, measure, target,
+                                         "supersubject.bk", sep="."))
+  }
+  if (file.exists(backing)) file.remove(backing) # TODO: warn the user
 
   vw_message("Building super-subject matrix...", verbose=verbose)
 
-  # Initiate Filebacked Big Matrix
-  # Dimentions are set so I later access the data column by column and not row by row
+  # Initiate File-backed Big Matrix
+  # Dimensions are set so I later access the data column by column and not row by row
   ss <- bigstatsr::FBM(
-    nrow = n_files+1,
+    nrow = n_files,
     ncol = n_verts,
     backingfile = gsub(".bk$", "", backing),
     create_bk = !file.exists(backing)
   )
 
-  # if (requireNamespace("progressr", quietly = TRUE)) {
-  #   # progressr::handlers(global = TRUE)
-  #   p <- progressr::progressor(steps = n_files)
-  # }
+  failed_to_load <- bigstatsr::big_parallelize(
+    X = ss,
+    p.FUN = function(X, ind, files_found, n_verts) {
 
-  # use the first row as vertex index
-  ss[1, ] <- seq_len(n_verts)
+      failure_log <- character(0)
 
-  # Populate rows with participant info
-  parallel::parLapply(cluster, seq_len(n_files), function(subj) {
+      # Process each observation assigned to this worker
+      file_path <- files_found[ind]
 
-    # if (requireNamespace("progressr", quietly = TRUE)) { p() }
+      tryCatch({
+        # Write to FBM (+1 for vertex index row)
+        if (target != 'fsaverage') {
 
-    ss[(subj+1), ] <- load.mgh(files_found[subj])$x[cortex]
+          X[ind, ] <- load.mgh(file_path)$x[1:n_verts]
 
-  })
+        } else {
 
-  # if (verbose) message("Supersubject object size: ", cat(utils::object.size(ss)))
+          X[ind, ] <- load.mgh(file_path)$x }
+
+      }, error = function(e) {
+        # Track failed observations
+        failure_log <<- c(failure_log, file_path)
+
+        # Fill with NA to maintain shape
+        X[ind, ] <- NA_real_
+      })
+
+      return(failure_log)
+    },
+    ncores = n_cores,
+    ind = seq_along(files_found),
+    # Pass data to workers
+    files_found = files_found,
+    # is_cortex = is_cortex,
+    n_verts = n_verts,
+    combine = "c"  # Combine logs from all cores
+  )
+
+  # Write combined logs from main process (doing this outside parallel process
+  # to avoid race conditions)
+  if (length(failed_to_load) > 0) {
+    writeLines(c(paste('Error:', length(failed_to_load),
+                       'observations failed to load! Replacing with NA.'),
+                 failed_to_load), log_file)
+  }
 
   # Save output
   if (save_rds) {

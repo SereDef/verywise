@@ -11,14 +11,12 @@ build_supersubject(
   outp_dir,
   measure,
   hemi,
+  n_cores,
   fwhmc = "fwhm10",
   target = "fsaverage",
-  backing = file.path(outp_dir, paste(hemi, measure, target, "supersubject.bk", sep =
-    ".")),
+  backing,
   error_cutoff = 20,
-  mask = TRUE,
   save_rds = FALSE,
-  cluster,
   verbose = TRUE
 )
 }
@@ -35,6 +33,8 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 \item{hemi}{: hemisphere, used to identify files.}
 
+\item{n_cores}{: number of cores for the parallel cluster}
+
 \item{fwhmc}{: (default = "fwhm10") full-width half maximum value, used to identify files.}
 
 \item{target}{: (default = "fsaverage"), used to identify files.}
@@ -45,13 +45,8 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 for the function to stop with an error. If < `error_cutoff` directories/files are not
 found a warning is thrown and missing files are registered in the `issues.log` file.}
 
-\item{mask}{: (default = TRUE) only keep cortical vertices, according to FreeSurfer
-cortical map.}
-
 \item{save_rds}{: (default = FALSE) save the supersubject file metadata for re-use
 in other sessions.}
-
-\item{cluster}{: the parallel cluster}
 
 \item{verbose}{: (default = TRUE)}
 }
