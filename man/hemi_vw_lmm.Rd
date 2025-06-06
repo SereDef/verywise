@@ -12,7 +12,6 @@ hemi_vw_lmm(
   FS_HOME = "",
   folder_id = "folder_id",
   hemi,
-  measure = gsub("vw_", "", all.vars(formula)[1]),
   fwhm = 10,
   target = "fsaverage",
   mcz_thr = 30,
@@ -45,18 +44,25 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
 
 \item{hemi}{: (default = "both") hemispheres to run.}
 
-\item{measure}{: (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
-this should be the same as specified in formula}
-
 \item{fwhm}{: (default = 10) full-width half maximum value}
 
-\item{target}{: (default = "fsaverage") template on which to register vertex-wise data.}
+\item{target}{: (default = "fsaverage") template on which to register vertex-wise data.
+The following values are accepted:
+ * fsaverage (default) = 163842 vertices (highest resolution),
+ * fsaverage6 = 40962 vertices,
+ * fsaverage5 = 10242 vertices,
+ * fsaverage4 = 2562 vertices,
+ * fsaverage3 = 642 vertices
+Note that, at the moment, these are only used to downsample the brain map, for faster
+model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
+template and the final analyses should also be run using `target = "fsaverage"`
+to avoid (small) imprecisions in vertex registration and smoothing.}
 
 \item{mcz_thr}{: (default = 0.001) numeric value for the Monte Carlo simulation threshold.
 Any of the following are accepted (equivalent values separate by `/`):
  * 13 / 1.3 / 0.05,
  * 20 / 2.0 / 0.01,
-. * 23 / 2.3 / 0.005,
+ * 23 / 2.3 / 0.005,
  * 30 / 3.0 / 0.001, \* default
  * 33 / 3.3 / 0.0005,
  * 40 / 4.0 / 0.0001.}

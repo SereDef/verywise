@@ -18,7 +18,7 @@
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param verbose : (default = TRUE)
-#' @inheritDotParams hemi_vw_lmm measure fwhm target model
+#' @inheritDotParams hemi_vw_lmm apply_cortical_mask save_ss fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -119,15 +119,23 @@ run_vw_lmm <- function(formula,
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param hemi : (default = "both") hemispheres to run.
-#' @param measure : (default = \code{gsub("vw_", "", all.vars(formula)[1])}) vertex-wise measure
-#' this should be the same as specified in formula
 #' @param fwhm : (default = 10) full-width half maximum value
 #' @param target : (default = "fsaverage") template on which to register vertex-wise data.
+#' The following values are accepted:
+#'  * fsaverage (default) = 163842 vertices (highest resolution),
+#'  * fsaverage6 = 40962 vertices,
+#'  * fsaverage5 = 10242 vertices,
+#'  * fsaverage4 = 2562 vertices,
+#'  * fsaverage3 = 642 vertices
+#' Note that, at the moment, these are only used to downsample the brain map, for faster
+#' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
+#' template and the final analyses should also be run using `target = "fsaverage"`
+#' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
 #' Any of the following are accepted (equivalent values separate by `/`):
 #'  * 13 / 1.3 / 0.05,
 #'  * 20 / 2.0 / 0.01,
-#'. * 23 / 2.3 / 0.005,
+#'  * 23 / 2.3 / 0.005,
 #'  * 30 / 3.0 / 0.001, \* default
 #'  * 33 / 3.3 / 0.0005,
 #'  * 40 / 4.0 / 0.0001.
@@ -158,7 +166,6 @@ hemi_vw_lmm <- function(formula, # model formula
                         FS_HOME = "",
                         folder_id = "folder_id",
                         hemi,
-                        measure = gsub("vw_", "", all.vars(formula)[1]),
                         fwhm = 10,
                         target = "fsaverage",
                         mcz_thr = 30,
@@ -170,6 +177,9 @@ hemi_vw_lmm <- function(formula, # model formula
                         n_cores,
                         verbose = TRUE
 ) {
+
+  # TMP: Assume the brain measure is always the OUTCOME
+  measure <- gsub("vw_", "", all.vars(formula)[1])
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(outp_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
@@ -266,10 +276,12 @@ hemi_vw_lmm <- function(formula, # model formula
   vw_message("Running analyses...", verbose=verbose)
   vw_message("Dimentions: ", n_obs, "observations x",
              length(good_verts), "/", vw_n, "vertices", verbose=verbose)
+
   # if (requireNamespace("progressr", quietly = TRUE)) {
   #   # progressr::handlers(global = TRUE)
   #   p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
   # }
+  # log_file <- file.path(outp_dir, paste0(hemi,".", measure,"model.log"))
 
   set.seed(seed)
   if (n_cores > 1 ) vw_message("Preparing cluster of ", n_cores, " workers...",
@@ -284,8 +296,10 @@ hemi_vw_lmm <- function(formula, # model formula
 
   chunk = NULL
   foreach::foreach(chunk = chunk_seq, .packages = c("bigstatsr")) %dopar% {
-    for (v in chunk) {
 
+    worker_id <- Sys.getpid() # TMP for debugging
+
+    for (v in chunk) {
 
       vertex <- ss[, v] # ss should not get copied n_cores times because it is a memory map
 
@@ -311,6 +325,9 @@ hemi_vw_lmm <- function(formula, # model formula
       t_vw[, v] <- pooled_stats$t
       p_vw[, v] <- -1 * log10(pooled_stats$p)
       r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
+
+      # TMP for debugging
+      vw_message(worker_id, ': vertex', v, 'done.')
     }
   }
 

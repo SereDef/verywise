@@ -9,9 +9,19 @@
 #' (if `save_rds == TRUE`) will be stored.
 #' @param measure : vertex-wise measure, used to identify files.
 #' @param hemi : hemisphere, used to identify files.
-#' @param n_cores : number of cores for the parallel cluster
+#' @param n_cores : number of cores to use for parallel processing.
 #' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
-#' @param target : (default = "fsaverage"), used to identify files.
+#' @param target : (default = "fsaverage") template on which to register vertex-wise data.
+#' The following values are accepted:
+#'  * fsaverage (default) = 163842 vertices (highest resolution),
+#'  * fsaverage6 = 40962 vertices,
+#'  * fsaverage5 = 10242 vertices,
+#'  * fsaverage4 = 2562 vertices,
+#'  * fsaverage3 = 642 vertices
+#' Note that, at the moment, these are only used to downsample the brain map, for faster
+#' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
+#' template and the final analyses should also be run using `target = "fsaverage"`
+#' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param backing : (default = `outp_dir`) location to save the matrix \code{backingfile}.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
 #' for the function to stop with an error. If < `error_cutoff` directories/files are not
