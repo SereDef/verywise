@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 <span>  apply_cortical_mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"lme4::lmer"</span>,</span>
+<span>  use_model_template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">n_cores</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -152,6 +153,10 @@ quicker processing in the future.</p></dd>
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>: (default = <code>"lme4::lmer"</code>) # "stats::lm"</p></dd>
+
+
+<dt id="arg-use-model-template">use_model_template<a class="anchor" aria-label="anchor" href="#arg-use-model-template"></a></dt>
+<dd><p>: pre-compile the model?</p></dd>
 
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>

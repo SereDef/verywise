@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">single_lmm</span><span class="op">(</span><span class="va">imp</span>, <span class="va">y</span>, <span class="va">formula</span>, pvalues <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">single_lmm</span><span class="op">(</span><span class="va">imp</span>, <span class="va">y</span>, <span class="va">formula</span>, model_template <span class="op">=</span> <span class="cn">NULL</span>, pvalues <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,6 +63,11 @@ supersubject matrix).</p></dd>
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>: R formula describing the linear mixed model (using <code>lme4</code> notation)</p></dd>
+
+
+<dt id="arg-model-template">model_template<a class="anchor" aria-label="anchor" href="#arg-model-template"></a></dt>
+<dd><p>: (default = NULL) `single_lmm` can leverage an "update"-based
+workflow to minimize repeated parsing and model construction overhead.</p></dd>
 
 
 <dt id="arg-pvalues">pvalues<a class="anchor" aria-label="anchor" href="#arg-pvalues"></a></dt>
