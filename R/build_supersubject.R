@@ -167,6 +167,9 @@ build_supersubject <- function(subj_dir,
     create_bk = !file.exists(backing)
   )
 
+  # Disable parallel BLAS to prevent nested parallelism
+  try(bigparallelr::set_blas_ncores(1), silent = TRUE)
+
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
     p.FUN = function(X, ind, files_found, n_verts) {
@@ -196,7 +199,7 @@ build_supersubject <- function(subj_dir,
 
       return(failure_log)
     },
-    ncores = n_cores,
+    ncores = as.integer(n_cores),
     ind = seq_along(files_found),
     # Pass data to workers
     files_found = files_found,
