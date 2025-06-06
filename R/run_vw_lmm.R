@@ -18,7 +18,7 @@
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param verbose : (default = TRUE)
-#' @inheritDotParams hemi_vw_lmm apply_cortical_mask save_ss fwhm target model
+#' @inheritDotParams hemi_vw_lmm apply_cortical_mask use_model_template save_ss fwhm target model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -72,6 +72,7 @@ run_vw_lmm <- function(formula,
   if (hemi == "both") { hemis <- c("lh","rh") } else { hemis <- as.vector(hemi) }
 
   # Run analyses ===============================================================
+  n_cores <- as.integer(n_cores) # make sure n_cores is an integer
 
   set.seed(seed)
 
@@ -146,6 +147,7 @@ run_vw_lmm <- function(formula,
 #' @param save_ss : (default = TRUE) save the super-subject matrix as an rds file for
 #' quicker processing in the future.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
+#' @param use_model_template : pre-compile the model?
 #' @param n_cores : the parallel cluster
 #' @param verbose : (default = TRUE)
 #'
@@ -174,6 +176,7 @@ hemi_vw_lmm <- function(formula, # model formula
                         apply_cortical_mask = TRUE,
                         save_ss = TRUE,
                         model = "lme4::lmer", # "stats::lm"
+                        use_model_template = FALSE,
                         n_cores,
                         verbose = TRUE
 ) {
@@ -234,7 +237,24 @@ hemi_vw_lmm <- function(formula, # model formula
   # Number of (imputed) datasets
   m <- length(data_list)
 
+  if (use_model_template) {
+    # Pre-compile the model
+    # cache the model frame to avoid re-generating it them each time
+    # single_lmm can leverage an "update"-based workflow to minimize repeated parsing
+    # and model construction overhead
+    vw_message(" * construct model template", verbose=verbose)
+    tmp_data <- data_list[[1]]
+    tmp_data[paste0('vw_', measure)] <- ss[,1]  # dummy outcome
+
+    # Fit model once
+    model_template <- lme4::lmer(formula = formula,
+                                 data = tmp_data)
+  } else {
+    model_template <- NULL
+  }
+
   # Prepare FBM output =========================================================
+  vw_message(" * generate file-backed output containers", verbose=verbose)
   if (is.null(outp_dir)) {
     outp_dir <- file.path(subj_dir, "results")
     dir.create(outp_dir, showWarnings = FALSE)
@@ -270,6 +290,7 @@ hemi_vw_lmm <- function(formula, # model formula
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
 
   # Prepare chunk sequence =====================================================
+  vw_message(" * chunk dataset", verbose=verbose)
   chunk_seq <- make_chunk_sequence(good_verts, chunk_size=1000)
 
   # Parallel analyses ==========================================================
@@ -313,7 +334,10 @@ hemi_vw_lmm <- function(formula, # model formula
         # TODO: log errors
       }
       # Loop through imputed datasets and run analyses
-      out_stats <- lapply(data_list, single_lmm, y = vertex, formula = formula,
+      out_stats <- lapply(data_list, single_lmm,
+                          y = vertex,
+                          formula = formula,
+                          model_template = model_template,
                           pvalues = (m == 1))
 
       # Pool results
@@ -423,6 +447,8 @@ hemi_vw_lmm <- function(formula, # model formula
 #' @param y : A vector of outcome values (i.e. a single vertex from the
 #' supersubject matrix).
 #' @param formula : R formula describing the linear mixed model (using \code{lme4} notation)
+#' @param model_template : (default = NULL) `single_lmm` can leverage an "update"-based
+#' workflow to minimize repeated parsing and model construction overhead.
 #' @param pvalues : (default : TRUE) whether to include p-values computed using the
 #' *t-as-z* approach (see Details).
 #'
@@ -451,12 +477,15 @@ hemi_vw_lmm <- function(formula, # model formula
 #'
 #' @export
 #'
-single_lmm <- function(imp, y, formula, pvalues = TRUE) {
+single_lmm <- function(imp, y, formula, model_template = NULL, pvalues = TRUE) {
   # Add (vertex) outcome to (single) dataset
   imp[all.vars(formula)[1]] <- y
 
   # Fit linear mixed model using `lme4::lmer`
-  fit <- suppressMessages(lmer(formula = formula, data = imp))
+  if (!is.null(model_template)) {
+    fit <- stats::update(model_template, data = imp)
+  } else {
+    fit <- suppressMessages(lmer(formula = formula, data = imp)) }
 
   # coef(fit)$id # A matrix of effects by random variable
   # lme4::ranef(fit) # extract random effects (these should sum to 0)
@@ -465,7 +494,10 @@ single_lmm <- function(imp, y, formula, pvalues = TRUE) {
   # Extract estimates, standard errors and p-values
   stats <- data.frame(
     "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
-    "se" = as.matrix(sqrt(diag(as.matrix(vcov(fit))))) # corresponding standard errors
+    "se" = as.matrix(summary(fit)$coefficients[, "Std. Error"]) # corresponding standard errors
+    # microbench
+    # sqrt(diag(summary(fit)$vcov))
+    # sqrt(diag(as.matrix(vcov(fit)))))
   )
 
   # "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests

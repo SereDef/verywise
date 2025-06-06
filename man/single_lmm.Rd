@@ -4,7 +4,7 @@
 \alias{single_lmm}
 \title{Run a single \code{lme4::lmer} model and extract stats}
 \usage{
-single_lmm(imp, y, formula, pvalues = TRUE)
+single_lmm(imp, y, formula, model_template = NULL, pvalues = TRUE)
 }
 \arguments{
 \item{imp}{: The phenotype dataset (in verywise format).}
@@ -13,6 +13,9 @@ single_lmm(imp, y, formula, pvalues = TRUE)
 supersubject matrix).}
 
 \item{formula}{: R formula describing the linear mixed model (using \code{lme4} notation)}
+
+\item{model_template}{: (default = NULL) `single_lmm` can leverage an "update"-based
+workflow to minimize repeated parsing and model construction overhead.}
 
 \item{pvalues}{: (default : TRUE) whether to include p-values computed using the
 *t-as-z* approach (see Details).}

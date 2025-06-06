@@ -132,8 +132,8 @@ build_supersubject <- function(subj_dir,
                     fsaverage3 = 642)
 
   if (target != 'fsaverage') {
-    vw_message('Warining: downsampling vertices induces (small) registration errors.',
-               'This is fine for model tuning but, in the final analysis,',
+    vw_message('WARNING: downsampling vertices induces (small) registration errors. ',
+               'This is fine for model tuning but, in the final analysis, ',
                'we reccommend using the high resolution `fsaverage` template.',
                verbose=TRUE)
   }

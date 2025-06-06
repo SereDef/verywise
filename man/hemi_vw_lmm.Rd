@@ -20,6 +20,7 @@ hemi_vw_lmm(
   apply_cortical_mask = TRUE,
   save_ss = TRUE,
   model = "lme4::lmer",
+  use_model_template = FALSE,
   n_cores,
   verbose = TRUE
 )
@@ -78,6 +79,8 @@ the cluster-wise p-value threshold on top of all corrections.}
 quicker processing in the future.}
 
 \item{model}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
+
+\item{use_model_template}{: pre-compile the model?}
 
 \item{n_cores}{: the parallel cluster}
 

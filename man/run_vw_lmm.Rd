@@ -61,6 +61,7 @@ to avoid (small) imprecisions in vertex registration and smoothing.}
     \item{\code{save_ss}}{: (default = TRUE) save the super-subject matrix as an rds file for
 quicker processing in the future.}
     \item{\code{model}}{: (default = \code{"lme4::lmer"}) # "stats::lm"}
+    \item{\code{use_model_template}}{: pre-compile the model?}
   }}
 }
 \value{
