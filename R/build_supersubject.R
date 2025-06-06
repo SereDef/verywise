@@ -167,8 +167,12 @@ build_supersubject <- function(subj_dir,
     create_bk = !file.exists(backing)
   )
 
-  # Disable parallel BLAS to prevent nested parallelism
-  try(bigparallelr::set_blas_ncores(1), silent = TRUE)
+  # Disable parallel BLAS (and other) to prevent accidental implicit parallelism:
+  Sys.setenv(OMP_NUM_THREADS = 1,
+             MKL_NUM_THREADS = 1,
+             OPENBLAS_NUM_THREADS = 1,
+             VECLIB_MAXIMUM_THREADS = 1,
+             NUMEXPR_NUM_THREADS = 1)
 
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
@@ -205,7 +209,7 @@ build_supersubject <- function(subj_dir,
     files_found = files_found,
     # is_cortex = is_cortex,
     n_verts = n_verts,
-    combine = "c"  # Combine logs from all cores
+    .combine = "c"  # Combine logs from all cores
   )
 
   # Write combined logs from main process (doing this outside parallel process
