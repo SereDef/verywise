@@ -111,15 +111,28 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Arguments passed on to <code><a href="hemi_vw_lmm.html">hemi_vw_lmm</a></code></p><dl><dt><code>measure</code></dt>
-<dd><p>: (default = <code>gsub("vw_", "", all.vars(formula)[1])</code>) vertex-wise measure
-this should be the same as specified in formula</p></dd>
-
-    <dt><code>fwhm</code></dt>
+<dd><p>Arguments passed on to <code><a href="hemi_vw_lmm.html">hemi_vw_lmm</a></code></p><dl><dt><code>fwhm</code></dt>
 <dd><p>: (default = 10) full-width half maximum value</p></dd>
 
     <dt><code>target</code></dt>
-<dd><p>: (default = "fsaverage") template on which to register vertex-wise data.</p></dd>
+<dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
+The following values are accepted:
+ * fsaverage (default) = 163842 vertices (highest resolution),
+ * fsaverage6 = 40962 vertices,
+ * fsaverage5 = 10242 vertices,
+ * fsaverage4 = 2562 vertices,
+ * fsaverage3 = 642 vertices
+Note that, at the moment, these are only used to downsample the brain map, for faster
+model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
+template and the final analyses should also be run using `target = "fsaverage"`
+to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
+
+    <dt><code>apply_cortical_mask</code></dt>
+<dd><p>: (default = TRUE) remove vertices that are not on the cortex.</p></dd>
+
+    <dt><code>save_ss</code></dt>
+<dd><p>: (default = TRUE) save the super-subject matrix as an rds file for
+quicker processing in the future.</p></dd>
 
     <dt><code>model</code></dt>
 <dd><p>: (default = <code>"lme4::lmer"</code>) # "stats::lm"</p></dd>

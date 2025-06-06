@@ -91,7 +91,7 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
-<dd><p>: number of cores for the parallel cluster</p></dd>
+<dd><p>: number of cores to use for parallel processing.</p></dd>
 
 
 <dt id="arg-fwhmc">fwhmc<a class="anchor" aria-label="anchor" href="#arg-fwhmc"></a></dt>
@@ -99,7 +99,17 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 
 <dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
-<dd><p>: (default = "fsaverage"), used to identify files.</p></dd>
+<dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
+The following values are accepted:
+ * fsaverage (default) = 163842 vertices (highest resolution),
+ * fsaverage6 = 40962 vertices,
+ * fsaverage5 = 10242 vertices,
+ * fsaverage4 = 2562 vertices,
+ * fsaverage3 = 642 vertices
+Note that, at the moment, these are only used to downsample the brain map, for faster
+model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
+template and the final analyses should also be run using `target = "fsaverage"`
+to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
 
 <dt id="arg-backing">backing<a class="anchor" aria-label="anchor" href="#arg-backing"></a></dt>
