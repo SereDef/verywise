@@ -7,3 +7,39 @@ The phenotype.csv file contains 20 rows (5 subjects x 2 cohorts x 2 timepoints) 
 6 columns ("folder_id", "site", "id", "time", "sex", "age"). The same file was also
 amputed (randomly injecting missing sex and age values) and then imputed using mice (m=3)
 and saved as a mids object.
+
+example_data_path = "/Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures"
+
+n_subs = 5
+n_vert = 642  # fsaverage3
+
+data_structure = list("site1" = list("sessions" = c("01",'02'), "n_subjects" = n_subs),
+                      "site2" = list("sessions" = c("01",'02'), "n_subjects" = n_subs))
+
+for (hemi in c('lh','rh')) {
+  simulate_dataset(path = example_data_path,
+                   data_structure = data_structure,
+                   vw_resolution = n_vert,
+                   measure = "area",
+                   hemi = hemi,
+                   target = "fsaverage", # TODO: update build_ss to work with other templates
+                   fwhmc = "fwhm10",
+                   vw_mean = 6.5,
+                   vw_sd = 0.5,
+                   simulate_association = NULL) # TODO: fix association
+}
+
+pheno <- readr::read_csv(file.path(example_data_path, "phenotype.csv"))
+
+# Inject 25% missingness at random
+pheno_miss <- pheno
+
+set.seed(3108)
+pheno_miss[sample(nrow(pheno), round(nrow(pheno)*0.25)), 'sex'] <- NA
+pheno_miss[sample(nrow(pheno), round(nrow(pheno)*0.25)), 'age'] <- NA
+
+pheno_imp <- mice::mice(pheno_miss, m = 3, maxit = 5)
+
+saveRDS(pheno_imp, file.path(example_data_path, "phenotype_mids.rds"))
+
+saveRDS(pheno, file.path(example_data_path, "phenotype.rds"))

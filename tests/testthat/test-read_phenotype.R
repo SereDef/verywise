@@ -18,8 +18,8 @@ test_that("load_pheno_file works for supported extensions", {
 test_that("load_pheno_file throws error for unsupported extensions", {
 
   pheno_file <- test_path("fixtures","example_data",
-                          "cohort1/sub-1_ses-01",
-                          "surf/lh.thickness.fwhm10.fsaverage.mgh")
+                          "site1/sub-1_ses-01",
+                          "surf/lh.area.fwhm10.fsaverage.mgh")
 
   expect_error(load_pheno_file(pheno_file), "Unsupported file extension")
 
