@@ -34,10 +34,10 @@ test_that("build_supersubject returns FBM with correct dimensions for valid inpu
     target = target,
     error_cutoff = error_cutoff,
     save_rds = FALSE,
-    verbose = TRUE
+    verbose = FALSE
   )
 
-  expect_s3_class(ss, "FBM")
+  expect_s4_class(ss, "FBM")
   expect_equal(dim(ss), c(length(folder_ids), 642))
 })
 
@@ -86,7 +86,8 @@ test_that("build_supersubject warns and continues if missing folders under cutof
 test_that("build_supersubject works with parallel processing", {
 
   # cleanup_output(outp_dir, hemi, measure, target)
-  more_cores = 4
+  more_cores <- min(2, parallel::detectCores(logical = FALSE))
+  if (more_cores < 2) skip("Not enough cores for parallel test")
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
@@ -101,7 +102,7 @@ test_that("build_supersubject works with parallel processing", {
     save_rds = FALSE,
     verbose = FALSE
   )
-  expect_s3_class(ss, "FBM")
+  expect_s4_class(ss, "FBM")
   expect_equal(dim(ss), c(length(folder_ids), 642))
 })
 

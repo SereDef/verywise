@@ -156,7 +156,7 @@ build_supersubject <- function(subj_dir,
   }
   if (file.exists(backing)) file.remove(backing) # TODO: warn the user
 
-  vw_message("Building super-subject matrix...", verbose=verbose)
+  vw_message("Building (", hemi, ") super-subject matrix...", verbose=verbose)
 
   # Initiate File-backed Big Matrix
   # Dimensions are set so I later access the data column by column and not row by row
@@ -168,15 +168,48 @@ build_supersubject <- function(subj_dir,
   )
 
   # Disable parallel BLAS (and other) to prevent accidental implicit parallelism:
+  # if (Sys.getenv()
   Sys.setenv(OMP_NUM_THREADS = 1,
              MKL_NUM_THREADS = 1,
              OPENBLAS_NUM_THREADS = 1,
              VECLIB_MAXIMUM_THREADS = 1,
              NUMEXPR_NUM_THREADS = 1)
 
+  # Set up parallel processing
+  # cluster <- parallel::makeCluster(n_cores, type = "FORK")
+  # doParallel::registerDoParallel(cluster)
+  # on.exit(parallel::stopCluster(cluster))
+  #
+  # failure_log <- character(0)
+  # obs <- NULL
+  # foreach::foreach(obs = seq_along(files_found)) %dopar% {
+  #
+  #   file_path <- files_found[obs]
+  #
+  #   tryCatch({
+  #     # Write to FBM (+1 for vertex index row)
+  #     if (target != 'fsaverage') {
+  #
+  #       X[ind, ] <- load.mgh(file_path)$x[1:n_verts]
+  #
+  #     } else {
+  #
+  #       X[ind, ] <- load.mgh(file_path)$x }
+  #
+  #   }, error = function(e) {
+  #     # Track failed observations
+  #     failure_log <<- c(failure_log, file_path, e$message, '\n')
+  #
+  #     # Fill with NA to maintain shape
+  #     X[ind, ] <- NA_real_
+  #   })
+  #
+  #   return(failure_log)
+  # }
+
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
-    p.FUN = function(X, ind, files_found, n_verts) {
+    p.FUN = function(X, ind, files_found, n_verts, target) {
 
       failure_log <- character(0)
 
@@ -186,16 +219,14 @@ build_supersubject <- function(subj_dir,
       tryCatch({
         # Write to FBM (+1 for vertex index row)
         if (target != 'fsaverage') {
-
           X[ind, ] <- load.mgh(file_path)$x[1:n_verts]
 
         } else {
-
-          X[ind, ] <- load.mgh(file_path)$x }
-
+          X[ind, ] <- load.mgh(file_path)$x
+        }
       }, error = function(e) {
         # Track failed observations
-        failure_log <<- c(failure_log, file_path)
+        failure_log <<- c(failure_log, paste(file_path, e$message, '\n'))
 
         # Fill with NA to maintain shape
         X[ind, ] <- NA_real_
@@ -207,9 +238,9 @@ build_supersubject <- function(subj_dir,
     ind = seq_along(files_found),
     # Pass data to workers
     files_found = files_found,
-    # is_cortex = is_cortex,
     n_verts = n_verts,
-    .combine = "c"  # Combine logs from all cores
+    target = target,
+    p.combine = "c"  # Combine logs from all cores
   )
 
   # Write combined logs from main process (doing this outside parallel process

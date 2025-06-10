@@ -4,11 +4,14 @@ The datasets was constructed using the verywise::simulate_dataset() function and
 it contains two cohorts with 5 subjects each, and 2 measurements per subject
 (a total of 40 .mgh files = 5 subjects x 2 cohorts x 2 timepoints x 2 hemispheres)
 The phenotype.csv file contains 20 rows (5 subjects x 2 cohorts x 2 timepoints) and
-6 columns ("folder_id", "site", "id", "time", "sex", "age"). The same file was also
-amputed (randomly injecting missing sex and age values) and then imputed using mice (m=3)
-and saved as a mids object.
+6 columns ("folder_id", "site", "id", "time", "sex", "age").
+The same file was also amputed (randomly injecting missing sex and age values) and
+then imputed using mice (m=3) and saved as a mids object.
 
-example_data_path = "/Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures"
+## Data simulation
+example_data_path = "/Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/example_data"
+measure = "area"
+fwhmc = "fwhm10"
 
 n_subs = 5
 n_vert = 642  # fsaverage3
@@ -20,10 +23,10 @@ for (hemi in c('lh','rh')) {
   simulate_dataset(path = example_data_path,
                    data_structure = data_structure,
                    vw_resolution = n_vert,
-                   measure = "area",
+                   measure = measure,
                    hemi = hemi,
                    target = "fsaverage", # TODO: update build_ss to work with other templates
-                   fwhmc = "fwhm10",
+                   fwhmc = fwhmc,
                    vw_mean = 6.5,
                    vw_sd = 0.5,
                    simulate_association = NULL) # TODO: fix association
@@ -43,3 +46,21 @@ pheno_imp <- mice::mice(pheno_miss, m = 3, maxit = 5)
 saveRDS(pheno_imp, file.path(example_data_path, "phenotype_mids.rds"))
 
 saveRDS(pheno, file.path(example_data_path, "phenotype.rds"))
+
+## Supersubject example data
+
+for (hemi in c('lh','rh')) {
+  ss <- build_supersubject(
+    subj_dir = example_data_path,
+    folder_ids = pheno$folder_id,
+    outp_dir = example_data_path,
+    measure = measure,
+    hemi = hemi,
+    n_cores = 1,
+    fwhmc = fwhmc,
+    target = "fsaverage3",
+    save_rds = TRUE,
+    verbose = TRUE)
+}
+
+
