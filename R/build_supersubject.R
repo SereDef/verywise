@@ -168,44 +168,11 @@ build_supersubject <- function(subj_dir,
   )
 
   # Disable parallel BLAS (and other) to prevent accidental implicit parallelism:
-  # if (Sys.getenv()
   Sys.setenv(OMP_NUM_THREADS = 1,
              MKL_NUM_THREADS = 1,
              OPENBLAS_NUM_THREADS = 1,
              VECLIB_MAXIMUM_THREADS = 1,
              NUMEXPR_NUM_THREADS = 1)
-
-  # Set up parallel processing
-  # cluster <- parallel::makeCluster(n_cores, type = "FORK")
-  # doParallel::registerDoParallel(cluster)
-  # on.exit(parallel::stopCluster(cluster))
-  #
-  # failure_log <- character(0)
-  # obs <- NULL
-  # foreach::foreach(obs = seq_along(files_found)) %dopar% {
-  #
-  #   file_path <- files_found[obs]
-  #
-  #   tryCatch({
-  #     # Write to FBM (+1 for vertex index row)
-  #     if (target != 'fsaverage') {
-  #
-  #       X[ind, ] <- load.mgh(file_path)$x[1:n_verts]
-  #
-  #     } else {
-  #
-  #       X[ind, ] <- load.mgh(file_path)$x }
-  #
-  #   }, error = function(e) {
-  #     # Track failed observations
-  #     failure_log <<- c(failure_log, file_path, e$message, '\n')
-  #
-  #     # Fill with NA to maintain shape
-  #     X[ind, ] <- NA_real_
-  #   })
-  #
-  #   return(failure_log)
-  # }
 
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
@@ -214,23 +181,26 @@ build_supersubject <- function(subj_dir,
       failure_log <- character(0)
 
       # Process each observation assigned to this worker
-      file_path <- files_found[ind]
+      for (i in ind){
+        file_path <- files_found[i]
 
-      tryCatch({
-        # Write to FBM (+1 for vertex index row)
-        if (target != 'fsaverage') {
-          X[ind, ] <- load.mgh(file_path)$x[1:n_verts]
+        tryCatch({
+          # Write to FBM
+          if (target != 'fsaverage') {
+            X[i, ] <- load.mgh(file_path)$x[1:n_verts]
 
-        } else {
-          X[ind, ] <- load.mgh(file_path)$x
-        }
-      }, error = function(e) {
-        # Track failed observations
-        failure_log <<- c(failure_log, paste(file_path, e$message, '\n'))
+          } else { # avoid subsetting if not necessary
+            X[i, ] <- load.mgh(file_path)$x
+          }
+        }, error = function(e) {
+          # Track failed observations
+          failure_log <<- c(failure_log, paste(file_path, e$message, '\n'))
 
-        # Fill with NA to maintain shape
-        X[ind, ] <- NA_real_
-      })
+          # Fill with NA to maintain shape
+          X[i, ] <- NA_real_
+        })
+
+      }
 
       return(failure_log)
     },

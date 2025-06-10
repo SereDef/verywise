@@ -90,7 +90,6 @@ run_vw_lmm <- function(formula,
                 data_list = data_list,
                 folder_id = folder_id,
                 seed = seed,
-                # cluster = cluster,
                 n_cores = n_cores,
                 FS_HOME = FS_HOME,
                 verbose = verbose,
@@ -185,7 +184,8 @@ hemi_vw_lmm <- function(formula, # model formula
   measure <- gsub("vw_", "", all.vars(formula)[1])
 
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(outp_dir, paste0(hemi, ".", measure, ".supersubject.rds"))
+  ss_file_name <- file.path(outp_dir, paste(hemi, measure, target,
+                            "supersubject.rds", sep="."))
 
   if (file.exists(ss_file_name)) {
     vw_message("Reading super-subject file from: ", ss_file_name, verbose=verbose)
