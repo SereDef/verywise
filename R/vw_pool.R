@@ -40,6 +40,8 @@
 #'
 #' @author Serena Defina, 2024.
 #'
+#' @export
+#'
 #' @references
 #' Rubin, D.B. (1987). \emph{Multiple Imputation for Nonresponse in Surveys}.
 #' New York: John Wiley and Sons.

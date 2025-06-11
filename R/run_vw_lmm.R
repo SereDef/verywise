@@ -40,32 +40,27 @@ run_vw_lmm <- function(formula,
                        ...
 ) {
 
+  check_formula(formula)
+
   # Check paths ================================================================
+  check_path(subj_dir)
+  if (!is.null(outp_dir)) check_path(outp_dir)
+
     # TODO: FS_HOME
     # TODO
     # subj_dir has the folders it needs
     # measure = gsub("vw_", "", all.vars(formula)[1]) is present in the folder
 
   # Read phenotype data (if not already loaded) ================================
+  vw_message("Checking and preparing phenotype dataset...", verbose=verbose)
 
-  if (is.character(pheno)) { pheno <- load_pheno_file(pheno)
-  } else {
-    stop("Only files are supported at the moment")
-  #   # Capture the name of the object
-  #   obj_name <- deparse(substitute(pheno))
-  #   pheno <- check_pheno_obj(obj_name)
-  }
+  if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
   # Transform to list of dataframes (imputed and single datasets alike)
-  vw_message("Checking and preparing phenotype dataset...", verbose=verbose)
   data_list <- imp2list(pheno)
 
-  # Check that "folder_id" column is present
-  if (! folder_id %in% names(data_list[[1]])) stop("Folder ID '", folder_id, "' not found in data.")
-  # TODO:
-  # Check there are no duplicates in folder_id
-  # check that is in long format
-  # check the the formula are columns in dataset
+  # Check that "folder_id" column is present and data list is not empty
+  check_data_list(data_list, folder_id)
 
   # Determine hemisphere(s) ====================================================
   hemi <- match.arg(hemi)
@@ -188,6 +183,21 @@ hemi_vw_lmm <- function(formula,
     dir.create(outp_dir, showWarnings = FALSE)
   }
 
+  # Set up the necessary FreeSurfer global variables
+  if (Sys.getenv("FREESURFER_HOME") == "") {
+
+    if (is.null(FS_HOME) | FS_HOME == "") stop("FREESURFER_HOME needs to be specified or set up.")
+
+    Sys.setenv(FREESURFER_HOME = FS_HOME)
+    system(paste("source", file.path(FS_HOME,"SetUpFreeSurfer.sh")))
+  }
+  if (Sys.getenv("SUBJECTS_DIR") == "") Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME,'subjects'))
+  # Add $FREESURFER_HOME/bin to $PATH (if not there already) so that FreeSurfer
+  # commands can also be called from RStudio
+  if (!grepl(file.path(FS_HOME, "bin"), Sys.getenv("PATH"))) {
+    Sys.setenv(PATH=paste(Sys.getenv("PATH"), file.path(FS_HOME,"bin"), sep=":"))
+  }
+
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(outp_dir, paste(hemi, measure, target,
                             "supersubject.rds", sep="."))
@@ -297,8 +307,8 @@ hemi_vw_lmm <- function(formula,
 
   # Parallel analyses ==========================================================
   vw_message("Running analyses...", verbose=verbose)
-  vw_message("Dimentions: ", n_obs, "observations x",
-             length(good_verts), "/", vw_n, "vertices", verbose=verbose)
+  vw_message("Dimentions: ", n_obs, " observations x ",
+             length(good_verts), "/", vw_n, " vertices.", verbose=verbose)
 
   # if (requireNamespace("progressr", quietly = TRUE)) {
   #   # progressr::handlers(global = TRUE)
@@ -326,15 +336,6 @@ hemi_vw_lmm <- function(formula,
 
       vertex <- ss[, v] # ss should not get copied n_cores times because it is a memory map
 
-      if (any(vertex == 0)) {
-        c_vw[, v] <- NA
-        s_vw[, v] <- NA
-        t_vw[, v] <- NA
-        p_vw[, v] <- NA
-        r_vw[, v] <- NA
-        next
-        # TODO: log errors
-      }
       # Loop through imputed datasets and run analyses
       out_stats <- lapply(data_list, single_lmm,
                           y = vertex,
@@ -390,21 +391,6 @@ hemi_vw_lmm <- function(formula,
   resid_mgh_path <- file.path(outp_dir, paste(hemi, "residuals.mgh", sep = "."))
   fbm2mgh(fbm = out[[ res_bk_names[length(res_bk_names)] ]],
           fname = resid_mgh_path)
-
-  # Set up the necessary FreeSurfer global variables
-  if (Sys.getenv("FREESURFER_HOME") == "") {
-
-    if (is.null(FS_HOME) | FS_HOME == "") stop("FREESURFER_HOME needs to be specified or set up.")
-
-    Sys.setenv(FREESURFER_HOME = FS_HOME)
-    system(paste("source", file.path(FS_HOME,"SetUpFreeSurfer.sh")))
-  }
-  if (Sys.getenv("SUBJECTS_DIR") == "") Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME,'subjects'))
-  # Add $FREESURFER_HOME/bin to $PATH (if not there already) so that FreeSurfer
-  # commands can also be called from RStudio
-  if (!grepl(file.path(FS_HOME, "bin"), Sys.getenv("PATH"))) {
-    Sys.setenv(PATH=paste(Sys.getenv("PATH"), file.path(FS_HOME,"bin"), sep=":"))
-  }
 
   # Estimate full-width half maximum (using FreeSurfer)
   vw_message("Estimating data smoothness for multiple testing correction...",
