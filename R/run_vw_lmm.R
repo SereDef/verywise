@@ -160,7 +160,7 @@ run_vw_lmm <- function(formula,
 #'
 #' @export
 #'
-hemi_vw_lmm <- function(formula, # model formula
+hemi_vw_lmm <- function(formula,
                         data_list,
                         subj_dir,
                         outp_dir = NULL,
@@ -182,6 +182,11 @@ hemi_vw_lmm <- function(formula, # model formula
 
   # TMP: Assume the brain measure is always the OUTCOME
   measure <- gsub("vw_", "", all.vars(formula)[1])
+
+  if (is.null(outp_dir)) {
+    outp_dir <- file.path(subj_dir, "results")
+    dir.create(outp_dir, showWarnings = FALSE)
+  }
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(outp_dir, paste(hemi, measure, target,
@@ -208,7 +213,10 @@ hemi_vw_lmm <- function(formula, # model formula
   }
 
   vw_message("Cleaning super-subject matrix...", verbose=verbose)
-  # TODO: mask cortex
+
+  # Cortical mask
+  is_cortex <- mask_cortex(hemi = hemi, target = target)
+
   # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
   problem_verts <- fbm_col_has_0(ss)
@@ -216,8 +224,6 @@ hemi_vw_lmm <- function(formula, # model formula
     vw_message("Ignoring ", sum(problem_verts)," vertices that contained 0 values.",
                verbose=verbose)
   }
-
-  is_cortex <- mask_cortex(hemi = hemi, target = target)
 
   good_verts <- which(!problem_verts & is_cortex)
 
@@ -255,10 +261,6 @@ hemi_vw_lmm <- function(formula, # model formula
 
   # Prepare FBM output =========================================================
   vw_message(" * generate file-backed output containers", verbose=verbose)
-  if (is.null(outp_dir)) {
-    outp_dir <- file.path(subj_dir, "results")
-    dir.create(outp_dir, showWarnings = FALSE)
-  }
 
   res_bk_names <- c("coef", "se", "t", "p", "resid")
   res_bk_paths <- file.path(
