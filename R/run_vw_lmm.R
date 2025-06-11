@@ -14,6 +14,7 @@
 #' @param hemi : (default = "both") which hemispheres to run.
 #' @param seed : (default = 3108) random seed.
 #' @param n_cores : (default = 1) number of cores for parallel processing.
+#' @param chunk_size : (default = 1000) size of data chunk for parallel processing
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
@@ -34,6 +35,7 @@ run_vw_lmm <- function(formula,
                        hemi = c("both", "lh","rh"),
                        seed = 3108,
                        n_cores = 1,
+                       chunk_size = 1000,
                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
                        folder_id = "folder_id",
                        verbose = TRUE,
@@ -86,6 +88,7 @@ run_vw_lmm <- function(formula,
                 folder_id = folder_id,
                 seed = seed,
                 n_cores = n_cores,
+                chunk_size = chunk_size,
                 FS_HOME = FS_HOME,
                 verbose = verbose,
                 ...)
@@ -143,6 +146,7 @@ run_vw_lmm <- function(formula,
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
 #' @param use_model_template : pre-compile the model?
 #' @param n_cores : the parallel cluster
+#' @param chunk_size : (default = 1000) size of data chunk for parallel processing
 #' @param verbose : (default = TRUE)
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
@@ -172,6 +176,7 @@ hemi_vw_lmm <- function(formula,
                         model = "lme4::lmer", # "stats::lm"
                         use_model_template = FALSE,
                         n_cores,
+                        chunk_size = 1000,
                         verbose = TRUE
 ) {
 
@@ -303,7 +308,7 @@ hemi_vw_lmm <- function(formula,
 
   # Prepare chunk sequence =====================================================
   vw_message(" * chunk dataset", verbose=verbose)
-  chunk_seq <- make_chunk_sequence(good_verts, chunk_size=1000)
+  chunk_seq <- make_chunk_sequence(good_verts, chunk_size=chunk_size)
 
   # Parallel analyses ==========================================================
   vw_message("Running analyses...", verbose=verbose)
@@ -330,7 +335,7 @@ hemi_vw_lmm <- function(formula,
   chunk = NULL
   foreach::foreach(chunk = chunk_seq,
                    .packages = c("bigstatsr"),
-                   .export = c("vw_pool", "vw_message", "single_lmm")) %dopar% {
+                   .export = c("single_lmm", "vw_pool", "vw_message")) %dopar% {
 
     worker_id <- Sys.getpid() # TMP for debugging
 
