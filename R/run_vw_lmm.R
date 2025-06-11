@@ -328,7 +328,9 @@ hemi_vw_lmm <- function(formula,
   }, add = TRUE)
 
   chunk = NULL
-  foreach::foreach(chunk = chunk_seq, .packages = c("bigstatsr")) %dopar% {
+  foreach::foreach(chunk = chunk_seq,
+                   .packages = c("bigstatsr"),
+                   .export = c("vw_pool", "single_lmm")) %dopar% {
 
     worker_id <- Sys.getpid() # TMP for debugging
 
