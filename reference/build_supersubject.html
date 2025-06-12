@@ -9,7 +9,7 @@ matrix with dimensions n_subjects x n_vertices.'><meta property="og:image" conte
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@ matrix with dimensions n_subjects x n_vertices.</p>
 <span>  <span class="va">hemi</span>,</span>
 <span>  <span class="va">n_cores</span>,</span>
 <span>  fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
-<span>  target <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
 <span>  <span class="va">backing</span>,</span>
 <span>  error_cutoff <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  save_rds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -98,7 +98,7 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 <dd><p>: (default = "fwhm10") full-width half maximum value, used to identify files.</p></dd>
 
 
-<dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
+<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
 <dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
  * fsaverage (default) = 163842 vertices (highest resolution),
@@ -108,7 +108,7 @@ The following values are accepted:
  * fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
 model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `target = "fsaverage"`
+template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
 

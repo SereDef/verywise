@@ -9,7 +9,7 @@ It checks the user inputs and runs the single_lmm function across all vertices."
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,7 @@ It checks the user inputs and runs the <code><a href="single_lmm.html">single_lm
 <span>  hemi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"lh"</span>, <span class="st">"rh"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  FS_HOME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"FREESURFER_HOME"</span><span class="op">)</span>,</span>
 <span>  folder_id <span class="op">=</span> <span class="st">"folder_id"</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -68,7 +69,22 @@ It checks the user inputs and runs the <code><a href="single_lmm.html">single_lm
 
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>: model formula object (this should specify a LME model)</p></dd>
+<dd><p>: Model formula object. This should specify a linear mixed model
+using `lme4` syntax.
+#' e.g. <code>vw_thickness ~ sex * age + site + (1|id)</code>.
+The *outcome* should be a brain surface metric. Available options:
+* `vw_thickness`
+* `vw_area`
+* `vw_area.pial`
+* `vw_curv`
+* `vw_jacobian_white`
+* `vw_pial`
+* `vw_pial_lgi`
+* `vw_sulc`
+* `vw_volume`
+* `vw_w_g.pct`
+* `vw_white.H`
+* `vw_white.K`</p></dd>
 
 
 <dt id="arg-pheno">pheno<a class="anchor" aria-label="anchor" href="#arg-pheno"></a></dt>
@@ -97,6 +113,10 @@ provided by the user, a "results" sub-directory will be created inside <code>sub
 <dd><p>: (default = 1) number of cores for parallel processing.</p></dd>
 
 
+<dt id="arg-chunk-size">chunk_size<a class="anchor" aria-label="anchor" href="#arg-chunk-size"></a></dt>
+<dd><p>: (default = 1000) size of data chunk for parallel processing</p></dd>
+
+
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
 <dd><p>: FreeSurfer directory, i.e. <code>$FREESURFER_HOME</code>.</p></dd>
 
@@ -114,7 +134,7 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
 <dd><p>Arguments passed on to <code><a href="hemi_vw_lmm.html">hemi_vw_lmm</a></code></p><dl><dt><code>fwhm</code></dt>
 <dd><p>: (default = 10) full-width half maximum value</p></dd>
 
-    <dt><code>target</code></dt>
+    <dt><code>fs_template</code></dt>
 <dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
  * fsaverage (default) = 163842 vertices (highest resolution),
@@ -124,7 +144,7 @@ The following values are accepted:
  * fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
 model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `target = "fsaverage"`
+template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
     <dt><code>apply_cortical_mask</code></dt>
