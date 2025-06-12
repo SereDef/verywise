@@ -4,12 +4,12 @@
 \alias{mask_cortex}
 \title{Clean out vertices that are not on the cortex}
 \usage{
-mask_cortex(hemi = "lh", target = "fsaverage")
+mask_cortex(hemi = "lh", fs_template = "fsaverage")
 }
 \arguments{
 \item{hemi}{: (default = "lh") hemisphere ("lh" or "rh")}
 
-\item{target}{: (default = "fsaverage")}
+\item{fs_template}{: (default = "fsaverage")}
 }
 \value{
 A (large) logical vector for cortical (or technical, i.e. vertex = 0) mask.

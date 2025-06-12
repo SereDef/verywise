@@ -9,19 +9,19 @@ measure <- "area"
 hemi <- "lh"
 n_cores <- 1
 fwhmc <- "fwhm10"
-target <- "fsaverage3"
+fs_template <- "fsaverage3"
 error_cutoff <- 2
 
 # Helper function to remove output files
-cleanup_output <- function(outp_dir, hemi, measure, target) {
-  pattern <- paste0(hemi, "\\.", measure, "\\.", target, ".*")
+cleanup_output <- function(outp_dir, hemi, measure, fs_template) {
+  pattern <- paste0(hemi, "\\.", measure, "\\.", fs_template, ".*")
   files <- list.files(outp_dir, pattern = pattern, full.names = TRUE)
   file.remove(files)
 }
 
 test_that("build_supersubject returns FBM with correct dimensions for valid input", {
 
-  # cleanup_output(outp_dir, hemi, measure, target)
+  # cleanup_output(outp_dir, hemi, measure, fs_template)
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
@@ -31,7 +31,7 @@ test_that("build_supersubject returns FBM with correct dimensions for valid inpu
     hemi = hemi,
     n_cores = n_cores,
     fwhmc = fwhmc,
-    target = target,
+    fs_template = fs_template,
     error_cutoff = error_cutoff,
     save_rds = FALSE,
     verbose = FALSE
@@ -85,7 +85,7 @@ test_that("build_supersubject warns and continues if missing folders under cutof
 
 test_that("build_supersubject works with parallel processing", {
 
-  # cleanup_output(outp_dir, hemi, measure, target)
+  # cleanup_output(outp_dir, hemi, measure, fs_template)
   more_cores <- min(2, parallel::detectCores(logical = FALSE))
   if (more_cores < 2) skip("Not enough cores for parallel test")
 
@@ -97,7 +97,7 @@ test_that("build_supersubject works with parallel processing", {
     hemi = hemi,
     n_cores = more_cores,
     fwhmc = fwhmc,
-    target = target,
+    fs_template = fs_template,
     error_cutoff = error_cutoff,
     save_rds = FALSE,
     verbose = FALSE
@@ -108,7 +108,7 @@ test_that("build_supersubject works with parallel processing", {
 
 test_that("build_supersubject creates output files when save_rds = TRUE", {
 
-  # cleanup_output(outp_dir, hemi, measure, target)
+  # cleanup_output(outp_dir, hemi, measure, fs_template)
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
@@ -118,15 +118,15 @@ test_that("build_supersubject creates output files when save_rds = TRUE", {
     hemi = hemi,
     n_cores = n_cores,
     fwhmc = fwhmc,
-    target = target,
+    fs_template = fs_template,
     error_cutoff = error_cutoff,
     save_rds = TRUE,
     verbose = FALSE
   )
 
   # Check that the .bk and .rds files exist
-  bk_file <- file.path(outp_dir, paste(hemi, measure, target, "supersubject.bk", sep = "."))
-  rds_file <- file.path(outp_dir, paste(hemi, measure, target, "supersubject.rds", sep = "."))
+  bk_file <- file.path(outp_dir, paste(hemi, measure, fs_template, "supersubject.bk", sep = "."))
+  rds_file <- file.path(outp_dir, paste(hemi, measure, fs_template, "supersubject.rds", sep = "."))
   expect_true(file.exists(bk_file))
   expect_true(file.exists(rds_file))
 })

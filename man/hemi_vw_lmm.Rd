@@ -13,15 +13,16 @@ hemi_vw_lmm(
   folder_id = "folder_id",
   hemi,
   fwhm = 10,
-  target = "fsaverage",
+  fs_template = "fsaverage",
   mcz_thr = 30,
   cwp_thr = 0.025,
   seed = 3108,
   apply_cortical_mask = TRUE,
   save_ss = TRUE,
   model = "lme4::lmer",
-  use_model_template = FALSE,
+  use_model_template = TRUE,
   n_cores,
+  chunk_size = 1000,
   verbose = TRUE
 )
 }
@@ -47,7 +48,7 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
 
 \item{fwhm}{: (default = 10) full-width half maximum value}
 
-\item{target}{: (default = "fsaverage") template on which to register vertex-wise data.
+\item{fs_template}{: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
  * fsaverage (default) = 163842 vertices (highest resolution),
  * fsaverage6 = 40962 vertices,
@@ -56,7 +57,7 @@ The following values are accepted:
  * fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
 model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `target = "fsaverage"`
+template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.}
 
 \item{mcz_thr}{: (default = 0.001) numeric value for the Monte Carlo simulation threshold.
@@ -83,6 +84,8 @@ quicker processing in the future.}
 \item{use_model_template}{: pre-compile the model?}
 
 \item{n_cores}{: the parallel cluster}
+
+\item{chunk_size}{: (default = 1000) size of data chunk for parallel processing}
 
 \item{verbose}{: (default = TRUE)}
 }

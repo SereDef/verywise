@@ -5,7 +5,22 @@
 #' This is is the main function in v0 of \code{verywise}.
 #' It checks the user inputs and runs the \code{\link{single_lmm}} function across all vertices.
 #'
-#' @param formula : model formula object (this should specify a LME model)
+#' @param formula : Model formula object. This should specify a linear mixed model
+#' using `lme4` syntax.
+#' #' e.g. \code{vw_thickness ~ sex * age + site + (1|id)}.
+#' The *outcome* should be a brain surface metric. Available options:
+#' * `vw_thickness`
+#' * `vw_area`
+#' * `vw_area.pial`
+#' * `vw_curv`
+#' * `vw_jacobian_white`
+#' * `vw_pial`
+#' * `vw_pial_lgi`
+#' * `vw_sulc`
+#' * `vw_volume`
+#' * `vw_w_g.pct`
+#' * `vw_white.H`
+#' * `vw_white.K`
 #' @param pheno : the phenotype data object (already loaded in the global environment) or
 #' a string containing a file path. Supported file extensions are: rds, csv, txt and sav.
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
@@ -19,7 +34,7 @@
 #' @param folder_id : (default = "folder_id") the name of the column in pheno that
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param verbose : (default = TRUE)
-#' @inheritDotParams hemi_vw_lmm apply_cortical_mask use_model_template save_ss fwhm target model
+#' @inheritDotParams hemi_vw_lmm apply_cortical_mask use_model_template save_ss fwhm fs_template model
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
@@ -41,17 +56,16 @@ run_vw_lmm <- function(formula,
                        verbose = TRUE,
                        ...
 ) {
+  # Check user input ===========================================================
 
-  check_formula(formula)
+  measure <- check_formula(formula)
 
-  # Check paths ================================================================
   check_path(subj_dir)
   if (!is.null(outp_dir)) check_path(outp_dir)
 
-    # TODO: FS_HOME
-    # TODO
-    # subj_dir has the folders it needs
-    # measure = gsub("vw_", "", all.vars(formula)[1]) is present in the folder
+  check_freesurfer_setup(FS_HOME, verbose=verbose)
+
+  n_cores <- check_cores(n_cores)
 
   # Read phenotype data (if not already loaded) ================================
   vw_message("Checking and preparing phenotype dataset...", verbose=verbose)
@@ -61,8 +75,9 @@ run_vw_lmm <- function(formula,
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno)
 
-  # Check that "folder_id" column is present and data list is not empty
-  check_data_list(data_list, folder_id)
+  # Check that the data list is not empty and that "folder_id" and all variables
+  # specified in the formula are present in the data
+  check_data_list(data_list, folder_id, formula)
 
   # Determine hemisphere(s) ====================================================
   hemi <- match.arg(hemi)
@@ -118,7 +133,7 @@ run_vw_lmm <- function(formula,
 #' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
 #' @param hemi : (default = "both") hemispheres to run.
 #' @param fwhm : (default = 10) full-width half maximum value
-#' @param target : (default = "fsaverage") template on which to register vertex-wise data.
+#' @param fs_template : (default = "fsaverage") template on which to register vertex-wise data.
 #' The following values are accepted:
 #'  * fsaverage (default) = 163842 vertices (highest resolution),
 #'  * fsaverage6 = 40962 vertices,
@@ -127,7 +142,7 @@ run_vw_lmm <- function(formula,
 #'  * fsaverage3 = 642 vertices
 #' Note that, at the moment, these are only used to downsample the brain map, for faster
 #' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-#' template and the final analyses should also be run using `target = "fsaverage"`
+#' template and the final analyses should also be run using `fs_template = "fsaverage"`
 #' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
 #' Any of the following are accepted (equivalent values separate by `/`):
@@ -167,14 +182,14 @@ hemi_vw_lmm <- function(formula,
                         folder_id = "folder_id",
                         hemi,
                         fwhm = 10,
-                        target = "fsaverage",
+                        fs_template = "fsaverage",
                         mcz_thr = 30,
                         cwp_thr = 0.025,
                         seed = 3108,
                         apply_cortical_mask = TRUE,
                         save_ss = TRUE,
                         model = "lme4::lmer", # "stats::lm"
-                        use_model_template = FALSE,
+                        use_model_template = TRUE,
                         n_cores,
                         chunk_size = 1000,
                         verbose = TRUE
@@ -184,27 +199,12 @@ hemi_vw_lmm <- function(formula,
   measure <- gsub("vw_", "", all.vars(formula)[1])
 
   if (is.null(outp_dir)) {
-    outp_dir <- file.path(subj_dir, "results")
+    outp_dir <- file.path(subj_dir, "verywise_results")
     dir.create(outp_dir, showWarnings = FALSE)
   }
 
-  # Set up the necessary FreeSurfer global variables
-  if (Sys.getenv("FREESURFER_HOME") == "") {
-
-    if (is.null(FS_HOME) | FS_HOME == "") stop("FREESURFER_HOME needs to be specified or set up.")
-
-    Sys.setenv(FREESURFER_HOME = FS_HOME)
-    system(paste("source", file.path(FS_HOME,"SetUpFreeSurfer.sh")))
-  }
-  if (Sys.getenv("SUBJECTS_DIR") == "") Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME,'subjects'))
-  # Add $FREESURFER_HOME/bin to $PATH (if not there already) so that FreeSurfer
-  # commands can also be called from RStudio
-  if (!grepl(file.path(FS_HOME, "bin"), Sys.getenv("PATH"))) {
-    Sys.setenv(PATH=paste(Sys.getenv("PATH"), file.path(FS_HOME,"bin"), sep=":"))
-  }
-
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(outp_dir, paste(hemi, measure, target,
+  ss_file_name <- file.path(outp_dir, paste(hemi, measure, fs_template,
                             "supersubject.rds", sep="."))
 
   if (file.exists(ss_file_name)) {
@@ -221,8 +221,7 @@ hemi_vw_lmm <- function(formula,
                              hemi = hemi,
                              n_cores = n_cores,
                              fwhmc = paste0("fwhm", fwhm),
-                             target = target,
-                             # mask = apply_cortical_mask,
+                             fs_template = fs_template,
                              save_rds = save_ss,
     )
   }
@@ -230,7 +229,7 @@ hemi_vw_lmm <- function(formula,
   vw_message("Cleaning super-subject matrix...", verbose=verbose)
 
   # Cortical mask
-  is_cortex <- mask_cortex(hemi = hemi, target = target)
+  is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s. These may be
   # located at the edge of the cortical map and are potentially problematic
@@ -250,16 +249,16 @@ hemi_vw_lmm <- function(formula,
   fixed_terms <- model_info[[1]]
 
   # Number of vertices
-  vw_n <- length(is_cortex) # length(good_verts) # ncol(ss)
-  # Number of terms (excluding the ranloaddom!?)
+  vw_n <- length(is_cortex)
+  # Number of terms (excluding random terms)
   fe_n <- length(fixed_terms)
   # Number of participants*timepoint (long format)
-  n_obs <- nrow(model_info[[2]]) # nrow(data_list[[1]])
+  n_obs <- nrow(model_info[[2]])
   # Number of (imputed) datasets
   m <- length(data_list)
 
   if (use_model_template) {
-    # Pre-compile the model
+    # "Pre-compile the model"
     # cache the model frame to avoid re-generating it them each time
     # single_lmm can leverage an "update"-based workflow to minimize repeated parsing
     # and model construction overhead
@@ -312,8 +311,8 @@ hemi_vw_lmm <- function(formula,
 
   # Parallel analyses ==========================================================
   vw_message("Running analyses...", verbose=verbose)
-  vw_message("Dimentions: ", n_obs, " observations x ",
-             length(good_verts), "/", vw_n, " vertices.", verbose=verbose)
+  vw_message("* dimentions: ", n_obs, " observations x ",
+             length(good_verts), " (of ", vw_n, " total) vertices.", verbose=verbose)
 
   # if (requireNamespace("progressr", quietly = TRUE)) {
   #   # progressr::handlers(global = TRUE)
@@ -322,10 +321,13 @@ hemi_vw_lmm <- function(formula,
   # log_file <- file.path(outp_dir, paste0(hemi,".", measure,"model.log"))
 
   set.seed(seed)
-  if (n_cores > 1 ) vw_message("Preparing cluster of ", n_cores, " workers...",
+  if (n_cores > 1 ) vw_message("* preparing cluster of ", n_cores, " workers...",
                                verbose=verbose)
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type = "FORK")
+  # TODO: would not work on Windows anyway till freesurfer dependency is needed
+                                   # type = ifelse(.Platform$OS.type == "unix",
+                                   #               "FORK", "PSOCK"))
   doParallel::registerDoParallel(cluster)
   on.exit({
     message(pretty_message("All done! :)"))
@@ -407,7 +409,7 @@ hemi_vw_lmm <- function(formula,
                         hemi = hemi,
                         resid_file = resid_mgh_path,
                         mask = good_verts,
-                        target = target)
+                        fs_template = fs_template)
   if (fwhm > 30) {
     vw_message("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30.",
                verbose=verbose)
@@ -519,5 +521,5 @@ single_lmm <- function(imp, y, formula, model_template = NULL, pvalues = TRUE) {
   # Following the `broom.mixed` package approach, which `mice::pool` relies on
   # df <- df.residual(fit)
 
- return(list("stats" = stats, "resid" = resid)) # , df
+ return(list("stats" = stats, "resid" = resid))
 }

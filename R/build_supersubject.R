@@ -11,7 +11,7 @@
 #' @param hemi : hemisphere, used to identify files.
 #' @param n_cores : number of cores to use for parallel processing.
 #' @param fwhmc : (default = "fwhm10") full-width half maximum value, used to identify files.
-#' @param target : (default = "fsaverage") template on which to register vertex-wise data.
+#' @param fs_template : (default = "fsaverage") template on which to register vertex-wise data.
 #' The following values are accepted:
 #'  * fsaverage (default) = 163842 vertices (highest resolution),
 #'  * fsaverage6 = 40962 vertices,
@@ -20,7 +20,7 @@
 #'  * fsaverage3 = 642 vertices
 #' Note that, at the moment, these are only used to downsample the brain map, for faster
 #' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-#' template and the final analyses should also be run using `target = "fsaverage"`
+#' template and the final analyses should also be run using `fs_template = "fsaverage"`
 #' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param backing : (default = `outp_dir`) location to save the matrix \code{backingfile}.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
@@ -47,11 +47,10 @@ build_supersubject <- function(subj_dir,
                                hemi,
                                n_cores,
                                fwhmc = "fwhm10",
-                               target = "fsaverage",
+                               fs_template = "fsaverage",
                                backing,
                                error_cutoff = 20,
-                               # mask = TRUE,
-                               save_rds = FALSE, # dir_tmp,
+                               save_rds = FALSE,
                                verbose = TRUE) {
 
   # TODO: check measure names! measure2 <- measure
@@ -124,14 +123,14 @@ build_supersubject <- function(subj_dir,
   # Get dimensions
   n_files <- length(files_found) # Number of observations / subjects
   # n_verts <- load.mgh(files_found[1])$ndim1 # Number of vertices
-  n_verts <- switch(target,
+  n_verts <- switch(fs_template,
                     fsaverage = 163842,
                     fsaverage6 = 40962,
                     fsaverage5 = 10242,
                     fsaverage4 = 2562,
                     fsaverage3 = 642)
 
-  if (target != 'fsaverage') {
+  if (fs_template != 'fsaverage') {
     vw_message('WARNING: downsampling vertices induces (small) registration errors. ',
                'This is fine for model tuning but, in the final analysis, ',
                'we reccommend using the high resolution `fsaverage` template.',
@@ -141,7 +140,7 @@ build_supersubject <- function(subj_dir,
   # Mask non-cortical vertex data
   # vw_message("Applying cortical mask...", verbose=verbose)
   # if (mask) {
-  #   is_cortex <- mask_cortex(hemi = hemi, target = target)
+  #   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
   #   if (length(is_cortex) != n_verts) stop("Length of cortical mask does not match number of vertices in the data.")
   #   n_verts <- sum(is_cortex)
   #   vw_message(n_verts, '/',length(is_cortex), 'vertices in cortex.', verbose=verbose)
@@ -151,7 +150,7 @@ build_supersubject <- function(subj_dir,
 
   # Define backing file for matrix
   if (missing(backing)) {
-    backing <- file.path(outp_dir, paste(hemi, measure, target,
+    backing <- file.path(outp_dir, paste(hemi, measure, fs_template,
                                          "supersubject.bk", sep="."))
   }
   if (file.exists(backing)) file.remove(backing) # TODO: warn the user
@@ -176,7 +175,7 @@ build_supersubject <- function(subj_dir,
 
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
-    p.FUN = function(X, ind, files_found, n_verts, target) {
+    p.FUN = function(X, ind, files_found, n_verts, fs_template) {
 
       failure_log <- character(0)
 
@@ -186,7 +185,7 @@ build_supersubject <- function(subj_dir,
 
         tryCatch({
           # Write to FBM
-          if (target != 'fsaverage') {
+          if (fs_template != 'fsaverage') {
             X[i, ] <- load.mgh(file_path)$x[1:n_verts]
 
           } else { # avoid subsetting if not necessary
@@ -209,7 +208,7 @@ build_supersubject <- function(subj_dir,
     # Pass data to workers
     files_found = files_found,
     n_verts = n_verts,
-    target = target,
+    fs_template = fs_template,
     p.combine = "c"  # Combine logs from all cores
   )
 

@@ -10,7 +10,7 @@
 #' @param hemi : hemisphere.
 #' @param resid_file : path the .mgh file containing the residuals of the model.
 #' @param mask : apply a mask (default = cortical mask + excluding problematic vertices)
-#' @param target : (default = "fsaverage") data template.
+#' @param fs_template : (default = "fsaverage") data template.
 #' @param verbose : (default = FALSE) verbosity.
 #'
 #' @return An integer FWHM value
@@ -20,8 +20,8 @@ estimate_fwhm <- function(outp_dir,
                           hemi,
                           resid_file,
                           mask = NULL,
-                          target = "fsaverage",
-                          verbose = FALSE #, # FS_HOME = ""
+                          fs_template = "fsaverage",
+                          verbose = FALSE
                           ) {
 
   fwhm_estim_path <- file.path(outp_dir, "fwhm.dat")
@@ -30,7 +30,7 @@ estimate_fwhm <- function(outp_dir,
   cmd_str <- paste("mris_fwhm",
                    "--i", resid_file,
                    "--hemi", hemi,
-                   "--subject", target,
+                   "--subject", fs_template,
                    "--prune",
                    "--cortex",
                    "--dat", fwhm_estim_path,
@@ -101,13 +101,16 @@ compute_clusters <- function(outp_dir,
   csd <- file.path(FS_HOME, "average", "mult-comp-cor", "fsaverage", hemi, "cortex",
                    paste0("fwhm", fwhm), csd_sign, mcz_thr_str, "mc-z.csd")
 
-  other_files <- paste0("stack", term_number, ".cache.th", mcz_thr, ".", csd_sign, ".sig.",
-                        c("cluster.mgh",
-                          "voxel.mgh",
-                          "cluster.summary",
-                          "ocn.mgh",
-                          "ocn.annot",
-                          "masked.mgh"))
+  other_files <- file.path(outp_dir,
+                           paste0(hemi,".stack", term_number, ".cache.th", mcz_thr, ".",
+                                  csd_sign, ".sig.",
+                                  c("cluster.mgh", # map of cluster-wise significances
+                                    "voxel.mgh", # map of corrected voxel-wise significances
+                                    "cluster.summary", # text summary file
+                                    "ocn.mgh", # value is cluster number
+                                    "ocn.annot", # output clusters as an annotation
+                                    "masked.mgh") # input with non-clusters set to 0
+                            ))
 
   cmd_str <- paste("mri_surfcluster",
                    "--in", pval_mgh_file,
@@ -117,11 +120,11 @@ compute_clusters <- function(outp_dir,
                    "--sum", other_files[3],
                    "--ocn", other_files[4],
                    "--oannot", other_files[5],
-                   "--annot aparc",
-                   "--cwpvalthresh", cwp_thr,
+                   "--annot aparc", # report annotation for max vertex
+                   "--cwpvalthresh", cwp_thr, # clusterwise threshold
                    "--o", other_files[6],
-                   "--no-fixmni",
-                   "--surf", "white")
+                   "--no-fixmni", # <do not> fix MNI talairach coordinates
+                   "--surf", "white") # get coorindates from surface (white)
 
   cmd_str <- if (!is.null(mask)) {
     paste(cmd_str, "--mask", mask)

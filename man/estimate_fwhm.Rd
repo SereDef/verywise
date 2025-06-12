@@ -9,7 +9,7 @@ estimate_fwhm(
   hemi,
   resid_file,
   mask = NULL,
-  target = "fsaverage",
+  fs_template = "fsaverage",
   verbose = FALSE
 )
 }
@@ -23,7 +23,7 @@ two files: "fwhm.dat" and "finamMask.mgh".}
 
 \item{mask}{: apply a mask (default = cortical mask + excluding problematic vertices)}
 
-\item{target}{: (default = "fsaverage") data template.}
+\item{fs_template}{: (default = "fsaverage") data template.}
 
 \item{verbose}{: (default = FALSE) verbosity.}
 }

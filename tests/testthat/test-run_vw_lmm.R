@@ -40,7 +40,7 @@ test_that("single_lmm disables pvalues when requested", {
 
 test_that("single_lmm errors with incorrect input", {
   bad_pheno <- list(a = 1, b = 2) # not a data.frame
-  expect_error(single_lmm(bad_pheno, y, formula))
+  expect_error(single_lmm(bad_pheno, y, formula, model_template = NULL))
 })
 
 # ==============================================================================

@@ -12,6 +12,7 @@ run_vw_lmm(
   hemi = c("both", "lh", "rh"),
   seed = 3108,
   n_cores = 1,
+  chunk_size = 1000,
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   folder_id = "folder_id",
   verbose = TRUE,
@@ -19,7 +20,22 @@ run_vw_lmm(
 )
 }
 \arguments{
-\item{formula}{: model formula object (this should specify a LME model)}
+\item{formula}{: Model formula object. This should specify a linear mixed model
+using `lme4` syntax.
+#' e.g. \code{vw_thickness ~ sex * age + site + (1|id)}.
+The *outcome* should be a brain surface metric. Available options:
+* `vw_thickness`
+* `vw_area`
+* `vw_area.pial`
+* `vw_curv`
+* `vw_jacobian_white`
+* `vw_pial`
+* `vw_pial_lgi`
+* `vw_sulc`
+* `vw_volume`
+* `vw_w_g.pct`
+* `vw_white.H`
+* `vw_white.K`}
 
 \item{pheno}{: the phenotype data object (already loaded in the global environment) or
 a string containing a file path. Supported file extensions are: rds, csv, txt and sav.}
@@ -35,6 +51,8 @@ provided by the user, a "results" sub-directory will be created inside \code{sub
 
 \item{n_cores}{: (default = 1) number of cores for parallel processing.}
 
+\item{chunk_size}{: (default = 1000) size of data chunk for parallel processing}
+
 \item{FS_HOME}{: FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.}
 
 \item{folder_id}{: (default = "folder_id") the name of the column in pheno that
@@ -46,7 +64,7 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
   Arguments passed on to \code{\link[=hemi_vw_lmm]{hemi_vw_lmm}}
   \describe{
     \item{\code{fwhm}}{: (default = 10) full-width half maximum value}
-    \item{\code{target}}{: (default = "fsaverage") template on which to register vertex-wise data.
+    \item{\code{fs_template}}{: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
  * fsaverage (default) = 163842 vertices (highest resolution),
  * fsaverage6 = 40962 vertices,
@@ -55,7 +73,7 @@ The following values are accepted:
  * fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
 model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `target = "fsaverage"`
+template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.}
     \item{\code{apply_cortical_mask}}{: (default = TRUE) remove vertices that are not on the cortex.}
     \item{\code{save_ss}}{: (default = TRUE) save the super-subject matrix as an rds file for

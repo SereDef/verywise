@@ -13,7 +13,7 @@ build_supersubject(
   hemi,
   n_cores,
   fwhmc = "fwhm10",
-  target = "fsaverage",
+  fs_template = "fsaverage",
   backing,
   error_cutoff = 20,
   save_rds = FALSE,
@@ -37,7 +37,7 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 \item{fwhmc}{: (default = "fwhm10") full-width half maximum value, used to identify files.}
 
-\item{target}{: (default = "fsaverage") template on which to register vertex-wise data.
+\item{fs_template}{: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
  * fsaverage (default) = 163842 vertices (highest resolution),
  * fsaverage6 = 40962 vertices,
@@ -46,7 +46,7 @@ The following values are accepted:
  * fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
 model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `target = "fsaverage"`
+template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.}
 
 \item{backing}{: (default = `outp_dir`) location to save the matrix \code{backingfile}.}

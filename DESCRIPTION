@@ -1,7 +1,7 @@
 Package: verywise
 Type: Package
 Title: Vertex-wise Statistical Analysis of Neuroimaging data
-Version: 0.2.2
+Version: 1.0.0
 Authors@R: c(
     person("Serena", "Defina", 
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
@@ -16,7 +16,8 @@ Authors@R: c(
            email = "r.muetzel@erasmusmc.nl", role = c("ctb", "fnd"))
            )
 Description: Whole-brain surface analysis of FreeSurfer MGH format data. The package allows 
-  application of several statistical models per vertex, including linear mixed models. 
+  application of several statistical models per vertex, including linear mixed models
+  and vertex-wise meta-analysis. 
   It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
   Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
 License: GPL-3
@@ -24,6 +25,7 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     haven,
+    metafor,
     mi (>= 1.1),
     mice (>= 3.16.0),
     parallelly (>= 1.38.0),

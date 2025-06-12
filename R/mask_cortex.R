@@ -8,16 +8,16 @@
 #' \code{\link{build_supersubject}}.
 #'
 #' @param hemi : (default = "lh") hemisphere ("lh" or "rh")
-#' @param target : (default = "fsaverage")
+#' @param fs_template : (default = "fsaverage")
 #'
 #' @return A (large) logical vector for cortical (or technical, i.e. vertex = 0) mask.
 #'
-mask_cortex <- function(hemi = "lh", target = "fsaverage") {
+mask_cortex <- function(hemi = "lh", fs_template = "fsaverage") {
   # Load mask file
   mask_file <- file.path(
     system.file("extdata", package = "verywise"), "cortex_mask",
-    # paste0(hemi, ".", target, ".cortex.mask.mgh")
-    paste0(hemi, ".", target, ".cortex.mask.rds")
+    # paste0(hemi, ".", fs_template, ".cortex.mask.mgh")
+    paste0(hemi, ".", fs_template, ".cortex.mask.rds")
   )
   mask <- readRDS(mask_file)
   # Turn into logical vector
