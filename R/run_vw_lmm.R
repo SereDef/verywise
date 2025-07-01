@@ -2,40 +2,121 @@
 #' Run vertex-wise linear mixed model using \code{lme4::lmer()}
 #'
 #' @description
-#' This is is the main function in v0 of \code{verywise}.
-#' It checks the user inputs and runs the \code{\link{single_lmm}} function across all vertices.
+#' This is is the main function for conducting vertex-wise linear mixed model analyses
+#' on brain surface metrics. It will first check use inputs, prepare the phenotype data(list) 
+#' and run the linear mixed model in each of the specified hemispheres using the 
+#' \code{\link{hemi_vw_lmm}} function. 
+#' 
+#' The function supports analysis of both single and multiple imputed datasets.
+#' It also automatically handles cortical masking, and provides cluster-wise correction
+#' for multiple testing using FreeSurfer's Monte Carlo simulation approach.
 #'
-#' @param formula : Model formula object. This should specify a linear mixed model
-#' using `lme4` syntax.
-#' #' e.g. \code{vw_thickness ~ sex * age + site + (1|id)}.
-#' The *outcome* should be a brain surface metric. Available options:
-#' * `vw_thickness`
-#' * `vw_area`
-#' * `vw_area.pial`
-#' * `vw_curv`
-#' * `vw_jacobian_white`
-#' * `vw_pial`
-#' * `vw_pial_lgi`
-#' * `vw_sulc`
-#' * `vw_volume`
-#' * `vw_w_g.pct`
-#' * `vw_white.H`
-#' * `vw_white.K`
-#' @param pheno : the phenotype data object (already loaded in the global environment) or
-#' a string containing a file path. Supported file extensions are: rds, csv, txt and sav.
-#' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
-#' @param outp_dir : output path, where do you want results to be stored. If none is
-#' provided by the user, a "results" sub-directory will be created inside \code{subj_dir}.
-#' @param hemi : (default = "both") which hemispheres to run.
-#' @param seed : (default = 3108) random seed.
-#' @param n_cores : (default = 1) number of cores for parallel processing.
-#' @param chunk_size : (default = 1000) size of data chunk for parallel processing
-#' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
-#' @param folder_id : (default = "folder_id") the name of the column in pheno that
-#' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
-#' @param verbose : (default = TRUE)
-#' @inheritDotParams hemi_vw_lmm apply_cortical_mask use_model_template save_ss fwhm fs_template model
+#' @param formula A model formula object. This should specify a linear mixed model
+#'   \code{lme4} syntax. The outcome variable should be one of the supported brain
+#'   surface metrics (see Details). Example: 
+#'   \code{vw_thickness ~ age * sex + site + (1|participant_id)}.
+#' @param pheno Either a `data.frame`/`tibble` containing the "phenotype" data 
+#'   (i.e., already loaded in the global environment), or a string specifying the
+#'   file path to phenotype data. Supported file formats: .rds, 
+#'   .csv, .txt, .sav (SPSS). 
+#'   The data should be in **long** format and it should contain all the variables 
+#'   specified in the \code{formula} plus the \code{folder_id} column.
+#' @param subj_dir Character string specifying the path to FreeSurfer data directory.
+#'   Must follow the verywise directory structure (see package vignette for details).
+#' @param outp_dir Character string specifying the output directory for results.
+#'   If \code{NULL} (default), creates a "verywise_results" subdirectory within 
+#'   \code{subj_dir}.
+#' @param hemi Character string specifying which hemisphere(s) to analyze.
+#'   Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"} (right only).
+#' @param folder_id Character string specifying the column name in \code{pheno}
+#'   that contains subject directory names of the input neuroimaging data 
+#'   (e.g., "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected to be nested 
+#'   inside \code{subj_dir}.
+#'   Default: \code{"folder_id"}.
+#' @param seed Integer specifying the random seed for reproducibility. Default: 3108.
+#' @param n_cores Integer specifying the number of CPU cores for parallel processing.
+#'   Default: 1.
+#' @param chunk_size Integer specifying the number of vertices processed per chunk
+#'   in parallel operations. Larger values use more memory but may be faster.
+#'   Default: 1000.
+#' @param FS_HOME Character string specifying the FreeSurfer home directory.
+#'   Defaults to \code{FREESURFER_HOME} environment variable.
+#' @param fs_template Character string specifying the FreeSurfer template for
+#'   vertex registration. Options:
+#'  * \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+#'  * \code{"fsaverage6"} = 40962 vertices,
+#'  * \code{"fsaverage5"} = 10242 vertices,
+#'  * \code{"fsaverage4"} = 2562 vertices,
+#'  * \code{"fsaverage3"} = 642 vertices
+#' Note that lower resolutions should be only used to downsample the brain map, for faster
+#' model tuning. The final analyses should also run using `fs_template = "fsaverage"`
+#' to avoid (small) imprecisions in vertex registration and smoothing.
+#' @param apply_cortical_mask Logical indicating whether to exclude non-cortical
+#'   vertices from analysis. Default: \code{TRUE} (recommended).
+#' @param use_model_template Logical indicating whether to pre-compile the model
+#'   template for faster estimation. Default: \code{TRUE} (recommended).
+#' @param save_ss Logical indicating whether to save the super-subject matrix as
+#'   an .rds file for faster future processing. Default: \code{TRUE} (recommended).
+#' @param verbose Logical indicating whether to display progress messages.
+#'   Default: \code{TRUE}.
+#' @param ... Additional arguments passed to \code{\link{hemi_vw_lmm}}, including e.g.,
+#'   \code{fwhm} (smoothing kernel size) and \code{model} (statistical model type).
 #'
+#' @details
+#' \strong{Supported Brain Surface Metrics:}
+#' The *outcome* specified in `formula` should be a brain surface metric among:
+#' \itemize{
+#'   \item \code{vw_thickness} - Cortical thickness
+#'   \item \code{vw_area} - Cortical surface area (white  surface)
+#'   \item \code{vw_area.pial} - Cortical surface area (pial surface)
+#'   \item \code{vw_curv} - Mean curvature
+#'   \item \code{vw_jacobian_white} - Jacobian determinant (white surface)
+#'   \item \code{vw_pial} - Pial surface coordinates
+#'   \item \code{vw_pial_lgi} - Local gyrification index (pial surface)
+#'   \item \code{vw_sulc} - Sulcal depth
+#'   \item \code{vw_volume} - Gray matter volume
+#'   \item \code{vw_w_g.pct} - White/gray matter intensity ratio
+#'   \item \code{vw_white.H} - Mean curvature (white surface)
+#'   \item \code{vw_white.K} - Gaussian curvature (white surface)
+#' }
+#' 
+#' \strong{Statistical Approach:}
+#' The function uses \code{lme4::lmer()} for mixed-effects modeling, enabling
+#' analysis of longitudinal and hierarchical data. P-values are computed using
+#' the t-as-z approximation, with cluster-wise correction applied using FreeSurfer's
+#' Monte Carlo simulation approach.
+#' 
+#' \strong{Multiple Imputation:}
+#' The function automatically detects and handles multiple imputed datasets
+#' (created with \code{mice} or similar packages), pooling results according
+#' to Rubin's rules.
+#' 
+#' \strong{Parallel processing:}
+#' The \code{verywise} package employs a carefully designed parallelization strategy 
+#' to maximize computational efficiency while avoiding the performance penalties 
+#' associated with nested parallelization.
+#' Therefore, when `hemi = 'both'`, left and right cortical hemispheres are processed sequentially.
+#' Within each hemisphere, vertices are divided into chunks of size \code{chunk_size} and processed 
+#' in parallel across \code{n_cores} workers (when \code{n_cores > 1}).
+#' When multiple imputed datasets are present, they are processed sequentially within each vertex.
+#' 
+#' Note that, on some systems, implicit parallelism in low-level matrix algebra libraries 
+#' (BLAS/LAPACK) can interfere with explicit parallelization. If you feel like processing is 
+#' taking too long, we recommend disabling these implicit threading libraries before starting R.
+#' For example:
+#' \preformatted{
+#' export OPENBLAS_NUM_THREADS=1
+#' export OMP_NUM_THREADS=1  
+#' export MKL_NUM_THREADS=1
+#' export VECLIB_MAXIMUM_THREADS=1
+#' export NUMEXPR_NUM_THREADS=1
+#' }
+#' 
+#' \strong{Output Files:}
+#' Results are saved in FreeSurfer-compatible .mgh format for visualization
+#' with [verywiseWIZard](https://github.com/SereDef/verywise-wizard), FreeView or 
+#' other neuroimaging software.
+#'  
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
 #'
@@ -48,11 +129,15 @@ run_vw_lmm <- function(formula,
                        subj_dir,
                        outp_dir = NULL,
                        hemi = c("both", "lh","rh"),
+                       folder_id = "folder_id",
                        seed = 3108,
                        n_cores = 1,
                        chunk_size = 1000,
                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
-                       folder_id = "folder_id",
+                       fs_template = "fsaverage",
+                       apply_cortical_mask = TRUE,
+                       use_model_template = TRUE,
+                       save_ss = TRUE,
                        verbose = TRUE,
                        ...
 ) {
@@ -105,6 +190,10 @@ run_vw_lmm <- function(formula,
                 n_cores = n_cores,
                 chunk_size = chunk_size,
                 FS_HOME = FS_HOME,
+                fs_template = fs_template,
+                apply_cortical_mask = apply_cortical_mask,
+                use_model_template = use_model_template,
+                save_ss = save_ss,
                 verbose = verbose,
                 ...)
     })
@@ -120,30 +209,10 @@ run_vw_lmm <- function(formula,
 #' @description
 #' It runs the \code{\link{single_lmm}} function across vertices in a single hemisphere.
 #'
-#' @param formula : a string or model formula object specifying a LME model,
-#' e.g. \code{vw_thickness ~ sex * age + site + (1|id)}.
+#' @inheritParams run_vw_lmm
 #' @param data_list : a list of dataframes containing phenotype information
 #' (generated by \code{\link{imp2list}})
-#' @param subj_dir : a string containing the path to the neuroimaging (FreeSurfer
-#' pre-processed) data, this expects a verywise structure.
-#' @param outp_dir : output path, where do you want results to be stored. If none is
-#' provided by the user, a "results" sub-directory will created inside \code{subj_dir}.
-#' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}.
-#' @param folder_id : (default = "folder_id") the name of the column in pheno that
-#' contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").
-#' @param hemi : (default = "both") hemispheres to run.
 #' @param fwhm : (default = 10) full-width half maximum value
-#' @param fs_template : (default = "fsaverage") template on which to register vertex-wise data.
-#' The following values are accepted:
-#'  * fsaverage (default) = 163842 vertices (highest resolution),
-#'  * fsaverage6 = 40962 vertices,
-#'  * fsaverage5 = 10242 vertices,
-#'  * fsaverage4 = 2562 vertices,
-#'  * fsaverage3 = 642 vertices
-#' Note that, at the moment, these are only used to downsample the brain map, for faster
-#' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-#' template and the final analyses should also be run using `fs_template = "fsaverage"`
-#' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
 #' Any of the following are accepted (equivalent values separate by `/`):
 #'  * 13 / 1.3 / 0.05,
@@ -154,15 +223,7 @@ run_vw_lmm <- function(formula,
 #'  * 40 / 4.0 / 0.0001.
 #' @param cwp_thr : (default = 0.025, when both hemispheres are ran, else 0.05)
 #' the cluster-wise p-value threshold on top of all corrections.
-#' @param seed : (default = 3108) random seed.
-#' @param apply_cortical_mask : (default = TRUE) remove vertices that are not on the cortex.
-#' @param save_ss : (default = TRUE) save the super-subject matrix as an rds file for
-#' quicker processing in the future.
 #' @param model : (default = \code{"lme4::lmer"}) # "stats::lm"
-#' @param use_model_template : pre-compile the model?
-#' @param n_cores : the parallel cluster
-#' @param chunk_size : (default = 1000) size of data chunk for parallel processing
-#' @param verbose : (default = TRUE)
 #'
 #' @return A list of file-backed matrices containing pooled coefficients, SEs,
 #' t- and p- values and residuals.
