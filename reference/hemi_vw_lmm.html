@@ -73,8 +73,10 @@
 
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>: a string or model formula object specifying a LME model,
-e.g. <code>vw_thickness ~ sex * age + site + (1|id)</code>.</p></dd>
+<dd><p>A model formula object. This should specify a linear mixed model
+<code>lme4</code> syntax. The outcome variable should be one of the supported brain
+surface metrics (see Details). Example:
+<code>vw_thickness ~ age * sex + site + (1|participant_id)</code>.</p></dd>
 
 
 <dt id="arg-data-list">data_list<a class="anchor" aria-label="anchor" href="#arg-data-list"></a></dt>
@@ -83,26 +85,32 @@ e.g. <code>vw_thickness ~ sex * age + site + (1|id)</code>.</p></dd>
 
 
 <dt id="arg-subj-dir">subj_dir<a class="anchor" aria-label="anchor" href="#arg-subj-dir"></a></dt>
-<dd><p>: a string containing the path to the neuroimaging (FreeSurfer
-pre-processed) data, this expects a verywise structure.</p></dd>
+<dd><p>Character string specifying the path to FreeSurfer data directory.
+Must follow the verywise directory structure (see package vignette for details).</p></dd>
 
 
 <dt id="arg-outp-dir">outp_dir<a class="anchor" aria-label="anchor" href="#arg-outp-dir"></a></dt>
-<dd><p>: output path, where do you want results to be stored. If none is
-provided by the user, a "results" sub-directory will created inside <code>subj_dir</code>.</p></dd>
+<dd><p>Character string specifying the output directory for results.
+If <code>NULL</code> (default), creates a "verywise_results" subdirectory within
+<code>subj_dir</code>.</p></dd>
 
 
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
-<dd><p>: FreeSurfer directory, i.e. <code>$FREESURFER_HOME</code>.</p></dd>
+<dd><p>Character string specifying the FreeSurfer home directory.
+Defaults to <code>FREESURFER_HOME</code> environment variable.</p></dd>
 
 
 <dt id="arg-folder-id">folder_id<a class="anchor" aria-label="anchor" href="#arg-folder-id"></a></dt>
-<dd><p>: (default = "folder_id") the name of the column in pheno that
-contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1").</p></dd>
+<dd><p>Character string specifying the column name in <code>pheno</code>
+that contains subject directory names of the input neuroimaging data
+(e.g., "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected to be nested
+inside <code>subj_dir</code>.
+Default: <code>"folder_id"</code>.</p></dd>
 
 
 <dt id="arg-hemi">hemi<a class="anchor" aria-label="anchor" href="#arg-hemi"></a></dt>
-<dd><p>: (default = "both") hemispheres to run.</p></dd>
+<dd><p>Character string specifying which hemisphere(s) to analyze.
+Options: <code>"both"</code> (default), <code>"lh"</code> (left only), <code>"rh"</code> (right only).</p></dd>
 
 
 <dt id="arg-fwhm">fwhm<a class="anchor" aria-label="anchor" href="#arg-fwhm"></a></dt>
@@ -110,16 +118,15 @@ contains the directory names of the input neuroimaging data (e.g. "sub-10_ses-T1
 
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
-<dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
-The following values are accepted:
- * fsaverage (default) = 163842 vertices (highest resolution),
- * fsaverage6 = 40962 vertices,
- * fsaverage5 = 10242 vertices,
- * fsaverage4 = 2562 vertices,
- * fsaverage3 = 642 vertices
-Note that, at the moment, these are only used to downsample the brain map, for faster
-model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `fs_template = "fsaverage"`
+<dd><p>Character string specifying the FreeSurfer template for
+  vertex registration. Options:
+ * <code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),
+ * <code>"fsaverage6"</code> = 40962 vertices,
+ * <code>"fsaverage5"</code> = 10242 vertices,
+ * <code>"fsaverage4"</code> = 2562 vertices,
+ * <code>"fsaverage3"</code> = 642 vertices
+Note that lower resolutions should be only used to downsample the brain map, for faster
+model tuning. The final analyses should also run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
 
@@ -140,16 +147,17 @@ the cluster-wise p-value threshold on top of all corrections.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>: (default = 3108) random seed.</p></dd>
+<dd><p>Integer specifying the random seed for reproducibility. Default: 3108.</p></dd>
 
 
 <dt id="arg-apply-cortical-mask">apply_cortical_mask<a class="anchor" aria-label="anchor" href="#arg-apply-cortical-mask"></a></dt>
-<dd><p>: (default = TRUE) remove vertices that are not on the cortex.</p></dd>
+<dd><p>Logical indicating whether to exclude non-cortical
+vertices from analysis. Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
-<dd><p>: (default = TRUE) save the super-subject matrix as an rds file for
-quicker processing in the future.</p></dd>
+<dd><p>Logical indicating whether to save the super-subject matrix as
+an .rds file for faster future processing. Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
@@ -157,19 +165,24 @@ quicker processing in the future.</p></dd>
 
 
 <dt id="arg-use-model-template">use_model_template<a class="anchor" aria-label="anchor" href="#arg-use-model-template"></a></dt>
-<dd><p>: pre-compile the model?</p></dd>
+<dd><p>Logical indicating whether to pre-compile the model
+template for faster estimation. Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
-<dd><p>: the parallel cluster</p></dd>
+<dd><p>Integer specifying the number of CPU cores for parallel processing.
+Default: 1.</p></dd>
 
 
 <dt id="arg-chunk-size">chunk_size<a class="anchor" aria-label="anchor" href="#arg-chunk-size"></a></dt>
-<dd><p>: (default = 1000) size of data chunk for parallel processing</p></dd>
+<dd><p>Integer specifying the number of vertices processed per chunk
+in parallel operations. Larger values use more memory but may be faster.
+Default: 1000.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>: (default = TRUE)</p></dd>
+<dd><p>Logical indicating whether to display progress messages.
+Default: <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
