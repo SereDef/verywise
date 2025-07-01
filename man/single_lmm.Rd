@@ -2,39 +2,55 @@
 % Please edit documentation in R/run_vw_lmm.R
 \name{single_lmm}
 \alias{single_lmm}
-\title{Run a single \code{lme4::lmer} model and extract stats}
+\title{Run a single linear mixed model and extract statistics}
 \usage{
 single_lmm(imp, y, formula, model_template = NULL, pvalues = TRUE)
 }
 \arguments{
-\item{imp}{: The phenotype dataset (in verywise format).}
+\item{imp}{A data.frame containing the phenotype dataset (in verywise format).}
 
-\item{y}{: A vector of outcome values (i.e. a single vertex from the
-supersubject matrix).}
+\item{y}{A numeric vector of outcome values representing a single vertex from 
+the super-subject matrix.}
 
-\item{formula}{: R formula describing the linear mixed model (using \code{lme4} notation)}
+\item{formula}{An R formula object describing the linear mixed model using
+\code{lme4} notation.}
 
-\item{model_template}{: (default = NULL) `single_lmm` can leverage an "update"-based
-workflow to minimize repeated parsing and model construction overhead.}
+\item{model_template}{Optional pre-compiled model object for faster estimation.
+When provided, \code{single_lmm} will use an "update"-based workflow instead 
+of refitting the model from scratch. This minimizes repeated parsing and model 
+construction overhead, significantly reducing computation time for large-scale 
+vertex-wise analyses. Default: \code{NULL}.}
 
-\item{pvalues}{: (default : TRUE) whether to include p-values computed using the
-*t-as-z* approach (see Details).}
+\item{pvalues}{Logical indicating whether to compute p-values using the
+*t-as-z* approximation (see Details). Default: \code{TRUE}.}
 }
 \value{
 A list with two elements:
-\enumerate{
-\item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
-fixed effect term)
-\item \code{"resid"}: a vector of residuals for the given model.
-}
+  \itemize{
+    \item \code{stats} - A data.frame with columns:
+      \itemize{
+        \item \code{term} - Fixed effect term names
+        \item \code{qhat} - Parameter estimates
+        \item \code{se} - Standard errors
+        \item \code{tval} - t-statistics (if \code{pvalues = TRUE})
+        \item \code{pval} - p-values (if \code{pvalues = TRUE})
+      }
+    \item \code{resid} - A numeric vector of model residuals
+  }
 }
 \description{
-Run a single \code{lme4::lmer} model and extract stats
+Fits a linear mixed model to a single vertex outcome using \code{lme4::lmer()}
+and extracts fixed effects statistics. This function is called repeatedly
+across all cortical vertices during vertex-wise analysis.
 }
 \details{
-No additional parameters are currently passed to the \code{lme4::lmer} call
-P-values are estimated using the *t-as-z* approach at the moment. This is known
-to the anti-conservative for small sample sizes. However we preferred a
-relatively lenient (and computationally inexpensive) solution at this stage.
-We will be addressing Type I error mores strictly at the cluster forming stage.
+No additional parameters are currently passed to the \code{lme4::lmer} call.
+P-values are estimated using the *t-as-z* approach. This is known
+to the anti-conservative for small sample sizes.sizes but provides a
+computationally efficient solution. Type I error control is addressed
+more rigorously at the cluster-forming stage.
+}
+\seealso{
+\code{\link{hemi_vw_lmm}} for hemisphere-wide analysis,
+  \code{\link{run_vw_lmm}} for the main interface.
 }

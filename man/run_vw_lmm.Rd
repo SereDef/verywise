@@ -91,8 +91,18 @@ Default: \code{TRUE}.}
 \code{fwhm} (smoothing kernel size) and \code{model} (statistical model type).}
 }
 \value{
-A list of file-backed matrices containing pooled coefficients, SEs,
-t- and p- values and residuals.
+A named list with elements corresponding to each analyzed hemisphere
+  (\code{"lh"} and/or \code{"rh"}). Each element contains a list of file-backed
+  matrices (\code{bigstatsr::FBM} objects) with:
+  \itemize{
+    \item \code{coef} - Regression coefficients
+    \item \code{se} - Standard errors
+    \item \code{t} - t-statistics
+    \item \code{p} - p-values
+    \item \code{resid} - Model residuals
+  }
+  Additionally, results are automatically saved to disk in .mgh format for
+  visualization and further analysis.
 }
 \description{
 This is is the main function for conducting vertex-wise linear mixed model analyses
@@ -158,6 +168,32 @@ export NUMEXPR_NUM_THREADS=1
 Results are saved in FreeSurfer-compatible .mgh format for visualization
 with [verywiseWIZard](https://github.com/SereDef/verywise-wizard), FreeView or 
 other neuroimaging software.
+}
+\note{
+\itemize{
+  \item Ensure FreeSurfer is properly installed and the \code{FREESURFER_HOME}
+    environment variable is set.
+  \item Large datasets may require substantial memory. Consider adjusting
+    \code{chunk_size} and \code{n_cores} based on your system specifications.
+  \item For reproducibility, always specify a \code{seed}.
+}
+}
+\examples{
+# Basic cortical thickness analysis
+\dontrun{
+results <- run_vw_lmm(
+  formula = vw_thickness ~ age + sex + site + (1|participant_id),
+  pheno = "path/to/phentype/data", # or data.frame object 
+  subj_dir = "/path/to/freesurfer/subjects",
+  outp_dir = "/path/to/output",
+  n_cores = 4)
+}
+
+}
+\seealso{
+\code{\link{hemi_vw_lmm}} for hemisphere-specific analysis,
+\code{\link{single_lmm}} for single-vertex modeling,
+\code{vignette("03-run-vw-lmm", package = "verywise")} for detailed usage examples.
 }
 \author{
 Serena Defina, 2024.
