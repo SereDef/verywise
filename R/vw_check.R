@@ -44,10 +44,16 @@ check_data_list <- function(data_list, folder_id, formula) {
   # TODO: check that is in long format ?
 }
 
-check_path <- function(dir_path) {
+check_path <- function(dir_path, file_exists=NULL) {
   param_name <- deparse(substitute(dir_path))
   if (!dir.exists(dir_path)) {
     stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
+  }
+  if (!is.null(file_exists)) {
+    file_path <- file.path(dir_path, file_exists)
+    if (file.exists(file_path)) {
+    warning(sprintf("A `%s` file already exists inside '%s'. Be careful, you may be overwriting results.", file_exists, dir_path))
+    }
   }
 }
 

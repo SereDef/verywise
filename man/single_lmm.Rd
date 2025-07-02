@@ -51,6 +51,5 @@ computationally efficient solution. Type I error control is addressed
 more rigorously at the cluster-forming stage.
 }
 \seealso{
-\code{\link{hemi_vw_lmm}} for hemisphere-wide analysis,
-  \code{\link{run_vw_lmm}} for the main interface.
+\code{\link{run_vw_lmm}} for the main interface.
 }

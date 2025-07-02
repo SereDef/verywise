@@ -31,7 +31,7 @@
 #' @param m : Number of imputed dataset (to avoid recomputing it)
 #'
 #' @note
-#' Used inside \code{\link{hemi_vw_lmm}}.
+#' Used inside \code{\link{run_vw_lmm}}.
 #'
 #' @return A list containing the pooled coefficients, SEs, t- and p- values.
 #'

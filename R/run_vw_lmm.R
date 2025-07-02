@@ -4,8 +4,8 @@
 #' @description
 #' This is is the main function for conducting vertex-wise linear mixed model analyses
 #' on brain surface metrics. It will first check use inputs, prepare the phenotype data(list) 
-#' and run the linear mixed model in each of the specified hemispheres using the 
-#' \code{\link{hemi_vw_lmm}} function. 
+#' and run a linear mixed model at each vertex of the specified hemisphere using the 
+#' \code{\link{single_lmm}} function. 
 #' 
 #' The function supports analysis of both single and multiple imputed datasets.
 #' It also automatically handles cortical masking, and provides cluster-wise correction
@@ -57,10 +57,21 @@
 #'   template for faster estimation. Default: \code{TRUE} (recommended).
 #' @param save_ss Logical indicating whether to save the super-subject matrix as
 #'   an .rds file for faster future processing. Default: \code{TRUE} (recommended).
+#' @param fwhm Numeric value specifying the full-width half-maximum for smoothing
+#'   kernel. Default: 10.
+#' @param mcz_thr Numeric value for Monte Carlo simulation threshold. 
+#' Any of the following are accepted (equivalent values separate by `/`):
+#'  * 13 / 1.3 / 0.05,
+#'  * 20 / 2.0 / 0.01,
+#'  * 23 / 2.3 / 0.005,
+#'  * 30 / 3.0 / 0.001, \* default
+#'  * 33 / 3.3 / 0.0005,
+#'  * 40 / 4.0 / 0.0001.
+#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of all corrections).
+#'   Set this to 0.025 when both hemispheres are analyzed, 0.05 for single hemisphere. 
+#'   Default: 0.025.
 #' @param verbose Logical indicating whether to display progress messages.
 #'   Default: \code{TRUE}.
-#' @param ... Additional arguments passed to \code{\link{hemi_vw_lmm}}, including e.g.,
-#'   \code{fwhm} (smoothing kernel size) and \code{model} (statistical model type).
 #'
 #' @details
 #' \strong{Supported Brain Surface Metrics:}
@@ -95,7 +106,8 @@
 #' The \code{verywise} package employs a carefully designed parallelization strategy 
 #' to maximize computational efficiency while avoiding the performance penalties 
 #' associated with nested parallelization.
-#' Therefore, when `hemi = 'both'`, left and right cortical hemispheres are processed sequentially.
+#' Left and right cortical hemispheres are processed sequentially by default, unless specified otherwise
+#' in the SLURM call (or similar, see vignette on parallelisation [COMING UP])
 #' Within each hemisphere, vertices are divided into chunks of size \code{chunk_size} and processed 
 #' in parallel across \code{n_cores} workers (when \code{n_cores > 1}).
 #' When multiple imputed datasets are present, they are processed sequentially within each vertex.
@@ -117,18 +129,9 @@
 #' with [verywiseWIZard](https://github.com/SereDef/verywise-wizard), FreeView or 
 #' other neuroimaging software.
 #'  
-#' @return A named list with elements corresponding to each analyzed hemisphere
-#'   (\code{"lh"} and/or \code{"rh"}). Each element contains a list of file-backed
-#'   matrices (\code{bigstatsr::FBM} objects) with:
-#'   \itemize{
-#'     \item \code{coef} - Regression coefficients
-#'     \item \code{se} - Standard errors
-#'     \item \code{t} - t-statistics
-#'     \item \code{p} - p-values
-#'     \item \code{resid} - Model residuals
-#'   }
-#'   Additionally, results are automatically saved to disk in .mgh format for
-#'   visualization and further analysis.
+#' @return A list of file-backed matrices (\code{bigstatsr::FBM} objects) containing pooled 
+#' coefficients, SEs, t- and p- values and residuals.
+#' Results are also automatically saved to disk in .mgh format.
 #'
 #' @note
 #' \itemize{
@@ -140,7 +143,6 @@
 #' }
 #' 
 #' @seealso
-#' \code{\link{hemi_vw_lmm}} for hemisphere-specific analysis,
 #' \code{\link{single_lmm}} for single-vertex modeling,
 #' \code{vignette("03-run-vw-lmm", package = "verywise")} for detailed usage examples.
 #'
@@ -152,10 +154,14 @@
 #'   pheno = "path/to/phentype/data", # or data.frame object 
 #'   subj_dir = "/path/to/freesurfer/subjects",
 #'   outp_dir = "/path/to/output",
+#'   hemi = "lh",
 #'   n_cores = 4)
 #' }
 #' 
 #' @author Serena Defina, 2024.
+#' 
+#' @importFrom foreach foreach
+#' @importFrom foreach %dopar%
 #'
 #' @export
 #'
@@ -163,7 +169,7 @@ run_vw_lmm <- function(formula,
                        pheno,
                        subj_dir,
                        outp_dir = NULL,
-                       hemi = c("both", "lh","rh"),
+                       hemi = c("lh","rh"),
                        folder_id = "folder_id",
                        seed = 3108,
                        n_cores = 1,
@@ -174,18 +180,27 @@ run_vw_lmm <- function(formula,
                        use_model_template = TRUE,
                        save_ss = TRUE,
                        verbose = TRUE,
-                       ...
+                       fwhm = 10,
+                       mcz_thr = 30,
+                       cwp_thr = 0.025
 ) {
   # Check user input ===========================================================
 
   measure <- check_formula(formula)
 
   check_path(subj_dir)
-  if (!is.null(outp_dir)) check_path(outp_dir)
+
+  if (is.null(outp_dir)) { 
+    outp_dir <- file.path(subj_dir, "verywise_results")
+    dir.create(outp_dir, showWarnings = FALSE)
+  }
+  check_path(outp_dir, file_exists='stack.txt')
 
   check_freesurfer_setup(FS_HOME, verbose=verbose)
 
   n_cores <- check_cores(n_cores)
+
+  hemi <- match.arg(hemi)
 
   # Read phenotype data (if not already loaded) ================================
   vw_message("Checking and preparing phenotype dataset...", verbose=verbose)
@@ -199,112 +214,12 @@ run_vw_lmm <- function(formula,
   # specified in the formula are present in the data
   check_data_list(data_list, folder_id, formula)
 
-  # Determine hemisphere(s) ====================================================
-  hemi <- match.arg(hemi)
-  if (hemi == "both") { hemis <- c("lh","rh") } else { hemis <- as.vector(hemi) }
-
   # Run analyses ===============================================================
-  n_cores <- as.integer(n_cores) # make sure n_cores is an integer
 
   set.seed(seed)
 
-  # Run analysis in each hemisphere (in sequence)
-  out <- lapply(hemis, function(h) {
-
-    if (h == "lh") { hemi_name <- "Left"} else { hemi_name <- "Right" }
-
-    vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose=verbose)
-
-    hemi_vw_lmm(hemi = h,
-                formula = formula,
-                subj_dir = subj_dir,
-                outp_dir = outp_dir,
-                data_list = data_list,
-                folder_id = folder_id,
-                seed = seed,
-                n_cores = n_cores,
-                chunk_size = chunk_size,
-                FS_HOME = FS_HOME,
-                fs_template = fs_template,
-                apply_cortical_mask = apply_cortical_mask,
-                use_model_template = use_model_template,
-                save_ss = save_ss,
-                verbose = verbose,
-                ...)
-    })
-
-  names(out) <- hemis
-
-  out
-}
-
-#' @title
-#' Run vertex-wise linear mixed model in one hemisphere using \code{lme4::lmer()}
-#'
-#' @description
-#' It runs the \code{\link{single_lmm}} function across vertices in a single hemisphere.
-#'
-#' @inheritParams run_vw_lmm
-#' @param data_list A list of data.frames containing phenotype information,
-#'   typically generated by \code{\link{imp2list}}.
-#' @param fwhm Numeric value specifying the full-width half-maximum for smoothing
-#'   kernel. Default: 10.
-#' @param mcz_thr Numeric value for Monte Carlo simulation threshold. 
-#' Any of the following are accepted (equivalent values separate by `/`):
-#'  * 13 / 1.3 / 0.05,
-#'  * 20 / 2.0 / 0.01,
-#'  * 23 / 2.3 / 0.005,
-#'  * 30 / 3.0 / 0.001, \* default
-#'  * 33 / 3.3 / 0.0005,
-#'  * 40 / 4.0 / 0.0001.
-#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of all corrections).
-#'   Set this to 0.025 when both hemispheres are analyzed, 0.05 for single hemisphere. 
-#'   Default: 0.025.
-#' @param model Character string specifying the statistical model type.
-#'   Default: \code{"lme4::lmer"}.
-#'
-#' @return A list of file-backed matrices (\code{bigstatsr::FBM} objects) containing pooled 
-#' coefficients, SEs, t- and p- values and residuals.
-#' Results are also automatically saved to disk in .mgh format.
-#'
-#' @seealso \code{\link{run_vw_lmm}} for the main user interface,
-#'   \code{\link{single_lmm}} for single-vertex modeling.
-#' 
-#' @author Serena Defina, 2024.
-#'
-#' @importFrom foreach foreach
-#' @importFrom foreach %dopar%
-#'
-#' @export
-#'
-hemi_vw_lmm <- function(hemi,
-                        data_list,
-                        formula,
-                        subj_dir,
-                        outp_dir = NULL,
-                        FS_HOME = "",
-                        folder_id = "folder_id",
-                        fwhm = 10,
-                        fs_template = "fsaverage",
-                        mcz_thr = 30,
-                        cwp_thr = 0.025,
-                        seed = 3108,
-                        apply_cortical_mask = TRUE,
-                        save_ss = TRUE,
-                        model = "lme4::lmer", # "stats::lm"
-                        use_model_template = TRUE,
-                        n_cores = 1,
-                        chunk_size = 1000,
-                        verbose = TRUE
-) {
-
-  # TMP: Assume the brain measure is always the OUTCOME
-  measure <- gsub("vw_", "", all.vars(formula)[1])
-
-  if (is.null(outp_dir)) {
-    outp_dir <- file.path(subj_dir, "verywise_results")
-    dir.create(outp_dir, showWarnings = FALSE)
-  }
+  if (hemi == "lh") { hemi_name <- "Left"} else { hemi_name <- "Right" }
+  vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose=verbose)
 
   # Read and clean vertex data =================================================
   ss_file_name <- file.path(outp_dir, paste(hemi, measure, fs_template,
@@ -334,19 +249,20 @@ hemi_vw_lmm <- function(hemi,
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
-  # Additionally check that there are no vertices that contain any 0s. These may be
-  # located at the edge of the cortical map and are potentially problematic
+  # Additionally check that there are no vertices that contain any 0s
   problem_verts <- fbm_col_has_0(ss)
   if (sum(problem_verts) > 0) {
-    vw_message("Ignoring ", sum(problem_verts)," vertices that contained 0 values.",
+    vw_message("Ignoring ", sum(problem_verts), " vertices that contained 0 values. ",
+               "These may be located at the edge of the cortical map and are potentially problematic.",
                verbose=verbose)
   }
 
   good_verts <- which(!problem_verts & is_cortex)
 
   # Unpack model ===============================================================
-  vw_message("Statistical model preparation...", verbose=verbose)
-
+  vw_message("Statistical model preparation...", 
+             "\nCall: ", formula, verbose=verbose)
+  
   model_info <- get_terms(formula, data_list)
 
   fixed_terms <- model_info[[1]]
@@ -370,8 +286,7 @@ hemi_vw_lmm <- function(hemi,
     tmp_data[paste0('vw_', measure)] <- ss[,1]  # dummy outcome
 
     # Fit model once
-    model_template <- lme4::lmer(formula = formula,
-                                 data = tmp_data)
+    model_template <- lme4::lmer(formula = formula, data = tmp_data)
   } else {
     model_template <- NULL
   }
@@ -385,9 +300,9 @@ hemi_vw_lmm <- function(hemi,
     paste(hemi, measure, res_bk_names, sep = ".")
   )
 
-  # TMP: remove files if they exist
+  # TMP: always remove files if they exist
   for (bk in res_bk_paths) {
-    # warning("Overwriting results")
+    vw_message("   WARNING: overwriting existing results backing files.", verbose=verbose)
     if (file.exists(paste0(bk,".bk"))) file.remove(paste0(bk,".bk"))
   }
   # Remove temporary matrices files after computations are done
@@ -423,12 +338,11 @@ hemi_vw_lmm <- function(hemi,
   # }
   # log_file <- file.path(outp_dir, paste0(hemi,".", measure,"model.log"))
 
-  set.seed(seed)
   if (n_cores > 1 ) vw_message("* preparing cluster of ", n_cores, " workers...",
                                verbose=verbose)
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type = "FORK")
-  # TODO: would not work on Windows anyway till freesurfer dependency is needed
+  # NOTE: would not work on Windows anyway till freesurfer dependency is needed
                                    # type = ifelse(.Platform$OS.type == "unix",
                                    #               "FORK", "PSOCK"))
   doParallel::registerDoParallel(cluster)
@@ -504,7 +418,7 @@ hemi_vw_lmm <- function(hemi,
   fbm2mgh(fbm = out[[ res_bk_names[length(res_bk_names)] ]],
           fname = resid_mgh_path)
 
-  # Estimate full-width half maximum (using FreeSurfer)
+  # Estimate full-width half maximum (using FreeSurfer) ================================
   vw_message("Estimating data smoothness for multiple testing correction...",
              verbose=verbose)
 
@@ -513,20 +427,22 @@ hemi_vw_lmm <- function(hemi,
                         resid_file = resid_mgh_path,
                         mask = good_verts,
                         fs_template = fs_template)
-  if (fwhm > 30) {
-    vw_message("Estimated smoothness is ", fwhm, ", which is really high. Reduced to 30.",
-               verbose=verbose)
-    fwhm <- 30
-  } else if (fwhm < 1) {
-    vw_message("Estimated smoothness is ", fwhm, ", which is really low. Increased to 1.",
-               verbose=verbose)
-    fwhm <- 1
+  
+  # Clamp fwhm to [1, 30] 
+  fwhm_clamped <- min(max(fwhm, 1), 30)
+
+  if (fwhm != fwhm_clamped) {
+    direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
+    vw_message(sprintf("Estimated smoothness is %s, which is really %s", fwhm, direction), verbose = verbose)
+    fwhm <- fwhm_clamped
+  } else {
+    vw_message(sprintf("Estimated smoothness = %s", fwhm), verbose = verbose)
   }
 
+  # Apply cluster-wise correction (using FreeSurfer) ==================================
   vw_message("Clusterwise correction...", verbose=verbose)
 
   for ( stack_n in seq_along(fixed_terms) ){
-    # message2("\n", verbose = verbose)
     compute_clusters(outp_dir = outp_dir,
                      hemi = hemi,
                      term_number = stack_n,
@@ -539,6 +455,7 @@ hemi_vw_lmm <- function(hemi,
 
   return(out)
 }
+
 
 #' @title
 #' Run a single linear mixed model and extract statistics
@@ -581,8 +498,7 @@ hemi_vw_lmm <- function(hemi,
 #'     \item \code{resid} - A numeric vector of model residuals
 #'   }
 #' 
-#' @seealso \code{\link{hemi_vw_lmm}} for hemisphere-wide analysis,
-#'   \code{\link{run_vw_lmm}} for the main interface.
+#' @seealso \code{\link{run_vw_lmm}} for the main interface.
 #'
 #' @importFrom lme4 lmer
 #' @importFrom lme4 fixef

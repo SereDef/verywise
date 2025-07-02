@@ -37,7 +37,7 @@ The residuals of the model are currently simply averaged across imputed
 datasets, for lack of a better idea of how to combine them.
 }
 \note{
-Used inside \code{\link{hemi_vw_lmm}}.
+Used inside \code{\link{run_vw_lmm}}.
 }
 \references{
 Rubin, D.B. (1987). \emph{Multiple Imputation for Nonresponse in Surveys}.

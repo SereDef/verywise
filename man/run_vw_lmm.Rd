@@ -9,7 +9,7 @@ run_vw_lmm(
   pheno,
   subj_dir,
   outp_dir = NULL,
-  hemi = c("both", "lh", "rh"),
+  hemi = c("lh", "rh"),
   folder_id = "folder_id",
   seed = 3108,
   n_cores = 1,
@@ -20,7 +20,9 @@ run_vw_lmm(
   use_model_template = TRUE,
   save_ss = TRUE,
   verbose = TRUE,
-  ...
+  fwhm = 10,
+  mcz_thr = 30,
+  cwp_thr = 0.025
 )
 }
 \arguments{
@@ -87,28 +89,32 @@ an .rds file for faster future processing. Default: \code{TRUE} (recommended).}
 \item{verbose}{Logical indicating whether to display progress messages.
 Default: \code{TRUE}.}
 
-\item{...}{Additional arguments passed to \code{\link{hemi_vw_lmm}}, including e.g.,
-\code{fwhm} (smoothing kernel size) and \code{model} (statistical model type).}
+\item{fwhm}{Numeric value specifying the full-width half-maximum for smoothing
+kernel. Default: 10.}
+
+\item{mcz_thr}{Numeric value for Monte Carlo simulation threshold. 
+Any of the following are accepted (equivalent values separate by `/`):
+ * 13 / 1.3 / 0.05,
+ * 20 / 2.0 / 0.01,
+ * 23 / 2.3 / 0.005,
+ * 30 / 3.0 / 0.001, \* default
+ * 33 / 3.3 / 0.0005,
+ * 40 / 4.0 / 0.0001.}
+
+\item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of all corrections).
+Set this to 0.025 when both hemispheres are analyzed, 0.05 for single hemisphere. 
+Default: 0.025.}
 }
 \value{
-A named list with elements corresponding to each analyzed hemisphere
-  (\code{"lh"} and/or \code{"rh"}). Each element contains a list of file-backed
-  matrices (\code{bigstatsr::FBM} objects) with:
-  \itemize{
-    \item \code{coef} - Regression coefficients
-    \item \code{se} - Standard errors
-    \item \code{t} - t-statistics
-    \item \code{p} - p-values
-    \item \code{resid} - Model residuals
-  }
-  Additionally, results are automatically saved to disk in .mgh format for
-  visualization and further analysis.
+A list of file-backed matrices (\code{bigstatsr::FBM} objects) containing pooled 
+coefficients, SEs, t- and p- values and residuals.
+Results are also automatically saved to disk in .mgh format.
 }
 \description{
 This is is the main function for conducting vertex-wise linear mixed model analyses
 on brain surface metrics. It will first check use inputs, prepare the phenotype data(list) 
-and run the linear mixed model in each of the specified hemispheres using the 
-\code{\link{hemi_vw_lmm}} function. 
+and run a linear mixed model at each vertex of the specified hemisphere using the 
+\code{\link{single_lmm}} function. 
 
 The function supports analysis of both single and multiple imputed datasets.
 It also automatically handles cortical masking, and provides cluster-wise correction
@@ -147,7 +153,8 @@ to Rubin's rules.
 The \code{verywise} package employs a carefully designed parallelization strategy 
 to maximize computational efficiency while avoiding the performance penalties 
 associated with nested parallelization.
-Therefore, when `hemi = 'both'`, left and right cortical hemispheres are processed sequentially.
+Left and right cortical hemispheres are processed sequentially by default, unless specified otherwise
+in the SLURM call (or similar, see vignette on parallelisation [COMING UP])
 Within each hemisphere, vertices are divided into chunks of size \code{chunk_size} and processed 
 in parallel across \code{n_cores} workers (when \code{n_cores > 1}).
 When multiple imputed datasets are present, they are processed sequentially within each vertex.
@@ -186,12 +193,12 @@ results <- run_vw_lmm(
   pheno = "path/to/phentype/data", # or data.frame object 
   subj_dir = "/path/to/freesurfer/subjects",
   outp_dir = "/path/to/output",
+  hemi = "lh",
   n_cores = 4)
 }
 
 }
 \seealso{
-\code{\link{hemi_vw_lmm}} for hemisphere-specific analysis,
 \code{\link{single_lmm}} for single-vertex modeling,
 \code{vignette("03-run-vw-lmm", package = "verywise")} for detailed usage examples.
 }
