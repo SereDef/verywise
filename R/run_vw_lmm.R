@@ -340,10 +340,7 @@ run_vw_lmm <- function(formula,
   vw_message("* dimentions: ", n_obs, " observations x ",
              length(good_verts), " (of ", vw_n, " total) vertices.", verbose=verbose)
 
-  # if (requireNamespace("progressr", quietly = TRUE)) {
-  #   # progressr::handlers(global = TRUE)
-  #   p <- progressr::progressor(along = good_verts) #1:nrow(chunk_seq)
-  # }
+  
   # log_file <- file.path(outp_dir, paste0(hemi,".", measure,"model.log"))
 
   if (n_cores > 1 ) vw_message("* preparing cluster of ", n_cores, " workers...",
@@ -357,53 +354,50 @@ run_vw_lmm <- function(formula,
 
   # Sync library paths: ensures all workers look for packages in the same place as the main session
   # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
-  # Ensure bigstatsr is loaded on all workers
-  # parallel::clusterEvalQ(cluster, {
-  #   requireNamespace("bigstatsr", quietly = TRUE)
-  # })
 
   # Progress bar setup
-  utils::capture.output(
-    progressbar <- utils::txtProgressBar(0, length(chunk_seq), style = 3), 
-    file = "/dev/null"
-  )
 
   vw_message("* running analysis...")
 
-  chunk = NULL
-  foreach::foreach(chunk = chunk_seq,
-                   .packages = c("bigstatsr"),
-                   .export = c("single_lmm", "vw_pool", "vw_message")) %dopar% {
-                     
-    utils::setTxtProgressBar(progressbar, chunk)
-                     
-    # worker_id <- Sys.getpid() # TMP for debugging
+  progressr::handlers(global = TRUE)
+  progressr::with_progress({
+    p <- progressr::progressor(steps = length(good_verts))
+    chunk = NULL
+    foreach::foreach(chunk = chunk_seq,
+                    .packages = c("bigstatsr"),
+                    .export = c("single_lmm", "vw_pool", "vw_message")) %dopar% {
 
-    for (v in chunk) {
+                      
+      # worker_id <- Sys.getpid() # TMP for debugging
 
-      vertex <- ss[, v] # ss should not get copied n_cores times because it is a memory map
+      for (v in chunk) {
+        # Progress update for each vertex
+        p(message = sprintf("Vertex %d", v))
 
-      # Loop through imputed datasets and run analyses
-      out_stats <- lapply(data_list, single_lmm,
-                          y = vertex,
-                          formula = formula,
-                          model_template = model_template,
-                          pvalues = (m == 1))
+        vertex <- ss[, v] # ss should not get copied n_cores times because it is a memory map
 
-      # Pool results
-      pooled_stats <- vw_pool(out_stats, m = m)
+        # Loop through imputed datasets and run analyses
+        out_stats <- lapply(data_list, single_lmm,
+                            y = vertex,
+                            formula = formula,
+                            model_template = model_template,
+                            pvalues = (m == 1))
 
-      # Write results to their respective FBM
-      c_vw[, v] <- pooled_stats$coef
-      s_vw[, v] <- pooled_stats$se
-      t_vw[, v] <- pooled_stats$t
-      p_vw[, v] <- -1 * log10(pooled_stats$p)
-      r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
+        # Pool results
+        pooled_stats <- vw_pool(out_stats, m = m)
 
-      # TMP for debugging
-      # vw_message(worker_id, ': vertex', v, 'done.')
+        # Write results to their respective FBM
+        c_vw[, v] <- pooled_stats$coef
+        s_vw[, v] <- pooled_stats$se
+        t_vw[, v] <- pooled_stats$t
+        p_vw[, v] <- -1 * log10(pooled_stats$p)
+        r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
+
+        # TMP for debugging
+        # vw_message(worker_id, ': vertex', v, 'done.')
+      }
     }
-  }
+  })
 
   parallel::stopCluster(cluster)
 
