@@ -31,11 +31,11 @@ run_vw_lmm(
 surface metrics (see Details). Example: 
 \code{vw_thickness ~ age * sex + site + (1|participant_id)}.}
 
-\item{pheno}{Either a `data.frame`/`tibble` containing the "phenotype" data 
+\item{pheno}{Either a \code{data.frame}/\code{tibble} containing the "phenotype" data 
 (i.e., already loaded in the global environment), or a string specifying the
 file path to phenotype data. Supported file formats: .rds, 
 .csv, .txt, .sav (SPSS). 
-The data should be in **long** format and it should contain all the variables 
+The data should be in \strong{long} format and it should contain all the variables 
 specified in the \code{formula} plus the \code{folder_id} column.}
 
 \item{subj_dir}{Character string specifying the path to FreeSurfer data directory.
@@ -67,14 +67,16 @@ Default: 1000.}
 Defaults to \code{FREESURFER_HOME} environment variable.}
 
 \item{fs_template}{Character string specifying the FreeSurfer template for
-  vertex registration. Options:
- * \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
- * \code{"fsaverage6"} = 40962 vertices,
- * \code{"fsaverage5"} = 10242 vertices,
- * \code{"fsaverage4"} = 2562 vertices,
- * \code{"fsaverage3"} = 642 vertices
+  vertex registration. Options: 
+  \itemize{
+  \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+  \item \code{"fsaverage6"} = 40962 vertices,
+  \item \code{"fsaverage5"} = 10242 vertices,
+  \item \code{"fsaverage4"} = 2562 vertices,
+  \item \code{"fsaverage3"} = 642 vertices
+}
 Note that lower resolutions should be only used to downsample the brain map, for faster
-model tuning. The final analyses should also run using `fs_template = "fsaverage"`
+model tuning. The final analyses should also run using \code{fs_template = "fsaverage"}
 to avoid (small) imprecisions in vertex registration and smoothing.}
 
 \item{apply_cortical_mask}{Logical indicating whether to exclude non-cortical
@@ -93,13 +95,15 @@ Default: \code{TRUE}.}
 kernel. Default: 10.}
 
 \item{mcz_thr}{Numeric value for Monte Carlo simulation threshold. 
-Any of the following are accepted (equivalent values separate by `/`):
- * 13 / 1.3 / 0.05,
- * 20 / 2.0 / 0.01,
- * 23 / 2.3 / 0.005,
- * 30 / 3.0 / 0.001, \* default
- * 33 / 3.3 / 0.0005,
- * 40 / 4.0 / 0.0001.}
+  Any of the following are accepted (equivalent values separate by \code{/}):
+  \itemize{
+  \item 13 / 1.3 / 0.05,
+  \item 20 / 2.0 / 0.01,
+  \item 23 / 2.3 / 0.005,
+  \item 30 / 3.0 / 0.001, \* default
+  \item 33 / 3.3 / 0.0005,
+  \item 40 / 4.0 / 0.0001.
+}}
 
 \item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of all corrections).
 Set this to 0.025 when both hemispheres are analyzed, 0.05 for single hemisphere. 
@@ -122,7 +126,7 @@ for multiple testing using FreeSurfer's Monte Carlo simulation approach.
 }
 \details{
 \strong{Supported Brain Surface Metrics:}
-The *outcome* specified in `formula` should be a brain surface metric among:
+The outcome specified in \code{formula} should be a brain surface metric among:
 \itemize{
   \item \code{vw_thickness} - Cortical thickness
   \item \code{vw_area} - Cortical surface area (white  surface)
