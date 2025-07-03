@@ -19,7 +19,7 @@ for multiple testing using FreeSurfer's Monte Carlo simulation approach."><meta 
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,11 +97,11 @@ surface metrics (see Details). Example:
 
 
 <dt id="arg-pheno">pheno<a class="anchor" aria-label="anchor" href="#arg-pheno"></a></dt>
-<dd><p>Either a `data.frame`/`tibble` containing the "phenotype" data
+<dd><p>Either a <code>data.frame</code>/<code>tibble</code> containing the "phenotype" data
 (i.e., already loaded in the global environment), or a string specifying the
 file path to phenotype data. Supported file formats: .rds,
 .csv, .txt, .sav (SPSS).
-The data should be in **long** format and it should contain all the variables
+The data should be in <strong>long</strong> format and it should contain all the variables
 specified in the <code>formula</code> plus the <code>folder_id</code> column.</p></dd>
 
 
@@ -151,14 +151,13 @@ Defaults to <code>FREESURFER_HOME</code> environment variable.</p></dd>
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
 <dd><p>Character string specifying the FreeSurfer template for
-  vertex registration. Options:
- * <code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),
- * <code>"fsaverage6"</code> = 40962 vertices,
- * <code>"fsaverage5"</code> = 10242 vertices,
- * <code>"fsaverage4"</code> = 2562 vertices,
- * <code>"fsaverage3"</code> = 642 vertices
-Note that lower resolutions should be only used to downsample the brain map, for faster
-model tuning. The final analyses should also run using `fs_template = "fsaverage"`
+  vertex registration. Options:</p><ul><li><p><code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),</p></li>
+<li><p><code>"fsaverage6"</code> = 40962 vertices,</p></li>
+<li><p><code>"fsaverage5"</code> = 10242 vertices,</p></li>
+<li><p><code>"fsaverage4"</code> = 2562 vertices,</p></li>
+<li><p><code>"fsaverage3"</code> = 642 vertices</p></li>
+</ul><p>Note that lower resolutions should be only used to downsample the brain map, for faster
+model tuning. The final analyses should also run using <code>fs_template = "fsaverage"</code>
 to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
 
@@ -189,13 +188,13 @@ kernel. Default: 10.</p></dd>
 
 <dt id="arg-mcz-thr">mcz_thr<a class="anchor" aria-label="anchor" href="#arg-mcz-thr"></a></dt>
 <dd><p>Numeric value for Monte Carlo simulation threshold.
-Any of the following are accepted (equivalent values separate by `/`):
- * 13 / 1.3 / 0.05,
- * 20 / 2.0 / 0.01,
- * 23 / 2.3 / 0.005,
- * 30 / 3.0 / 0.001, \* default
- * 33 / 3.3 / 0.0005,
- * 40 / 4.0 / 0.0001.</p></dd>
+  Any of the following are accepted (equivalent values separate by <code>/</code>):</p><ul><li><p>13 / 1.3 / 0.05,</p></li>
+<li><p>20 / 2.0 / 0.01,</p></li>
+<li><p>23 / 2.3 / 0.005,</p></li>
+<li><p>30 / 3.0 / 0.001, \* default</p></li>
+<li><p>33 / 3.3 / 0.0005,</p></li>
+<li><p>40 / 4.0 / 0.0001.</p></li>
+</ul></dd>
 
 
 <dt id="arg-cwp-thr">cwp_thr<a class="anchor" aria-label="anchor" href="#arg-cwp-thr"></a></dt>
@@ -213,7 +212,7 @@ Results are also automatically saved to disk in .mgh format.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Supported Brain Surface Metrics:</strong>
-The *outcome* specified in `formula` should be a brain surface metric among:</p><ul><li><p><code>vw_thickness</code> - Cortical thickness</p></li>
+The outcome specified in <code>formula</code> should be a brain surface metric among:</p><ul><li><p><code>vw_thickness</code> - Cortical thickness</p></li>
 <li><p><code>vw_area</code> - Cortical surface area (white  surface)</p></li>
 <li><p><code>vw_area.pial</code> - Cortical surface area (pial surface)</p></li>
 <li><p><code>vw_curv</code> - Mean curvature</p></li>
