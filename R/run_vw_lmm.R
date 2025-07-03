@@ -110,11 +110,12 @@
 #' The \code{verywise} package employs a carefully designed parallelization strategy 
 #' to maximize computational efficiency while avoiding the performance penalties 
 #' associated with nested parallelization.
-#' Left and right cortical hemispheres are processed sequentially by default, unless specified otherwise
-#' in the SLURM call (or similar, see vignette on parallelisation [COMING UP])
+#' Left and right cortical hemispheres are processed sequentially by default. Parallel processing 
+#' of the two hemispheres (and/or different metrics / models) should be handled by the user
+#' (for example, using SLURM job arrays or similar, see vignette on parallelisation [COMING UP])
 #' Within each hemisphere, vertices are divided into chunks of size \code{chunk_size} and processed 
 #' in parallel across \code{n_cores} workers (when \code{n_cores > 1}).
-#' When multiple imputed datasets are present, they are processed sequentially within each vertex.
+#' When multiple imputed datasets are present, these are processed sequentially within each vertex.
 #' 
 #' Note that, on some systems, implicit parallelism in low-level matrix algebra libraries 
 #' (BLAS/LAPACK) can interfere with explicit parallelization. If you feel like processing is 
@@ -127,6 +128,9 @@
 #' export VECLIB_MAXIMUM_THREADS=1
 #' export NUMEXPR_NUM_THREADS=1
 #' }
+#' 
+#' Also note that using a very large number of cores (e.b. >120) may sometimes cause
+#' worker initialization or other issues (e.g. R parallel processess limits)
 #' 
 #' \strong{Output Files:}
 #' Results are saved in FreeSurfer-compatible .mgh format for visualization
@@ -265,7 +269,7 @@ run_vw_lmm <- function(formula,
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...", 
-             "\nCall: ", formula, verbose=verbose)
+             "\nCall: ", as.character(formula), verbose=verbose)
   
   model_info <- get_terms(formula, data_list)
 
@@ -352,14 +356,28 @@ run_vw_lmm <- function(formula,
   doParallel::registerDoParallel(cluster)
 
   # Sync library paths: ensures all workers look for packages in the same place as the main session
-  parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
+  # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
+  # Ensure bigstatsr is loaded on all workers
+  # parallel::clusterEvalQ(cluster, {
+  #   requireNamespace("bigstatsr", quietly = TRUE)
+  # })
+
+  # Progress bar setup
+  utils::capture.output(
+    progressbar <- utils::txtProgressBar(0, length(chunk_seq), style = 3), 
+    file = "/dev/null"
+  )
+
+  vw_message("* running analysis...")
 
   chunk = NULL
   foreach::foreach(chunk = chunk_seq,
                    .packages = c("bigstatsr"),
                    .export = c("single_lmm", "vw_pool", "vw_message")) %dopar% {
-
-    worker_id <- Sys.getpid() # TMP for debugging
+                     
+    utils::setTxtProgressBar(progressbar, chunk)
+                     
+    # worker_id <- Sys.getpid() # TMP for debugging
 
     for (v in chunk) {
 
@@ -383,7 +401,7 @@ run_vw_lmm <- function(formula,
       r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
 
       # TMP for debugging
-      vw_message(worker_id, ': vertex', v, 'done.')
+      # vw_message(worker_id, ': vertex', v, 'done.')
     }
   }
 

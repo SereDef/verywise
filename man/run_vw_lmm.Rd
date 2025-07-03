@@ -157,11 +157,12 @@ to Rubin's rules.
 The \code{verywise} package employs a carefully designed parallelization strategy 
 to maximize computational efficiency while avoiding the performance penalties 
 associated with nested parallelization.
-Left and right cortical hemispheres are processed sequentially by default, unless specified otherwise
-in the SLURM call (or similar, see vignette on parallelisation [COMING UP])
+Left and right cortical hemispheres are processed sequentially by default. Parallel processing 
+of the two hemispheres (and/or different metrics / models) should be handled by the user
+(for example, using SLURM job arrays or similar, see vignette on parallelisation [COMING UP])
 Within each hemisphere, vertices are divided into chunks of size \code{chunk_size} and processed 
 in parallel across \code{n_cores} workers (when \code{n_cores > 1}).
-When multiple imputed datasets are present, they are processed sequentially within each vertex.
+When multiple imputed datasets are present, these are processed sequentially within each vertex.
 
 Note that, on some systems, implicit parallelism in low-level matrix algebra libraries 
 (BLAS/LAPACK) can interfere with explicit parallelization. If you feel like processing is 
@@ -174,6 +175,9 @@ export MKL_NUM_THREADS=1
 export VECLIB_MAXIMUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 }
+
+Also note that using a very large number of cores (e.b. >120) may sometimes cause
+worker initialization or other issues (e.g. R parallel processess limits)
 
 \strong{Output Files:}
 Results are saved in FreeSurfer-compatible .mgh format for visualization
