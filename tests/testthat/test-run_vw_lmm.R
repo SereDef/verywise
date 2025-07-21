@@ -3,7 +3,7 @@ library(lme4)
 # Example data
 set.seed(3108)
 
-subj_dir <- test_path("fixtures","example_data")
+subj_dir <- test_path("fixtures", "example_data")
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 
 n_obs <- nrow(pheno)
@@ -13,7 +13,7 @@ formula <- vw_area ~ sex + age + (1 | id)
 test_that("single_lmm returns correct structure", {
   result <- single_lmm(pheno, y, formula)
   expect_type(result, "list")
-  expect_named(result, c("stats", "resid"))
+  expect_named(result, c("stats", "resid", "warning"))
   expect_s3_class(result$stats, "data.frame")
   expect_true("term" %in% names(result$stats))
   expect_true("qhat" %in% names(result$stats))

@@ -48,12 +48,42 @@
 #'
 vw_pool <- function(out_stats, m) {
 
+  fails <- vapply(out_stats,
+                  function(i) if (!is.null(i$error)) i$error else NA_character_,
+                  character(1))
+  num_failed <- sum(!is.na(fails))
+
+  if (num_failed > 0) {
+    unique_errors <- paste(num_failed, "of", length(out_stats), " imputations failed. Errors: ",
+                           paste(unique(stats::na.omit(fails)), collapse = " | "))
+    return(unique_errors)
+  }
+
   if (m == 1) {
     # Just reformat output (no pooling needed)
-    stats <- append(as.list(out_stats[[1]]$stats[-1]), # only values (no term names)
-                    list("r" = as.vector(out_stats[[1]]$resid)))
-    names(stats) <- c("coef","se","t","p","resid")
+    s <- out_stats[[1]]$stats
+    stats <- list(
+      coef  = s$coef,
+      se    = s$se,
+      t     = s$t,
+      p     = s$p,
+      resid = as.vector(out_stats[[1]]$resid),
+      warning = out_stats[[1]]$warning
+    )
     return(stats)
+  }
+
+  # Extract warnings (if any)
+  warnings <- vapply(out_stats,
+                     function(i) if (!is.null(i$warning)) i$warning else NA_character_,
+                     character(1))
+  num_warned <- sum(!is.na(warnings))
+
+  if (num_warned > 0) {
+    warning_msg <- paste(num_warned, "of", length(out_stats), " imputations gave Warnings: ",
+                         paste(unique(stats::na.omit(warnings)), collapse = " | "))
+  } else {
+    warning_msg <- NULL
   }
 
   # Extract estimates, standard errors and p-values
@@ -69,7 +99,7 @@ vw_pool <- function(out_stats, m) {
     dplyr::group_by(.data$term) %>%
     dplyr::summarize(
       # Number of imputations
-      m = m, # dplyr::n(),
+      m = m,
       # Mean coefficient
       qbar = mean(.data$qhat),
       # Mean squared SE
@@ -107,8 +137,9 @@ vw_pool <- function(out_stats, m) {
     "se" = se,
     "t" = tval,
     "p" = pval,
-    "resid" = resid
-    )
+    "resid" = resid,
+    "warning" = warning_msg
+  )
 }
 
 #' @title

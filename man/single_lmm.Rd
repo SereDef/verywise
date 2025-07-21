@@ -4,25 +4,46 @@
 \alias{single_lmm}
 \title{Run a single linear mixed model and extract statistics}
 \usage{
-single_lmm(imp, y, formula, model_template = NULL, pvalues = TRUE)
+single_lmm(
+  imp,
+  y,
+  formula,
+  model_template = NULL,
+  pvalues = TRUE,
+  weights = NULL,
+  lmm_control = lme4::lmerControl()
+)
 }
 \arguments{
-\item{imp}{A data.frame containing the phenotype dataset (in verywise format).}
+\item{imp}{A data.frame containing the phenotype dataset
+(in verywise format).}
 
-\item{y}{A numeric vector of outcome values representing a single vertex from 
-the super-subject matrix.}
+\item{y}{A numeric vector of outcome values representing a single
+vertex from the super-subject matrix.}
 
 \item{formula}{An R formula object describing the linear mixed model using
 \code{lme4} notation.}
 
-\item{model_template}{Optional pre-compiled model object for faster estimation.
-When provided, \code{single_lmm} will use an "update"-based workflow instead 
-of refitting the model from scratch. This minimizes repeated parsing and model 
-construction overhead, significantly reducing computation time for large-scale 
-vertex-wise analyses. Default: \code{NULL}.}
+\item{model_template}{Optional pre-compiled model object for faster
+estimation. When provided, \code{single_lmm} will use an "update"-based
+workflow instead of refitting the model from scratch. This minimizes
+repeated parsing and model construction overhead, significantly reducing
+computation time for large-scale vertex-wise analyses.
+Default: \code{NULL}.}
 
 \item{pvalues}{Logical indicating whether to compute p-values using the
 *t-as-z* approximation (see Details). Default: \code{TRUE}.}
+
+\item{weights}{Optional numeric vector of weights for the linear mixed model.
+You can use this argument to specify inverse-probability weights.
+Note that these are not normalized or standardized in any way.
+Default: \code{NULL} (no weights).}
+
+\item{lmm_control}{Optional list (of correct class, resulting from
+\code{lmerControl()} containing control parameters to be passed to
+\code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
+see the \code{*lmerControl} documentation for details.
+Default: (uses default settings).}
 }
 \value{
 A list with two elements:
@@ -39,9 +60,10 @@ A list with two elements:
   }
 }
 \description{
-Fits a linear mixed model to a single vertex outcome using \code{lme4::lmer()}
-and extracts fixed effects statistics. This function is called repeatedly
-across all cortical vertices during vertex-wise analysis.
+Fits a linear mixed model to a single vertex outcome using
+\code{lme4::lmer()} and extracts fixed effects statistics. This function
+is called repeatedly across all cortical vertices during vertex-wise
+analysis.
 }
 \details{
 No additional parameters are currently passed to the \code{lme4::lmer} call.

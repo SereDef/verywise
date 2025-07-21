@@ -230,10 +230,10 @@ simulate_freesurfer_data <- function(path,
         # Create subject folder structure -------------------------------------
         sub_dir <- file.path(site_dir, paste0("sub-", i, "_ses-", t))
 
-        dir.create(sub_dir, showWarnings = FALSE)
-        dir.create(file.path(sub_dir, "surf"), showWarnings = FALSE)
-        dir.create(file.path(sub_dir, "stats"), showWarnings = FALSE)
-        dir.create(file.path(sub_dir, "mri"), showWarnings = FALSE)
+        dir.create(sub_dir, recursive = TRUE, showWarnings = FALSE)
+        dir.create(file.path(sub_dir, "surf"), recursive = TRUE, showWarnings = FALSE)
+        dir.create(file.path(sub_dir, "stats"), recursive = TRUE, showWarnings = FALSE)
+        dir.create(file.path(sub_dir, "mri"), recursive = TRUE, showWarnings = FALSE)
 
         # File name
         mgh_fname <- paste(hemi, measure, fwhmc, target, "mgh", sep = ".")
