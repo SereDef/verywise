@@ -4,10 +4,13 @@
 \alias{get_terms}
 \title{Unpack \code{lme4} formula}
 \usage{
-get_terms(formula)
+get_terms(formula, data_list)
 }
 \arguments{
 \item{formula}{: model formula object (this should specify a LME model)}
+
+\item{data_list}{: the data, formatted as a list of datasets, as in the
+output of \code{\link{imp2list}}.}
 }
 \value{
 A character vector of fixed terms.

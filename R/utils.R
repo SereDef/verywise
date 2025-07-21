@@ -97,16 +97,23 @@ vw_message <- function(..., verbose = TRUE) {
 #' Get the terms for the fixed effect for the given formula.
 #'
 #' @param formula : model formula object (this should specify a LME model)
+#' @param data_list : the data, formatted as a list of datasets, as in the
+#' output of \code{\link{imp2list}}.
 #'
 #' @return A character vector of fixed terms.
 #'
 #' @author Serena Defina, 2024.
 #'
-get_terms <- function(formula) {
-  fixed_formula <- lme4::nobars(formula)
-  terms <- attr(terms(fixed_formula), "term.labels")
+get_terms <- function(formula, data_list) {
+  # Get a dataset from list (the first)
+  dset <- data_list[[1]]
+  # Add a placeholder for vw_* outcome
+  dset[all.vars(formula)[1]] <- 999
+  # Unpack the formula
+  lf <- lme4::lFormula(formula = formula, data = dset)
+  fixed_terms <- colnames(lf$X) # fixed-effects design matrix
 
-  return(terms)
+  return(fixed_terms)
 }
 
 # ============================== FBM operations ===============================

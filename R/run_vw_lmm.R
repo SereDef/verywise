@@ -252,8 +252,9 @@ run_vw_lmm <- function(
   # specified in the formula are present in the data
   check_data_list(data_list, folder_id, formula)
 
-  # Check that the stacks are not overwitten by mistake
-  fixed_terms <- get_terms(formula)
+  fixed_terms <- get_terms(formula, data_list)
+
+  # Check that the stacks are not overwritten by mistake and
   # Save the stack names (i.e. fixed terms) to a lookup file
   check_stack_file(fixed_terms, outp_dir)
 
