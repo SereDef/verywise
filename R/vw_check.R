@@ -52,8 +52,38 @@ check_path <- function(dir_path, file_exists=NULL) {
   if (!is.null(file_exists)) {
     file_path <- file.path(dir_path, file_exists)
     if (file.exists(file_path)) {
-    warning(sprintf("A `%s` file already exists inside '%s'. Be careful, you may be overwriting results.", file_exists, dir_path))
+    warning(sprintf("A `%s` file already exists inside '%s'. Be careful, you may be overwriting results.",
+                    file_exists, dir_path))
     }
+  }
+}
+
+check_stack_file <- function(fixed_terms, outp_dir) {
+
+  stack_ids <- data.frame("stack_number" = seq_along(fixed_terms),
+                          "stack_name" = as.character(fixed_terms),
+                          stringsAsFactors = FALSE)
+
+  stack_file <- file.path(outp_dir, "stack_names.txt")
+
+  if (file.exists(stack_file)) {
+    # Read existing file
+    existing_stack_ids <- utils::read.table(stack_file,
+                                            header = TRUE,
+                                            sep = "\t",
+                                            stringsAsFactors = FALSE)
+    # Compare with new stacks
+    if (!identical(existing_stack_ids, stack_ids)) {
+      stop(sprintf("A `stack_names.txt` file already exists in `%s`", outp_dir),
+           " but its content looks different than expected from your formula. ",
+           "This is not allowed to avoid overwriting results by mistake. ",
+           "Please use different output directories for different models. ",
+           "If overwriting was intentional, please manually delete the existing",
+           " `stack_names.txt` file.")
+    }
+  } else {
+    # Write it
+    utils::write.table(stack_ids, stack_file, sep = "\t", row.names = FALSE)
   }
 }
 

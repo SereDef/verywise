@@ -4,20 +4,16 @@
 \alias{get_terms}
 \title{Unpack \code{lme4} formula}
 \usage{
-get_terms(formula, data_list)
+get_terms(formula)
 }
 \arguments{
 \item{formula}{: model formula object (this should specify a LME model)}
-
-\item{data_list}{: the data, formatted as a list of datasets, as in the
-output of \code{\link{imp2list}}.}
 }
 \value{
-A list with two elements: the fixed terms, and the model frame.
+A character vector of fixed terms.
 }
 \description{
-Get the terms for the fixed effect and the model matrix for the given formula
-and dataset.
+Get the terms for the fixed effect for the given formula.
 }
 \author{
 Serena Defina, 2024.

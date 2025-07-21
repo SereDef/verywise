@@ -94,33 +94,19 @@ vw_message <- function(..., verbose = TRUE) {
 #' Unpack \code{lme4} formula
 #'
 #' @description
-#' Get the terms for the fixed effect and the model matrix for the given formula
-#' and dataset.
+#' Get the terms for the fixed effect for the given formula.
 #'
 #' @param formula : model formula object (this should specify a LME model)
-#' @param data_list : the data, formatted as a list of datasets, as in the
-#' output of \code{\link{imp2list}}.
 #'
-#' @importFrom lme4 lFormula
-#'
-#' @return A list with two elements: the fixed terms, and the model frame.
+#' @return A character vector of fixed terms.
 #'
 #' @author Serena Defina, 2024.
 #'
-get_terms <- function(formula, data_list) {
-  # TODO: allow for ... arguments
+get_terms <- function(formula) {
+  fixed_formula <- lme4::nobars(formula)
+  terms <- attr(terms(fixed_formula), "term.labels")
 
-  # Get a dataset from list (the first)
-  dset <- data_list[[1]]
-  # Add a placeholder for vw_* outcome
-  dset[all.vars(formula)[1]] <- 999
-  # Unpack the formula
-  lf <- lme4::lFormula(formula = formula, data = dset)
-  fixed_terms <- colnames(lf$X) # fixed-effects design matrix
-  # stats::model.frame does not work properly
-  model_frame <- lf$fr # A model frame containing the variables needed ( = from 1 dataset)
-  info <- list(fixed_terms, model_frame)
-  info
+  return(terms)
 }
 
 # ============================== FBM operations ===============================

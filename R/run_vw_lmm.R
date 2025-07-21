@@ -228,6 +228,8 @@ run_vw_lmm <- function(
 
   if (is.null(outp_dir)) {
     outp_dir <- file.path(subj_dir, "verywise_results")
+    vw_message("  WARNING: outpur directory unspecified, which is not recommended.",
+               " You can find the results at ", outp_dir)
     dir.create(outp_dir, showWarnings = FALSE)
   }
   check_path(outp_dir, file_exists = "stack.txt")
@@ -250,6 +252,11 @@ run_vw_lmm <- function(
   # specified in the formula are present in the data
   check_data_list(data_list, folder_id, formula)
 
+  # Check that the stacks are not overwitten by mistake
+  fixed_terms <- get_terms(formula)
+  # Save the stack names (i.e. fixed terms) to a lookup file
+  check_stack_file(fixed_terms, outp_dir)
+
   # Run analyses ===============================================================
 
   set.seed(seed)
@@ -258,7 +265,7 @@ run_vw_lmm <- function(
   vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose = verbose)
 
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(outp_dir, paste(hemi, measure, fs_template,
+  ss_file_name <- file.path(outp_dir, "ss", paste(hemi, measure, fs_template,
                                             "supersubject.rds", sep = "."))
 
   if (file.exists(ss_file_name)) {
@@ -272,7 +279,7 @@ run_vw_lmm <- function(
     ss <- build_supersubject(
       subj_dir = subj_dir,
       folder_ids = data_list[[1]][, folder_id],
-      outp_dir = outp_dir,
+      outp_dir = file.path(outp_dir, "ss"),
       measure = measure,
       hemi = hemi,
       n_cores = n_cores,
@@ -302,16 +309,12 @@ run_vw_lmm <- function(
   vw_message("Statistical model preparation...",
              "\nCall: ", deparse(formula), verbose = verbose)
 
-  model_info <- get_terms(formula, data_list)
-
-  fixed_terms <- model_info[[1]]
-
   # Number of vertices
   vw_n <- length(is_cortex)
   # Number of terms (excluding random terms)
   fe_n <- length(fixed_terms)
   # Number of participants*timepoint (long format)
-  n_obs <- nrow(model_info[[2]])
+  n_obs <- nrow(data_list[[1]])
   # Number of (imputed) datasets
   m <- length(data_list)
 
@@ -457,17 +460,11 @@ run_vw_lmm <- function(
 
   # Post-processing ============================================================
 
-  # Save the stack names (i.e. fixed terms) to a lookup file
-  stack_ids <- data.frame("stack_number" = seq_along(fixed_terms),
-                          "stack_name" = as.character(fixed_terms))
-  utils::write.table(stack_ids, file.path(outp_dir, "stack_names.txt"),
-                     sep = "\t", row.names = FALSE)
-
   # Split all coefficients into separate .mgh files
   vw_message("Converting coefficients, SEs, t- and p-values to .mgh format...",
              verbose = verbose)
 
-  results_grid <- expand.grid(stack_ids$stack_number, # how many terms
+  results_grid <- expand.grid(seq_along(fixed_terms), # how many terms
                               # all statistics except the residuals
                               res_bk_names[-length(res_bk_names)])
 
