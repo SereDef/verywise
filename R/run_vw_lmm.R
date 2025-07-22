@@ -232,7 +232,7 @@ run_vw_lmm <- function(
                " You can find the results at ", outp_dir)
     dir.create(outp_dir, showWarnings = FALSE)
   }
-  check_path(outp_dir, file_exists = "stack.txt")
+  check_path(outp_dir)
 
   check_freesurfer_setup(FS_HOME, verbose = verbose)
 

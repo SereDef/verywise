@@ -44,11 +44,19 @@ check_data_list <- function(data_list, folder_id, formula) {
   # TODO: check that is in long format ?
 }
 
-check_path <- function(dir_path, file_exists=NULL) {
+check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
   param_name <- deparse(substitute(dir_path))
+
   if (!dir.exists(dir_path)) {
-    stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
+    if (create_if_not) {
+      vw_message(sprintf("The `%s` specified ('%s') does not exist. I'll try to create it.",
+                         param_name, dir_path))
+      dir.create(dir_path, recursive=TRUE)
+    } else {
+      stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
+    }
   }
+
   if (!is.null(file_exists)) {
     file_path <- file.path(dir_path, file_exists)
     if (file.exists(file_path)) {
