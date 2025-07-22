@@ -54,7 +54,7 @@ test_that("check_path warns if file exists", {
   tmp <- tempfile()
   dir.create(tmp)
   file.create(file.path(tmp, "file.txt"))
-  expect_warning(check_path(tmp, "file.txt"), "already exists")
+  expect_warning(check_path(tmp, file_exists="file.txt"), "already exists")
 })
 
 test_that("check_cores returns valid core number", {

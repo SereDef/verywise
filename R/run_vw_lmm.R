@@ -232,13 +232,20 @@ run_vw_lmm <- function(
                " You can find the results at ", outp_dir)
     dir.create(outp_dir, showWarnings = FALSE)
   }
-  check_path(outp_dir)
+  check_path(outp_dir, create_if_not = TRUE)
 
   check_freesurfer_setup(FS_HOME, verbose = verbose)
 
   n_cores <- check_cores(n_cores)
 
   hemi <- match.arg(hemi)
+
+  check_numeric_param(seed, integer = TRUE, lower = 0)
+  check_numeric_param(chunk_size, integer = TRUE,
+                      lower = 1, upper = 5000) # for memory safety
+  # check_numeric_param(fwhm, lower = 0)
+  # check_numeric_param(mcz_thr, lower = 0)
+  # check_numeric_param(cwp_thr, lower = 0)
 
   # Read phenotype data (if not already loaded) ================================
   vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
