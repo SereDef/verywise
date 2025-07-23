@@ -77,6 +77,7 @@ approach.</p>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  tolerate_surf_not_found <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  use_model_template <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -158,6 +159,14 @@ Default: 1000.</p></dd>
 <dd><p>Logical indicating whether to save the super-subject matrix as
 an .rds file for faster future processing.
 Default: <code>TRUE</code> (recommended).</p></dd>
+
+
+<dt id="arg-tolerate-surf-not-found">tolerate_surf_not_found<a class="anchor" aria-label="anchor" href="#arg-tolerate-surf-not-found"></a></dt>
+<dd><p>Integer indicating how many brain surface
+files listed in <code>folder_id</code> can be missing from <code>subj_dir</code>. If
+the number of missing or corrupted files is
+<code> &gt; tolerate_surf_not_found </code> execution will stop.
+Default: <code>20L</code>.</p></dd>
 
 
 <dt id="arg-use-model-template">use_model_template<a class="anchor" aria-label="anchor" href="#arg-use-model-template"></a></dt>
