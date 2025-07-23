@@ -62,6 +62,7 @@ build_supersubject <- function(subj_dir,
   # files_list = list.dirs.till(subj_dir, n = 2)
   # files_list <- files_list[unlist(lapply(folder_ids, grep, files_list))]
   folder_list <- file.path(subj_dir, folder_ids)
+  if(!dir.exists(outp_dir)) dir.create(outp_dir, showWarnings = FALSE)
   log_file <- file.path(outp_dir, paste0(hemi,".", measure,".issues.log"))
 
   # Check that the locations in phenotype exist ----------------
@@ -118,11 +119,6 @@ build_supersubject <- function(subj_dir,
 
   vw_message(length(files_found),"/",length(folder_ids)," observations found.",
              verbose = verbose)
-
-  utils::write.csv(files_found,
-                   file=file.path(outp_dir,
-                                  paste(hemi, measure, 'rownames', 'csv', sep = '.')),
-                   row.names = FALSE, col.names = FALSE, quote = FALSE)
 
   # Build empty large matrix to store all vertex and subjects ------------------
 
@@ -214,6 +210,12 @@ build_supersubject <- function(subj_dir,
                        'observations failed to load! Replacing with NA.'),
                  failed_to_load), log_file)
   }
+
+  # Save row index names (i.e. observations) to ensure matching
+  utils::write.csv(files_found,
+                   file=file.path(outp_dir,
+                                  paste(hemi, measure, 'rownames', 'csv', sep = '.')),
+                   row.names = FALSE, col.names = FALSE, quote = FALSE)
 
   # Save output
   if (save_rds) {
