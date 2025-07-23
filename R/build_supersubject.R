@@ -71,6 +71,10 @@ build_supersubject <- function(subj_dir,
 
     folders_not_found <- setdiff(folder_list, folders_found)
 
+    writeLines(c(paste("Attention:",length(folders_not_found),
+                       "observations speficied in phenotype were not found:"),
+                 gsub(" ", "^", folders_not_found), "\n"), log_file)
+
     # If many observations are missing, the folder id may be mispecified
     if (length(folders_not_found) > error_cutoff) {
       stop(length(folders_not_found), " observations specified in phenotype were
@@ -80,10 +84,6 @@ build_supersubject <- function(subj_dir,
     # If not many observations are missing, notify user but keep at it
     warning(length(folders_not_found), " observations specified in phenotype were
             not found in `subj_dir`. See .log file for datails.")
-
-    writeLines(c(paste("Attention:",length(folders_not_found),
-                       "observations speficied in phenotype were not found:"),
-                       folders_not_found, "\n"), log_file)
   }
 
   mgh_file_name <- paste0(
@@ -101,6 +101,10 @@ build_supersubject <- function(subj_dir,
 
     files_not_found <- setdiff(mgh_files, files_found)
 
+    writeLines(c(paste("Attention:", length(files_not_found),
+                       "files were corrupt or missing:"),
+                 files_not_found, "\n"), log_file)
+
     # If many files are missing, something may have gone wrong in the pre-processing
     if (length(files_not_found) > error_cutoff) {
       stop(length(files_not_found), " specified brain surface files were not found in `subj_dir`.
@@ -110,13 +114,15 @@ build_supersubject <- function(subj_dir,
     # If not many files are missing, notify user but keep at it
     warning(length(files_not_found), " brain surface files were corrupt or missing.
             See .log file for datails.")
-
-    writeLines(c(paste("Attention:", length(files_not_found),
-                       "files were corrupt or missing:"),
-                 files_not_found, "\n"), log_file)
   }
 
-  vw_message(length(files_found),"/",length(folder_ids)," observations found.", verbose=verbose)
+  vw_message(length(files_found),"/",length(folder_ids)," observations found.",
+             verbose = verbose)
+
+  utils::write.csv(files_found,
+                   file=file.path(outp_dir,
+                                  paste(hemi, measure, 'rownames', 'csv', sep = '.')),
+                   row.names = FALSE, col.names = FALSE, quote = FALSE)
 
   # Build empty large matrix to store all vertex and subjects ------------------
 
@@ -137,17 +143,6 @@ build_supersubject <- function(subj_dir,
                verbose=TRUE)
   }
 
-  # Mask non-cortical vertex data
-  # vw_message("Applying cortical mask...", verbose=verbose)
-  # if (mask) {
-  #   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
-  #   if (length(is_cortex) != n_verts) stop("Length of cortical mask does not match number of vertices in the data.")
-  #   n_verts <- sum(is_cortex)
-  #   vw_message(n_verts, '/',length(is_cortex), 'vertices in cortex.', verbose=verbose)
-  # } else {
-  #   is_cortex <- rep(TRUE, n_verts)
-  # }
-
   # Define backing file for matrix
   if (missing(backing)) {
     backing <- file.path(outp_dir, paste(hemi, measure, fs_template,
@@ -155,7 +150,7 @@ build_supersubject <- function(subj_dir,
   }
   if (file.exists(backing)) file.remove(backing) # TODO: warn the user
 
-  vw_message("Building (", hemi, ") super-subject matrix...", verbose=verbose)
+  vw_message("Building (", hemi, ") super-subject matrix...", verbose = verbose)
 
   # Initiate File-backed Big Matrix
   # Dimensions are set so I later access the data column by column and not row by row
@@ -222,7 +217,7 @@ build_supersubject <- function(subj_dir,
 
   # Save output
   if (save_rds) {
-    vw_message("Saving supersubject matrix to .rds file.", verbose=verbose)
+    vw_message("Saving supersubject matrix to .rds file.", verbose = verbose)
     ss$save()
   }
 

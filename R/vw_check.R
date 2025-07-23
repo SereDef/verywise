@@ -161,17 +161,6 @@ check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer 
   }
 }
 
-# check_formula(formula)
-# check_data_list(data_list, folder_id)
-# check_directory(subj_dir, "subj_dir")
-# if (!is.null(outp_dir)) check_directory(dirname(outp_dir), "outp_dir parent")
-# check_hemi(hemi)
-# check_numeric_param(fwhm, "fwhm", lower = 0)
-# check_numeric_param(mcz_thr, "mcz_thr", lower = 0)
-# check_numeric_param(cwp_thr, "cwp_thr", lower = 0, upper = 1)
-# check_numeric_param(seed, "seed", integer = TRUE)
-# check_numeric_param(n_cores, "n_cores", lower = 1, integer = TRUE)
-#
 # validate_hemi_vw_lmm_inputs <- function(formula, data_list, subj_dir, outp_dir,
 #                                         folder_id, hemi, fwhm, mcz_thr, cwp_thr, seed, n_cores) {
 #   check_formula(formula)

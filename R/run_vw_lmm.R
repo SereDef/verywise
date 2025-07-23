@@ -48,6 +48,11 @@
 #' @param save_ss Logical indicating whether to save the super-subject matrix as
 #'   an .rds file for faster future processing.
 #'   Default: \code{TRUE} (recommended).
+#' @param tolerate_surf_not_found Integer indicating how many brain surface
+#'   files listed in \code{folder_id} can be missing from \code{subj_dir}. If
+#'   the number of missing or corrupted files is
+#'   \code{ > tolerate_surf_not_found } execution will stop.
+#'   Default: \code{20L}.
 #' @param use_model_template Logical indicating whether to pre-compile the model
 #'   template for faster estimation.
 #'   Default: \code{TRUE} (recommended).
@@ -209,6 +214,7 @@ run_vw_lmm <- function(
   n_cores = 1,
   chunk_size = 1000,
   save_ss = TRUE,
+  tolerate_surf_not_found = 20,
   use_model_template = TRUE,
   weights = NULL,
   lmm_control = lme4::lmerControl(),
@@ -293,7 +299,8 @@ run_vw_lmm <- function(
       n_cores = n_cores,
       fwhmc = paste0("fwhm", fwhm),
       fs_template = fs_template,
-      save_rds = save_ss
+      save_rds = save_ss,
+      error_cutoff = tolerate_surf_not_found
     )
   }
 
@@ -312,6 +319,20 @@ run_vw_lmm <- function(
   }
 
   good_verts <- which(!problem_verts & is_cortex)
+
+  ss_rownames <- scan(file = file.path(outp_dir, "ss",
+                                       paste(hemi, measure, 'rownames', 'csv', sep = '.')),
+                      what = character(), sep = "\n")
+
+  if (!identical(ss_rownames, data_list[[1]][, folder_id])) {
+    # TMP assume all data.frames in data_list have the same shape and order
+    # TODO: perform check
+    vw_message('Matching phenotype with available brain surfaces.')
+    data_list <- lapply(data_list,
+                        function(df) {
+                          # Match the row names in ss
+                          return(df[match(ss_rownames, df[, folder_id]), ])})
+  }
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...",

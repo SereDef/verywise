@@ -15,6 +15,7 @@ run_vw_lmm(
   n_cores = 1,
   chunk_size = 1000,
   save_ss = TRUE,
+  tolerate_surf_not_found = 20,
   use_model_template = TRUE,
   weights = NULL,
   lmm_control = lme4::lmerControl(),
@@ -73,6 +74,12 @@ Default: 1000.}
 \item{save_ss}{Logical indicating whether to save the super-subject matrix as
 an .rds file for faster future processing.
 Default: \code{TRUE} (recommended).}
+
+\item{tolerate_surf_not_found}{Integer indicating how many brain surface
+files listed in \code{folder_id} can be missing from \code{subj_dir}. If
+the number of missing or corrupted files is
+\code{ > tolerate_surf_not_found } execution will stop.
+Default: \code{20L}.}
 
 \item{use_model_template}{Logical indicating whether to pre-compile the model
 template for faster estimation.
