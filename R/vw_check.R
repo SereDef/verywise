@@ -26,6 +26,12 @@ check_data_list <- function(data_list, folder_id, formula) {
 
   data1 <- data_list[[1]]
 
+  if (!all(vapply(data_list,
+                  function(df) { identical(dim(df), dim(data1)) &&
+                      identical(names(df), names(data1)) }, logical(1)))) {
+    stop("Each data.frame in `data_list` must have the same dimentions.")
+  }
+
   if (!(folder_id %in% names(data1))) {
     stop(sprintf("Folder ID '%s' not found in data.", folder_id))
   }
@@ -98,6 +104,26 @@ check_stack_file <- function(fixed_terms, outp_dir) {
     # Write it
     utils::write.table(stack_ids, stack_file, sep = "\t", row.names = FALSE)
   }
+}
+
+
+check_weights <- function(weights, data_list) {
+
+  if (is.null(weights)) return(NULL)
+
+  data1 <- data_list[[1]]
+
+  if (is.character(weights) && length(weights) == 1) {
+    if (weights %in% names(data1)) return(data1[, weights])
+    stop(sprintf("Weights variable '%s' not found in data.", weights))
+  }
+
+  if (is.numeric(weights)) {
+    if (length(weights) == nrow(data1)) return(weights)
+    stop("Weights vector has not the same dimensions as data.")
+  }
+
+  stop("The weights format you provided is not valid.")
 }
 
 check_cores <- function(n_cores){

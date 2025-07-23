@@ -85,9 +85,10 @@ Default: \code{20L}.}
 template for faster estimation.
 Default: \code{TRUE} (recommended).}
 
-\item{weights}{Optional numeric vector of weights for the linear mixed model.
-You can use this argument to specify inverse-probability weights.
-Note that these are not normalized or standardized in any way.
+\item{weights}{Optional string or numeric vector of weights for the linear mixed model.
+You can use this argument to specify inverse-probability weights. If this
+is a string, the function look for a column with that name in the phenotype
+data. Note that these are not normalized or standardized in any way.
 Default: \code{NULL} (no weights).}
 
 \item{lmm_control}{Optional list (of correct class, resulting from

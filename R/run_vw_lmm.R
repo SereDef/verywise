@@ -56,9 +56,10 @@
 #' @param use_model_template Logical indicating whether to pre-compile the model
 #'   template for faster estimation.
 #'   Default: \code{TRUE} (recommended).
-#' @param weights Optional numeric vector of weights for the linear mixed model.
-#'   You can use this argument to specify inverse-probability weights.
-#'   Note that these are not normalized or standardized in any way.
+#' @param weights Optional string or numeric vector of weights for the linear mixed model.
+#'   You can use this argument to specify inverse-probability weights. If this
+#'   is a string, the function look for a column with that name in the phenotype
+#'   data. Note that these are not normalized or standardized in any way.
 #'   Default: \code{NULL} (no weights).
 #' @param lmm_control Optional list (of correct class, resulting from
 #'   \code{lmerControl()} containing control parameters to be passed to
@@ -265,13 +266,15 @@ run_vw_lmm <- function(
   # specified in the formula are present in the data
   check_data_list(data_list, folder_id, formula)
 
+  weights <- check_weights(weights, data_list)
+
   fixed_terms <- get_terms(formula, data_list)
 
   # Check that the stacks are not overwritten by mistake and
   # Save the stack names (i.e. fixed terms) to a lookup file
   check_stack_file(fixed_terms, outp_dir)
 
-  # Run analyses ===============================================================
+  # Build supersubject =========================================================
 
   set.seed(seed)
 
