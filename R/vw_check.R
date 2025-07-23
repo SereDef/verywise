@@ -30,6 +30,11 @@ check_data_list <- function(data_list, folder_id, formula) {
     stop(sprintf("Folder ID '%s' not found in data.", folder_id))
   }
 
+  if (any(is.na(data1[folder_id]))) {
+    stop(sprintf("Folder ID '%s' contains missing values. ",
+                 "This is not allowed, please remove any NAs.", folder_id))
+  }
+
   if (any(duplicated(data1[folder_id]))) {
     stop(sprintf("Folder IDs must be unique.'%s' contains duplicates.", folder_id))
   }
