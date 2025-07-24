@@ -179,7 +179,7 @@ build_supersubject <- function(subj_dir,
           if (fs_template != 'fsaverage') {
             X[i, ] <- load.mgh(file_path)$x[1:n_verts]
 
-          } else { # avoid subsetting if not necessary
+          } else { # avoid sub-setting if not necessary
             X[i, ] <- load.mgh(file_path)$x
           }
         }, error = function(e) {
@@ -212,10 +212,13 @@ build_supersubject <- function(subj_dir,
   }
 
   # Save row index names (i.e. observations) to ensure matching
-  utils::write.csv(files_found,
-                   file=file.path(outp_dir,
-                                  paste(hemi, measure, 'rownames', 'csv', sep = '.')),
-                   row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+  utils::write.table(basename(dirname(dirname(files_found))),
+                     file=file.path(outp_dir,
+                                    paste(hemi, measure, 'ss', 'rownames', 'csv',
+                                          sep = '.')),
+                   row.names = FALSE, col.names = FALSE, quote = FALSE,
+                   sep = ",")
 
   # Save output
   if (save_rds) {
