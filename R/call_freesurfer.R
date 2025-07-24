@@ -5,10 +5,10 @@
 #' estimates the full-width half maximum (FWHM) of the brain data based on the
 #' residuals of your model.
 #'
-#' @param outp_dir : output path, where results are stored. The function generates
-#' two files: "fwhm.dat" and "finamMask.mgh".
+#' @param result_path : path where model residuals are stored and where results
+#'    are generated: this includes two files:
+#'    "hemi.measure.fwhm.dat" and "hemi.measure.finamMask.mgh".
 #' @param hemi : hemisphere.
-#' @param resid_file : path the .mgh file containing the residuals of the model.
 #' @param mask : apply a mask (default = cortical mask + excluding problematic vertices)
 #' @param fs_template : (default = "fsaverage") data template.
 #' @param verbose : (default = FALSE) verbosity.
@@ -16,19 +16,19 @@
 #' @return An integer FWHM value
 #' @export
 #'
-estimate_fwhm <- function(outp_dir,
+estimate_fwhm <- function(result_path,
                           hemi,
-                          resid_file,
                           mask = NULL,
                           fs_template = "fsaverage",
-                          verbose = FALSE
-                          ) {
+                          verbose = FALSE) {
 
-  fwhm_estim_path <- file.path(outp_dir, "fwhm.dat")
-  final_mask_path <- file.path(outp_dir, "finalMask.mgh")
+  fwhm_estim_path <- paste0(result_path, ".fwhm.dat")
+  final_mask_path <- paste0(result_path, ".finalMask.mgh")
+
+  resid_mgh_path <- paste0(result_path, ".residuals.mgh")
 
   cmd_str <- paste("mris_fwhm",
-                   "--i", resid_file,
+                   "--i", resid_mgh_path,
                    "--hemi", hemi,
                    "--subject", fs_template,
                    "--prune",
@@ -56,9 +56,9 @@ estimate_fwhm <- function(outp_dir,
 #' This function is a wrapper for the FreeSurfer command \code{mri_surfcluster}.
 #' It computes the clusters of significant vertices.
 #'
-#' @param outp_dir : output path, where results are stored.
+#' @param stack_path : path where this term's p values are stored and where
+#'    results are generated.
 #' @param hemi : hemisphere.
-#' @param term_number : which (fixed) term are the clusters computed for.
 #' @param fwhm : full-width half maximum estimate of data smoothness.
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}
 #' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
@@ -77,9 +77,8 @@ estimate_fwhm <- function(outp_dir,
 #'
 #' @export
 #'
-compute_clusters <- function(outp_dir,
+compute_clusters <- function(stack_path,
                              hemi,
-                             term_number,
                              fwhm,
                              FS_HOME,
                              cwp_thr = 0.025,
@@ -88,33 +87,29 @@ compute_clusters <- function(outp_dir,
                              mask = NULL,
                              verbose = FALSE) {
 
-  pval_mgh_file <- file.path(
-    outp_dir,
-    paste(hemi, paste0("stack",term_number), "p.mgh", sep = ".")
-  )
+  pval_mgh_file <- paste0(stack_path, ".p.mgh")
 
-  # Montecarlo simulation threshold
+  # Format montecarlo simulation threshold
   mcz_thr_str <- paste0("th", mcz_thr)
 
-  if (fwhm < 10) fwhm <- paste0("0", fwhm)
+  # Format FWHM (esure a leading 0 if < 10)
+  fwhm_str <- paste0("fwhm", sprintf("%02d", fwhm))
 
-  csd <- file.path(FS_HOME, "average", "mult-comp-cor", "fsaverage", hemi, "cortex",
-                   paste0("fwhm", fwhm), csd_sign, mcz_thr_str, "mc-z.csd")
+  csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", "fsaverage", hemi,
+                        "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
 
-  other_files <- file.path(outp_dir,
-                           paste0(hemi,".stack", term_number, ".cache.th", mcz_thr, ".",
-                                  csd_sign, ".sig.",
-                                  c("cluster.mgh", # map of cluster-wise significances
-                                    "voxel.mgh", # map of corrected voxel-wise significances
-                                    "cluster.summary", # text summary file
-                                    "ocn.mgh", # value is cluster number
-                                    "ocn.annot", # output clusters as an annotation
-                                    "masked.mgh") # input with non-clusters set to 0
-                            ))
+  other_files <- paste0(stack_path, ".cache.th", mcz_thr, ".", csd_sign, ".sig.",
+                        c("cluster.mgh", # map of cluster-wise significances
+                          "voxel.mgh", # map of corrected voxel-wise significances
+                          "cluster.summary", # text summary file
+                          "ocn.mgh", # value is cluster number
+                          "ocn.annot", # output clusters as an annotation
+                          "masked.mgh") # input with non-clusters set to 0
+                        )
 
   cmd_str <- paste("mri_surfcluster",
                    "--in", pval_mgh_file,
-                   "--csd", csd,
+                   "--csd", csd_file,
                    "--cwsig", other_files[1],
                    "--vwsig", other_files[2],
                    "--sum", other_files[3],

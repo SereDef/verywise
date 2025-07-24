@@ -5,9 +5,8 @@
 \title{Compute significant clusters of vertices}
 \usage{
 compute_clusters(
-  outp_dir,
+  stack_path,
   hemi,
-  term_number,
   fwhm,
   FS_HOME,
   cwp_thr = 0.025,
@@ -18,11 +17,10 @@ compute_clusters(
 )
 }
 \arguments{
-\item{outp_dir}{: output path, where results are stored.}
+\item{stack_path}{: path where this term's p values are stored and where
+results are generated.}
 
 \item{hemi}{: hemisphere.}
-
-\item{term_number}{: which (fixed) term are the clusters computed for.}
 
 \item{fwhm}{: full-width half maximum estimate of data smoothness.}
 

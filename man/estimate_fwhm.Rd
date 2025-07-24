@@ -5,21 +5,19 @@
 \title{Estimate full-width half maximum (FWHM)}
 \usage{
 estimate_fwhm(
-  outp_dir,
+  result_path,
   hemi,
-  resid_file,
   mask = NULL,
   fs_template = "fsaverage",
   verbose = FALSE
 )
 }
 \arguments{
-\item{outp_dir}{: output path, where results are stored. The function generates
-two files: "fwhm.dat" and "finamMask.mgh".}
+\item{result_path}{: path where model residuals are stored and where results
+are generated: this includes two files:
+"hemi.measure.fwhm.dat" and "hemi.measure.finamMask.mgh".}
 
 \item{hemi}{: hemisphere.}
-
-\item{resid_file}{: path the .mgh file containing the residuals of the model.}
 
 \item{mask}{: apply a mask (default = cortical mask + excluding problematic vertices)}
 

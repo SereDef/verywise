@@ -366,13 +366,13 @@ run_vw_lmm <- function(
   }
 
   # Prepare FBM output =========================================================
+
+  result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
+
   vw_message(" * generate file-backed output containers", verbose = verbose)
 
   res_bk_names <- c("coef", "se", "t", "p", "resid")
-  res_bk_paths <- file.path(
-    outp_dir,
-    paste(hemi, measure, res_bk_names, sep = ".")
-  )
+  res_bk_paths <- paste(result_path, res_bk_names, sep = ".")
 
   # TMP: always remove files if they exist
   for (bk in res_bk_paths) {
@@ -499,11 +499,8 @@ run_vw_lmm <- function(
                               # all statistics except the residuals
                               res_bk_names[-length(res_bk_names)])
 
-  stats_mgh_paths <- file.path(
-    outp_dir,
-    paste(hemi, paste0("stack", results_grid[, 1]),
-          results_grid[, 2], "mgh", sep = ".")
-  )
+  stats_mgh_paths <- paste(result_path, paste0("stack", results_grid[, 1]),
+                           results_grid[, 2], "mgh", sep = ".")
 
   lapply(seq_len(nrow(results_grid)), function(grid_row) {
     fbm2mgh(fbm = out[[results_grid[grid_row, 2]]],
@@ -512,7 +509,7 @@ run_vw_lmm <- function(
   })
 
   vw_message("Converting residuals to .mgh format...", verbose = verbose)
-  resid_mgh_path <- file.path(outp_dir, paste(hemi, "residuals.mgh", sep = "."))
+  resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
   fbm2mgh(fbm = out[[res_bk_names[length(res_bk_names)]]],
           fname = resid_mgh_path)
 
@@ -520,9 +517,8 @@ run_vw_lmm <- function(
   vw_message("Estimating data smoothness for multiple testing correction...",
              verbose = verbose)
 
-  fwhm <- estimate_fwhm(outp_dir = outp_dir,
+  fwhm <- estimate_fwhm(result_path = result_path,
                         hemi = hemi,
-                        resid_file = resid_mgh_path,
                         mask = good_verts,
                         fs_template = fs_template)
 
@@ -542,14 +538,14 @@ run_vw_lmm <- function(
   vw_message("Clusterwise correction...", verbose = verbose)
 
   for (stack_n in seq_along(fixed_terms)){
-    compute_clusters(outp_dir = outp_dir,
+    stack_path <- paste0(result_path, ".stack", stack_n)
+    compute_clusters(stack_path = stack_path,
                      hemi = hemi,
-                     term_number = stack_n,
                      fwhm = fwhm,
                      FS_HOME = FS_HOME,
                      mcz_thr = mcz_thr,
                      cwp_thr = cwp_thr,
-                     mask = file.path(outp_dir, "finalMask.mgh"))
+                     mask = paste0(result_path, ".finalMask.mgh"))
   }
 
   vw_message(pretty_message("All done! :)"))
