@@ -324,13 +324,12 @@ run_vw_lmm <- function(
   good_verts <- which(!problem_verts & is_cortex)
 
   ss_rownames <- scan(file = file.path(outp_dir, "ss",
-                                       paste(hemi, measure, 'rownames', 'csv', sep = '.')),
+                                       paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
                       what = character(), sep = "\n")
 
   if (!identical(ss_rownames, data_list[[1]][, folder_id])) {
-    # TMP assume all data.frames in data_list have the same shape and order
-    # TODO: perform check
-    vw_message('Matching phenotype with available brain surfaces.')
+    # Assume all data.frames in data_list have the same order... one hopes
+    vw_message('Matching phenotype with available brain surface data.')
     data_list <- lapply(data_list,
                         function(df) {
                           # Match the row names in ss
