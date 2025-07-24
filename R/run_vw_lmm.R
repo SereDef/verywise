@@ -266,7 +266,7 @@ run_vw_lmm <- function(
   # specified in the formula are present in the data
   check_data_list(data_list, folder_id, formula)
 
-  weights <- check_weights(weights, data_list)
+  check_weights(weights, data_list)
 
   fixed_terms <- get_terms(formula, data_list)
 
@@ -623,6 +623,11 @@ single_lmm <- function(
   weights = NULL,
   lmm_control = lme4::lmerControl())
   {
+
+  if (!is.null(weights) && !is.numeric(weights)) {
+    weights <- imp[, weights]
+  }
+
   # Add (vertex) outcome to (single) dataset
   imp[all.vars(formula)[1]] <- y
 

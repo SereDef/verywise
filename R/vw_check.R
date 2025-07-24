@@ -109,17 +109,17 @@ check_stack_file <- function(fixed_terms, outp_dir) {
 
 check_weights <- function(weights, data_list) {
 
-  if (is.null(weights)) return(NULL)
+  if (is.null(weights)) return(invisible(NULL))
 
   data1 <- data_list[[1]]
 
   if (is.character(weights) && length(weights) == 1) {
-    if (weights %in% names(data1)) return(data1[, weights])
+    if (weights %in% names(data1)) return(invisible(NULL))
     stop(sprintf("Weights variable '%s' not found in data.", weights))
   }
 
   if (is.numeric(weights)) {
-    if (length(weights) == nrow(data1)) return(weights)
+    if (length(weights) == nrow(data1)) return(invisible(NULL))
     stop("Weights vector has not the same dimensions as data.")
   }
 
