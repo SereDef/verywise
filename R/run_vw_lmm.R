@@ -426,9 +426,8 @@ run_vw_lmm <- function(
 
   vw_message("* fitting linear mixed models...")
 
-  utils::capture.output(pb <- utils::txtProgressBar(0, length(chunk_seq),
-                                                    style = 3),
-                        file = "/dev/null")
+  # utils::capture.output(pb <- utils::txtProgressBar(0, length(chunk_seq),
+  #                                                   style = 3), file = "/dev/null")
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
   chunk <- NULL
@@ -438,7 +437,7 @@ run_vw_lmm <- function(
                    ) %dopar% {
 
     # worker_id <- Sys.getpid() # TMP for debugging
-    utils::setTxtProgressBar(pb, chunk)
+    # utils::setTxtProgressBar(pb, chunk)
 
     for (v in chunk) {
 
@@ -479,6 +478,9 @@ run_vw_lmm <- function(
       r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
 
     }
+    vw_message(sprintf("    - Worker %s: finished chunk %d/%d\n",
+               Sys.getpid(), which(chunk_seq == chunk), length(chunk_seq)))
+    flush.console()
   }
 
   parallel::stopCluster(cluster)
