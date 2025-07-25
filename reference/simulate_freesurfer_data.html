@@ -58,15 +58,14 @@ by calling FreeSurfer recon_all command. This follows the folder names "sub-", p
 <span>  <span class="va">path</span>,</span>
 <span>  data_structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cohort1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>    cohort2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">150</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  vw_resolution <span class="op">=</span> <span class="fl">163842</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
 <span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
 <span>  fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
-<span>  target <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
 <span>  vw_mean <span class="op">=</span> <span class="fl">6.5</span>,</span>
 <span>  vw_sd <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  simulate_association <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">31081996</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">3108</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,10 +84,6 @@ vector of session names/numbers; and <code>"n_subjects"</code>: an integer indic
 the number of subjects.</p></dd>
 
 
-<dt id="arg-vw-resolution">vw_resolution<a class="anchor" aria-label="anchor" href="#arg-vw-resolution"></a></dt>
-<dd><p>(default = 163842) data dimension (how many vertices)</p></dd>
-
-
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
 <dd><p>(default = "thickness"), measure, used in file names.</p></dd>
 
@@ -102,8 +97,14 @@ the number of subjects.</p></dd>
 file names.</p></dd>
 
 
-<dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
-<dd><p>(default = "fsaverage"), used in file names.</p></dd>
+<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
+<dd><p>Character string specifying the FreeSurfer template for
+vertex registration. Options:</p><ul><li><p><code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),</p></li>
+<li><p><code>"fsaverage6"</code> = 40962 vertices,</p></li>
+<li><p><code>"fsaverage5"</code> = 10242 vertices,</p></li>
+<li><p><code>"fsaverage4"</code> = 2562 vertices,</p></li>
+<li><p><code>"fsaverage3"</code> = 642 vertices</p></li>
+</ul></dd>
 
 
 <dt id="arg-vw-mean">vw_mean<a class="anchor" aria-label="anchor" href="#arg-vw-mean"></a></dt>
@@ -116,12 +117,13 @@ file names.</p></dd>
 
 <dt id="arg-simulate-association">simulate_association<a class="anchor" aria-label="anchor" href="#arg-simulate-association"></a></dt>
 <dd><p>(default = NULL) simulate an association in the
-format <code>beta * variable</code>. This is by default isolated to three regions:
+format <code>"[beta] * [variable name]"</code>. For example <code>"0.05 * age"</code>.
+This is by default isolated to three regions:
 the superior temporal gyrus, precentral gyrus and middle temporal gyrus.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>(default = 31081996) seed used for randomization.</p></dd>
+<dd><p>(default = 3108) seed used for randomization.</p></dd>
 
 </dl></div>
     <div class="section level2">
