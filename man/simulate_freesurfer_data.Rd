@@ -8,15 +8,14 @@ simulate_freesurfer_data(
   path,
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
-  vw_resolution = 163842,
   measure = "thickness",
   hemi = "lh",
   fwhmc = "fwhm10",
-  target = "fsaverage",
+  fs_template = "fsaverage",
   vw_mean = 6.5,
   vw_sd = 0.5,
   simulate_association = NULL,
-  seed = 31081996
+  seed = 3108
 )
 }
 \arguments{
@@ -27,8 +26,6 @@ dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
 vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
-\item{vw_resolution}{(default = 163842) data dimension (how many vertices)}
-
 \item{measure}{(default = "thickness"), measure, used in file names.}
 
 \item{hemi}{(default = "lh") hemisphere, used in file names.}
@@ -36,17 +33,26 @@ the number of subjects.}
 \item{fwhmc}{(default = "fwhm10") full-width half maximum value, used in
 file names.}
 
-\item{target}{(default = "fsaverage"), used in file names.}
+\item{fs_template}{Character string specifying the FreeSurfer template for
+vertex registration. Options:
+\itemize{
+\item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+\item \code{"fsaverage6"} = 40962 vertices,
+\item \code{"fsaverage5"} = 10242 vertices,
+\item \code{"fsaverage4"} = 2562 vertices,
+\item \code{"fsaverage3"} = 642 vertices
+}}
 
 \item{vw_mean}{(default = 6.5) mean of the simulated vertex-wise data.}
 
 \item{vw_sd}{(default = 0.5) standard deviation of the simulated vertex-wise data.}
 
 \item{simulate_association}{(default = NULL) simulate an association in the
-format \code{beta * variable}. This is by default isolated to three regions:
+format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
+This is by default isolated to three regions:
 the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 
-\item{seed}{(default = 31081996) seed used for randomization.}
+\item{seed}{(default = 3108) seed used for randomization.}
 }
 \description{
 Simulating FreeSurfer data for multiple cohorts/sites and multiple

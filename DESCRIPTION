@@ -42,7 +42,6 @@ Imports:
     foreach,
     lme4 (>= 1.1.35.5),
     magrittr,
-    progressr,
     rlang
 SystemRequirements: FreeSurfer
 Config/Needs/website: rmarkdown

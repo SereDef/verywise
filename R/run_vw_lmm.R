@@ -374,18 +374,17 @@ run_vw_lmm <- function(
   res_bk_names <- c("coef", "se", "t", "p", "resid")
   res_bk_paths <- paste(result_path, res_bk_names, sep = ".")
 
-  # TMP: always remove files if they exist
-  for (bk in res_bk_paths) {
+  # Note: always remove backing files if they already exist
+  res_bk_files <- paste0(res_bk_paths, ".bk")
+
+  if (any(file.exists(res_bk_files))) {
     vw_message("   WARNING: overwriting existing results backing files.",
                verbose = verbose)
-    if (file.exists(paste0(bk, ".bk"))) file.remove(paste0(bk, ".bk"))
+    file.remove(res_bk_files[file.exists(res_bk_files)])
   }
+
   # Remove temporary matrices files after computations are done
-  on.exit({
-    for (bk in res_bk_paths) {
-      if (file.exists(paste0(bk, ".bk"))) file.remove(paste0(bk, ".bk"))
-    }
-  })
+  on.exit(file.remove(res_bk_files))
 
   # Coefficients
   c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[1])
@@ -397,7 +396,7 @@ run_vw_lmm <- function(
   p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, backingfile = res_bk_paths[4])
   # Residuals
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
-
+  # Model fitting issues
   log_file <- file.path(outp_dir, paste0(hemi, ".", measure, ".issues.log"))
 
   # Prepare chunk sequence =====================================================
@@ -425,63 +424,62 @@ run_vw_lmm <- function(
   # as the main session
   # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
 
-  vw_message("* running analysis...")
+  vw_message("* fitting linear mixed models...")
 
-  # Progress bar setup
-  progressr::handlers(global = TRUE)
-  progressr::with_progress({
-    p <- progressr::progressor(steps = length(good_verts))
-    chunk <- NULL
-    foreach::foreach(chunk = chunk_seq,
-                     .packages = c("bigstatsr"),
-                     .export = c("single_lmm", "vw_pool", "vw_message")
-                     ) %dopar% {
+  utils::capture.output(pb <- utils::txtProgressBar(0, length(chunk_seq),
+                                                    style = 3),
+                        file = "/dev/null")
 
-      # worker_id <- Sys.getpid() # TMP for debugging
+  # Progress bar setup # note progressr only works with doFuture not doParallel
+  chunk <- NULL
+  foreach::foreach(chunk = chunk_seq,
+                   .packages = c("bigstatsr"),
+                   .export = c("single_lmm", "vw_pool", "vw_message")
+                   ) %dopar% {
 
-      for (v in chunk) {
-        # Progress update for each vertex
-        p(message = sprintf("Vertex %d", v))
+    # worker_id <- Sys.getpid() # TMP for debugging
+    utils::setTxtProgressBar(pb, chunk)
 
-        # NOTE: ss should not be copied n_cores times because it is a memory map
-        vertex <- ss[, v]
+    for (v in chunk) {
 
-        # Loop through imputed datasets and run analyses
-        out_stats <- lapply(data_list, single_lmm,
-                            y = vertex,
-                            formula = formula,
-                            model_template = model_template,
-                            weights = weights,
-                            lmm_control = lmm_control,
-                            pvalues = (m == 1))
+      # NOTE: ss should not be copied n_cores times because it is a memory map
+      vertex <- ss[, v]
 
-        # Pool results
-        pooled_stats <- vw_pool(out_stats, m = m)
+      # Loop through imputed datasets and run analyses
+      out_stats <- lapply(data_list, single_lmm,
+                          y = vertex,
+                          formula = formula,
+                          model_template = model_template,
+                          weights = weights,
+                          lmm_control = lmm_control,
+                          pvalues = (m == 1))
 
-        # Log errors (if any)
-        if (is.character(pooled_stats)) {
-          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
-              append = TRUE)
-          # & skip to the next value of v
-          next
-        }
+      # Pool results
+      pooled_stats <- vw_pool(out_stats, m = m)
 
-        # Log warnings (if any)
-        if (!is.null(pooled_stats$warning)) {
-          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
-              append = TRUE)
-        }
-
-        # Write results to their respective FBM
-        c_vw[, v] <- pooled_stats$coef
-        s_vw[, v] <- pooled_stats$se
-        t_vw[, v] <- pooled_stats$t
-        p_vw[, v] <- -1 * log10(pooled_stats$p)
-        r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
-
+      # Log errors (if any)
+      if (is.character(pooled_stats)) {
+        cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
+            append = TRUE)
+        # & skip to the next value of v
+        next
       }
+
+      # Log warnings (if any)
+      if (!is.null(pooled_stats$warning)) {
+        cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
+            append = TRUE)
+      }
+
+      # Write results to their respective FBM
+      c_vw[, v] <- pooled_stats$coef
+      s_vw[, v] <- pooled_stats$se
+      t_vw[, v] <- pooled_stats$t
+      p_vw[, v] <- -1 * log10(pooled_stats$p)
+      r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
+
     }
-  })
+  }
 
   parallel::stopCluster(cluster)
 

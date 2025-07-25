@@ -1,14 +1,15 @@
 #' @title
-#' Simulate a dataset including phenotype and FreeSurfer data
+#' Simulate longitudinal brain surface dataset with phenotype
 #'
 #' @description
-#' Simulating a dataset with multiple cohorts/sites and multiple
-#' timepoints/sessions. This generates:
+#' This function generates synthetic longitudinal datasets for
+#' multiple sites/cohorts (as well as multiple timepoints/sessions per subject).
+#' It generates:
 #' \itemize{
-#' \item a \code{pheno} data.frame with participant sex and age mock-data, saved
-#' as "phenotype.csv" file in the \code{path} directory.
-#' \item the FreeSurfer data saved as .mgh files organised in a verywise folder
-#' structure.
+#' \item the brain surface data in FreeSurfer format (.mgh files) organised in a
+#'  verywise folder structure (see vignettes).
+#' \item a mathing \code{pheno} dataframe with participant sex and age mock-data,
+#'  saved as "phenotype.csv" file in the \code{path} directory.
 #' }
 #'
 #' @param path Where should the dataset be created.
@@ -20,6 +21,8 @@
 #' \code{\link{simulate_freesurfer_data}}, \code{\link{simulate_long_pheno_data}}
 #'
 #' @author Serena Defina, 2024.
+#'
+#' @return NULL. Files are written to `path`.
 #'
 #' @export
 #'
@@ -34,7 +37,7 @@ simulate_dataset <- function(path,
                                  "n_subjects" = 20
                                )
                              ),
-                             simulate_association =  0.05 * pheno$age,
+                             simulate_association =  NULL,
                              overwrite = TRUE,
                              seed = 31081996,
                              ...) {
@@ -66,6 +69,19 @@ simulate_dataset <- function(path,
                      file = pheno_file_path,
                      row.names = FALSE
     )
+  }
+
+  if (!is.null(simulate_association)) {
+    if (is.numeric(simulate_association)) {
+      stopifnot(length(simulate_association) == nrow(pheno))
+    } else if (is.character(simulate_association)) {
+      parsed_ass <- strsplit(simulate_association, ' ', fixed = TRUE)[[1]]
+      beta <- as.numeric(parsed_ass[1])
+      var_name <- parsed_ass[3]
+      simulate_association <- beta * pheno[var_name]
+    } else {
+      stop('`simulate_association` is not correctly specified.')
+    }
   }
 
   # Simulate FreeSurfer data to match
@@ -104,7 +120,7 @@ simulate_long_pheno_data <- function(data_structure = list(
                                          "n_subjects" = 150
                                        )
                                      ),
-                                     seed = 31081996) {
+                                     seed = 31081) {
 
   cat("Creating phenotype file...\n")
   set.seed(seed)
@@ -169,18 +185,26 @@ simulate_long_pheno_data <- function(data_structure = list(
 #' dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
 #' vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 #' the number of subjects.
-#' @param vw_resolution (default = 163842) data dimension (how many vertices)
 #' @param measure (default = "thickness"), measure, used in file names.
 #' @param hemi (default = "lh") hemisphere, used in file names.
 #' @param fwhmc (default = "fwhm10") full-width half maximum value, used in
 #' file names.
-#' @param target (default = "fsaverage"), used in file names.
+#' @param fs_template Character string specifying the FreeSurfer template for
+#'   vertex registration. Options:
+#'   \itemize{
+#'   \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+#'   \item \code{"fsaverage6"} = 40962 vertices,
+#'   \item \code{"fsaverage5"} = 10242 vertices,
+#'   \item \code{"fsaverage4"} = 2562 vertices,
+#'   \item \code{"fsaverage3"} = 642 vertices
+#'   }
 #' @param vw_mean (default = 6.5) mean of the simulated vertex-wise data.
 #' @param vw_sd (default = 0.5) standard deviation of the simulated vertex-wise data.
 #' @param simulate_association (default = NULL) simulate an association in the
-#' format \code{beta * variable}. This is by default isolated to three regions:
+#' format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
+#' This is by default isolated to three regions:
 #' the superior temporal gyrus, precentral gyrus and middle temporal gyrus.
-#' @param seed (default = 31081996) seed used for randomization.
+#' @param seed (default = 3108) seed used for randomization.
 #'
 #' @author Serena Defina, 2024.
 #'
@@ -197,19 +221,24 @@ simulate_freesurfer_data <- function(path,
                                          "n_subjects" = 150
                                        )
                                      ),
-                                     vw_resolution = 163842,
                                      measure = "thickness",
                                      hemi = "lh",
                                      fwhmc = "fwhm10",
-                                     target = "fsaverage",
+                                     fs_template = "fsaverage",
                                      vw_mean = 6.5,
                                      vw_sd = 0.5,
                                      simulate_association = NULL,
-                                     seed = 31081996) {
-  cat("Creating FreeSurfer dataset (", hemi,") ...\n")
+                                     seed = 3108) {
+  vw_message("Creating FreeSurfer dataset (", hemi,") ...\n")
   set.seed(seed)
 
-  # TODO: check path exists and create directory if not
+  check_path(path, create_if_not = TRUE)
+
+  total_n_files = sum(sapply(
+    data_structure,
+    function(site) site$n_subjects * length(site$sessions)))
+
+  vw_message(' * ', total_n_files, 'total files.')
 
   for (l in seq_along(data_structure)) {
     site <- names(data_structure[l])
@@ -220,7 +249,7 @@ simulate_freesurfer_data <- function(path,
     site_dir <- file.path(path, site)
     dir.create(site_dir, showWarnings = FALSE)
 
-    cat(
+    vw_message(
       "Generated", n, "(subjects) x", length(sess), "(sessions) cortical",
       measure, "files in:", site, "\n"
     )
@@ -230,22 +259,31 @@ simulate_freesurfer_data <- function(path,
         # Create subject folder structure -------------------------------------
         sub_dir <- file.path(site_dir, paste0("sub-", i, "_ses-", t))
 
-        dir.create(sub_dir, recursive = TRUE, showWarnings = FALSE)
         dir.create(file.path(sub_dir, "surf"), recursive = TRUE, showWarnings = FALSE)
-        dir.create(file.path(sub_dir, "stats"), recursive = TRUE, showWarnings = FALSE)
-        dir.create(file.path(sub_dir, "mri"), recursive = TRUE, showWarnings = FALSE)
+        # Not creating "stats" and "mri" subfolders
 
         # File name
-        mgh_fname <- paste(hemi, measure, fwhmc, target, "mgh", sep = ".")
+        mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
+
+        n_verts <- switch(fs_template,
+                          fsmicro = 10,
+                          fsaverage = 163842,
+                          fsaverage6 = 40962,
+                          fsaverage5 = 10242,
+                          fsaverage4 = 2562,
+                          fsaverage3 = 642)
 
         # Randomly generated vertex-wise data
-        vw_data <- stats::rnorm(vw_resolution, mean = vw_mean, sd = vw_sd)
-        vw_data[vw_data <= 0] <- 0.1 # non-negative
+        vw_data <- stats::rnorm(n_verts, mean = vw_mean, sd = vw_sd)
+        vw_data[vw_data <= 0] <- 0.1 # make it non-negative
 
         # Specify association cluster
         if (!is.null(simulate_association)) {
+          stopifnot(is.numeric(simulate_association) &&
+                      (length(simulate_association) == total_n_files))
+
           # Isolate some regions from annotation file in R/sysdata.rda
-          annot <- aparc.annot$vd_label[1:vw_resolution] %in% c(
+          annot <- aparc.annot$vd_label[1:n_verts] %in% c(
             14474380, # superior temporal gyrus
             14423100, # precentral gyrus
             3302560 # middle temporal gyrus

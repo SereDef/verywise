@@ -36,7 +36,7 @@ test_that("simulate_freesurfer_data creates correct files", {
   simulate_freesurfer_data(
     path = tmp,
     data_structure = ds,
-    vw_resolution = 10,
+    fs_template = 'fsmicro',
     measure = "thickness",
     hemi = "lh",
     seed = 1
@@ -74,8 +74,8 @@ test_that("simulate_freesurfer_data handles simulate_association argument", {
     simulate_freesurfer_data(
       path = tmp,
       data_structure = ds,
-      vw_resolution = 10,
-      simulate_association = rep(0.1, 2),
+      fs_template = 'fsmicro',
+      simulate_association = 0.1,
       seed = 1
     ),
     NA

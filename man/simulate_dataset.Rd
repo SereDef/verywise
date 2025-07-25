@@ -2,13 +2,13 @@
 % Please edit documentation in R/simulate_dataset.R
 \name{simulate_dataset}
 \alias{simulate_dataset}
-\title{Simulate a dataset including phenotype and FreeSurfer data}
+\title{Simulate longitudinal brain surface dataset with phenotype}
 \usage{
 simulate_dataset(
   path,
   data_structure = list(cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 10),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 20)),
-  simulate_association = 0.05 * pheno$age,
+  simulate_association = NULL,
   overwrite = TRUE,
   seed = 31081996,
   ...
@@ -23,23 +23,28 @@ vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
 \item{simulate_association}{(default = NULL) simulate an association in the
-format \code{beta * variable}. This is by default isolated to three regions:
+format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
+This is by default isolated to three regions:
 the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 
 \item{overwrite}{(default = TRUE) whether phenotype file should be overwitten.}
 
-\item{seed}{(default = 31081996) seed used for randomization.}
+\item{seed}{(default = 3108) seed used for randomization.}
 
 \item{...}{Other arguments to be passed to \code{\link{simulate_freesurfer_data}}}
 }
+\value{
+NULL. Files are written to `path`.
+}
 \description{
-Simulating a dataset with multiple cohorts/sites and multiple
-timepoints/sessions. This generates:
+This function generates synthetic longitudinal datasets for
+multiple sites/cohorts (as well as multiple timepoints/sessions per subject).
+It generates:
 \itemize{
-\item a \code{pheno} data.frame with participant sex and age mock-data, saved
-as "phenotype.csv" file in the \code{path} directory.
-\item the FreeSurfer data saved as .mgh files organised in a verywise folder
-structure.
+\item the brain surface data in FreeSurfer format (.mgh files) organised in a
+ verywise folder structure (see vignettes).
+\item a mathing \code{pheno} dataframe with participant sex and age mock-data,
+ saved as "phenotype.csv" file in the \code{path} directory.
 }
 }
 \seealso{
