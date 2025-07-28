@@ -93,7 +93,7 @@ compute_clusters <- function(stack_path,
   mcz_thr_str <- paste0("th", mcz_thr)
 
   # Format FWHM (esure a leading 0 if < 10)
-  fwhm_str <- paste0("fwhm", sprintf("%02d", fwhm))
+  fwhm_str <- paste0("fwhm", sprintf("%02d", as.integer(fwhm)))
 
   csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", "fsaverage", hemi,
                         "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
