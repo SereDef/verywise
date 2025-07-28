@@ -325,7 +325,7 @@ run_vw_lmm <- function(
 
   ss_rownames <- scan(file = file.path(outp_dir, "ss",
                                        paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
-                      what = character(), sep = "\n")
+                      what = character(), sep = "\n", quiet = TRUE)
 
   if (!identical(ss_rownames, data_list[[1]][, folder_id])) {
     # Assume all data.frames in data_list have the same order... one hopes
@@ -359,8 +359,10 @@ run_vw_lmm <- function(
     tmp_data[paste0("vw_", measure)] <- ss[, 1]  # dummy outcome
 
     # Fit model once
-    model_template <- lme4::lmer(formula = formula, data = tmp_data,
-                                 weights = weights, control = lmm_control)
+    model_template <- suppressMessages(
+      lme4::lmer(formula = formula, data = tmp_data,
+                 weights = weights, control = lmm_control)
+      )
   } else {
     model_template <- NULL
   }
@@ -435,9 +437,15 @@ run_vw_lmm <- function(
                    .packages = c("bigstatsr"),
                    .export = c("single_lmm", "vw_pool", "vw_message")
                    ) %dopar% {
+    # Progress updates
+    if (verbose) {
+      chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
+      worker_id <- Sys.getpid() # useful for debugging
 
-    # worker_id <- Sys.getpid() # TMP for debugging
-    # utils::setTxtProgressBar(pb, chunk)
+      vw_message(sprintf("   - Processing chunk %d/%d (worker: %s)\n",
+                         chunk_idx, length(chunk_seq), worker_id))
+      utils::flush.console()
+    }
 
     for (v in chunk) {
 
@@ -475,12 +483,9 @@ run_vw_lmm <- function(
       s_vw[, v] <- pooled_stats$se
       t_vw[, v] <- pooled_stats$t
       p_vw[, v] <- -1 * log10(pooled_stats$p)
-      r_vw[, v] <- pooled_stats$resid # ("+", res) / length(res)
+      r_vw[, v] <- pooled_stats$resid
 
     }
-    vw_message(sprintf("    - Worker %s: finished chunk %d/%d\n",
-               Sys.getpid(), which(chunk_seq == chunk), length(chunk_seq)))
-    flush.console()
   }
 
   parallel::stopCluster(cluster)

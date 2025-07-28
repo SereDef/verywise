@@ -12,12 +12,13 @@ make_chunk_sequence(iv, chunk_size = 1000)
 \item{chunk_size}{: (default = 1000) how big are the chunks}
 }
 \value{
-A matrix with n_chunks rows and 2 columns (chunk start and end positions).
+A list with n_chunks elements. Each element is a vector of vertex
+  positions.
 }
 \description{
 This function takes a vector of values representing the dimension of the
-vertex-wise data to use and splits it into chunks for speeding up parallel
-processing.
+vertex-wise data to use and splits it into chunks for memory-efficient
+parallel processing.
 }
 \author{
 Serena Defina, 2024.
