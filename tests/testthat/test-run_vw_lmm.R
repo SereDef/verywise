@@ -88,7 +88,11 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
   expect_s4_class(result$p, "FBM")
   expect_s4_class(result$resid, "FBM")
 
-  expect_true(file.exists(file.path(outp_dir,
-                                    'lh.area.stack1.cache.th30.abs.sign.ocn.mgh')))
+  expect_true(file.exists(
+    file.path(outp_dir, 'lh.area.stack2.coef.mgh')))
+  expect_true(file.exists(
+    file.path(outp_dir, 'lh.area.stack3.cache.th30.abs.sig.ocn.mgh')))
+  expect_true(file.exists(
+    file.path(outp_dir, 'lh.area.progress.log')))
 
 })
