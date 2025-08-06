@@ -11,8 +11,7 @@ check_formula <- function(formula) {
                   "w_g.pct", "white.H", "white.K")
 
   if (!measure %in% fs_metrics) {
-    stop(sprintf("The outcome in `formula` should be a brain surface metric.",
-                 "'%s' is not a valid metric. See `?run_vw_lmm`", measure))
+    stop(sprintf("The outcome in `formula` should be a brain surface metric. '%s' is not a valid metric. See `?run_vw_lmm`", measure))
   }
 
   return(measure)
@@ -37,8 +36,8 @@ check_data_list <- function(data_list, folder_id, formula) {
   }
 
   if (any(is.na(data1[folder_id]))) {
-    stop(sprintf("Folder ID '%s' contains missing values. ",
-                 "This is not allowed, please remove any NAs.", folder_id))
+    stop(sprintf("Folder ID '%s' contains missing values. This is not allowed, please remove any NAs.",
+                 folder_id))
   }
 
   if (any(duplicated(data1[folder_id]))) {
@@ -53,6 +52,7 @@ check_data_list <- function(data_list, folder_id, formula) {
                  terms[missing_vars]))
   }
   # TODO: check that is in long format ?
+  invisible(NULL)
 }
 
 check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
@@ -70,11 +70,10 @@ check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
 
   if (!is.null(file_exists)) {
     file_path <- file.path(dir_path, file_exists)
-    if (file.exists(file_path)) {
-    warning(sprintf("A `%s` file already exists inside '%s'. Be careful, you may be overwriting results.",
-                    file_exists, dir_path))
-    }
+    if (file.exists(file_path)) return(file_path)
   }
+
+  invisible(NULL)
 }
 
 check_stack_file <- function(fixed_terms, outp_dir) {
@@ -107,11 +106,9 @@ check_stack_file <- function(fixed_terms, outp_dir) {
 }
 
 
-check_weights <- function(weights, data_list) {
+check_weights <- function(weights, data1) {
 
   if (is.null(weights)) return(invisible(NULL))
-
-  data1 <- data_list[[1]]
 
   if (is.character(weights) && length(weights) == 1) {
     if (weights %in% names(data1)) return(invisible(NULL))
@@ -132,7 +129,7 @@ check_cores <- function(n_cores){
   avail_cores <- parallelly::availableCores()
   avail_connections <- parallelly::freeConnections()
 
-  if (n_cores < 1) stop("`n_cores` shoudl be an integer that is 1 or higher.")
+  if (n_cores < 1) stop("`n_cores` should be an integer that is 1 or higher.")
 
   if (n_cores > avail_cores) {
     vw_message("WARNING: You requested ", n_cores, " cores but only ", avail_cores,

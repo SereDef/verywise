@@ -63,10 +63,10 @@ vw_pool <- function(out_stats, m) {
     # Just reformat output (no pooling needed)
     s <- out_stats[[1]]$stats
     stats <- list(
-      coef  = s$coef,
-      se    = s$se,
-      t     = s$t,
-      p     = s$p,
+      coef = s$qhat,
+      se = s$se,
+      t = s$tval,
+      p = s$pval,
       resid = as.vector(out_stats[[1]]$resid),
       warning = out_stats[[1]]$warning
     )

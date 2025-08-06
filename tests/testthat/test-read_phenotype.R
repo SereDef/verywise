@@ -1,11 +1,11 @@
+data_dir <- test_path("fixtures", "fs3")
+
 # Test load_pheno_file function
 test_that("load_pheno_file works for supported extensions", {
 
   # Mocking file existence and loading functionality
-  pheno_file1 <- test_path("fixtures","example_data",
-                          "phenotype.csv")
-  pheno_file2 <- test_path("fixtures","example_data",
-                           "phenotype_mids.rds")
+  pheno_file1 <- file.path(data_dir, "phenotype.csv")
+  pheno_file2 <- file.path(data_dir, "phenotype_mids.rds")
 
   data1 <- load_pheno_file(pheno_file1)
   data2 <- load_pheno_file(pheno_file2)
@@ -17,9 +17,8 @@ test_that("load_pheno_file works for supported extensions", {
 
 test_that("load_pheno_file throws error for unsupported extensions", {
 
-  pheno_file <- test_path("fixtures","example_data",
-                          "site1/sub-1_ses-01",
-                          "surf/lh.area.fwhm10.fsaverage.mgh")
+  pheno_file <- file.path(data_dir, "site1/sub-1_ses-01",
+                          "surf/lh.area.fwhm10.fsaverage3.mgh")
 
   expect_error(load_pheno_file(pheno_file), "Unsupported file extension")
 

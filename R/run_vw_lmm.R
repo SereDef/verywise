@@ -227,30 +227,40 @@ run_vw_lmm <- function(
   cwp_thr = 0.025,
   verbose = TRUE
 ) {
+
+  hemi <- match.arg(hemi)
+
+  hemi_name <- if (hemi == "lh") "left" else "right"
+  vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose = verbose)
+
   # Check user input ===========================================================
+  vw_message("Checking user inputs...", verbose = verbose)
 
   measure <- check_formula(formula)
 
-  check_path(subj_dir)
+  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
+
+  ss_in_subj_dir <- check_path(subj_dir,
+                               file_exists = file.path('ss', ss_file))
 
   if (is.null(outp_dir)) {
     outp_dir <- file.path(subj_dir, "verywise_results")
-    vw_message("  WARNING: outpur directory unspecified, which is not recommended.",
+    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
                " You can find the results at ", outp_dir)
     dir.create(outp_dir, showWarnings = FALSE)
   }
-  check_path(outp_dir, create_if_not = TRUE)
+
+  ss_in_outp_dir <- check_path(outp_dir, create_if_not = TRUE,
+                               file_exists = file.path('ss', ss_file))
 
   check_freesurfer_setup(FS_HOME, verbose = verbose)
 
   n_cores <- check_cores(n_cores)
 
-  hemi <- match.arg(hemi)
-
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE,
                       lower = 1, upper = 5000) # for memory safety
-  # check_numeric_param(fwhm, lower = 0)
+  check_numeric_param(fwhm, lower = 1, upper = 30)
   # check_numeric_param(mcz_thr, lower = 0)
   # check_numeric_param(cwp_thr, lower = 0)
 
@@ -260,43 +270,54 @@ run_vw_lmm <- function(
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
   # Transform to list of dataframes (imputed and single datasets alike)
-  data_list <- imp2list(pheno)
+  data_list <- imp2list(pheno); rm(pheno)
 
-  # Check that the data list is not empty and that "folder_id" and all variables
-  # specified in the formula are present in the data
+  # Check that the data_list is not empty, it contains data.frames of the same
+  # dims, and that "folder_id" and all variables specified in the formula are
+  # present in the data
   check_data_list(data_list, folder_id, formula)
 
-  check_weights(weights, data_list)
+  # Extract first dataset
+  data1 <- data_list[[1]]
 
-  fixed_terms <- get_terms(formula, data_list)
+  vw_message(" * ", length(data_list), " datasets of dimention: ", nrow(data1),
+             " x ", ncol(data1), verbose = verbose)
+
+  check_weights(weights, data1)
+
+  fixed_terms <- get_terms(formula, data1)
 
   # Check that the stacks are not overwritten by mistake and
   # Save the stack names (i.e. fixed terms) to a lookup file
   check_stack_file(fixed_terms, outp_dir)
 
   # Build supersubject =========================================================
-
+  RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
 
-  if (hemi == "lh") hemi_name <- "Left" else hemi_name <- "Right"
-  vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose = verbose)
-
   # Read and clean vertex data =================================================
-  ss_file_name <- file.path(outp_dir, "ss", paste(hemi, measure, fs_template,
-                                            "supersubject.rds", sep = "."))
 
-  if (file.exists(ss_file_name)) {
-    vw_message("Reading super-subject file from: ", ss_file_name,
+  vw_message("Checking and preparing brain surface data...", verbose = verbose)
+
+  ss_file_locs <- c(ss_in_subj_dir, ss_in_outp_dir)
+  ss_exists <- ss_file_locs[!is.null(ss_file_locs)]
+
+  if (!is.null(ss_exists)) {
+    vw_message(" * reading super-subject file from: ", ss_exists,
                verbose = verbose)
 
-    ss <- bigstatsr::big_attach(ss_file_name)
+    ss <- bigstatsr::big_attach(ss_exists)
+
+    ss_folder <- dirname(ss_exists)
 
   } else {
 
+    ss_folder <- file.path(outp_dir, "ss")
+
     ss <- build_supersubject(
       subj_dir = subj_dir,
-      folder_ids = data_list[[1]][, folder_id],
-      outp_dir = file.path(outp_dir, "ss"),
+      folder_ids = data1[, folder_id],
+      supsubj_dir = ss_folder,
       measure = measure,
       hemi = hemi,
       n_cores = n_cores,
@@ -307,99 +328,71 @@ run_vw_lmm <- function(
     )
   }
 
-  vw_message("Cleaning super-subject matrix...", verbose = verbose)
+  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
 
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
   problem_verts <- fbm_col_has_0(ss)
-  if (sum(problem_verts) > 0) {
-    vw_message("Ignoring ", sum(problem_verts),
-               " vertices that contained 0 values. These may be located",
-               " at the edge of the cortical map and are potentially",
-               " problematic.", verbose = verbose)
-  }
 
-  good_verts <- which(!problem_verts & is_cortex)
+  good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
-  ss_rownames <- scan(file = file.path(outp_dir, "ss",
-                                       paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
+  ss_rownames <- scan(file = file.path(ss_folder,
+                             paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
                       what = character(), sep = "\n", quiet = TRUE)
 
-  if (!identical(ss_rownames, data_list[[1]][, folder_id])) {
+  if (!identical(ss_rownames, data1[, folder_id])) {
     # Assume all data.frames in data_list have the same order... one hopes
-    vw_message('Matching phenotype with available brain surface data.')
+    vw_message(' * matching phenotype with available brain surface data')
     data_list <- lapply(data_list,
-                        function(df) {
-                          # Match the row names in ss
+                        function(df) {  # Match the row names in ss
                           return(df[match(ss_rownames, df[, folder_id]), ])})
   }
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...",
-             "\nCall: ", deparse(formula), verbose = verbose)
+             "\n * call: ", deparse(formula), verbose = verbose)
 
   # Number of vertices
-  vw_n <- length(is_cortex)
+  vw_n <- length(is_cortex); rm(is_cortex)
   # Number of terms (excluding random terms)
   fe_n <- length(fixed_terms)
   # Number of participants*timepoint (long format)
-  n_obs <- nrow(data_list[[1]])
+  n_obs <- nrow(data1)
   # Number of (imputed) datasets
   m <- length(data_list)
 
-  if (use_model_template) {
-    # "Pre-compile the model"
-    # cache the model frame to avoid re-generating it them each time
-    # single_lmm can leverage an "update"-based workflow to minimize
-    # repeated parsing and model construction overhead
-    vw_message(" * construct model template", verbose = verbose)
-    tmp_data <- data_list[[1]]
-    tmp_data[paste0("vw_", measure)] <- ss[, 1]  # dummy outcome
-
-    # Fit model once
-    model_template <- suppressMessages(
-      lme4::lmer(formula = formula, data = tmp_data,
-                 weights = weights, control = lmm_control)
-      )
-  } else {
-    model_template <- NULL
-  }
+  # "Pre-compile the model"
+  # cache the model frame to avoid re-generating it them each time
+  # single_lmm can leverage an "update"-based workflow to minimize
+  # repeated parsing and model construction overhead
+  model_template <- precompile_model(use_model_template,
+    formula = formula, tmp_data = data1, tmp_y = ss[,1],
+    measure = measure, lmm_control = lmm_control, verbose = verbose)
 
   # Prepare FBM output =========================================================
 
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
-  vw_message(" * generate file-backed output containers", verbose = verbose)
-
+  # Temporary output matrices
   res_bk_names <- c("coef", "se", "t", "p", "resid")
-  res_bk_paths <- paste(result_path, res_bk_names, sep = ".")
+  res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
+                                   verbose = verbose)
+  on.exit(file.remove(paste0(res_bk_paths, ".bk")))
 
-  # Note: always remove backing files if they already exist
-  res_bk_files <- paste0(res_bk_paths, ".bk")
+  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+                         backingfile = res_bk_paths["coef"])  # Coefficients
+  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+                         backingfile = res_bk_paths["se"])    # Standard errors
+  t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+                         backingfile = res_bk_paths["t"])     # t values
+  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1,
+                         backingfile = res_bk_paths["p"])     # P values
+  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0,
+                         backingfile = res_bk_paths["resid"]) # Residuals
 
-  if (any(file.exists(res_bk_files))) {
-    vw_message("   WARNING: overwriting existing results backing files.",
-               verbose = verbose)
-    file.remove(res_bk_files[file.exists(res_bk_files)])
-  }
-
-  # Remove temporary matrices files after computations are done
-  on.exit(file.remove(res_bk_files))
-
-  # Coefficients
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[1])
-  # Standard errors
-  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[2])
-  # t values
-  t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, backingfile = res_bk_paths[3])
-  # P values
-  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, backingfile = res_bk_paths[4])
-  # Residuals
-  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, backingfile = res_bk_paths[5])
-  # Model fitting issues
-  log_file <- file.path(outp_dir, paste0(hemi, ".", measure, ".issues.log"))
+  log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
   # Prepare chunk sequence =====================================================
   vw_message(" * chunk dataset", verbose = verbose)
@@ -416,11 +409,14 @@ run_vw_lmm <- function(
   if (n_cores > 1) vw_message("* preparing cluster of ", n_cores, " workers...",
                               verbose = verbose)
   # Set up parallel processing
-  cluster <- parallel::makeCluster(n_cores, type = "FORK")
+  cluster <- parallel::makeCluster(n_cores, type = "FORK",
+                                   outfile = paste0(result_path, ".progress.log"))
   # NOTE: would not work on Windows anyway till freesurfer dependency is needed
   # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
 
   doParallel::registerDoParallel(cluster)
+  # Perform %dopar% as %dorng% loops, for reproducible random numbers
+  doRNG::registerDoRNG(seed)
 
   # Sync library paths: ensures all workers look for packages in the same place
   # as the main session
@@ -437,19 +433,20 @@ run_vw_lmm <- function(
                    .packages = c("bigstatsr"),
                    .export = c("single_lmm", "vw_pool", "vw_message")
                    ) %dopar% {
+
     # Progress updates
     if (verbose) {
       chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
       worker_id <- Sys.getpid() # useful for debugging
 
-      vw_message(sprintf("   - Processing chunk %d/%d (worker: %s)\n",
+      vw_message(sprintf("   - Processing chunk %d/%d (worker: %s)",
                          chunk_idx, length(chunk_seq), worker_id))
       utils::flush.console()
     }
 
     for (v in chunk) {
 
-      # NOTE: ss should not be copied n_cores times because it is a memory map
+      # NOTE: ss does not need to be copied to each worker with doParallel
       vertex <- ss[, v]
 
       # Loop through imputed datasets and run analyses
@@ -532,11 +529,11 @@ run_vw_lmm <- function(
 
   if (fwhm != fwhm_clamped) {
     direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
-    vw_message(sprintf("Estimated smoothness is %s, which is really %s",
+    vw_message(sprintf(" * estimated smoothness is %s, which is really %s",
                        fwhm, direction), verbose = verbose)
     fwhm <- fwhm_clamped
   } else {
-    vw_message(sprintf("Estimated smoothness = %s", fwhm), verbose = verbose)
+    vw_message(sprintf(" * estimated smoothness = %s", fwhm), verbose = verbose)
   }
 
   # Apply cluster-wise correction (using FreeSurfer) ===========================
@@ -639,7 +636,7 @@ single_lmm <- function(
     tryCatch(
       {
         if (!is.null(model_template)) {
-          stats::update(model_template, data = imp)
+          stats::update(model_template, data = imp, weights = weights)
         } else {
           suppressMessages(lmer(formula = formula, data = imp,
                                 weights = weights, control = lmm_control))
@@ -658,6 +655,7 @@ single_lmm <- function(
 
   if (!is.null(error_msg)) {
     result <- list("stats" = NA, "resid" = NA, "error" = error_msg)
+    return(result)
   }
 
   # coef(fit)$id # A matrix of effects by random variable

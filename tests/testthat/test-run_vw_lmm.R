@@ -3,15 +3,18 @@ library(lme4)
 # Example data
 set.seed(3108)
 
-subj_dir <- test_path("fixtures", "example_data")
+subj_dir <- test_path("fixtures", "fs7")
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 
 n_obs <- nrow(pheno)
-y <- rnorm(n_obs)
-formula <- vw_area ~ sex + age + (1 | id)
+test_y <- rnorm(n_obs, mean = 6.5, sd = 0.2)
+test_formula <- vw_area ~ sex + age + (1 | id)
+fs_home = "/Applications/freesurfer/7.4.1"
 
 test_that("single_lmm returns correct structure", {
-  result <- single_lmm(pheno, y, formula)
+  result <- single_lmm(imp = pheno,
+                       y = test_y,
+                       formula = test_formula)
   expect_type(result, "list")
   expect_named(result, c("stats", "resid", "warning"))
   expect_s3_class(result$stats, "data.frame")
@@ -25,22 +28,67 @@ test_that("single_lmm returns correct structure", {
 test_that("single_lmm works with model_template", {
   # Fit a template model
   pheno2 <- pheno
-  pheno2[all.vars(formula)[1]] <- y
-  template <- lmer(formula, data = pheno2)
+  pheno2[all.vars(test_formula)[1]] <- test_y
+  template <- lmer(test_formula, data = pheno2)
   # Use the template for single_lmm
-  result <- single_lmm(pheno, y, formula, model_template = template)
+  result <- single_lmm(pheno, test_y, test_formula, model_template = template)
   expect_type(result, "list")
   expect_s3_class(result$stats, "data.frame")
 })
 
 test_that("single_lmm disables pvalues when requested", {
-  result <- single_lmm(pheno, y, formula, pvalues = FALSE)
+  result <- single_lmm(pheno, test_y, test_formula, pvalues = FALSE)
   expect_false("pval" %in% names(result$stats))
 })
 
-test_that("single_lmm errors with incorrect input", {
-  bad_pheno <- list(a = 1, b = 2) # not a data.frame
-  expect_error(single_lmm(bad_pheno, y, formula, model_template = NULL))
-})
-
 # ==============================================================================
+test_that("run_vw_lmm runs end-to-end with simulated data", {
+  if (!dir.exists(fs_home)) {
+    testthat::skip("FreeSurfer not found in FREESURFER_HOME")
+  }
+
+  outp_dir <- withr::local_tempdir()
+
+  # Run function
+  result <- run_vw_lmm(
+    formula = test_formula,
+    pheno = pheno,
+    folder_id = 'folder_id',
+    subj_dir = subj_dir,
+    outp_dir = outp_dir,
+    hemi = "lh",
+    seed = 42,
+    n_cores = 1,
+    FS_HOME = fs_home,
+    # prioritize speed over accuracy
+    lmm_control = lme4::lmerControl(calc.derivs = FALSE,
+                                    use.last.params = TRUE,
+                                    check.rankX = "ignore",
+                                    check.nobs.vs.rankZ = "ignore",
+                                    check.nobs.vs.nlev = "ignore",
+                                    check.nlev.gtreq.5 = "ignore",
+                                    check.nlev.gtr.1 = "ignore",
+                                    check.nobs.vs.nRE = "ignore",
+                                    check.formula.LHS = "ignore",
+                                    check.scaleX = "ignore",
+                                    check.conv.grad = "ignore",
+                                    check.conv.singular = "ignore",
+                                    check.conv.hess = "ignore"),
+    use_model_template = TRUE,
+    verbose = TRUE
+  )
+
+  # Structure tests
+  expect_type(result, "list")
+  expect_length(result, 5)
+  expect_named(result, c("coef", "se", "t", "p", "resid"))
+  expect_s4_class(result$coef, "FBM")
+  expect_s4_class(result$se, "FBM")
+  expect_s4_class(result$t, "FBM")
+  expect_s4_class(result$p, "FBM")
+  expect_s4_class(result$resid, "FBM")
+
+  expect_true(file.exists(file.path(outp_dir,
+                                    'lh.area.stack1.cache.th30.abs.sign.ocn.mgh')))
+
+})

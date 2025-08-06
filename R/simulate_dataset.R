@@ -14,6 +14,7 @@
 #'
 #' @param path Where should the dataset be created.
 #' @param overwrite (default = TRUE) whether phenotype file should be overwitten.
+#' @param verbose (deafult = TRUE)
 #' @param ... Other arguments to be passed to \code{\link{simulate_freesurfer_data}}
 #' @inheritParams simulate_freesurfer_data
 #'
@@ -40,28 +41,31 @@ simulate_dataset <- function(path,
                              simulate_association =  NULL,
                              overwrite = TRUE,
                              seed = 31081996,
+                             verbose = TRUE,
                              ...) {
 
   # Create directory in path if it does not exist
-  if (!dir.exists(path)) dir.create(path)
+  if (!dir.exists(path)) dir.create(path,
+                                    showWarnings = FALSE, recursive = TRUE)
 
   pheno_file_path <- file.path(path, "phenotype.csv")
 
   if (!overwrite & file.exists(pheno_file_path)) {
-    message("Re-using existing phenotype file created on: ",
-            file.info(pheno_file_path)[,"mtime"])
+    vw_message(" * re-using existing phenotype file created on: ",
+               file.info(pheno_file_path)[,"mtime"], verbose = verbose)
     pheno <- utils::read.csv(pheno_file_path)
 
   } else {
     if (overwrite & file.exists(pheno_file_path)) {
-      message("Overwriting existing phenotype file created on: ",
-            file.info(pheno_file_path)[,"mtime"])
+      vw_message(" * overwriting existing phenotype file created on: ",
+                 file.info(pheno_file_path)[,"mtime"], verbose = verbose)
     }
 
     # Simulate phenotype data
     pheno <- simulate_long_pheno_data(
       data_structure = data_structure,
-      seed = seed
+      seed = seed,
+      verbose = verbose
     )
 
     # TODO: make this also a multiple imputation object for testing
@@ -78,7 +82,7 @@ simulate_dataset <- function(path,
       parsed_ass <- strsplit(simulate_association, ' ', fixed = TRUE)[[1]]
       beta <- as.numeric(parsed_ass[1])
       var_name <- parsed_ass[3]
-      simulate_association <- beta * pheno[var_name]
+      simulate_association <- as.vector(beta * pheno[var_name])[[1]]
     } else {
       stop('`simulate_association` is not correctly specified.')
     }
@@ -90,6 +94,7 @@ simulate_dataset <- function(path,
     data_structure = data_structure,
     simulate_association = simulate_association,
     seed = seed,
+    verbose = verbose,
     ...
   )
 }
@@ -102,7 +107,7 @@ simulate_dataset <- function(path,
 #' Simulating phenotype data (in the long format) for multiple cohorts/sites and
 #' multiple timepoints/sessions.
 #'
-#' @inheritParams simulate_freesurfer_data
+#' @inheritParams simulate_dataset
 #'
 #' @return A dataframe (in long format) with id, sex and age data.
 #'
@@ -120,9 +125,10 @@ simulate_long_pheno_data <- function(data_structure = list(
                                          "n_subjects" = 150
                                        )
                                      ),
-                                     seed = 31081) {
+                                     seed = 31081,
+                                     verbose = TRUE) {
 
-  cat("Creating phenotype file...\n")
+  vw_message(" * creating phenotype file...", verbose = verbose)
   set.seed(seed)
 
   fake_data <- list()
@@ -205,6 +211,7 @@ simulate_long_pheno_data <- function(data_structure = list(
 #' This is by default isolated to three regions:
 #' the superior temporal gyrus, precentral gyrus and middle temporal gyrus.
 #' @param seed (default = 3108) seed used for randomization.
+#' @param verbose (dafault = TRUE) verbosity.
 #'
 #' @author Serena Defina, 2024.
 #'
@@ -228,8 +235,12 @@ simulate_freesurfer_data <- function(path,
                                      vw_mean = 6.5,
                                      vw_sd = 0.5,
                                      simulate_association = NULL,
-                                     seed = 3108) {
-  vw_message("Creating FreeSurfer dataset (", hemi,") ...\n")
+                                     seed = 3108,
+                                     verbose = TRUE) {
+
+  if (hemi == "lh") hemi_name <- "left" else hemi_name <- "right"
+  vw_message(" * creating FreeSurfer dataset (", hemi," hemisphere)...",
+             verbose = verbose)
   set.seed(seed)
 
   check_path(path, create_if_not = TRUE)
@@ -238,7 +249,9 @@ simulate_freesurfer_data <- function(path,
     data_structure,
     function(site) site$n_subjects * length(site$sessions)))
 
-  vw_message(' * ', total_n_files, 'total files.')
+  vw_message(' * ', total_n_files, ' total files.', verbose = verbose)
+
+  file_counter <- 1
 
   for (l in seq_along(data_structure)) {
     site <- names(data_structure[l])
@@ -249,10 +262,8 @@ simulate_freesurfer_data <- function(path,
     site_dir <- file.path(path, site)
     dir.create(site_dir, showWarnings = FALSE)
 
-    vw_message(
-      "Generated", n, "(subjects) x", length(sess), "(sessions) cortical",
-      measure, "files in:", site, "\n"
-    )
+    vw_message(" * ", site, ": ", n, " (subjects) x ", length(sess),
+      " (sessions) cortical ", measure, " files", verbose = verbose)
 
     for (i in seq_len(n)) {
       for (t in sess) {
@@ -273,24 +284,38 @@ simulate_freesurfer_data <- function(path,
                           fsaverage4 = 2562,
                           fsaverage3 = 642)
 
+        # Start from a vector of type double, filled with 0s
+        vw_data <- numeric(n_verts)
+
         # Randomly generated vertex-wise data
-        vw_data <- stats::rnorm(n_verts, mean = vw_mean, sd = vw_sd)
-        vw_data[vw_data <= 0] <- 0.1 # make it non-negative
+
+        # First isolate some regions from annotation file in R/sysdata.rda
+        # Chose these because they are a small subset (~1.5%) of the surface
+        # The rest of the values are left to 0 so they won't be analysed
+        locate_verbosity <- if (file_counter == 1) verbose else FALSE
+        roi_locs <- locate_roi(rois=c('temporalpole', 'frontalpole',
+                                      'entorhinal'), n_verts = n_verts,
+                               verbose = locate_verbosity)
+
+        vw_data[roi_locs] <- stats::rnorm(sum(roi_locs),
+                                          mean = vw_mean,
+                                          sd = vw_sd)
+        vw_data[vw_data < 0] <- 0.1 # make sure it is non-negative
 
         # Specify association cluster
         if (!is.null(simulate_association)) {
           stopifnot(is.numeric(simulate_association) &&
                       (length(simulate_association) == total_n_files))
 
-          # Isolate some regions from annotation file in R/sysdata.rda
-          annot <- aparc.annot$vd_label[1:n_verts] %in% c(
-            14474380, # superior temporal gyrus
-            14423100, # precentral gyrus
-            3302560 # middle temporal gyrus
-          )
-          vw_data[annot] <- vw_data[annot] -
-            simulate_association[i + (which(sess == t) - 1)]
+          # Associations only in my fav region
+          assoc_roi <- locate_roi(rois='entorhinal', n_verts = n_verts,
+                                  verbose = locate_verbosity)
+
+          vw_data[assoc_roi] <- vw_data[assoc_roi] -
+            simulate_association[file_counter]
         }
+
+        file_counter <- file_counter + 1
 
         save.mgh(as.mgh(vw_data), file.path(sub_dir, "surf", mgh_fname))
         invisible(NULL)

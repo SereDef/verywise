@@ -7,8 +7,11 @@ ds_multicohort <- list(
   "cohort2" = list(sessions = c("01"), n_subjects = 3)
 )
 
+verbosity = FALSE
+
 test_that("simulate_long_pheno_data returns correct structure", {
-  pheno <- simulate_long_pheno_data(data_structure = ds_multicohort, seed = 123)
+  pheno <- simulate_long_pheno_data(data_structure = ds_multicohort,
+                                    seed = 123, verbose = verbosity)
   expect_true(is.data.frame(pheno))
   expect_true(all(c("id", "time", "sex", "age", "site", "folder_id") %in% names(pheno)))
   expect_equal(length(unique(pheno$site)), 2)
@@ -21,7 +24,7 @@ test_that("simulate_dataset creates phenotype file and calls simulate_freesurfer
     path = tmp,
     data_structure = ds,
     overwrite = TRUE,
-    seed = 42
+    seed = 321, verbose = verbosity
   )
   expect_true(file.exists(file.path(tmp, "phenotype.csv")))
   pheno <- utils::read.csv(file.path(tmp, "phenotype.csv"))
@@ -39,7 +42,7 @@ test_that("simulate_freesurfer_data creates correct files", {
     fs_template = 'fsmicro',
     measure = "thickness",
     hemi = "lh",
-    seed = 1
+    seed = 123, verbose = verbosity
   )
   surf_dir <- file.path(tmp, "cohort1", "sub-1_ses-01", "surf")
   files <- list.files(surf_dir, pattern = "lh.thickness.*\\.mgh$")
@@ -52,7 +55,7 @@ test_that("simulate_dataset respects overwrite argument", {
     path = tmp,
     data_structure = ds,
     overwrite = TRUE,
-    seed = 1
+    seed = 123, verbose = verbosity
   )
   old_time <- file.info(file.path(tmp, "phenotype.csv"))$mtime
   Sys.sleep(1)
@@ -61,7 +64,7 @@ test_that("simulate_dataset respects overwrite argument", {
     path = tmp,
     data_structure = ds,
     overwrite = FALSE,
-    seed = 1
+    seed = 123, verbose = verbosity
   )
   new_time <- file.info(file.path(tmp, "phenotype.csv"))$mtime
   expect_equal(old_time, new_time)
@@ -76,7 +79,7 @@ test_that("simulate_freesurfer_data handles simulate_association argument", {
       data_structure = ds,
       fs_template = 'fsmicro',
       simulate_association = 0.1,
-      seed = 1
+      seed = 123, verbose = verbosity
     ),
     NA
   )

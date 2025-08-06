@@ -1,0 +1,7 @@
+"site","id","time","sex","age","folder_id"
+"site1",1,"01","Male",38.7,"site1/sub-1_ses-01"
+"site1",2,"01","Female",41.2,"site1/sub-2_ses-01"
+"site1",3,"01","Female",19.8,"site1/sub-3_ses-01"
+"site1",1,"02","Male",39,"site1/sub-1_ses-02"
+"site1",2,"02","Female",42,"site1/sub-2_ses-02"
+"site1",3,"02","Female",21,"site1/sub-3_ses-02"

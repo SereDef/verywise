@@ -11,6 +11,7 @@ simulate_dataset(
   simulate_association = NULL,
   overwrite = TRUE,
   seed = 31081996,
+  verbose = TRUE,
   ...
 )
 }
@@ -30,6 +31,8 @@ the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 \item{overwrite}{(default = TRUE) whether phenotype file should be overwitten.}
 
 \item{seed}{(default = 3108) seed used for randomization.}
+
+\item{verbose}{(deafult = TRUE)}
 
 \item{...}{Other arguments to be passed to \code{\link{simulate_freesurfer_data}}}
 }

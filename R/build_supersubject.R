@@ -5,7 +5,7 @@
 #' @param subj_dir : path to the FreeSurfer data, this expects a verywise structure.
 #' @param folder_ids : the vector of observations to include. This holds the relative
 #' path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").
-#' @param outp_dir : output path, where logs, backing files and the matrix itself
+#' @param supsubj_dir : output path, where logs, backing files and the matrix itself
 #' (if `save_rds == TRUE`) will be stored.
 #' @param measure : vertex-wise measure, used to identify files.
 #' @param hemi : hemisphere, used to identify files.
@@ -22,7 +22,7 @@
 #' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
 #' template and the final analyses should also be run using `fs_template = "fsaverage"`
 #' to avoid (small) imprecisions in vertex registration and smoothing.
-#' @param backing : (default = `outp_dir`) location to save the matrix \code{backingfile}.
+#' @param backing : (default = `supsubj_dir`) location to save the matrix \code{backingfile}.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
 #' for the function to stop with an error. If < `error_cutoff` directories/files are not
 #' found a warning is thrown and missing files are registered in the `issues.log` file.
@@ -42,7 +42,7 @@
 #'
 build_supersubject <- function(subj_dir,
                                folder_ids,
-                               outp_dir,
+                               supsubj_dir,
                                measure,
                                hemi,
                                n_cores,
@@ -55,15 +55,18 @@ build_supersubject <- function(subj_dir,
 
   # TODO: check measure names! measure2 <- measure
   # if(measure2 == "w_g.pct") measure2 <- "w-g.pct"
+  hemi_name <- if (hemi == "lh") "left" else "right"
+  vw_message("Building (", hemi_name, " hemisphere) super-subject matrix...",
+             verbose = verbose)
 
   # Identify brain surface files to load ---------------------------------------
-  vw_message("Retrieving ", length(folder_ids), " brain surface files...", verbose=verbose)
+  vw_message(" * retrieving ", length(folder_ids), " brain surface files...",
+             verbose = verbose)
 
-  # files_list = list.dirs.till(subj_dir, n = 2)
-  # files_list <- files_list[unlist(lapply(folder_ids, grep, files_list))]
   folder_list <- file.path(subj_dir, folder_ids)
-  if(!dir.exists(outp_dir)) dir.create(outp_dir, showWarnings = FALSE)
-  log_file <- file.path(outp_dir, paste0(hemi,".", measure,".issues.log"))
+  if(!dir.exists(supsubj_dir)) dir.create(supsubj_dir, showWarnings = FALSE)
+
+  log_file <- file.path(supsubj_dir, paste0(hemi,".", measure,".issues.log"))
 
   # Check that the locations in phenotype exist ----------------
   folders_found <- folder_list[dir.exists(folder_list)]
@@ -72,26 +75,26 @@ build_supersubject <- function(subj_dir,
 
     folders_not_found <- setdiff(folder_list, folders_found)
 
-    writeLines(c(paste("Attention:",length(folders_not_found),
+    writeLines(c(paste("Attention:", length(folders_not_found),
                        "observations speficied in phenotype were not found:"),
                  gsub(" ", "^", folders_not_found), "\n"), log_file)
 
     # If many observations are missing, the folder id may be mispecified
     if (length(folders_not_found) > error_cutoff) {
-      stop(length(folders_not_found), " observations specified in phenotype were
-           not found in `subj_dir`. Is your `folder_id` correctly specified?")
+      stop(length(folders_not_found),
+      " observations specified in phenotype were not found in `subj_dir`.",
+      "\nIs your `folder_id` correctly specified?")
     }
 
     # If not many observations are missing, notify user but keep at it
-    warning(length(folders_not_found), " observations specified in phenotype were
-            not found in `subj_dir`. See .log file for datails.")
+    warning(" ! ", length(folders_not_found),
+    " observations specified in phenotype were not found in `subj_dir`.",
+    "\n   See issues.log file for datails.")
   }
 
   mgh_file_name <- paste0(
     hemi, ".", measure,
-    if (fwhmc != "") { paste0(".", fwhmc)},
-    ".fsaverage.mgh" # TODO: handle other low-resolution registrations?
-  )
+    if (fwhmc != "") { paste0(".", fwhmc)}, ".", fs_template, ".mgh")
 
   mgh_files <- file.path(folders_found, "surf", mgh_file_name)
 
@@ -107,18 +110,21 @@ build_supersubject <- function(subj_dir,
                  files_not_found, "\n"), log_file)
 
     # If many files are missing, something may have gone wrong in the pre-processing
-    if (length(files_not_found) > error_cutoff) {
-      stop(length(files_not_found), " specified brain surface files were not found in `subj_dir`.
-           Are you sure the FreeSurfer pre-processing ran successfully?")
+    if (length(files_not_found) >= error_cutoff) {
+      stop(length(files_not_found),
+      " specified brain surface files were not found in `subj_dir`.",
+      "\nAre you sure the FreeSurfer pre-processing ran successfully?")
+    } else {
+      # If not many files are missing, notify user but keep at it
+      warning(" ! ", length(files_not_found),
+              " brain surface files were corrupt or missing.",
+              "\n   See issues.log file for datails.")
     }
 
-    # If not many files are missing, notify user but keep at it
-    warning(length(files_not_found), " brain surface files were corrupt or missing.
-            See .log file for datails.")
   }
 
-  vw_message(length(files_found),"/",length(folder_ids)," observations found.",
-             verbose = verbose)
+  vw_message(" * ", length(files_found),"/",length(folder_ids),
+             " observations found.", verbose = verbose)
 
   # Build empty large matrix to store all vertex and subjects ------------------
 
@@ -133,20 +139,19 @@ build_supersubject <- function(subj_dir,
                     fsaverage3 = 642)
 
   if (fs_template != 'fsaverage') {
-    vw_message('WARNING: downsampling vertices induces (small) registration errors. ',
-               'This is fine for model tuning but, in the final analysis, ',
-               'we reccommend using the high resolution `fsaverage` template.',
-               verbose=TRUE)
+    vw_message(" ! NOTE: downsampling vertices induces (small) registration errors.",
+               "\n   This is fine for model tuning but, in the final analysis, ",
+               "we reccommend\n   using the high resolution `fsaverage` template.",
+               verbose = TRUE)
   }
 
   # Define backing file for matrix
   if (missing(backing)) {
-    backing <- file.path(outp_dir, paste(hemi, measure, fs_template,
-                                         "supersubject.bk", sep="."))
+    backing <- file.path(supsubj_dir,
+                         paste(hemi, measure, fs_template, "supersubject.bk",
+                               sep="."))
   }
   if (file.exists(backing)) file.remove(backing) # TODO: warn the user
-
-  vw_message("Building (", hemi, ") super-subject matrix...", verbose = verbose)
 
   # Initiate File-backed Big Matrix
   # Dimensions are set so I later access the data column by column and not row by row
@@ -163,6 +168,8 @@ build_supersubject <- function(subj_dir,
              OPENBLAS_NUM_THREADS = 1,
              VECLIB_MAXIMUM_THREADS = 1,
              NUMEXPR_NUM_THREADS = 1)
+
+  vw_message(" * populating super-subject matrix...", verbose = verbose)
 
   failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
@@ -212,17 +219,22 @@ build_supersubject <- function(subj_dir,
   }
 
   # Save row index names (i.e. observations) to ensure matching
+  ss_rownames <- folder_ids[
+    vapply(folder_ids,
+           function(id) any(grepl(paste0("/", id, "/"), files_found, fixed = TRUE)),
+           logical(1))
+    ]
 
-  utils::write.table(basename(dirname(dirname(files_found))),
-                     file=file.path(outp_dir,
-                                    paste(hemi, measure, 'ss', 'rownames', 'csv',
-                                          sep = '.')),
-                   row.names = FALSE, col.names = FALSE, quote = FALSE,
-                   sep = ",")
+  utils::write.table(ss_rownames,
+                     file = file.path(supsubj_dir,
+                                      paste(hemi, measure, 'ss.rownames.csv',
+                                            sep = '.')),
+                     row.names = FALSE, col.names = FALSE, quote = FALSE,
+                     sep = ",")
 
   # Save output
   if (save_rds) {
-    vw_message("Saving supersubject matrix to .rds file.", verbose = verbose)
+    vw_message(" * saving supersubject matrix to .rds file.", verbose = verbose)
     ss$save()
   }
 

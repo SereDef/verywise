@@ -1,7 +1,8 @@
+data_dir <- test_path("fixtures", "fs3")
+
 test_that("imp2list works correctly on mids files", {
 
-  pheno_file <- test_path("fixtures","example_data",
-                           "phenotype_mids.rds")
+  pheno_file <- file.path(data_dir, "phenotype_mids.rds")
 
   mids_data <- load_pheno_file(pheno_file)
 

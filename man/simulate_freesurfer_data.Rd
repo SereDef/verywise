@@ -15,7 +15,8 @@ simulate_freesurfer_data(
   vw_mean = 6.5,
   vw_sd = 0.5,
   simulate_association = NULL,
-  seed = 3108
+  seed = 3108,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ This is by default isolated to three regions:
 the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
 
 \item{seed}{(default = 3108) seed used for randomization.}
+
+\item{verbose}{(dafault = TRUE) verbosity.}
 }
 \description{
 Simulating FreeSurfer data for multiple cohorts/sites and multiple

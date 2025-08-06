@@ -8,7 +8,7 @@ matrix with dimensions n_subjects x n_vertices.}
 build_supersubject(
   subj_dir,
   folder_ids,
-  outp_dir,
+  supsubj_dir,
   measure,
   hemi,
   n_cores,
@@ -26,7 +26,7 @@ build_supersubject(
 \item{folder_ids}{: the vector of observations to include. This holds the relative
 path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").}
 
-\item{outp_dir}{: output path, where logs, backing files and the matrix itself
+\item{supsubj_dir}{: output path, where logs, backing files and the matrix itself
 (if `save_rds == TRUE`) will be stored.}
 
 \item{measure}{: vertex-wise measure, used to identify files.}
@@ -49,7 +49,7 @@ model tuning. `verywise` expects the input data to be always registered on the "
 template and the final analyses should also be run using `fs_template = "fsaverage"`
 to avoid (small) imprecisions in vertex registration and smoothing.}
 
-\item{backing}{: (default = `outp_dir`) location to save the matrix \code{backingfile}.}
+\item{backing}{: (default = `supsubj_dir`) location to save the matrix \code{backingfile}.}
 
 \item{error_cutoff}{: (default = 20) how many missing directories or brain surface files
 for the function to stop with an error. If < `error_cutoff` directories/files are not

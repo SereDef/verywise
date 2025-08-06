@@ -1,10 +1,10 @@
 
-subj_dir <- test_path("fixtures","example_data")
+subj_dir <- test_path("fixtures", "fs3")
 
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 folder_ids <- pheno$folder_id
 
-outp_dir <- subj_dir
+supsubj_dir <- tempdir()
 measure <- "area"
 hemi <- "lh"
 n_cores <- 1
@@ -13,20 +13,20 @@ fs_template <- "fsaverage3"
 error_cutoff <- 2
 
 # Helper function to remove output files
-cleanup_output <- function(outp_dir, hemi, measure, fs_template) {
-  pattern <- paste0(hemi, "\\.", measure, "\\.", fs_template, ".*")
-  files <- list.files(outp_dir, pattern = pattern, full.names = TRUE)
-  file.remove(files)
-}
+# cleanup_output <- function(supsubj_dir, hemi, measure, fs_template) {
+#   pattern <- paste0(hemi, "\\.", measure, "\\.", fs_template, ".*")
+#   files <- list.files(supsubj_dir, pattern = pattern, full.names = TRUE)
+#   file.remove(files)
+# }
 
 test_that("build_supersubject returns FBM with correct dimensions for valid input", {
 
-  # cleanup_output(outp_dir, hemi, measure, fs_template)
+  # cleanup_output(supsubj_dir, hemi, measure, fs_template)
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
     folder_ids = folder_ids,
-    outp_dir = outp_dir,
+    supsubj_dir = supsubj_dir,
     measure = measure,
     hemi = hemi,
     n_cores = n_cores,
@@ -44,15 +44,18 @@ test_that("build_supersubject returns FBM with correct dimensions for valid inpu
 test_that("build_supersubject errors if missing folders exceed error_cutoff", {
 
   too_many_missing_folders <- folder_ids
-  too_many_missing_folders[1:3] <- c("site1/missing_sub1", "site1/missing_sub2", "site1/missing_sub3")
+  too_many_missing_folders[1:3] <- c("site1/missing_sub1",
+                                     "site1/missing_sub2",
+                                     "site1/missing_sub3")
 
   expect_error(
     build_supersubject(
       subj_dir = subj_dir,
       folder_ids = too_many_missing_folders,
-      outp_dir = outp_dir,
+      supsubj_dir = supsubj_dir,
       measure = measure,
       hemi = hemi,
+      fs_template = fs_template,
       n_cores = n_cores,
       error_cutoff = error_cutoff,
       save_rds = FALSE,
@@ -71,9 +74,10 @@ test_that("build_supersubject warns and continues if missing folders under cutof
     build_supersubject(
       subj_dir = subj_dir,
       folder_ids = some_missing_folders,
-      outp_dir = outp_dir,
+      supsubj_dir = supsubj_dir,
       measure = measure,
       hemi = hemi,
+      fs_template = fs_template,
       n_cores = n_cores,
       error_cutoff = error_cutoff,
       save_rds = FALSE,
@@ -85,14 +89,14 @@ test_that("build_supersubject warns and continues if missing folders under cutof
 
 test_that("build_supersubject works with parallel processing", {
 
-  # cleanup_output(outp_dir, hemi, measure, fs_template)
+  # cleanup_output(supsubj_dir, hemi, measure, fs_template)
   more_cores <- min(2, parallel::detectCores(logical = FALSE))
   if (more_cores < 2) skip("Not enough cores for parallel test")
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
     folder_ids = folder_ids,
-    outp_dir = outp_dir,
+    supsubj_dir = supsubj_dir,
     measure = measure,
     hemi = hemi,
     n_cores = more_cores,
@@ -108,12 +112,12 @@ test_that("build_supersubject works with parallel processing", {
 
 test_that("build_supersubject creates output files when save_rds = TRUE", {
 
-  # cleanup_output(outp_dir, hemi, measure, fs_template)
+  # cleanup_output(supsubj_dir, hemi, measure, fs_template)
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
     folder_ids = folder_ids,
-    outp_dir = outp_dir,
+    supsubj_dir = supsubj_dir,
     measure = measure,
     hemi = hemi,
     n_cores = n_cores,
@@ -125,8 +129,8 @@ test_that("build_supersubject creates output files when save_rds = TRUE", {
   )
 
   # Check that the .bk and .rds files exist
-  bk_file <- file.path(outp_dir, paste(hemi, measure, fs_template, "supersubject.bk", sep = "."))
-  rds_file <- file.path(outp_dir, paste(hemi, measure, fs_template, "supersubject.rds", sep = "."))
+  bk_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template, "supersubject.bk", sep = "."))
+  rds_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template, "supersubject.rds", sep = "."))
   expect_true(file.exists(bk_file))
   expect_true(file.exists(rds_file))
 })

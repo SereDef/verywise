@@ -7,7 +7,8 @@
 simulate_long_pheno_data(
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
-  seed = 31081
+  seed = 31081,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
 the number of subjects.}
 
 \item{seed}{(default = 3108) seed used for randomization.}
+
+\item{verbose}{(deafult = TRUE)}
 }
 \value{
 A dataframe (in long format) with id, sex and age data.

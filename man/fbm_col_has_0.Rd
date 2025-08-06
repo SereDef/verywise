@@ -10,7 +10,8 @@ fbm_col_has_0(
   row.ind = bigstatsr::rows_along(X),
   col.ind = bigstatsr::cols_along(X),
   row.mask = NULL,
-  col.mask = NULL
+  col.mask = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ fbm_col_has_0(
 \item{row.mask}{: (default = NULL) specify a subset of rows}
 
 \item{col.mask}{: (default = NULL) specify a subset of columns}
+
+\item{verbose}{: (default = TRUE)}
 }
 \value{
 A (large) logical vector for where rows are all 0.

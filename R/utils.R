@@ -1,30 +1,4 @@
-# ============================= Modelling helpers ==============================
-
-#' @title
-#' Unpack \code{lme4} formula
-#'
-#' @description
-#' Get the terms for the fixed effect for the given formula.
-#'
-#' @param formula : model formula object (this should specify a LME model)
-#' @param data_list : the data, formatted as a list of datasets, as in the
-#' output of \code{\link{imp2list}}.
-#'
-#' @return A character vector of fixed terms.
-#'
-#' @author Serena Defina, 2024.
-#'
-get_terms <- function(formula, data_list) {
-  # Get a dataset from list (the first)
-  dset <- data_list[[1]]
-  # Add a placeholder for vw_* outcome
-  dset[all.vars(formula)[1]] <- 999
-  # Unpack the formula
-  lf <- lme4::lFormula(formula = formula, data = dset)
-  fixed_terms <- colnames(lf$X) # fixed-effects design matrix
-
-  return(fixed_terms)
-}
+# ============================== Load balancing ================================
 
 #' @title
 #' Define chunks of vertices for analyses
@@ -72,6 +46,7 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
 #' @param col.ind : indicator for columns
 #' @param row.mask : (default = NULL) specify a subset of rows
 #' @param col.mask : (default = NULL) specify a subset of columns
+#' @param verbose : (default = TRUE)
 #'
 #' @importFrom bigstatsr rows_along
 #' @importFrom bigstatsr cols_along
@@ -84,14 +59,15 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
 fbm_col_has_0 <- function(X, n_cores = 1,
                           row.ind = bigstatsr::rows_along(X),
                           col.ind = bigstatsr::cols_along(X),
-                          row.mask = NULL, col.mask = NULL) {
+                          row.mask = NULL, col.mask = NULL,
+                          verbose = TRUE) {
   # Any sub-selection?
   if (is.numeric(row.mask)) row.mask <- as.logical(row.mask)
   if (is.numeric(col.mask)) col.mask <- as.logical(col.mask)
   if (!is.null(row.mask)) row.ind <- row.ind[row.mask]
   if (!is.null(col.mask)) col.ind <- col.ind[col.mask]
 
-  bigstatsr::big_apply(X,
+  problem_verts <- bigstatsr::big_apply(X,
     a.FUN = function(X, ind) {
       apply(
         X[row.ind, col.ind[ind]], 2,
@@ -102,6 +78,33 @@ fbm_col_has_0 <- function(X, n_cores = 1,
     ncores = n_cores,
     ind = seq_along(col.ind)
   )
+
+  if (sum(problem_verts) > 0) {
+    vw_message(" * Ignoring ", sum(problem_verts),
+               " vertices that contained 0 values.\n  These may be located",
+               " at the edge of the cortical map and are potentially",
+               " problematic.", verbose = verbose)
+  }
+  return(problem_verts)
+}
+
+build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
+
+  vw_message(" * generate file-backed output containers", verbose = verbose)
+
+  res_bk_paths <- paste(result_path, res_bk_names, sep = ".")
+
+  # Note: always remove backing files if they already exist
+  res_bk_files <- paste0(res_bk_paths, ".bk")
+
+  if (any(file.exists(res_bk_files))) {
+    vw_message("   ! WARNING: overwriting existing results backing files.",
+               verbose = verbose)
+    file.remove(res_bk_files[file.exists(res_bk_files)])
+  }
+  names(res_bk_paths) <- res_bk_names
+
+  return(res_bk_paths)
 }
 
 # ============================= Folder navigators =============================
@@ -130,6 +133,41 @@ list.dirs.till <- function(path, n) {
   }
 }
 
+# ======================== simulation helpers ==================================
+
+locate_roi <- function(rois = NULL, n_verts = 163842, verbose = TRUE) {
+  # using Desikan-Killiany 36 regions
+
+  all_rois <- aparc.annot$vd_label[1:n_verts]
+  roi_counts <- as.data.frame(table(all_rois))
+  names(roi_counts) <- c('roi_id', 'vw_count')
+  roi_counts['vw_prop'] <- round(roi_counts[,'vw_count']/n_verts, 3)
+
+  notations <- aparc.annot$LUT[, c('LUT_labelname', 'LUT_value')]
+  names(notations) <- c('roi_label', 'roi_id')
+
+  roi_lookup <- merge(notations, roi_counts, by = 'roi_id',
+                      all.x = FALSE, all.y = TRUE)
+  roi_lookup <- roi_lookup[order(-roi_lookup$vw_prop), ]
+
+  # If no input ROIs are provided just return the entire lookup
+  if (is.null(rois)) {
+    return(roi_lookup)
+  }
+
+  # If only one ROI is provided make sure this is a vector
+  rois <- as.vector(rois, mode = "character")
+
+  selected_rois <- roi_lookup[roi_lookup[,'roi_label'] %in% rois, ]
+  vw_message(' * selected ', sum(selected_rois$vw_count), ' vertices (',
+             sum(selected_rois$vw_prop)*100, '%)', verbose = verbose)
+
+  roi_ids <- selected_rois[, 'roi_id']
+
+  roi_locs <- all_rois %in% as.integer(roi_ids)
+
+  return(roi_locs)
+}
 
 # ???? =========================================================================
 # qdecr_decon <- function(x, y = environment()) {
