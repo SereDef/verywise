@@ -7,6 +7,8 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Codecov test
+coverage](https://codecov.io/gh/SereDef/verywise/graph/badge.svg)](https://app.codecov.io/gh/SereDef/verywise)
 <!-- badges: end -->
 
 The goal of `verywise` is to offer a flexible, user-friendly interface
