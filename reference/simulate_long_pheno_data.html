@@ -9,7 +9,7 @@ multiple timepoints/sessions."><meta property="og:image" content="https://serede
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,8 @@ multiple timepoints/sessions.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">simulate_long_pheno_data</span><span class="op">(</span></span>
 <span>  data_structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cohort1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>    cohort2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">150</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">31081</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">31081</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -68,6 +69,10 @@ the number of subjects.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>(default = 3108) seed used for randomization.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>(deafult = TRUE)</p></dd>
 
 </dl></div>
     <div class="section level2">

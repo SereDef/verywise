@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,7 +35,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Unpack <code>lme4</code> formula</h1>
-      <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/R/utils.R" class="external-link"><code>R/utils.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/R/lmm_helpers.R" class="external-link"><code>R/lmm_helpers.R</code></a></small>
       <div class="d-none name"><code>get_terms.Rd</code></div>
     </div>
 
@@ -45,7 +45,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_terms</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data_list</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_terms</span><span class="op">(</span><span class="va">formula</span>, <span class="va">dset</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,8 +56,8 @@
 <dd><p>: model formula object (this should specify a LME model)</p></dd>
 
 
-<dt id="arg-data-list">data_list<a class="anchor" aria-label="anchor" href="#arg-data-list"></a></dt>
-<dd><p>: the data, formatted as a list of datasets, as in the
+<dt id="arg-dset">dset<a class="anchor" aria-label="anchor" href="#arg-dset"></a></dt>
+<dd><p>: the data.frame, for example the first element in the list
 output of <code><a href="imp2list.html">imp2list</a></code>.</p></dd>
 
 </dl></div>

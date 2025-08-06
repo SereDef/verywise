@@ -9,7 +9,7 @@ matrix with dimensions n_subjects x n_vertices.'><meta property="og:image" conte
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@ matrix with dimensions n_subjects x n_vertices.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">build_supersubject</span><span class="op">(</span></span>
 <span>  <span class="va">subj_dir</span>,</span>
 <span>  <span class="va">folder_ids</span>,</span>
-<span>  <span class="va">outp_dir</span>,</span>
+<span>  <span class="va">supsubj_dir</span>,</span>
 <span>  <span class="va">measure</span>,</span>
 <span>  <span class="va">hemi</span>,</span>
 <span>  <span class="va">n_cores</span>,</span>
@@ -77,7 +77,7 @@ matrix with dimensions n_subjects x n_vertices.</p>
 path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").</p></dd>
 
 
-<dt id="arg-outp-dir">outp_dir<a class="anchor" aria-label="anchor" href="#arg-outp-dir"></a></dt>
+<dt id="arg-supsubj-dir">supsubj_dir<a class="anchor" aria-label="anchor" href="#arg-supsubj-dir"></a></dt>
 <dd><p>: output path, where logs, backing files and the matrix itself
 (if `save_rds == TRUE`) will be stored.</p></dd>
 
@@ -113,7 +113,7 @@ to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
 
 
 <dt id="arg-backing">backing<a class="anchor" aria-label="anchor" href="#arg-backing"></a></dt>
-<dd><p>: (default = `outp_dir`) location to save the matrix <code>backingfile</code>.</p></dd>
+<dd><p>: (default = `supsubj_dir`) location to save the matrix <code>backingfile</code>.</p></dd>
 
 
 <dt id="arg-error-cutoff">error_cutoff<a class="anchor" aria-label="anchor" href="#arg-error-cutoff"></a></dt>
