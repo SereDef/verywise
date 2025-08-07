@@ -76,14 +76,14 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.13-1",
+      "Version": "1.0.14",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "methods",
         "utils"
       ],
-      "Hash": "6b868847b365672d6c1677b1608da9ed"
+      "Hash": "e7bdd9ee90e96921ca8a0f1972d66682"
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
@@ -112,6 +112,20 @@
       ],
       "Hash": "4ac8e423216b8b70cb9653d1b3f71eb9"
     },
+    "Rdpack": {
+      "Package": "Rdpack",
+      "Version": "2.6.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "rbibutils",
+        "tools",
+        "utils"
+      ],
+      "Hash": "1b2ca1972e3b00cd0bb5a98e16403028"
+    },
     "RhpcBLASctl": {
       "Package": "RhpcBLASctl",
       "Version": "0.23-42",
@@ -121,10 +135,10 @@
     },
     "bigassertr": {
       "Package": "bigassertr",
-      "Version": "0.1.6",
+      "Version": "0.1.7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "02a2208d425b3446e7ecf1eaa8dbcd44"
+      "Hash": "8278cd2a3110ceee3e2f6de224c00e9a"
     },
     "bigparallelr": {
       "Package": "bigparallelr",
@@ -144,9 +158,9 @@
     },
     "bigstatsr": {
       "Package": "bigstatsr",
-      "Version": "1.6.1",
+      "Version": "1.6.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
         "RSpectra",
@@ -165,7 +179,7 @@
         "tibble",
         "utils"
       ],
-      "Hash": "4732d0fffbd87a2f6fba894e93b68493"
+      "Hash": "bddd46d1cadbdb1dc4d980ad7cc10c41"
     },
     "bit": {
       "Package": "bit",
@@ -241,6 +255,17 @@
       ],
       "Hash": "8ef2084dd7d28847b374e55440e4f8cb"
     },
+    "digest": {
+      "Package": "digest",
+      "Version": "0.6.37",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "33698c4b3127fc9f506654607fb73676"
+    },
     "doParallel": {
       "Package": "doParallel",
       "Version": "1.0.17",
@@ -254,6 +279,21 @@
         "utils"
       ],
       "Hash": "451e5edf411987991ab6a5410c45011f"
+    },
+    "doRNG": {
+      "Package": "doRNG",
+      "Version": "1.8.6.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "foreach",
+        "iterators",
+        "rngtools",
+        "stats",
+        "utils"
+      ],
+      "Hash": "46be2fc2c00109dafabaf5534577f025"
     },
     "dplyr": {
       "Package": "dplyr",
@@ -459,9 +499,9 @@
     },
     "lme4": {
       "Package": "lme4",
-      "Version": "1.1-35.5",
+      "Version": "1.1-37",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "MASS",
         "Matrix",
@@ -477,11 +517,12 @@
         "nlme",
         "nloptr",
         "parallel",
+        "reformulas",
         "splines",
         "stats",
         "utils"
       ],
-      "Hash": "16a08fc75007da0d08e0c0388c7c33e6"
+      "Hash": "637ceb7665637edce9289dd763972704"
     },
     "magrittr": {
       "Package": "magrittr",
@@ -554,15 +595,15 @@
     },
     "parallelly": {
       "Package": "parallelly",
-      "Version": "1.41.0",
+      "Version": "1.45.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "parallel",
         "tools",
         "utils"
       ],
-      "Hash": "f5ae11e8e15ee84950752e7b01c55295"
+      "Hash": "1e127bc944e0c1ec7c0297d685917dfe"
     },
     "pillar": {
       "Package": "pillar",
@@ -601,6 +642,31 @@
       ],
       "Hash": "b4404b1de13758dea1c0484ad0d48563"
     },
+    "rbibutils": {
+      "Package": "rbibutils",
+      "Version": "2.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "tools",
+        "utils"
+      ],
+      "Hash": "dfc034a172fd88fc66b1a703894c4185"
+    },
+    "reformulas": {
+      "Package": "reformulas",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "Rdpack",
+        "methods",
+        "stats"
+      ],
+      "Hash": "697a42ea989da568a0251101f36a7632"
+    },
     "renv": {
       "Package": "renv",
       "Version": "1.0.7",
@@ -613,14 +679,14 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.1.4",
+      "Version": "1.1.6",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
         "utils"
       ],
-      "Hash": "3eec01f8b1dee337674b2e34ab1f9bc1"
+      "Hash": "892124978869b74935dc3934c42bfe5a"
     },
     "rmio": {
       "Package": "rmio",
@@ -632,6 +698,21 @@
         "ff"
       ],
       "Hash": "59acc756baa1546c24070a98f4eb5b21"
+    },
+    "rngtools": {
+      "Package": "rngtools",
+      "Version": "1.5.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "digest",
+        "methods",
+        "parallel",
+        "stats",
+        "utils"
+      ],
+      "Hash": "367a915f939520767660671efa0e32bd"
     },
     "scales": {
       "Package": "scales",
