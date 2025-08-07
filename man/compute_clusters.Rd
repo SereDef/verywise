@@ -12,6 +12,7 @@ compute_clusters(
   cwp_thr = 0.025,
   mcz_thr = 30,
   csd_sign = "abs",
+  full_surfcluster_output = FALSE,
   mask = NULL,
   verbose = FALSE
 )
@@ -39,6 +40,12 @@ Any of the following are accepted (equivalent values separate by `/`):
  * 40 / 4.0 / 0.0001.}
 
 \item{csd_sign}{: (default = "abs")}
+
+\item{full_surfcluster_output}{: (default = FALSE) whether to save additional
+files: \code{.cluster.mgh}: a map of cluster-wise significances
+files: \code{.voxel.mgh}: a map of corrected voxel-wise significance
+files: \code{.ocn.annot}: output clusters as an annotation
+files: \code{.masked.mgh}: input with non-clusters set to 0}
 
 \item{mask}{: apply a mask (default = cortical mask + excluding problematic vertices)}
 

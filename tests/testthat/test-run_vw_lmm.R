@@ -48,18 +48,22 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
   }
 
   outp_dir <- withr::local_tempdir()
+  # If you need to inspect results (note: running test() instead of check())
+  # outp_dir <- file.path(subj_dir, 'results')
 
   # Run function
   result <- run_vw_lmm(
     formula = test_formula,
     pheno = pheno,
-    folder_id = 'folder_id',
     subj_dir = subj_dir,
     outp_dir = outp_dir,
     hemi = "lh",
-    seed = 42,
-    n_cores = 1,
-    FS_HOME = fs_home,
+    fs_template = "fsaverage",
+    apply_cortical_mask = TRUE,
+    folder_id = "folder_id",
+    tolerate_surf_not_found = 20,
+    use_model_template = TRUE,
+    weights = NULL,
     # prioritize speed over accuracy
     lmm_control = lme4::lmerControl(calc.derivs = FALSE,
                                     use.last.params = TRUE,
@@ -74,7 +78,16 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
                                     check.conv.grad = "ignore",
                                     check.conv.singular = "ignore",
                                     check.conv.hess = "ignore"),
-    use_model_template = TRUE,
+    seed = 42,
+    n_cores = 1,
+    chunk_size = 1000,
+    FS_HOME = fs_home,
+    fwhm = 10,
+    mcz_thr = 30,
+    cwp_thr = 0.025,
+    save_optional_cluster_info = FALSE,
+    save_ss = FALSE,
+    save_residuals = FALSE,
     verbose = TRUE
   )
 

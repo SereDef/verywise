@@ -96,9 +96,14 @@
 #'   all corrections). Set this to 0.025 when both hemispheres are analyzed,
 #'   0.05 for single hemisphere.
 #'   Default: 0.025.
+#' @param save_optional_cluster_info Logical indicating whether to save additional
+#'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+#'  for details. Default: \code{FALSE}.
 #' @param save_ss Logical indicating whether to save the super-subject matrix as
 #'   an .rds file for faster future processing.
-#'   Default: \code{TRUE} (recommended).
+#'   Default: \code{TRUE} (recommended for repeated analyses).
+#' @param save_residuals Logical indicating whether to save the residuals.mgh
+#'   file. Default: \code{FALSE}.
 #' @param verbose Logical indicating whether to display progress messages.
 #'   Default: \code{TRUE}.
 #'
@@ -230,7 +235,9 @@ run_vw_lmm <- function(
   mcz_thr = 30,
   cwp_thr = 0.025,
   # Output control
+  save_optional_cluster_info = FALSE,
   save_ss = TRUE,
+  save_residuals = FALSE,
   verbose = TRUE
 ) {
 
@@ -335,18 +342,8 @@ run_vw_lmm <- function(
     )
   }
 
-  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
-
-  # Cortical mask
-  is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
-
-  # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss)
-
-  good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
-
   ss_rownames <- scan(file = file.path(ss_folder,
-                             paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
+                                       paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
                       what = character(), sep = "\n", quiet = TRUE)
 
   if (!identical(ss_rownames, data1[, folder_id])) {
@@ -356,6 +353,16 @@ run_vw_lmm <- function(
                         function(df) {  # Match the row names in ss
                           return(df[match(ss_rownames, df[, folder_id]), ])})
   }
+
+  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
+
+  # Cortical mask
+  is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
+
+  # Additionally check that there are no vertices that contain any 0s
+  problem_verts <- fbm_col_has_0(ss)
+
+  good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...",
@@ -386,7 +393,7 @@ run_vw_lmm <- function(
   res_bk_names <- c("coef", "se", "t", "p", "resid")
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
-  on.exit(file.remove(paste0(res_bk_paths, ".bk")))
+  on.exit(file.remove(paste0(res_bk_paths, ".bk")), add = TRUE)
 
   c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
                          backingfile = res_bk_paths["coef"])  # Coefficients
@@ -501,8 +508,8 @@ run_vw_lmm <- function(
   # Post-processing ============================================================
 
   # Split all coefficients into separate .mgh files
-  vw_message("Converting coefficients, SEs, t- and p-values to .mgh format...",
-             verbose = verbose)
+  vw_message("Post-processing\n * converting coefficients, SEs, t- and p-values",
+             " to .mgh format", verbose = verbose)
 
   results_grid <- expand.grid(seq_along(fixed_terms), # how many terms
                               # all statistics except the residuals
@@ -517,10 +524,11 @@ run_vw_lmm <- function(
             filter = as.integer(results_grid[grid_row, 1]))
   })
 
-  vw_message("Converting residuals to .mgh format...", verbose = verbose)
+  vw_message(" * converting residuals to .mgh format...", verbose = verbose)
   resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
   fbm2mgh(fbm = out[[res_bk_names[length(res_bk_names)]]],
           fname = resid_mgh_path)
+  if (!save_residuals) on.exit(file.remove(resid_mgh_path), add = TRUE)
 
   # Estimate full-width half maximum (using FreeSurfer) ========================
   vw_message("Estimating data smoothness for multiple testing correction...",
@@ -554,6 +562,7 @@ run_vw_lmm <- function(
                      FS_HOME = FS_HOME,
                      mcz_thr = mcz_thr,
                      cwp_thr = cwp_thr,
+                     full_surfcluster_output = save_optional_cluster_info,
                      mask = paste0(result_path, ".finalMask.mgh"))
   }
 

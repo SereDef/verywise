@@ -24,7 +24,9 @@ run_vw_lmm(
   fwhm = 10,
   mcz_thr = 30,
   cwp_thr = 0.025,
+  save_optional_cluster_info = FALSE,
   save_ss = TRUE,
+  save_residuals = FALSE,
   verbose = TRUE
 )
 }
@@ -132,9 +134,16 @@ all corrections). Set this to 0.025 when both hemispheres are analyzed,
 0.05 for single hemisphere.
 Default: 0.025.}
 
+\item{save_optional_cluster_info}{Logical indicating whether to save additional
+output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+for details. Default: \code{FALSE}.}
+
 \item{save_ss}{Logical indicating whether to save the super-subject matrix as
 an .rds file for faster future processing.
-Default: \code{TRUE} (recommended).}
+Default: \code{TRUE} (recommended for repeated analyses).}
+
+\item{save_residuals}{Logical indicating whether to save the residuals.mgh
+file. Default: \code{FALSE}.}
 
 \item{verbose}{Logical indicating whether to display progress messages.
 Default: \code{TRUE}.}

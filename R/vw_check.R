@@ -161,7 +161,8 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
     if (Sys.getenv("FREESURFER_HOME") == "") {
       stop("FREESURFER_HOME needs to be specified or set up.")
     }
-
+    # This is the default already but I recall that in case the user set this
+    # after the package was compiled
     FS_HOME <- Sys.getenv("FREESURFER_HOME")
 
   } else {
