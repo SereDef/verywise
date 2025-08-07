@@ -352,6 +352,8 @@ run_vw_lmm <- function(
     data_list <- lapply(data_list,
                         function(df) {  # Match the row names in ss
                           return(df[match(ss_rownames, df[, folder_id]), ])})
+    data1 <- data_list[[1]]
+    vw_message('   ', norw(data1), ' observationts retained.')
   }
 
   vw_message(" * cleaning super-subject matrix...", verbose = verbose)
