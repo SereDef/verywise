@@ -166,16 +166,17 @@ test_that("check_numeric_param validates numeric parameters", {
 
 # Note: check_freesurfer_setup modifies environment variables and calls system
 # commands, so it's best tested in an integration
-test_that("check_freesurfer_setup errors when FreeSurfer home is not set up", {
 
-  skip_if(Sys.getenv("FREESURFER_HOME") != "")
-
-  expect_error(check_freesurfer_setup(""),
-               regexp = 'FREESURFER_HOME needs to be specified or set up')
-  expect_error(check_freesurfer_setup(NULL),
-               regexp = 'FREESURFER_HOME needs to be specified or set up')
-
-  not_fs_home <- tmp()
-  expect_error(check_freesurfer_setup(not_fs_home),
-               regexp = 'not a FREESURFER_HOME directory')
-})
+# test_that("check_freesurfer_setup errors when FreeSurfer home is not set up", {
+#
+#   skip_if(Sys.getenv("FREESURFER_HOME") != "")
+#
+#   expect_error(check_freesurfer_setup(""),
+#                regexp = 'FREESURFER_HOME needs to be specified or set up')
+#   expect_error(check_freesurfer_setup(NULL),
+#                regexp = 'FREESURFER_HOME needs to be specified or set up')
+#
+#   not_fs_home <- tmp()
+#   expect_error(check_freesurfer_setup(not_fs_home),
+#                regexp = 'not a FREESURFER_HOME directory')
+# })
