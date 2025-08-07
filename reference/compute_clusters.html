@@ -56,6 +56,7 @@ It computes the clusters of significant vertices.</p>
 <span>  cwp_thr <span class="op">=</span> <span class="fl">0.025</span>,</span>
 <span>  mcz_thr <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  csd_sign <span class="op">=</span> <span class="st">"abs"</span>,</span>
+<span>  full_surfcluster_output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -100,6 +101,14 @@ Any of the following are accepted (equivalent values separate by `/`):
 
 <dt id="arg-csd-sign">csd_sign<a class="anchor" aria-label="anchor" href="#arg-csd-sign"></a></dt>
 <dd><p>: (default = "abs")</p></dd>
+
+
+<dt id="arg-full-surfcluster-output">full_surfcluster_output<a class="anchor" aria-label="anchor" href="#arg-full-surfcluster-output"></a></dt>
+<dd><p>: (default = FALSE) whether to save additional
+files: <code>.cluster.mgh</code>: a map of cluster-wise significances
+files: <code>.voxel.mgh</code>: a map of corrected voxel-wise significance
+files: <code>.ocn.annot</code>: output clusters as an annotation
+files: <code>.masked.mgh</code>: input with non-clusters set to 0</p></dd>
 
 
 <dt id="arg-mask">mask<a class="anchor" aria-label="anchor" href="#arg-mask"></a></dt>

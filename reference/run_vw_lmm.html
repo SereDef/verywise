@@ -86,7 +86,9 @@ approach.</p>
 <span>  fwhm <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  mcz_thr <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  cwp_thr <span class="op">=</span> <span class="fl">0.025</span>,</span>
+<span>  save_optional_cluster_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  save_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -231,10 +233,21 @@ all corrections). Set this to 0.025 when both hemispheres are analyzed,
 Default: 0.025.</p></dd>
 
 
+<dt id="arg-save-optional-cluster-info">save_optional_cluster_info<a class="anchor" aria-label="anchor" href="#arg-save-optional-cluster-info"></a></dt>
+<dd><p>Logical indicating whether to save additional
+output form <code>mri_surfcluster</code> call. See <code><a href="compute_clusters.html">compute_clusters</a></code>
+for details. Default: <code>FALSE</code>.</p></dd>
+
+
 <dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
 <dd><p>Logical indicating whether to save the super-subject matrix as
 an .rds file for faster future processing.
-Default: <code>TRUE</code> (recommended).</p></dd>
+Default: <code>TRUE</code> (recommended for repeated analyses).</p></dd>
+
+
+<dt id="arg-save-residuals">save_residuals<a class="anchor" aria-label="anchor" href="#arg-save-residuals"></a></dt>
+<dd><p>Logical indicating whether to save the residuals.mgh
+file. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
