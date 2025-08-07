@@ -10,21 +10,21 @@ run_vw_lmm(
   subj_dir,
   outp_dir = NULL,
   hemi = c("lh", "rh"),
+  fs_template = "fsaverage",
+  apply_cortical_mask = TRUE,
   folder_id = "folder_id",
-  seed = 3108,
-  n_cores = 1,
-  chunk_size = 1000,
-  save_ss = TRUE,
   tolerate_surf_not_found = 20,
   use_model_template = TRUE,
   weights = NULL,
   lmm_control = lme4::lmerControl(),
+  seed = 3108,
+  n_cores = 1,
+  chunk_size = 1000,
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
-  fs_template = "fsaverage",
-  apply_cortical_mask = TRUE,
   fwhm = 10,
   mcz_thr = 30,
   cwp_thr = 0.025,
+  save_ss = TRUE,
   verbose = TRUE
 )
 }
@@ -53,27 +53,28 @@ If \code{NULL} (default), creates a "verywise_results" subdirectory within
 Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
 (right only).}
 
+\item{fs_template}{Character string specifying the FreeSurfer template for
+vertex registration. Options:
+\itemize{
+\item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+\item \code{"fsaverage6"} = 40962 vertices,
+\item \code{"fsaverage5"} = 10242 vertices,
+\item \code{"fsaverage4"} = 2562 vertices,
+\item \code{"fsaverage3"} = 642 vertices
+}
+Note that lower resolutions should be only used to downsample the brain
+map, for faster model tuning. The final analyses should also run using
+\code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
+registration and smoothing.}
+
+\item{apply_cortical_mask}{Logical indicating whether to exclude non-cortical
+vertices from analysis. Default: \code{TRUE} (recommended).}
+
 \item{folder_id}{Character string specifying the column name in \code{pheno}
 that contains subject directory names of the input neuroimaging data
 (e.g. "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected
 to be nested inside \code{subj_dir}.
 Default: \code{"folder_id"}.}
-
-\item{seed}{Integer specifying the random seed for reproducibility
-Default: 3108.}
-
-\item{n_cores}{Integer specifying the number of CPU cores for parallel
-processing.
-Default: 1.}
-
-\item{chunk_size}{Integer specifying the number of vertices processed per
-chunk in parallel operations. Larger values use more memory but may be
-faster.
-Default: 1000.}
-
-\item{save_ss}{Logical indicating whether to save the super-subject matrix as
-an .rds file for faster future processing.
-Default: \code{TRUE} (recommended).}
 
 \item{tolerate_surf_not_found}{Integer indicating how many brain surface
 files listed in \code{folder_id} can be missing from \code{subj_dir}. If
@@ -97,25 +98,20 @@ Default: \code{NULL} (no weights).}
 see the \code{*lmerControl} documentation for details.
 Default: (uses default settings).}
 
+\item{seed}{Integer specifying the random seed for reproducibility
+Default: 3108.}
+
+\item{n_cores}{Integer specifying the number of CPU cores for parallel
+processing.
+Default: 1.}
+
+\item{chunk_size}{Integer specifying the number of vertices processed per
+chunk in parallel operations. Larger values use more memory but may be
+faster.
+Default: 1000.}
+
 \item{FS_HOME}{Character string specifying the FreeSurfer home directory.
 Defaults to \code{FREESURFER_HOME} environment variable.}
-
-\item{fs_template}{Character string specifying the FreeSurfer template for
-vertex registration. Options:
-\itemize{
-\item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
-\item \code{"fsaverage6"} = 40962 vertices,
-\item \code{"fsaverage5"} = 10242 vertices,
-\item \code{"fsaverage4"} = 2562 vertices,
-\item \code{"fsaverage3"} = 642 vertices
-}
-Note that lower resolutions should be only used to downsample the brain
-map, for faster model tuning. The final analyses should also run using
-\code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
-registration and smoothing.}
-
-\item{apply_cortical_mask}{Logical indicating whether to exclude non-cortical
-vertices from analysis. Default: \code{TRUE} (recommended).}
 
 \item{fwhm}{Numeric value specifying the full-width half-maximum for
 smoothing kernel. Default: 10.}
@@ -135,6 +131,10 @@ smoothing kernel. Default: 10.}
 all corrections). Set this to 0.025 when both hemispheres are analyzed,
 0.05 for single hemisphere.
 Default: 0.025.}
+
+\item{save_ss}{Logical indicating whether to save the super-subject matrix as
+an .rds file for faster future processing.
+Default: \code{TRUE} (recommended).}
 
 \item{verbose}{Logical indicating whether to display progress messages.
 Default: \code{TRUE}.}

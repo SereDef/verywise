@@ -25,6 +25,9 @@ test_that("check_data_list validates structure and contents", {
   expect_null(check_data_list(data_list, "folder_id", good_formula))
 
   # check_data_list errors when data_list is malformed
+  expect_error(check_data_list(list(), "folder_id", good_formula),
+               regexp = "must be a non-empty list")
+
   bad_data_list <- list(df, df[, -1])
   expect_error(check_data_list(bad_data_list, "folder_id", good_formula),
                regexp = "must have the same dimentions")
@@ -71,6 +74,15 @@ test_that("check_path creates or checks path correctly", {
   file.create(file.path(tmp, "a_file.txt"))
   expect_equal(check_path(tmp, file_exists = "a_file.txt"),
                file.path(tmp, "a_file.txt"))
+  # check_path handles vectors of file_exists as expected (first file found)\
+  dir.create(file.path(tmp, "nest"), recursive = TRUE, showWarnings = FALSE)
+  file.create(file.path(tmp, "nest", "a_nested_file.txt"))
+  expect_equal(check_path(tmp, file_exists = c("a_file.txt",
+                                               "nest/a_nested_file.txt")),
+               file.path(tmp, "a_file.txt"))
+  expect_equal(check_path(tmp, file_exists = c("a_nested_file.txt",
+                                               "nest/a_nested_file.txt")),
+               file.path(tmp, "nest/a_nested_file.txt"))
 })
 
 test_that("check_stack_file writes or validates stack_names.txt", {
@@ -127,6 +139,8 @@ test_that("check_cores adjusts the number of cores and warns", {
   expect_type(check_cores(1.1), "integer")
   expect_type(check_cores("1"), "integer")
 
+  # check_cores warns and reduces the number of cores if too high
+  expect_type(check_cores(100), "integer")
   # check_cores errors on invalid core number
   expect_error(check_cores(0),
                regexp = "should be an integer that is 1 or higher")
@@ -152,3 +166,16 @@ test_that("check_numeric_param validates numeric parameters", {
 
 # Note: check_freesurfer_setup modifies environment variables and calls system
 # commands, so it's best tested in an integration
+test_that("check_freesurfer_setup errors when FreeSurfer home is not set up", {
+
+  skip_if(Sys.getenv("FREESURFER_HOME") != "")
+
+  expect_error(check_freesurfer_setup(""),
+               regexp = 'FREESURFER_HOME needs to be specified or set up')
+  expect_error(check_freesurfer_setup(NULL),
+               regexp = 'FREESURFER_HOME needs to be specified or set up')
+
+  not_fs_home <- tmp()
+  expect_error(check_freesurfer_setup(not_fs_home),
+               regexp = 'not a FREESURFER_HOME directory')
+})

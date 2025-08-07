@@ -31,23 +31,26 @@
 #' @param hemi Character string specifying which hemisphere(s) to analyze.
 #'   Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
 #'   (right only).
+#' @param fs_template Character string specifying the FreeSurfer template for
+#'   vertex registration. Options:
+#'   \itemize{
+#'   \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+#'   \item \code{"fsaverage6"} = 40962 vertices,
+#'   \item \code{"fsaverage5"} = 10242 vertices,
+#'   \item \code{"fsaverage4"} = 2562 vertices,
+#'   \item \code{"fsaverage3"} = 642 vertices
+#'   }
+#'   Note that lower resolutions should be only used to downsample the brain
+#'   map, for faster model tuning. The final analyses should also run using
+#'   \code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
+#'   registration and smoothing.
+#' @param apply_cortical_mask Logical indicating whether to exclude non-cortical
+#'   vertices from analysis. Default: \code{TRUE} (recommended).
 #' @param folder_id Character string specifying the column name in \code{pheno}
 #'   that contains subject directory names of the input neuroimaging data
 #'   (e.g. "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected
 #'   to be nested inside \code{subj_dir}.
 #'   Default: \code{"folder_id"}.
-#' @param seed Integer specifying the random seed for reproducibility
-#'   Default: 3108.
-#' @param n_cores Integer specifying the number of CPU cores for parallel
-#'   processing.
-#'   Default: 1.
-#' @param chunk_size Integer specifying the number of vertices processed per
-#'   chunk in parallel operations. Larger values use more memory but may be
-#'   faster.
-#'   Default: 1000.
-#' @param save_ss Logical indicating whether to save the super-subject matrix as
-#'   an .rds file for faster future processing.
-#'   Default: \code{TRUE} (recommended).
 #' @param tolerate_surf_not_found Integer indicating how many brain surface
 #'   files listed in \code{folder_id} can be missing from \code{subj_dir}. If
 #'   the number of missing or corrupted files is
@@ -66,23 +69,17 @@
 #'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
 #'   see the \code{*lmerControl} documentation for details.
 #'   Default: (uses default settings).
+#' @param seed Integer specifying the random seed for reproducibility
+#'   Default: 3108.
+#' @param n_cores Integer specifying the number of CPU cores for parallel
+#'   processing.
+#'   Default: 1.
+#' @param chunk_size Integer specifying the number of vertices processed per
+#'   chunk in parallel operations. Larger values use more memory but may be
+#'   faster.
+#'   Default: 1000.
 #' @param FS_HOME Character string specifying the FreeSurfer home directory.
 #'   Defaults to \code{FREESURFER_HOME} environment variable.
-#' @param fs_template Character string specifying the FreeSurfer template for
-#'   vertex registration. Options:
-#'   \itemize{
-#'   \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
-#'   \item \code{"fsaverage6"} = 40962 vertices,
-#'   \item \code{"fsaverage5"} = 10242 vertices,
-#'   \item \code{"fsaverage4"} = 2562 vertices,
-#'   \item \code{"fsaverage3"} = 642 vertices
-#'   }
-#'   Note that lower resolutions should be only used to downsample the brain
-#'   map, for faster model tuning. The final analyses should also run using
-#'   \code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
-#'   registration and smoothing.
-#' @param apply_cortical_mask Logical indicating whether to exclude non-cortical
-#'   vertices from analysis. Default: \code{TRUE} (recommended).
 #' @param fwhm Numeric value specifying the full-width half-maximum for
 #'   smoothing kernel. Default: 10.
 #' @param mcz_thr Numeric value for Monte Carlo simulation threshold.
@@ -99,6 +96,9 @@
 #'   all corrections). Set this to 0.025 when both hemispheres are analyzed,
 #'   0.05 for single hemisphere.
 #'   Default: 0.025.
+#' @param save_ss Logical indicating whether to save the super-subject matrix as
+#'   an .rds file for faster future processing.
+#'   Default: \code{TRUE} (recommended).
 #' @param verbose Logical indicating whether to display progress messages.
 #'   Default: \code{TRUE}.
 #'
@@ -205,26 +205,32 @@
 #' @export
 #'
 run_vw_lmm <- function(
+  # Basic settings
   formula,
   pheno,
   subj_dir,
   outp_dir = NULL,
+  # Brain data processing
   hemi = c("lh", "rh"),
+  fs_template = "fsaverage",
+  apply_cortical_mask = TRUE,
   folder_id = "folder_id",
-  seed = 3108,
-  n_cores = 1,
-  chunk_size = 1000,
-  save_ss = TRUE,
   tolerate_surf_not_found = 20,
+  # Modeling settings
   use_model_template = TRUE,
   weights = NULL,
   lmm_control = lme4::lmerControl(),
+  # Reproducibility and parallel processing
+  seed = 3108,
+  n_cores = 1,
+  chunk_size = 1000,
+  # Cluster estimation
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
-  fs_template = "fsaverage",
-  apply_cortical_mask = TRUE,
   fwhm = 10,
   mcz_thr = 30,
   cwp_thr = 0.025,
+  # Output control
+  save_ss = TRUE,
   verbose = TRUE
 ) {
 
@@ -241,7 +247,8 @@ run_vw_lmm <- function(
   ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
 
   ss_in_subj_dir <- check_path(subj_dir,
-                               file_exists = file.path('ss', ss_file))
+                               file_exists = c(ss_file,
+                                               file.path('ss', ss_file)))
 
   if (is.null(outp_dir)) {
     outp_dir <- file.path(subj_dir, "verywise_results")

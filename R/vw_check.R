@@ -69,8 +69,11 @@ check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
   }
 
   if (!is.null(file_exists)) {
-    file_path <- file.path(dir_path, file_exists)
-    if (file.exists(file_path)) return(file_path)
+    file_exists <- as.vector(file_exists, mode = 'character')
+    for (f in file_exists) {
+      file_path <- file.path(dir_path, f)
+      if (file.exists(file_path)) return(file_path)
+    }
   }
 
   invisible(NULL)
@@ -135,7 +138,7 @@ check_cores <- function(n_cores){
     vw_message("WARNING: You requested ", n_cores, " cores but only ", avail_cores,
                " are available. Resetting `n_cores` to ", avail_cores-1, ".",
                verbose=TRUE)
-    n_cores <- avail_cores-1
+    n_cores <- as.integer(avail_cores-1)
   }
 
   if (n_cores > avail_connections) {
@@ -143,7 +146,7 @@ check_cores <- function(n_cores){
                avail_connections, " free connections for user operations. ",
                "Reducing the number of parallel processes to ", avail_connections-1,
                ".", verbose=TRUE)
-    n_cores <- min(n_cores, parallelly::freeConnections() - 1)
+    n_cores <- as.integer(min(n_cores, parallelly::freeConnections() - 1))
   }
 
   return(n_cores)
@@ -153,23 +156,38 @@ check_cores <- function(n_cores){
 
 check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
   # Set up the necessary FreeSurfer global variables
-  if (Sys.getenv("FREESURFER_HOME") == "") {
+  if (is.null(FS_HOME) | FS_HOME == "") {
 
-    if (is.null(FS_HOME) | FS_HOME == "") stop("FREESURFER_HOME needs to be specified or set up.")
+    if (Sys.getenv("FREESURFER_HOME") == "") {
+      stop("FREESURFER_HOME needs to be specified or set up.")
+    }
+
+    FS_HOME <- Sys.getenv("FREESURFER_HOME")
+
+  } else {
 
     vw_message("Setting up FreeSurfer evironment...", verbose=verbose)
+    exit_code <- system(paste("source",
+                              file.path(FS_HOME, "SetUpFreeSurfer.sh")))
+    if (exit_code != 0) { # --> sourcing failed
+      stop(FS_HOME, " is not a FREESURFER_HOME directory.")
+    }
     Sys.setenv(FREESURFER_HOME = FS_HOME)
-    system(paste("source", file.path(FS_HOME,"SetUpFreeSurfer.sh")))
   }
 
-  if (Sys.getenv("SUBJECTS_DIR") == "") Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME,'subjects'))
+  vw_message(" * Note: using FreeSurfer version ", basename(FS_HOME),
+             verbose = verbose)
 
+  if (Sys.getenv("SUBJECTS_DIR") == "") {
+    Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME, "subjects"))
+  }
   # Add $FREESURFER_HOME/bin to $PATH (if not there already) so that FreeSurfer
   # commands can also be called from RStudio
   if (!grepl(file.path(FS_HOME, "bin"), Sys.getenv("PATH"))) {
-    Sys.setenv(PATH=paste(Sys.getenv("PATH"), file.path(FS_HOME,"bin"), sep=":"))
+    Sys.setenv(PATH = paste(Sys.getenv("PATH"),
+                            file.path(FS_HOME, "bin"), sep=":"))
   }
-
+  return(invisible(NULL))
 }
 
 check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer = FALSE) {
