@@ -72,21 +72,21 @@ approach.</p>
 <span>  <span class="va">subj_dir</span>,</span>
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  hemi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lh"</span>, <span class="st">"rh"</span><span class="op">)</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  apply_cortical_mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  folder_id <span class="op">=</span> <span class="st">"folder_id"</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  tolerate_surf_not_found <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  use_model_template <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  FS_HOME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"FREESURFER_HOME"</span><span class="op">)</span>,</span>
-<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
-<span>  apply_cortical_mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  fwhm <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  mcz_thr <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  cwp_thr <span class="op">=</span> <span class="fl">0.025</span>,</span>
+<span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -129,36 +129,30 @@ Options: <code>"both"</code> (default), <code>"lh"</code> (left only), <code>"rh
 (right only).</p></dd>
 
 
+<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
+<dd><p>Character string specifying the FreeSurfer template for
+vertex registration. Options:</p><ul><li><p><code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),</p></li>
+<li><p><code>"fsaverage6"</code> = 40962 vertices,</p></li>
+<li><p><code>"fsaverage5"</code> = 10242 vertices,</p></li>
+<li><p><code>"fsaverage4"</code> = 2562 vertices,</p></li>
+<li><p><code>"fsaverage3"</code> = 642 vertices</p></li>
+</ul><p>Note that lower resolutions should be only used to downsample the brain
+map, for faster model tuning. The final analyses should also run using
+<code>fs_template = "fsaverage"</code> to avoid (small) imprecisions in vertex
+registration and smoothing.</p></dd>
+
+
+<dt id="arg-apply-cortical-mask">apply_cortical_mask<a class="anchor" aria-label="anchor" href="#arg-apply-cortical-mask"></a></dt>
+<dd><p>Logical indicating whether to exclude non-cortical
+vertices from analysis. Default: <code>TRUE</code> (recommended).</p></dd>
+
+
 <dt id="arg-folder-id">folder_id<a class="anchor" aria-label="anchor" href="#arg-folder-id"></a></dt>
 <dd><p>Character string specifying the column name in <code>pheno</code>
 that contains subject directory names of the input neuroimaging data
 (e.g. "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected
 to be nested inside <code>subj_dir</code>.
 Default: <code>"folder_id"</code>.</p></dd>
-
-
-<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Integer specifying the random seed for reproducibility
-Default: 3108.</p></dd>
-
-
-<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
-<dd><p>Integer specifying the number of CPU cores for parallel
-processing.
-Default: 1.</p></dd>
-
-
-<dt id="arg-chunk-size">chunk_size<a class="anchor" aria-label="anchor" href="#arg-chunk-size"></a></dt>
-<dd><p>Integer specifying the number of vertices processed per
-chunk in parallel operations. Larger values use more memory but may be
-faster.
-Default: 1000.</p></dd>
-
-
-<dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
-<dd><p>Logical indicating whether to save the super-subject matrix as
-an .rds file for faster future processing.
-Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-tolerate-surf-not-found">tolerate_surf_not_found<a class="anchor" aria-label="anchor" href="#arg-tolerate-surf-not-found"></a></dt>
@@ -191,27 +185,27 @@ see the <code>*lmerControl</code> documentation for details.
 Default: (uses default settings).</p></dd>
 
 
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Integer specifying the random seed for reproducibility
+Default: 3108.</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>Integer specifying the number of CPU cores for parallel
+processing.
+Default: 1.</p></dd>
+
+
+<dt id="arg-chunk-size">chunk_size<a class="anchor" aria-label="anchor" href="#arg-chunk-size"></a></dt>
+<dd><p>Integer specifying the number of vertices processed per
+chunk in parallel operations. Larger values use more memory but may be
+faster.
+Default: 1000.</p></dd>
+
+
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
 <dd><p>Character string specifying the FreeSurfer home directory.
 Defaults to <code>FREESURFER_HOME</code> environment variable.</p></dd>
-
-
-<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
-<dd><p>Character string specifying the FreeSurfer template for
-vertex registration. Options:</p><ul><li><p><code>"fsaverage"</code> (default) = 163842 vertices (highest resolution),</p></li>
-<li><p><code>"fsaverage6"</code> = 40962 vertices,</p></li>
-<li><p><code>"fsaverage5"</code> = 10242 vertices,</p></li>
-<li><p><code>"fsaverage4"</code> = 2562 vertices,</p></li>
-<li><p><code>"fsaverage3"</code> = 642 vertices</p></li>
-</ul><p>Note that lower resolutions should be only used to downsample the brain
-map, for faster model tuning. The final analyses should also run using
-<code>fs_template = "fsaverage"</code> to avoid (small) imprecisions in vertex
-registration and smoothing.</p></dd>
-
-
-<dt id="arg-apply-cortical-mask">apply_cortical_mask<a class="anchor" aria-label="anchor" href="#arg-apply-cortical-mask"></a></dt>
-<dd><p>Logical indicating whether to exclude non-cortical
-vertices from analysis. Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-fwhm">fwhm<a class="anchor" aria-label="anchor" href="#arg-fwhm"></a></dt>
@@ -235,6 +229,12 @@ smoothing kernel. Default: 10.</p></dd>
 all corrections). Set this to 0.025 when both hemispheres are analyzed,
 0.05 for single hemisphere.
 Default: 0.025.</p></dd>
+
+
+<dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
+<dd><p>Logical indicating whether to save the super-subject matrix as
+an .rds file for faster future processing.
+Default: <code>TRUE</code> (recommended).</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
