@@ -107,6 +107,23 @@ build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
   return(res_bk_paths)
 }
 
+# ==============================================================================
+
+with_tmp_sysenv <- function(tmp_sysenv, code) {
+  sysenv <- Sys.getenv(names(tmp_sysenv), unset = NA, names = TRUE)
+
+  for (nm in names(tmp_sysenv)) Sys.setenv(nm = tmp_sysenv[[nm]])
+
+  on.exit({
+    for (nm in names(sysenv)) {
+      if (is.na(sysenv[[nm]])) Sys.unsetenv(nm)
+      else Sys.setenv(nm = sysenv[[nm]])
+    }
+  }, add = TRUE)
+
+  force(code)
+}
+
 # ============================= Folder navigators =============================
 #' @title
 #' List sub-directories till depth \code{n}
@@ -169,47 +186,16 @@ locate_roi <- function(rois = NULL, n_verts = 163842, verbose = TRUE) {
   return(roi_locs)
 }
 
-# ???? =========================================================================
-# qdecr_decon <- function(x, y = environment()) {
-#   y <- as.list(substitute(x, env = y))
-#   y[-1] <- lapply(y[-1], eval)
-#   y
-# }
-#
-# # Get function from string =====================================================
-# get_function <- function(x, ...) {
-#   if(is.character(x)){
-#     fn <- strsplit(x, "::")[[1]] # example > "stats" "lm"
-#     x <- if(length(fn) == 1) {
-#       get(fn[[1]], envir = parent.frame(), mode = "function", ...)
-#     } else {
-#       get(fn[[2]], envir = asNamespace(fn[[1]]), mode = "function", ...)
-#     }
-#   }
-#   x
-# }
-#
-# do.call2 <- function(what, args, ...) {
-#   what <- get_function(what)
-#   do.call(what, as.list(args), ...)
-# }
-#
-#
-# # ==============================================================================\
-# # Set all arguments for given function call (model) and list of user defined
-# # arguments (margs)
-# set_arguments <- function(margs, model){
-#   m <- names(margs)
-#   if(is.null(m)) m <- rep("", length(margs))
-#
-#   f <- methods::formalArgs(get_function(model))
-#   f2 <- formals(get_function(model))
-#   # Rename arguments if necessary
-#   b <- which(m[-1] == "")
-#   m[b+1] <- f[!f %in% m[-1]][length(b)]
-#   names(margs) <- m
-#   # Add default arguments...?
-#   margs <- c(margs, f2[!names(f2) %in% m])
-#   if(is.symbol(margs$`...`)) margs$`...` <- NULL
-#   margs
-# }
+# ==============================================================================
+
+count_vertices <- function(fs_template) {
+
+  n_verts <- switch(fs_template,
+                    fsmicro = 100,
+                    fsaverage = 163842,
+                    fsaverage6 = 40962,
+                    fsaverage5 = 10242,
+                    fsaverage4 = 2562,
+                    fsaverage3 = 642)
+  return(n_verts)
+}

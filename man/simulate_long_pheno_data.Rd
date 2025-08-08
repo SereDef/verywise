@@ -2,31 +2,45 @@
 % Please edit documentation in R/simulate_dataset.R
 \name{simulate_long_pheno_data}
 \alias{simulate_long_pheno_data}
-\title{Simulate phenotype data}
+\title{Simulate (longitudinal) phenotype data}
 \usage{
 simulate_long_pheno_data(
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
-  seed = 31081,
+  seed = 3108,
   verbose = TRUE
 )
 }
 \arguments{
-\item{data_structure}{A nested list, with top level determining the cohort/
-dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
-the number of subjects.}
+\item{data_structure}{Named list defining cohorts/sites. Each element is a
+list with:
+\describe{
+  \item{\code{"sessions"}}{Character vector of session labels.}
+  \item{\code{"n_subjects"}}{Integer number of subjects.}
+}}
 
-\item{seed}{(default = 3108) seed used for randomization.}
+\item{seed}{Integer (default = \code{3108}). Random seed.}
 
-\item{verbose}{(deafult = TRUE)}
+\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
+progress messages.}
 }
 \value{
-A dataframe (in long format) with id, sex and age data.
+A \code{data.frame} in long format with columns:
+\code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{folder_id}.
 }
 \description{
-Simulating phenotype data (in the long format) for multiple cohorts/sites and
-multiple timepoints/sessions.
+Generates synthetic phenotype data in long format for multiple cohorts/sites
+and multiple timepoints/sessions per subject. Each record contains:
+\itemize{
+  \item Subject ID
+  \item Session/timepoint
+  \item Sex
+  \item Age
+  \item A \code{folder_id} field matching the FreeSurfer directory structure
+}
+}
+\seealso{
+\code{\link{simulate_dataset}}, \code{\link{simulate_freesurfer_data}}
 }
 \author{
 Serena Defina, 2024.

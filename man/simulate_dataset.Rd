@@ -2,56 +2,78 @@
 % Please edit documentation in R/simulate_dataset.R
 \name{simulate_dataset}
 \alias{simulate_dataset}
-\title{Simulate longitudinal brain surface dataset with phenotype}
+\title{Simulate a longitudinal brain surface dataset with associated phenotype data}
 \usage{
 simulate_dataset(
   path,
   data_structure = list(cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 10),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 20)),
+  fs_template = "fsaverage",
   simulate_association = NULL,
   overwrite = TRUE,
-  seed = 31081996,
+  seed = 3108,
   verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{path}{Where should the dataset be created.}
+\item{path}{Character string. Directory where the dataset should be created.
+Will be created if it does not exist.}
 
-\item{data_structure}{A nested list, with top level determining the cohort/
-dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
-the number of subjects.}
+\item{data_structure}{Named list defining cohorts/sites. Each element is a
+list with:
+\describe{
+  \item{\code{"sessions"}}{Character vector of session labels.}
+  \item{\code{"n_subjects"}}{Integer number of subjects.}
+}}
 
-\item{simulate_association}{(default = NULL) simulate an association in the
-format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
-This is by default isolated to three regions:
-the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
+\item{fs_template}{Character (default = \code{"fsaverage"}). FreeSurfer
+template for vertex registration. This is used to determine the size of
+the synthetic brain surface data. Options:
+\itemize{
+  \item \code{"fsaverage"} = 163842 vertices (highest resolution)
+  \item \code{"fsaverage6"} = 40962 vertices
+  \item \code{"fsaverage5"} = 10242 vertices
+  \item \code{"fsaverage4"} = 2562 vertices
+  \item \code{"fsaverage3"} = 642 vertices
+}}
 
-\item{overwrite}{(default = TRUE) whether phenotype file should be overwitten.}
+\item{simulate_association}{Optional. If numeric, must be of length equal to
+the number of generated files; if character, must have the format
+\code{"<beta> * <variable_name>"}. Associations are injected into one small
+region (the entorhinal cortex).}
 
-\item{seed}{(default = 3108) seed used for randomization.}
+\item{overwrite}{Logical (default = \code{TRUE}). Whether to overwrite an
+existing phenotype file.}
 
-\item{verbose}{(deafult = TRUE)}
+\item{seed}{Integer (default = \code{3108}). Random seed.}
 
-\item{...}{Other arguments to be passed to \code{\link{simulate_freesurfer_data}}}
+\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
+progress messages.}
+
+\item{...}{Additional arguments passed to \code{\link{simulate_freesurfer_data}}.}
 }
 \value{
-NULL. Files are written to `path`.
+Invisibly returns \code{NULL}. Data and phenotype files are written to
+\code{path}.
 }
 \description{
-This function generates synthetic longitudinal datasets for
-multiple sites/cohorts (as well as multiple timepoints/sessions per subject).
-It generates:
+Generates a synthetic longitudinal dataset for multiple sites/cohorts,
+each with multiple timepoints/sessions per subject. The function produces:
+
 \itemize{
-\item the brain surface data in FreeSurfer format (.mgh files) organised in a
- verywise folder structure (see vignettes).
-\item a mathing \code{pheno} dataframe with participant sex and age mock-data,
- saved as "phenotype.csv" file in the \code{path} directory.
+  \item Brain surface data in FreeSurfer \code{.mgh} format, organised
+  in a verywise folder structure (see vignettes for details).
+  \item A matching \code{pheno} data frame with mock participant sex and
+  age, saved as \file{"phenotype.csv"} in the \code{path} directory.
 }
+
+This is useful for testing pipelines or demonstrations where realistic
+FreeSurfer-style data and phenotypic information are required.
 }
 \seealso{
-\code{\link{simulate_freesurfer_data}}, \code{\link{simulate_long_pheno_data}}
+\code{\link{simulate_freesurfer_data}},
+\code{\link{simulate_long_pheno_data}}
 }
 \author{
 Serena Defina, 2024.

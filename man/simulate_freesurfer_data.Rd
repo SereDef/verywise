@@ -2,16 +2,16 @@
 % Please edit documentation in R/simulate_dataset.R
 \name{simulate_freesurfer_data}
 \alias{simulate_freesurfer_data}
-\title{Simulate FreeSurfer data}
+\title{Simulate longitudinal FreeSurfer vertex-wise data}
 \usage{
 simulate_freesurfer_data(
   path,
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
+  fs_template = "fsaverage",
   measure = "thickness",
   hemi = "lh",
   fwhmc = "fwhm10",
-  fs_template = "fsaverage",
   vw_mean = 6.5,
   vw_sd = 0.5,
   simulate_association = NULL,
@@ -20,48 +20,67 @@ simulate_freesurfer_data(
 )
 }
 \arguments{
-\item{path}{Where should the data be created.}
+\item{path}{Character string. Directory where the dataset should be created.
+Will be created if it does not exist.}
 
-\item{data_structure}{A nested list, with top level determining the cohort/
-dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
-the number of subjects.}
-
-\item{measure}{(default = "thickness"), measure, used in file names.}
-
-\item{hemi}{(default = "lh") hemisphere, used in file names.}
-
-\item{fwhmc}{(default = "fwhm10") full-width half maximum value, used in
-file names.}
-
-\item{fs_template}{Character string specifying the FreeSurfer template for
-vertex registration. Options:
-\itemize{
-\item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
-\item \code{"fsaverage6"} = 40962 vertices,
-\item \code{"fsaverage5"} = 10242 vertices,
-\item \code{"fsaverage4"} = 2562 vertices,
-\item \code{"fsaverage3"} = 642 vertices
+\item{data_structure}{Named list defining cohorts/sites. Each element is a
+list with:
+\describe{
+  \item{\code{"sessions"}}{Character vector of session labels.}
+  \item{\code{"n_subjects"}}{Integer number of subjects.}
 }}
 
-\item{vw_mean}{(default = 6.5) mean of the simulated vertex-wise data.}
+\item{fs_template}{Character (default = \code{"fsaverage"}). FreeSurfer
+template for vertex registration. This is used to determine the size of
+the synthetic brain surface data. Options:
+\itemize{
+  \item \code{"fsaverage"} = 163842 vertices (highest resolution)
+  \item \code{"fsaverage6"} = 40962 vertices
+  \item \code{"fsaverage5"} = 10242 vertices
+  \item \code{"fsaverage4"} = 2562 vertices
+  \item \code{"fsaverage3"} = 642 vertices
+}}
 
-\item{vw_sd}{(default = 0.5) standard deviation of the simulated vertex-wise data.}
+\item{measure}{Character (default = \code{"thickness"}). Surface measure to
+simulate. This is used for file names.}
 
-\item{simulate_association}{(default = NULL) simulate an association in the
-format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
-This is by default isolated to three regions:
-the superior temporal gyrus, precentral gyrus and middle temporal gyrus.}
+\item{hemi}{Character (default = \code{"lh"}). Hemisphere code: \code{"lh"}
+(left) or \code{"rh"} (right). This is used for file names.}
 
-\item{seed}{(default = 3108) seed used for randomization.}
+\item{fwhmc}{Character (default = \code{"fwhm10"}). Full-width half maximum
+smoothing parameter. This is used for file names.}
 
-\item{verbose}{(dafault = TRUE) verbosity.}
+\item{vw_mean}{Numeric (default = \code{6.5}). Mean of the simulated
+vertex-wise values.}
+
+\item{vw_sd}{Numeric (default = \code{0.5}). Standard deviation of the
+simulated vertex-wise values.}
+
+\item{simulate_association}{Optional. If numeric, must be of length equal to
+the number of generated files; if character, must have the format
+\code{"<beta> * <variable_name>"}. Associations are injected into one small
+region (the entorhinal cortex).}
+
+\item{seed}{Integer (default = \code{3108}). Random seed.}
+
+\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
+progress messages.}
+}
+\value{
+Invisibly returns \code{NULL}. Vertex-wise data are written to \code{path}
+in FreeSurfer-compatible format.
 }
 \description{
-Simulating FreeSurfer data for multiple cohorts/sites and multiple
-timepoints/sessions. This function emulates the folder structure output obtained
-by calling FreeSurfer recon_all command. This follows the folder names "sub-", participant ID,
-"_ses-", session ID.
+Simulates FreeSurfer-formatted brain surface data for multiple cohorts/sites
+and multiple timepoints/sessions. The output folder structure emulates that
+produced by the FreeSurfer \code{recon-all} command, with directories named:
+\code{sub-<ID>_ses-<SESSION>}.
+
+The vertex-wise data are stored as \code{.mgh} files, with optional simulation
+of an association with a phenotype variable.
+}
+\seealso{
+\code{\link{simulate_dataset}}, \code{\link{simulate_long_pheno_data}}
 }
 \author{
 Serena Defina, 2024.

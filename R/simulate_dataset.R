@@ -1,29 +1,59 @@
 #' @title
-#' Simulate longitudinal brain surface dataset with phenotype
+#' Simulate a longitudinal brain surface dataset with associated phenotype data
 #'
 #' @description
-#' This function generates synthetic longitudinal datasets for
-#' multiple sites/cohorts (as well as multiple timepoints/sessions per subject).
-#' It generates:
+#' Generates a synthetic longitudinal dataset for multiple sites/cohorts,
+#' each with multiple timepoints/sessions per subject. The function produces:
+#'
 #' \itemize{
-#' \item the brain surface data in FreeSurfer format (.mgh files) organised in a
-#'  verywise folder structure (see vignettes).
-#' \item a mathing \code{pheno} dataframe with participant sex and age mock-data,
-#'  saved as "phenotype.csv" file in the \code{path} directory.
+#'   \item Brain surface data in FreeSurfer \code{.mgh} format, organised
+#'   in a verywise folder structure (see vignettes for details).
+#'   \item A matching \code{pheno} data frame with mock participant sex and
+#'   age, saved as \file{"phenotype.csv"} in the \code{path} directory.
 #' }
 #'
-#' @param path Where should the dataset be created.
-#' @param overwrite (default = TRUE) whether phenotype file should be overwitten.
-#' @param verbose (deafult = TRUE)
-#' @param ... Other arguments to be passed to \code{\link{simulate_freesurfer_data}}
-#' @inheritParams simulate_freesurfer_data
+#' This is useful for testing pipelines or demonstrations where realistic
+#' FreeSurfer-style data and phenotypic information are required.
+#'
+#' @param path Character string. Directory where the dataset should be created.
+#'   Will be created if it does not exist.
+#' @param data_structure Named list defining cohorts/sites. Each element is a
+#'   list with:
+#'   \describe{
+#'     \item{\code{"sessions"}}{Character vector of session labels.}
+#'     \item{\code{"n_subjects"}}{Integer number of subjects.}
+#'   }
+#' @param fs_template Character (default = \code{"fsaverage"}). FreeSurfer
+#'   template for vertex registration. This is used to determine the size of
+#'   the synthetic brain surface data. Options:
+#'   \itemize{
+#'     \item \code{"fsaverage"} = 163842 vertices (highest resolution)
+#'     \item \code{"fsaverage6"} = 40962 vertices
+#'     \item \code{"fsaverage5"} = 10242 vertices
+#'     \item \code{"fsaverage4"} = 2562 vertices
+#'     \item \code{"fsaverage3"} = 642 vertices
+#'   }
+#' @param simulate_association Optional. If numeric, must be of length equal to
+#'   the number of generated files; if character, must have the format
+#'   \code{"<beta> * <variable_name>"}. Associations are injected into one small
+#'   region (the entorhinal cortex).
+#' @param overwrite Logical (default = \code{TRUE}). Whether to overwrite an
+#'   existing phenotype file.
+#' @param seed Integer (default = \code{3108}). Random seed.
+#' @param verbose Logical (default = \code{TRUE}). If \code{TRUE}, print
+#'   progress messages.
+#' @param ... Additional arguments passed to \code{\link{simulate_freesurfer_data}}.
+#'
 #'
 #' @seealso
-#' \code{\link{simulate_freesurfer_data}}, \code{\link{simulate_long_pheno_data}}
+#' \code{\link{simulate_freesurfer_data}},
+#' \code{\link{simulate_long_pheno_data}}
 #'
 #' @author Serena Defina, 2024.
 #'
-#' @return NULL. Files are written to `path`.
+#' @return
+#' Invisibly returns \code{NULL}. Data and phenotype files are written to
+#' \code{path}.
 #'
 #' @export
 #'
@@ -38,9 +68,10 @@ simulate_dataset <- function(path,
                                  "n_subjects" = 20
                                )
                              ),
+                             fs_template = "fsaverage",
                              simulate_association =  NULL,
                              overwrite = TRUE,
-                             seed = 31081996,
+                             seed = 3108,
                              verbose = TRUE,
                              ...) {
 
@@ -92,6 +123,7 @@ simulate_dataset <- function(path,
   simulate_freesurfer_data(
     path = path,
     data_structure = data_structure,
+    fs_template = fs_template,
     simulate_association = simulate_association,
     seed = seed,
     verbose = verbose,
@@ -101,17 +133,30 @@ simulate_dataset <- function(path,
 
 
 #' @title
-#' Simulate phenotype data
+#' Simulate (longitudinal) phenotype data
 #'
 #' @description
-#' Simulating phenotype data (in the long format) for multiple cohorts/sites and
-#' multiple timepoints/sessions.
+#' Generates synthetic phenotype data in long format for multiple cohorts/sites
+#' and multiple timepoints/sessions per subject. Each record contains:
+#' \itemize{
+#'   \item Subject ID
+#'   \item Session/timepoint
+#'   \item Sex
+#'   \item Age
+#'   \item A \code{folder_id} field matching the FreeSurfer directory structure
+#' }
 #'
 #' @inheritParams simulate_dataset
 #'
-#' @return A dataframe (in long format) with id, sex and age data.
+#' @return
+#' A \code{data.frame} in long format with columns:
+#' \code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{folder_id}.
 #'
-#' @author Serena Defina, 2024.
+#' @seealso
+#' \code{\link{simulate_dataset}}, \code{\link{simulate_freesurfer_data}}
+#'
+#' @author
+#' Serena Defina, 2024.
 #'
 #' @export
 #'
@@ -125,7 +170,7 @@ simulate_long_pheno_data <- function(data_structure = list(
                                          "n_subjects" = 150
                                        )
                                      ),
-                                     seed = 31081,
+                                     seed = 3108,
                                      verbose = TRUE) {
 
   vw_message(" * creating phenotype file...", verbose = verbose)
@@ -178,42 +223,37 @@ simulate_long_pheno_data <- function(data_structure = list(
 
 
 #' @title
-#' Simulate FreeSurfer data
+#' Simulate longitudinal FreeSurfer vertex-wise data
 #'
 #' @description
-#' Simulating FreeSurfer data for multiple cohorts/sites and multiple
-#' timepoints/sessions. This function emulates the folder structure output obtained
-#' by calling FreeSurfer recon_all command. This follows the folder names "sub-", participant ID,
-#' "_ses-", session ID.
+#' Simulates FreeSurfer-formatted brain surface data for multiple cohorts/sites
+#' and multiple timepoints/sessions. The output folder structure emulates that
+#' produced by the FreeSurfer \code{recon-all} command, with directories named:
+#' \code{sub-<ID>_ses-<SESSION>}.
 #'
-#' @param path Where should the data be created.
-#' @param data_structure A nested list, with top level determining the cohort/
-#' dataset/site. Each site is itself a list with two items: \code{"sessions"}: a
-#' vector of session names/numbers; and \code{"n_subjects"}: an integer indicating
-#' the number of subjects.
-#' @param measure (default = "thickness"), measure, used in file names.
-#' @param hemi (default = "lh") hemisphere, used in file names.
-#' @param fwhmc (default = "fwhm10") full-width half maximum value, used in
-#' file names.
-#' @param fs_template Character string specifying the FreeSurfer template for
-#'   vertex registration. Options:
-#'   \itemize{
-#'   \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
-#'   \item \code{"fsaverage6"} = 40962 vertices,
-#'   \item \code{"fsaverage5"} = 10242 vertices,
-#'   \item \code{"fsaverage4"} = 2562 vertices,
-#'   \item \code{"fsaverage3"} = 642 vertices
-#'   }
-#' @param vw_mean (default = 6.5) mean of the simulated vertex-wise data.
-#' @param vw_sd (default = 0.5) standard deviation of the simulated vertex-wise data.
-#' @param simulate_association (default = NULL) simulate an association in the
-#' format \code{"[beta] * [variable name]"}. For example \code{"0.05 * age"}.
-#' This is by default isolated to three regions:
-#' the superior temporal gyrus, precentral gyrus and middle temporal gyrus.
-#' @param seed (default = 3108) seed used for randomization.
-#' @param verbose (dafault = TRUE) verbosity.
+#' The vertex-wise data are stored as \code{.mgh} files, with optional simulation
+#' of an association with a phenotype variable.
+#'
+#' @inheritParams simulate_dataset
+#' @param measure Character (default = \code{"thickness"}). Surface measure to
+#'   simulate. This is used for file names.
+#' @param hemi Character (default = \code{"lh"}). Hemisphere code: \code{"lh"}
+#'   (left) or \code{"rh"} (right). This is used for file names.
+#' @param fwhmc Character (default = \code{"fwhm10"}). Full-width half maximum
+#'   smoothing parameter. This is used for file names.
+#' @param vw_mean Numeric (default = \code{6.5}). Mean of the simulated
+#'   vertex-wise values.
+#' @param vw_sd Numeric (default = \code{0.5}). Standard deviation of the
+#'   simulated vertex-wise values.
 #'
 #' @author Serena Defina, 2024.
+
+#' @return
+#' Invisibly returns \code{NULL}. Vertex-wise data are written to \code{path}
+#' in FreeSurfer-compatible format.
+#'
+#' @seealso
+#' \code{\link{simulate_dataset}}, \code{\link{simulate_long_pheno_data}}
 #'
 #' @export
 #'
@@ -228,18 +268,18 @@ simulate_freesurfer_data <- function(path,
                                          "n_subjects" = 150
                                        )
                                      ),
+                                     fs_template = "fsaverage",
                                      measure = "thickness",
                                      hemi = "lh",
                                      fwhmc = "fwhm10",
-                                     fs_template = "fsaverage",
                                      vw_mean = 6.5,
                                      vw_sd = 0.5,
                                      simulate_association = NULL,
                                      seed = 3108,
                                      verbose = TRUE) {
 
-  if (hemi == "lh") hemi_name <- "left" else hemi_name <- "right"
-  vw_message(" * creating FreeSurfer dataset (", hemi," hemisphere)...",
+  hemi_name <- if (hemi == "lh") "left" else "right"
+  vw_message(" * creating FreeSurfer dataset (", hemi_name," hemisphere)...",
              verbose = verbose)
   set.seed(seed)
 
@@ -276,13 +316,7 @@ simulate_freesurfer_data <- function(path,
         # File name
         mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
 
-        n_verts <- switch(fs_template,
-                          fsmicro = 10,
-                          fsaverage = 163842,
-                          fsaverage6 = 40962,
-                          fsaverage5 = 10242,
-                          fsaverage4 = 2562,
-                          fsaverage3 = 642)
+        n_verts <- count_vertices(fs_template)
 
         # Start from a vector of type double, filled with 0s
         vw_data <- numeric(n_verts)
