@@ -43,6 +43,8 @@ test_that("build_supersubject returns FBM with correct dimensions for valid inpu
 
 test_that("build_supersubject errors if missing folders exceed error_cutoff", {
 
+  skip_on_os("windows")
+
   too_many_missing_folders <- folder_ids
   too_many_missing_folders[1:3] <- c("site1/missing_sub1",
                                      "site1/missing_sub2",
@@ -66,6 +68,8 @@ test_that("build_supersubject errors if missing folders exceed error_cutoff", {
 })
 
 test_that("build_supersubject warns and continues if missing folders under cutoff", {
+
+  skip_on_os("windows")
 
   some_missing_folders <- folder_ids
   some_missing_folders[1] <- "site1/missing_sub1"

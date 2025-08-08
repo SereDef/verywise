@@ -60,8 +60,9 @@ check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
 
   if (!dir.exists(dir_path)) {
     if (create_if_not) {
-      vw_message(sprintf("The `%s` specified ('%s') does not exist. I'll try to create it.",
-                         param_name, dir_path))
+      vw_message(sprintf(
+        " * the `%s` specified ('%s') does not exist.\n   I'll try to create it.",
+        param_name, dir_path))
       dir.create(dir_path, recursive=TRUE)
     } else {
       stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
@@ -135,17 +136,17 @@ check_cores <- function(n_cores){
   if (n_cores < 1) stop("`n_cores` should be an integer that is 1 or higher.")
 
   if (n_cores > avail_cores) {
-    vw_message("WARNING: You requested ", n_cores, " cores but only ", avail_cores,
-               " are available. Resetting `n_cores` to ", avail_cores-1, ".",
-               verbose=TRUE)
+    vw_message(" * WARNING: You requested ", n_cores, " cores but only ",
+               avail_cores," are available.\n   Resetting `n_cores` to ",
+               avail_cores-1, ".", verbose = TRUE)
     n_cores <- as.integer(avail_cores-1)
   }
 
   if (n_cores > avail_connections) {
-    vw_message("WARNING: ", n_cores, " cores excedes R limit of ",
+    vw_message(" * WARNING: ", n_cores, " cores excedes R limit of ",
                avail_connections, " free connections for user operations. ",
-               "Reducing the number of parallel processes to ", avail_connections-1,
-               ".", verbose=TRUE)
+               "\n   Reducing the number of parallel processes to ",
+               avail_connections-1, ".", verbose = TRUE)
     n_cores <- as.integer(min(n_cores, parallelly::freeConnections() - 1))
   }
 

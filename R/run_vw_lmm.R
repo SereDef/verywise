@@ -353,7 +353,7 @@ run_vw_lmm <- function(
                         function(df) {  # Match the row names in ss
                           return(df[match(ss_rownames, df[, folder_id]), ])})
     data1 <- data_list[[1]]
-    vw_message('   ', norw(data1), ' observationts retained.')
+    vw_message('   ', nrow(data1), ' observationts retained.')
   }
 
   vw_message(" * cleaning super-subject matrix...", verbose = verbose)
@@ -415,18 +415,18 @@ run_vw_lmm <- function(
   chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
 
   # Parallel analyses ==========================================================
-  vw_message("Running analyses...", verbose = verbose)
-  vw_message("* dimentions: ", n_obs, " observations x ",
-             length(good_verts), " (of ", vw_n, " total) vertices.",
-             verbose = verbose)
+  vw_message("Running analyses...\n",
+             " * dimentions: ", n_obs, " observations x ", length(good_verts),
+             " (of ", vw_n, " total) vertices.", verbose = verbose)
 
-  # log_file <- file.path(outp_dir, paste0(hemi,".", measure,"model.log"))
+  progress_file <- paste0(result_path, ".progress.log")
+  on.exit(file.remove(progress_file), add = TRUE)
 
-  if (n_cores > 1) vw_message("* preparing cluster of ", n_cores, " workers...",
+  if (n_cores > 1) vw_message(" * preparing cluster of ", n_cores, " workers...",
                               verbose = verbose)
   # Set up parallel processing
   cluster <- parallel::makeCluster(n_cores, type = "FORK",
-                                   outfile = paste0(result_path, ".progress.log"))
+                                   outfile = progress_file)
   # NOTE: would not work on Windows anyway till freesurfer dependency is needed
   # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
 
@@ -438,12 +438,11 @@ run_vw_lmm <- function(
   # as the main session
   # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
 
-  vw_message("* fitting linear mixed models...")
-
-  # utils::capture.output(pb <- utils::txtProgressBar(0, length(chunk_seq),
-  #                                                   style = 3), file = "/dev/null")
-
   # Progress bar setup # note progressr only works with doFuture not doParallel
+  vw_message(" * fitting linear mixed models...\n",
+             "   this may take some time, check the ", basename(progress_file),
+             " file for updates.", verbose = verbose)
+
   chunk <- NULL
   foreach::foreach(chunk = chunk_seq,
                    .packages = c("bigstatsr"),
@@ -455,7 +454,7 @@ run_vw_lmm <- function(
       chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
       worker_id <- Sys.getpid() # useful for debugging
 
-      vw_message(sprintf("   - Processing chunk %d/%d (worker: %s)",
+      vw_message(sprintf(" - Processing chunk %d/%d (worker: %s)",
                          chunk_idx, length(chunk_seq), worker_id))
       utils::flush.console()
     }
@@ -558,6 +557,7 @@ run_vw_lmm <- function(
 
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
+    fs_verbosity <- if(stack_n == 1 ) verbose else FALSE
     compute_clusters(stack_path = stack_path,
                      hemi = hemi,
                      fwhm = fwhm,
@@ -565,7 +565,8 @@ run_vw_lmm <- function(
                      mcz_thr = mcz_thr,
                      cwp_thr = cwp_thr,
                      full_surfcluster_output = save_optional_cluster_info,
-                     mask = paste0(result_path, ".finalMask.mgh"))
+                     mask = paste0(result_path, ".finalMask.mgh"),
+                     verbose = fs_verbosity)
   }
 
   vw_message(pretty_message("All done! :)"))

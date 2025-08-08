@@ -43,8 +43,10 @@ test_that("single_lmm disables pvalues when requested", {
 
 # ==============================================================================
 test_that("run_vw_lmm runs end-to-end with simulated data", {
+  skip_on_os("windows")
+
   if (!dir.exists(fs_home)) {
-    testthat::skip("FreeSurfer not found in FREESURFER_HOME")
+    skip("FreeSurfer not found in FREESURFER_HOME")
   }
 
   outp_dir <- withr::local_tempdir()
@@ -105,7 +107,5 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
     file.path(outp_dir, 'lh.area.stack2.coef.mgh')))
   expect_true(file.exists(
     file.path(outp_dir, 'lh.area.stack3.cache.th30.abs.sig.ocn.mgh')))
-  expect_true(file.exists(
-    file.path(outp_dir, 'lh.area.progress.log')))
 
 })

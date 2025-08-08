@@ -46,6 +46,6 @@ Imports:
     lme4 (>= 1.1.35.5),
     magrittr,
     rlang
-SystemRequirements: FreeSurfer
+SystemRequirements: Unix (not supported on Windows), FreeSurfer
 Config/Needs/website: rmarkdown
 Config/testthat/edition: 3

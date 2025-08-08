@@ -81,8 +81,8 @@ fbm_col_has_0 <- function(X, n_cores = 1,
 
   if (sum(problem_verts) > 0) {
     vw_message(" * Ignoring ", sum(problem_verts),
-               " vertices that contained 0 values.\n  These may be located",
-               " at the edge of the cortical map and are potentially",
+               " vertices that contained 0 values.\n   These may be located",
+               " at the edge of the cortical map and\n   are potentially",
                " problematic.", verbose = verbose)
   }
   return(problem_verts)
