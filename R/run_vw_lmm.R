@@ -357,11 +357,9 @@ run_vw_lmm <- function(
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
   # Ensure phenotype and ss row order matches ==================================
-
-  data_list <- check_row_match(rownames_file = file.path(ss_dir,
-                                                         paste(hemi, measure,
-                                                               'ss.rownames.csv',
-                                                               sep = '.')),
+  rownames_file <- gsub('.fsaverage\\d*\\.supersubject.bk',
+                        '.ss.rownames.csv', ss$bk)
+  data_list <- check_row_match(rownames_file = rownames_file,
                                data_list = data_list,
                                folder_id = folder_id)
 
