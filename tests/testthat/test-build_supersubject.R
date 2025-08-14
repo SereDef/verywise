@@ -4,13 +4,15 @@ subj_dir <- test_path("fixtures", "fs3")
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 folder_ids <- pheno$folder_id
 
-supsubj_dir <- tempdir()
+supsubj_dir <- file.path(subj_dir, "ss")
 measure <- "area"
 hemi <- "lh"
 n_cores <- 1
 fwhmc <- "fwhm10"
 fs_template <- "fsaverage3"
 error_cutoff <- 2
+
+supsubj_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep='.')
 
 # Helper function to remove output files
 # cleanup_output <- function(supsubj_dir, hemi, measure, fs_template) {
@@ -117,6 +119,7 @@ test_that("build_supersubject works with parallel processing", {
 test_that("build_supersubject creates output files when save_rds = TRUE", {
 
   # cleanup_output(supsubj_dir, hemi, measure, fs_template)
+  supsubj_dir <- file.path(subj_dir, 'ss')
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
@@ -133,8 +136,95 @@ test_that("build_supersubject creates output files when save_rds = TRUE", {
   )
 
   # Check that the .bk and .rds files exist
-  bk_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template, "supersubject.bk", sep = "."))
-  rds_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template, "supersubject.rds", sep = "."))
+  bk_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template,
+                                          "supersubject.bk", sep = "."))
+  rds_file <- file.path(supsubj_dir, paste(hemi, measure, fs_template,
+                                           "supersubject.rds", sep = "."))
+  row_file <- file.path(supsubj_dir, paste(hemi, measure,
+                                           "ss.rownames.csv", sep = "."))
   expect_true(file.exists(bk_file))
   expect_true(file.exists(rds_file))
+  expect_true(file.exists(row_file))
 })
+
+# ==============================================================================
+
+test_that("subset_supersubject works with matching IDs", {
+
+  new_supsubj_dir <- file.path(tempdir(), 'subset')
+
+  new_ss <- subset_supersubject(
+    supsubj_dir = supsubj_dir,
+    supsubj_file = supsubj_file,
+    folder_ids = folder_ids[1:6],
+    new_supsubj_dir = new_supsubj_dir
+
+  )
+
+  og_ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
+
+  expect_s4_class(new_ss, "FBM")
+  expect_equal(og_ss[1:6, ], new_ss[])
+
+  new_names <- scan(file.path(new_supsubj_dir, "lh.area.ss.rownames.csv"),
+                    what = character(), sep = "\n", quiet = TRUE)
+
+  expect_length(new_names, 6)
+
+  expect_true(file.exists(file.path(
+    new_supsubj_dir, gsub('.rds$', '.bk', supsubj_file))))
+})
+
+test_that("subset_supersubject returns original matrix when no subsetting is required", {
+
+  new_supsubj_dir <- file.path(tempdir(), 'no_subset')
+
+  no_change_ss <- subset_supersubject(
+    supsubj_dir = supsubj_dir,
+    supsubj_file = supsubj_file,
+    folder_ids = folder_ids,
+    new_supsubj_dir = new_supsubj_dir
+
+  )
+
+  og_ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
+
+  expect_s4_class(no_change_ss, "FBM")
+  expect_equal(og_ss[], no_change_ss[])
+
+  # No ss.rownames or new backing file is created
+  expect_false(file.exists(file.path(
+    new_supsubj_dir, gsub('.rds$', '.bk', supsubj_file))))
+})
+
+test_that("subset_supersubject warns when some IDs missing", {
+
+  new_supsubj_dir <- tempdir()
+
+  expect_warning(
+    subset_supersubject(
+      supsubj_dir = supsubj_dir,
+      supsubj_file = supsubj_file,
+      folder_ids = c(folder_ids[1:6], 'not_a_person'), # One missing
+      new_supsubj_dir = new_supsubj_dir
+    ),
+    regexp = "observations specified in phenotype were not found"
+  )
+})
+
+test_that("subset_supersubject errors when too many IDs are missing", {
+
+  new_supsubj_dir <- tempdir()
+
+  expect_error(
+    subset_supersubject(
+      supsubj_dir = supsubj_dir,
+      supsubj_file = supsubj_file,
+      folder_ids = c(folder_ids[1:6], 1:25), # too many missings
+      new_supsubj_dir = new_supsubj_dir
+    ),
+    "observations specified in phenotype were not found"
+  )
+
+})
+

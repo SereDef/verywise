@@ -30,13 +30,12 @@ out_stats_with_error[[2]]$error <- "Singular fit"
 
 test_that("vw_pool returns pooled stats for valid input", {
   result <- vw_pool(out_stats, m = 2)
-  expect_named(result, c("coef", "se", "t", "p", "resid", "warning"))
+  expect_named(result, c("coef", "se", "p", "resid", "warning"))
   expect_true(is.numeric(result$coef))
   expect_true(is.numeric(result$se))
-  expect_true(is.numeric(result$t))
   expect_true(is.numeric(result$p))
   expect_true(is.matrix(result$resid) || is.numeric(result$resid))
-  expect_null(result$warning)
+  expect_equal(result$warning, "")
 })
 
 test_that("vw_pool returns warning string if warnings present", {

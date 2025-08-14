@@ -1,0 +1,41 @@
+# Cluster Growing Summary (mri_surfcluster)
+# 7.4.1
+# 7.4.1
+# CreationTime 2025/08/13-14:06:04-GMT
+# cmdline mri_surfcluster --in fixtures/fs7/results/lh.area.stack3.-log10p.mgh --csd /Applications/freesurfer/7.4.1/average/mult-comp-cor/fsaverage/lh/cortex/fwhm01/abs/th30/mc-z.csd --ocn fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.ocn.mgh --sum fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.cluster.summary --annot aparc --cwpvalthresh 0.025 --no-fixmni --surf white --mask fixtures/fs7/results/lh.area.finalMask.mgh 
+# cwd /Users/Serena/Desktop/Packages/verywise/tests/testthat
+# sysname  Darwin
+# hostname macbook-pro-5.erasmusmc.nl
+# machine  x86_64
+# FixVertexAreaFlag 1
+# FixSurfClusterArea 1
+# 
+# Input      fixtures/fs7/results/lh.area.stack3.-log10p.mgh
+# Frame Number      0
+# srcsubj fsaverage
+# hemi lh
+# surface white
+# group_avg_surface_area 82220
+# group_avg_vtxarea_loaded 1
+# annot aparc
+# SUBJECTS_DIR /Applications/freesurfer/7.4.1/subjects
+# SearchSpace_mm2 1139.24
+# SearchSpace_vtx 2213
+# Bonferroni 0
+# Minimum Threshold 3
+# Maximum Threshold infinity
+# Threshold Sign    abs
+# AdjustThreshWhenOneTail 1
+# CW PValue Threshold: 0.025 
+# Area Threshold    0 mm^2
+# CSD thresh  3.000000
+# CSD nreps    10000
+# CSD simtype  null-z
+# CSD contrast NA
+# CSD confint  90.000000
+# Overall max 44.8535 at vertex 259
+# Overall min 0 at vertex 0
+# NClusters          0
+# FixMNI = 0
+# 
+# ClusterNo  Max   VtxMax   Size(mm^2)  MNIX   MNIY   MNIZ    CWP    CWPLow    CWPHi   NVtxs    WghtVtx   Annot

@@ -4,19 +4,19 @@
 \alias{fbm2mgh}
 \title{Save file backed matrix (FBM) to MGH file}
 \usage{
-fbm2mgh(fbm, fname, filter = NULL)
+fbm2mgh(fbm, fnames, mode = "1row.1file")
 }
 \arguments{
 \item{fbm}{a file backed matrix}
 
-\item{fname}{file name to be used to save out the data}
+\item{fnames}{file name to be used to save out the data}
 
-\item{filter}{a vector of indices of rows to include of fbm}
+\item{mode}{"1row.1file" or "allrows.1file"}
 }
 \description{
 Save file backed matrix (FBM) to MGH file
 }
 \author{
-Sander Lamballais, 2018.
+Serena Defina, 2025.
 Modified version of save_mgh.m (by Heath Pardoe, 09/12/2013)
 }

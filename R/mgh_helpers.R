@@ -36,16 +36,16 @@ as.mgh <- function(x, version = 1L,
 #' @title
 #' Save file backed matrix (FBM) to MGH file
 #'
-#' @author Sander Lamballais, 2018.
+#' @author Serena Defina, 2025.
 #' Modified version of save_mgh.m (by Heath Pardoe, 09/12/2013)
 #'
 #' @param fbm a file backed matrix
-#' @param fname file name to be used to save out the data
-#' @param filter a vector of indices of rows to include of fbm
+#' @param fnames file name to be used to save out the data
+#' @param mode "1row.1file" or "allrows.1file"
 #'
 #' @export
 #'
-fbm2mgh <-function(fbm, fname, filter = NULL) {
+fbm2mgh <-function(fbm, fnames, mode = '1row.1file') {
 
   MRI.UCHAR <-  0
   MRI.INT <-    1
@@ -56,41 +56,54 @@ fbm2mgh <-function(fbm, fname, filter = NULL) {
   MRI.TENSOR <- 6
   slices <- c(1:256)
 
-  # Create .mgh file
-  fid <- file(fname, open = "wb", blocking = TRUE)
-  on.exit(close(fid))
-
-  # Define dimensions
-  if (!is.null(filter)){
-    if (max(filter) > fbm$nrow) stop("In fbm2mgh, the defined filter exceeds the bounds.")
-    if (min(filter) < 1) stop("In fbm2mgh, the defined filter contains non-positive numbers.")
-  } else {
-    filter <- seq_len(fbm$nrow)
-  }
-
   width <- fbm$ncol
   height <- 1
   depth <- 1
-  nframes <- length(filter)
 
-  writeBin(as.integer(1), fid, size = 4, endian = "big")
-  writeBin(as.integer(width), fid, size = 4, endian = "big")
-  writeBin(as.integer(height), fid, size = 4, endian = "big")
-  writeBin(as.integer(depth), fid, size = 4, endian = "big")
-  writeBin(as.integer(nframes), fid, size = 4, endian = "big")
-  writeBin(as.integer(MRI.FLOAT), fid, size = 4, endian = "big")
-  writeBin(as.integer(1), fid, size = 4, endian = "big")
-  UNUSED.SPACE.SIZE <- 256
-  USED.SPACE.SIZE <- (3 * 4 + 4 * 3 * 4)
-  unused.space.size <- UNUSED.SPACE.SIZE - 2
-  writeBin(as.integer(0), fid, size = 2, endian = "big")
-  writeBin(as.integer(rep.int(0, unused.space.size)), fid, size = 1)
-  bpv <- 4
-  nelts <- width * height
+  if (mode == '1row.1file') {
+    stopifnot(fbm$nrow == length(fnames))
+    nframes <- 1
+  } else {
+    nframes <- fbm$nrow
+  }
 
-  for (i in filter) writeBin(fbm[i, ], fid, size = 4, endian = "big")
+  for (f in seq_along(fnames)) {
+    # Create .mgh file
+    fid <- file(fnames[f], open = "wb", blocking = TRUE)
 
-  NULL
+    # Populate it
+    writeBin(as.integer(1), fid, size = 4, endian = "big")
+    writeBin(as.integer(width), fid, size = 4, endian = "big")
+    writeBin(as.integer(height), fid, size = 4, endian = "big")
+    writeBin(as.integer(depth), fid, size = 4, endian = "big")
+    writeBin(as.integer(nframes), fid, size = 4, endian = "big")
+    writeBin(as.integer(MRI.FLOAT), fid, size = 4, endian = "big")
+    writeBin(as.integer(1), fid, size = 4, endian = "big")
+    UNUSED.SPACE.SIZE <- 256
+    USED.SPACE.SIZE <- (3 * 4 + 4 * 3 * 4)
+    unused.space.size <- UNUSED.SPACE.SIZE - 2
+    writeBin(as.integer(0), fid, size = 2, endian = "big")
+    writeBin(as.integer(rep.int(0, unused.space.size)), fid, size = 1)
+    bpv <- 4
+    nelts <- width * height
+
+    if (mode == '1row.1file') {
+      writeBin(fbm[f, ], fid, size = 4, endian = "big")
+    } else {
+      # memory safe writing
+      batch_size <- 1500
+      for (start in seq(1, nframes, by = batch_size)) {
+        end <- min(start + batch_size - 1, nframes)
+        chunk <- fbm[start:end, , drop = FALSE]
+        writeBin(as.vector(t(chunk)), fid, size = 4, endian = "big")
+      } # make sure it runs sequentially so fid connection is not broken
+
+    }
+
+    close(fid)
+    }
+
+  invisible(NULL)
 }
 
 #' @title

@@ -85,6 +85,9 @@ run_vw_meta <- function(stack, hemi, result_dirs,
 
   }
 
+  # result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
+
+
   # Coefficients
   c_vw <- bigstatsr::FBM(1, n_verts, init = 0, backingfile = 'meta.coef')
   # Standard errors
@@ -137,11 +140,19 @@ run_vw_meta <- function(stack, hemi, result_dirs,
   names(out) <- c("coef", "se", "p")
 
   # Save to MGH files
-  for (stat in seq_len(length(out))) {
-    fbm2mgh(fbm = out[[ stat ]],
-            fname = paste(hemi, paste0("stack",stack),
-                          "meta", names(out)[stat], "mgh", sep = "."))
-  }
+  # Save model statistics into separate .mgh files
+
+  # convert_to_mgh(out,
+  #                result_path,
+  #                stacks = seq_along(fixed_terms),
+  #                stat_names = c(res_bk_names),
+  #                verbose = verbose)
+  #
+  # for (stat in seq_len(length(out))) {
+  #   fbm2mgh(fbm = out[[ stat ]],
+  #           fname = paste(hemi, paste0("stack",stack),
+  #                         "meta", names(out)[stat], "mgh", sep = "."))
+  # }
 
   return(out)
 }
