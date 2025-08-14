@@ -55,9 +55,6 @@ build_supersubject <- function(subj_dir,
 
   # TODO: check measure names! measure2 <- measure
   # if(measure2 == "w_g.pct") measure2 <- "w-g.pct"
-  hemi_name <- if (hemi == "lh") "left" else "right"
-  vw_message("Building (", hemi_name, " hemisphere) super-subject matrix...",
-             verbose = verbose)
 
   # Identify brain surface files to load ---------------------------------------
   vw_message(" * retrieving ", length(folder_ids), " brain surface files...",
@@ -110,7 +107,7 @@ build_supersubject <- function(subj_dir,
                  files_not_found, "\n"), log_file)
 
     # If many files are missing, something may have gone wrong in the pre-processing
-    if (length(files_not_found) >= error_cutoff) {
+    if (length(files_not_found) > error_cutoff) {
       stop(length(files_not_found),
       " specified brain surface files were not found in `subj_dir`.",
       "\nAre you sure the FreeSurfer pre-processing ran successfully?")
@@ -130,13 +127,7 @@ build_supersubject <- function(subj_dir,
 
   # Get dimensions
   n_files <- length(files_found) # Number of observations / subjects
-  # n_verts <- load.mgh(files_found[1])$ndim1 # Number of vertices
-  n_verts <- switch(fs_template,
-                    fsaverage = 163842,
-                    fsaverage6 = 40962,
-                    fsaverage5 = 10242,
-                    fsaverage4 = 2562,
-                    fsaverage3 = 642)
+  n_verts <- count_vertices(fs_template)
 
   if (fs_template != 'fsaverage') {
     vw_message(" ! NOTE: downsampling vertices induces (small) registration errors.",
@@ -158,20 +149,17 @@ build_supersubject <- function(subj_dir,
   ss <- bigstatsr::FBM(
     nrow = n_files,
     ncol = n_verts,
+    type = "float",
     backingfile = gsub(".bk$", "", backing),
     create_bk = !file.exists(backing)
   )
 
-  # Disable parallel BLAS (and other) to prevent accidental implicit parallelism:
-  Sys.setenv(OMP_NUM_THREADS = 1,
-             MKL_NUM_THREADS = 1,
-             OPENBLAS_NUM_THREADS = 1,
-             VECLIB_MAXIMUM_THREADS = 1,
-             NUMEXPR_NUM_THREADS = 1)
-
   vw_message(" * populating super-subject matrix...", verbose = verbose)
 
-  failed_to_load <- bigstatsr::big_parallelize(
+  # Temporarily disable parallel BLAS (and other) to prevent accidental implicit
+  # parallelism
+  with_tmp_sysenv(code = {
+    failed_to_load <- bigstatsr::big_parallelize(
     X = ss,
     p.FUN = function(X, ind, files_found, n_verts, fs_template) {
 
@@ -209,6 +197,7 @@ build_supersubject <- function(subj_dir,
     fs_template = fs_template,
     p.combine = "c"  # Combine logs from all cores
   )
+  })
 
   # Write combined logs from main process (doing this outside parallel process
   # to avoid race conditions)
@@ -238,5 +227,167 @@ build_supersubject <- function(subj_dir,
     ss$save()
   }
 
+  return(ss)
+}
+
+#' @title
+#' Subset an existing supersubject matrix by matching folder IDs
+#'
+#' @description
+#' This function subsets a \link[bigstatsr]{FBM} supersubject matrix that was
+#' created using \code{\link{build_supersubject}}, retaining only the rows that
+#' correspond to a set of folder (or row) IDs.
+#' It reads row names from an associated \code{.csv} file, checks for missing IDs,
+#' and writes logs if any are not found. The new subsetted matrix can be saved
+#' for future use.
+#'
+#' @param supsubj_dir Character string indicating the path to the directory
+#'   containing the supersubject files (i.e the supersubject matrix itself as a
+#'   \code{.rds} file, and the associated \code{.bk} and \code{.rownames.csv}
+#'   files).
+#' @param supsubj_file Character string indicating the name of the supersubject
+#'   \code{.rds} file. Must follow the naming pattern
+#'   \code{"<hemi>.<measure>.<fs_template>.supersubject.rds"}.
+#' @param folder_ids Character vector of folder IDs to retain in the new ss
+#'   matrix. This should also be a column in the phenotype dataset.
+#' @param error_cutoff Integer indicating the maximum number of missing IDs that
+#'   is allowed before the function throws an error. If the number of missing IDs
+#'   is \code{ <= error_cutoff }, a warning is issued instead.
+#'   Default: 20.
+#' @param new_supsubj_dir Character string indicating the path to the directory
+#'   where the new supersubject files should be stored (either temporarily or
+#'   permanently if \code{ save_rds == TRUE }. Created if it does not exist.
+#' @param save_rds Logical. If \code{TRUE}, the new ss is also saved to a
+#'   \code{.rds} file inside \code{new_supsubj_dir}.
+#' @param verbose Logical. Default: \code{TRUE}.
+#'
+#' @return
+#' A \link[bigstatsr]{FBM} object containing the subsetted supersubject matrix.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Reads row names from the supersubject's `.csv` file.
+#' 2. Checks whether all `folder_ids` exist in the supersubject.
+#' 3. Logs missing IDs to `issues.log` in `new_supsubj_dir`.
+#' 4. If the number of missing IDs exceeds `error_cutoff`, stops with an error.
+#' 5. Creates a new FBM with only the matching rows, writing it blockwise to
+#'    avoid excessive RAM usage.
+#' 6. Writes the filtered row names to `ss.rownames.csv` in `new_supsubj_dir`.
+#'
+#' @examples
+#' \dontrun{
+#' # Subset a supersubject to a small set of IDs
+#' subset_supersubject(
+#'   supsubj_dir = "path/to/original/ss/",
+#'   supsubj_file = "<hemi>.<measure>.<fsaverage>.supersubject.rds",
+#'   folder_ids = pheno_data[, "folder_id"],
+#'   error_cutoff = 20,
+#'   new_supsubj_dir = "path/to/subsetted/ss/",
+#'   save_rds = TRUE
+#' )
+#' }
+#'
+#' @seealso \link{build_supersubject}
+#'
+#' @export
+#'
+subset_supersubject <- function(supsubj_dir,
+                                supsubj_file,
+                                folder_ids,
+                                error_cutoff = 20,
+                                new_supsubj_dir,
+                                save_rds = FALSE,
+                                verbose = TRUE) {
+
+  rownames_file <- file.path(supsubj_dir,
+                             gsub('.fsaverage\\d*\\.supersubject.rds',
+                                  '.ss.rownames.csv', supsubj_file))
+
+  ss_rownames <- scan(file = rownames_file, what = character(), sep = "\n",
+                      quiet = TRUE)
+
+  ids_not_found <- setdiff(folder_ids, ss_rownames)
+  n_ids_not_found <- length(ids_not_found)
+
+  if (n_ids_not_found > 0) {
+
+    log_file <- file.path(new_supsubj_dir,
+                          gsub('.fsaverage\\d*\\.supersubject.rds',
+                               '.issues.log', supsubj_file))
+
+    writeLines(c(paste("Attention:", n_ids_not_found,
+                       "observations speficied in phenotype were not found:"),
+                 ids_not_found, "\n"), log_file)
+
+    # If many observations are missing, the folder id may be mispecified
+    if (n_ids_not_found > error_cutoff) {
+      stop(n_ids_not_found,
+           " observations specified in phenotype were not found in `subj_dir`.",
+           "\nIs your `folder_id` correctly specified?",
+           "\nSee issues.log file for datails.")
+    }
+
+    # If not many observations are missing, notify user but keep at it
+    warning(" ! ", n_ids_not_found,
+            " observations specified in phenotype were not found in `subj_dir`.",
+            "\n   See issues.log file for datails.")
+  }
+
+  ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
+
+  rows_to_keep <- which(ss_rownames %in% folder_ids)
+
+  if (length(rows_to_keep) < length(ss_rownames)) {
+    # We gots to subset
+
+    n_col <- ss$ncol # Number of vertices
+    n_row <- length(rows_to_keep) # New number of rows
+
+    # Define backing file for matrix
+    if(!dir.exists(new_supsubj_dir)) {
+      dir.create(new_supsubj_dir, showWarnings = FALSE)
+    }
+
+    backing <- file.path(new_supsubj_dir, gsub(".rds$", ".bk", supsubj_file))
+    if (file.exists(backing)) file.remove(backing)
+
+    new_ss <- bigstatsr::FBM(nrow = n_row,
+                             ncol = n_col,
+                             type = "float",
+                             backingfile = gsub(".bk$", "", backing),
+                             create_bk = !file.exists(backing))
+
+    vw_message(" * subsetting super-subject matrix...",
+               "\n   ", n_row, "/", ss$nrow, " rows matching data[,`folder_id`])",
+               verbose = verbose)
+
+    # Fill new ss matrix in chunks
+    bigstatsr::big_apply(
+        X = ss,
+        a.FUN = function(X, ind, ind.row) {
+          new_ss[ind.row, ] <- X[ind,]
+          invisible(NULL)
+        },
+        ind = rows_to_keep,
+        ind.row = seq_along(rows_to_keep),
+        block.size = 1000,
+    )
+
+    utils::write.table(ss_rownames[rows_to_keep],
+                       file = file.path(new_supsubj_dir,
+                                        basename(rownames_file)),
+                       row.names = FALSE, col.names = FALSE, quote = FALSE,
+                       sep = ",")
+
+    # Save output
+    if (save_rds) {
+      vw_message(" * saving (subsetted) supersubject matrix to .rds file.",
+                 verbose = verbose)
+      new_ss$save()
+    }
+
+    return(new_ss)
+
+  }
   return(ss)
 }

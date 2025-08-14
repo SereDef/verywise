@@ -25,7 +25,7 @@ run_vw_lmm(
   mcz_thr = 30,
   cwp_thr = 0.025,
   save_optional_cluster_info = FALSE,
-  save_ss = TRUE,
+  save_ss = FALSE,
   save_residuals = FALSE,
   verbose = TRUE
 )
@@ -48,8 +48,8 @@ directory. Must follow the verywise directory structure (see package
 vignette for details).}
 
 \item{outp_dir}{Character string specifying the output directory for results.
-If \code{NULL} (default), creates a "verywise_results" subdirectory within
-\code{subj_dir}.}
+If \code{NULL} (default), creates a "verywise_results" sub-directory in the
+current working directory (not recommended).}
 
 \item{hemi}{Character string specifying which hemisphere(s) to analyze.
 Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
@@ -138,9 +138,11 @@ Default: 0.025.}
 output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
 for details. Default: \code{FALSE}.}
 
-\item{save_ss}{Logical indicating whether to save the super-subject matrix as
-an .rds file for faster future processing.
-Default: \code{TRUE} (recommended for repeated analyses).}
+\item{save_ss}{Logical indicating whether to save the super-subject matrix
+("ss") as an .rds file that can be then re-used in future analyses. This can
+also be a character string specifying the directory where ss should be saved.
+When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
+default. Default: \code{FALSE}.}
 
 \item{save_residuals}{Logical indicating whether to save the residuals.mgh
 file. Default: \code{FALSE}.}

@@ -25,12 +25,6 @@ check_data_list <- function(data_list, folder_id, formula) {
 
   data1 <- data_list[[1]]
 
-  if (!all(vapply(data_list,
-                  function(df) { identical(dim(df), dim(data1)) &&
-                      identical(names(df), names(data1)) }, logical(1)))) {
-    stop("Each data.frame in `data_list` must have the same dimentions.")
-  }
-
   if (!(folder_id %in% names(data1))) {
     stop(sprintf("Folder ID '%s' not found in data.", folder_id))
   }
@@ -51,12 +45,30 @@ check_data_list <- function(data_list, folder_id, formula) {
     stop(sprintf("Variables: '%s' are specified in the formula but not present in the data.",
                  terms[missing_vars]))
   }
-  # TODO: check that is in long format ?
+
+  # Ensure all data.frames are equivalent to data1
+  if (!all(vapply(data_list,
+                  function(df) { identical(df[,folder_id], data1[,folder_id]) &&
+                      identical(names(df), names(data1)) }, logical(1)))) {
+    stop("Each data.frame in `data_list` must have identical dimentions.")
+  }
+
+  # TODO: check that is in "long" format ...?
+
   invisible(NULL)
 }
 
-check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
+check_path <- function(dir_path, create_if_not = FALSE) { # file_exists = NULL
+
   param_name <- deparse(substitute(dir_path))
+
+  if (param_name == "outp_dir" & is.null(dir_path)) {
+    outp_dir <- file.path(getwd(), "verywise_results")
+    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
+                 " You can find the results at ", outp_dir)
+    dir.create(outp_dir, showWarnings = FALSE)
+    return(outp_dir)
+  }
 
   if (!dir.exists(dir_path)) {
     if (create_if_not) {
@@ -69,15 +81,16 @@ check_path <- function(dir_path, create_if_not=FALSE, file_exists=NULL) {
     }
   }
 
-  if (!is.null(file_exists)) {
-    file_exists <- as.vector(file_exists, mode = 'character')
-    for (f in file_exists) {
-      file_path <- file.path(dir_path, f)
-      if (file.exists(file_path)) return(file_path)
-    }
-  }
+  # Check for files inside the folder [not used in the latest version]
+  # if (!is.null(file_exists)) {
+  #   file_exists <- as.vector(file_exists, mode = 'character')
+  #   for (f in file_exists) {
+  #     file_path <- file.path(dir_path, f)
+  #     if (file.exists(file_path)) return(file_path)
+  #   }
+  # }
 
-  invisible(NULL)
+  return(dir_path)
 }
 
 check_stack_file <- function(fixed_terms, outp_dir) {
@@ -109,6 +122,26 @@ check_stack_file <- function(fixed_terms, outp_dir) {
   }
 }
 
+check_ss_exists <- function(path, ss_file) {
+
+  ss_path <- file.path(path, ss_file)
+
+  if (!file.exists(ss_path)) {
+    return(FALSE)
+  }
+
+  rn_file <- gsub('.fsaverage\\d*\\.supersubject.rds', '.ss.rownames.csv',
+                  ss_file)
+  rn_path <- file.path(path, rn_file)
+
+  if (!file.exists(rn_path)) {
+    param_name <- deparse(substitute(path))
+    stop(sprintf("A `%s` file was found in `%s`, but its `ss.rownames.csv` is missing.",
+                 ss_file, param_name))
+
+  }
+  return(TRUE)
+}
 
 check_weights <- function(weights, data1) {
 
@@ -202,6 +235,39 @@ check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer 
   if (param < lower || param > upper) {
     stop(sprintf("`%s` must be between %s and %s.", name, lower, upper))
   }
+}
+
+check_row_match <- function(rownames_file, data_list, folder_id) {
+
+  ss_rownames <- scan(file = rownames_file,
+                      what = character(), sep = "\n", quiet = TRUE)
+
+  folder_ids <- data_list[[1]][, folder_id]
+
+  if (!identical(ss_rownames, folder_ids)) {
+
+    vw_message(' * matching phenotype with brain surface data')
+
+    # Note there should be no NA in match(ss_rownames, folder_ids) because these
+    # are thre are no ss_rownames that are not in folder_id
+    # (see build_supersubject and subset_supersubject functions)
+    matching_key <- match(ss_rownames, folder_ids)
+    if (any(is.na(matching_key))) stop("Error filtering rows in ss.")
+
+    # Also folder_id should be identical in all dfs (see check_data_list)
+    data_list <- lapply(data_list,
+                        function(df) {  # Match the row names in ss
+                          return(df[matching_key, ])})
+
+    # Note the user was already notified and an error should have already occurred
+    # if the drop was above the cutoff
+    obs_drop <- length(folder_ids) - length(matching_key)
+    if (obs_drop > 0) {
+      vw_message('   ', obs_drop, ' observations were dropped from phenotype.')
+    }
+  }
+
+  return(data_list)
 }
 
 # validate_hemi_vw_lmm_inputs <- function(formula, data_list, subj_dir, outp_dir,

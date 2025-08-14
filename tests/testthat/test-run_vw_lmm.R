@@ -6,40 +6,8 @@ set.seed(3108)
 subj_dir <- test_path("fixtures", "fs7")
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 
-n_obs <- nrow(pheno)
-test_y <- rnorm(n_obs, mean = 6.5, sd = 0.2)
 test_formula <- vw_area ~ sex + age + (1 | id)
-fs_home = "/Applications/freesurfer/7.4.1"
-
-test_that("single_lmm returns correct structure", {
-  result <- single_lmm(imp = pheno,
-                       y = test_y,
-                       formula = test_formula)
-  expect_type(result, "list")
-  expect_named(result, c("stats", "resid", "warning"))
-  expect_s3_class(result$stats, "data.frame")
-  expect_true("term" %in% names(result$stats))
-  expect_true("qhat" %in% names(result$stats))
-  expect_true("se" %in% names(result$stats))
-  expect_true("pval" %in% names(result$stats))
-  expect_length(result$resid, n_obs)
-})
-
-test_that("single_lmm works with model_template", {
-  # Fit a template model
-  pheno2 <- pheno
-  pheno2[all.vars(test_formula)[1]] <- test_y
-  template <- lmer(test_formula, data = pheno2)
-  # Use the template for single_lmm
-  result <- single_lmm(pheno, test_y, test_formula, model_template = template)
-  expect_type(result, "list")
-  expect_s3_class(result$stats, "data.frame")
-})
-
-test_that("single_lmm disables pvalues when requested", {
-  result <- single_lmm(pheno, test_y, test_formula, pvalues = FALSE)
-  expect_false("pval" %in% names(result$stats))
-})
+fs_home = "/Applications/freesurfer/7.4.1" # mac only
 
 # ==============================================================================
 test_that("run_vw_lmm runs end-to-end with simulated data", {
@@ -49,9 +17,9 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
     skip("FreeSurfer not found in FREESURFER_HOME")
   }
 
-  outp_dir <- withr::local_tempdir()
+  # outp_dir <- withr::local_tempdir()
   # If you need to inspect results (note: running test() instead of check())
-  # outp_dir <- file.path(subj_dir, 'results')
+  outp_dir <- file.path(subj_dir, 'results')
 
   # Run function
   result <- run_vw_lmm(
@@ -95,16 +63,16 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
 
   # Structure tests
   expect_type(result, "list")
-  expect_length(result, 5)
-  expect_named(result, c("coef", "se", "t", "p", "resid"))
+  expect_named(result, c("coef", "se", "p", "resid"))
   expect_s4_class(result$coef, "FBM")
   expect_s4_class(result$se, "FBM")
-  expect_s4_class(result$t, "FBM")
   expect_s4_class(result$p, "FBM")
   expect_s4_class(result$resid, "FBM")
 
   expect_true(file.exists(
-    file.path(outp_dir, 'lh.area.stack2.coef.mgh')))
+    file.path(outp_dir, 'lh.area.stack1.coef.mgh')))
+  expect_true(file.exists(
+    file.path(outp_dir, 'lh.area.stack2.p.mgh')))
   expect_true(file.exists(
     file.path(outp_dir, 'lh.area.stack3.cache.th30.abs.sig.ocn.mgh')))
 

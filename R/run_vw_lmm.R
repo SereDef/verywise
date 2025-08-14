@@ -26,8 +26,8 @@
 #'   directory. Must follow the verywise directory structure (see package
 #'   vignette for details).
 #' @param outp_dir Character string specifying the output directory for results.
-#'   If \code{NULL} (default), creates a "verywise_results" subdirectory within
-#'   \code{subj_dir}.
+#'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
+#'   current working directory (not recommended).
 #' @param hemi Character string specifying which hemisphere(s) to analyze.
 #'   Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
 #'   (right only).
@@ -99,9 +99,11 @@
 #' @param save_optional_cluster_info Logical indicating whether to save additional
 #'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
 #'  for details. Default: \code{FALSE}.
-#' @param save_ss Logical indicating whether to save the super-subject matrix as
-#'   an .rds file for faster future processing.
-#'   Default: \code{TRUE} (recommended for repeated analyses).
+#' @param save_ss Logical indicating whether to save the super-subject matrix
+#'  ("ss") as an .rds file that can be then re-used in future analyses. This can
+#'  also be a character string specifying the directory where ss should be saved.
+#'  When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
+#'  default. Default: \code{FALSE}.
 #' @param save_residuals Logical indicating whether to save the residuals.mgh
 #'   file. Default: \code{FALSE}.
 #' @param verbose Logical indicating whether to display progress messages.
@@ -236,10 +238,9 @@ run_vw_lmm <- function(
   cwp_thr = 0.025,
   # Output control
   save_optional_cluster_info = FALSE,
-  save_ss = TRUE,
+  save_ss = FALSE,
   save_residuals = FALSE,
-  verbose = TRUE
-) {
+  verbose = TRUE) {
 
   hemi <- match.arg(hemi)
 
@@ -253,27 +254,18 @@ run_vw_lmm <- function(
 
   ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
 
-  ss_in_subj_dir <- check_path(subj_dir,
-                               file_exists = c(ss_file,
-                                               file.path('ss', ss_file)))
+  subj_dir <- check_path(subj_dir)
+  ss_exists <- check_ss_exists(subj_dir, ss_file)
 
-  if (is.null(outp_dir)) {
-    outp_dir <- file.path(subj_dir, "verywise_results")
-    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
-               " You can find the results at ", outp_dir)
-    dir.create(outp_dir, showWarnings = FALSE)
-  }
-
-  ss_in_outp_dir <- check_path(outp_dir, create_if_not = TRUE,
-                               file_exists = file.path('ss', ss_file))
+  outp_dir <- check_path(outp_dir, create_if_not = TRUE)
 
   check_freesurfer_setup(FS_HOME, verbose = verbose)
 
   n_cores <- check_cores(n_cores)
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
-  check_numeric_param(chunk_size, integer = TRUE,
-                      lower = 1, upper = 5000) # for memory safety
+  check_numeric_param(chunk_size, integer = TRUE, lower = 1,
+                      upper = 5000) # for memory safety
   check_numeric_param(fwhm, lower = 1, upper = 30)
   # check_numeric_param(mcz_thr, lower = 0)
   # check_numeric_param(cwp_thr, lower = 0)
@@ -305,7 +297,7 @@ run_vw_lmm <- function(
   # Save the stack names (i.e. fixed terms) to a lookup file
   check_stack_file(fixed_terms, outp_dir)
 
-  # Build supersubject =========================================================
+  # Reproducibility baby =======================================================
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
 
@@ -313,47 +305,45 @@ run_vw_lmm <- function(
 
   vw_message("Checking and preparing brain surface data...", verbose = verbose)
 
-  ss_file_locs <- c(ss_in_subj_dir, ss_in_outp_dir)
-  ss_exists <- ss_file_locs[!is.null(ss_file_locs)]
+  if (is.character(save_ss)) {
+    ss_dir <- check_path(save_ss, create_if_not = TRUE)
+    save_ss <- TRUE
+  } else {
+    ss_dir <- file.path(outp_dir, 'ss')
+    if (!save_ss) on.exit(unlink(ss_dir, recursive = TRUE), add = TRUE)
+  }
 
-  if (!is.null(ss_exists)) {
-    vw_message(" * reading super-subject file from: ", ss_exists,
+  if (ss_exists) {
+    vw_message(" * reading super-subject file from: ", subj_dir,
                verbose = verbose)
 
-    ss <- bigstatsr::big_attach(ss_exists)
-
-    ss_folder <- dirname(ss_exists)
+    ss <- subset_supersubject(
+      supsubj_dir = subj_dir,
+      supsubj_file = ss_file,
+      folder_ids = data1[, folder_id],
+      new_supsubj_dir = ss_dir,
+      save_rds = save_ss,
+      error_cutoff = tolerate_surf_not_found,
+      verbose = verbose)
 
   } else {
 
-    ss_folder <- file.path(outp_dir, "ss")
+    vw_message("Building (", hemi_name, " hemisphere) super-subject matrix...",
+               verbose = verbose)
 
     ss <- build_supersubject(
       subj_dir = subj_dir,
       folder_ids = data1[, folder_id],
-      supsubj_dir = ss_folder,
+      supsubj_dir = ss_dir,
       measure = measure,
       hemi = hemi,
+      fs_template = fs_template,
       n_cores = n_cores,
       fwhmc = paste0("fwhm", fwhm),
-      fs_template = fs_template,
       save_rds = save_ss,
-      error_cutoff = tolerate_surf_not_found
+      error_cutoff = tolerate_surf_not_found,
+      verbose = verbose
     )
-  }
-
-  ss_rownames <- scan(file = file.path(ss_folder,
-                                       paste(hemi, measure, 'ss.rownames.csv', sep = '.')),
-                      what = character(), sep = "\n", quiet = TRUE)
-
-  if (!identical(ss_rownames, data1[, folder_id])) {
-    # Assume all data.frames in data_list have the same order... one hopes
-    vw_message(' * matching phenotype with available brain surface data')
-    data_list <- lapply(data_list,
-                        function(df) {  # Match the row names in ss
-                          return(df[match(ss_rownames, df[, folder_id]), ])})
-    data1 <- data_list[[1]]
-    vw_message('   ', nrow(data1), ' observationts retained.')
   }
 
   vw_message(" * cleaning super-subject matrix...", verbose = verbose)
@@ -365,6 +355,17 @@ run_vw_lmm <- function(
   problem_verts <- fbm_col_has_0(ss)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
+
+  # Ensure phenotype and ss row order matches ==================================
+
+  data_list <- check_row_match(rownames_file = file.path(ss_dir,
+                                                         paste(hemi, measure,
+                                                               'ss.rownames.csv',
+                                                               sep = '.')),
+                               data_list = data_list,
+                               folder_id = folder_id)
+
+  data1 <- data_list[[1]]
 
   # Unpack model ===============================================================
   vw_message("Statistical model preparation...",
@@ -392,20 +393,22 @@ run_vw_lmm <- function(
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
   # Temporary output matrices
-  res_bk_names <- c("coef", "se", "t", "p", "resid")
+  res_bk_names <- c("coef", "se", "p", "resid") # "t",
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
   on.exit(file.remove(paste0(res_bk_paths, ".bk")), add = TRUE)
 
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+  fbm_precision <- "float" # single precision – 32 bits
+
+  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["coef"])  # Coefficients
-  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["se"])    # Standard errors
-  t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
-                         backingfile = res_bk_paths["t"])     # t values
-  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1,
+  # t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
+  #                        backingfile = res_bk_paths["t"])     # t values
+  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
                          backingfile = res_bk_paths["p"])     # P values
-  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0,
+  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["resid"]) # Residuals
 
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
@@ -454,13 +457,28 @@ run_vw_lmm <- function(
       chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
       worker_id <- Sys.getpid() # useful for debugging
 
-      vw_message(sprintf(" - Processing chunk %d/%d (worker: %s)",
+      vw_message(sprintf("- Processing chunk %d/%d (worker: %s)",
                          chunk_idx, length(chunk_seq), worker_id))
       utils::flush.console()
+
+      progress_tracker <- list()
+      for (update_freq in c('25%','50%','75%')){
+        progress_tracker[update_freq] <- as.integer(
+          attr(chunk, paste0('chunk_',update_freq))
+          )
+      }
     }
 
     for (v in chunk) {
 
+      if (verbose) {
+        milestone <- names(which(progress_tracker == v))
+        if (length(milestone) == 1) {
+          vw_message(sprintf("--- chunk %d/%d is %s done.",
+                             chunk_idx, length(chunk_seq), milestone))
+          utils::flush.console()
+        }
+      }
       # NOTE: ss does not need to be copied to each worker with doParallel
       vertex <- ss[, v]
 
@@ -470,11 +488,10 @@ run_vw_lmm <- function(
                           formula = formula,
                           model_template = model_template,
                           weights = weights,
-                          lmm_control = lmm_control,
-                          pvalues = (m == 1))
+                          lmm_control = lmm_control)
 
       # Pool results
-      pooled_stats <- vw_pool(out_stats, m = m)
+      pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
 
       # Log errors (if any)
       if (is.character(pooled_stats)) {
@@ -485,7 +502,7 @@ run_vw_lmm <- function(
       }
 
       # Log warnings (if any)
-      if (!is.null(pooled_stats$warning)) {
+      if (pooled_stats$warning != "") {
         cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
             append = TRUE)
       }
@@ -493,8 +510,8 @@ run_vw_lmm <- function(
       # Write results to their respective FBM
       c_vw[, v] <- pooled_stats$coef
       s_vw[, v] <- pooled_stats$se
-      t_vw[, v] <- pooled_stats$t
-      p_vw[, v] <- -1 * log10(pooled_stats$p)
+      # t_vw[, v] <- pooled_stats$t
+      p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
       r_vw[, v] <- pooled_stats$resid
 
     }
@@ -502,33 +519,20 @@ run_vw_lmm <- function(
 
   parallel::stopCluster(cluster)
 
-  out <- list(c_vw, s_vw, t_vw, p_vw, r_vw)
+  out <- list(c_vw, s_vw, p_vw, r_vw) # t_vw,
   # "coefficients", "standard_errors", "t_values", "p_values", "residuals"
   names(out) <- res_bk_names
 
   # Post-processing ============================================================
 
-  # Split all coefficients into separate .mgh files
-  vw_message("Post-processing\n * converting coefficients, SEs, t- and p-values",
-             " to .mgh format", verbose = verbose)
+  # Save model statistics into separate .mgh files
+  convert_to_mgh(out,
+                 result_path,
+                 stacks = seq_along(fixed_terms),
+                 stat_names = c(res_bk_names,'-log10p'),
+                 verbose = verbose)
 
-  results_grid <- expand.grid(seq_along(fixed_terms), # how many terms
-                              # all statistics except the residuals
-                              res_bk_names[-length(res_bk_names)])
-
-  stats_mgh_paths <- paste(result_path, paste0("stack", results_grid[, 1]),
-                           results_grid[, 2], "mgh", sep = ".")
-
-  lapply(seq_len(nrow(results_grid)), function(grid_row) {
-    fbm2mgh(fbm = out[[results_grid[grid_row, 2]]],
-            fname = stats_mgh_paths[grid_row],
-            filter = as.integer(results_grid[grid_row, 1]))
-  })
-
-  vw_message(" * converting residuals to .mgh format...", verbose = verbose)
   resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
-  fbm2mgh(fbm = out[[res_bk_names[length(res_bk_names)]]],
-          fname = resid_mgh_path)
   if (!save_residuals) on.exit(file.remove(resid_mgh_path), add = TRUE)
 
   # Estimate full-width half maximum (using FreeSurfer) ========================
@@ -557,7 +561,7 @@ run_vw_lmm <- function(
 
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
-    fs_verbosity <- if(stack_n == 1 ) verbose else FALSE
+    fs_verbosity <- if(stack_n == 1) verbose else FALSE
     compute_clusters(stack_path = stack_path,
                      hemi = hemi,
                      fwhm = fwhm,
@@ -572,149 +576,4 @@ run_vw_lmm <- function(
   vw_message(pretty_message("All done! :)"))
 
   return(out)
-}
-
-
-#' @title
-#' Run a single linear mixed model and extract statistics
-#'
-#' @description
-#' Fits a linear mixed model to a single vertex outcome using
-#' \code{lme4::lmer()} and extracts fixed effects statistics. This function
-#' is called repeatedly across all cortical vertices during vertex-wise
-#' analysis.
-#'
-#' @param imp A data.frame containing the phenotype dataset
-#'   (in verywise format).
-#' @param y A numeric vector of outcome values representing a single
-#'   vertex from the super-subject matrix.
-#' @param formula An R formula object describing the linear mixed model using
-#'   \code{lme4} notation.
-#' @param model_template Optional pre-compiled model object for faster
-#'   estimation. When provided, \code{single_lmm} will use an "update"-based
-#'   workflow instead of refitting the model from scratch. This minimizes
-#'   repeated parsing and model construction overhead, significantly reducing
-#'   computation time for large-scale vertex-wise analyses.
-#'   Default: \code{NULL}.
-#' @param pvalues Logical indicating whether to compute p-values using the
-#'   *t-as-z* approximation (see Details). Default: \code{TRUE}.
-#' @inheritParams run_vw_lmm
-#'
-#' @details
-#' No additional parameters are currently passed to the \code{lme4::lmer} call.
-#' P-values are estimated using the *t-as-z* approach. This is known
-#' to the anti-conservative for small sample sizes.sizes but provides a
-#' computationally efficient solution. Type I error control is addressed
-#' more rigorously at the cluster-forming stage.
-#'
-#' @return A list with two elements:
-#'   \itemize{
-#'     \item \code{stats} - A data.frame with columns:
-#'       \itemize{
-#'         \item \code{term} - Fixed effect term names
-#'         \item \code{qhat} - Parameter estimates
-#'         \item \code{se} - Standard errors
-#'         \item \code{tval} - t-statistics (if \code{pvalues = TRUE})
-#'         \item \code{pval} - p-values (if \code{pvalues = TRUE})
-#'       }
-#'     \item \code{resid} - A numeric vector of model residuals
-#'   }
-#'
-#' @seealso \code{\link{run_vw_lmm}} for the main interface.
-#'
-#' @importFrom lme4 lmer
-#' @importFrom lme4 fixef
-#' @importFrom stats vcov
-#' @importFrom stats pnorm
-#' @importFrom stats residuals
-# #' @importFrom stats df.residual
-# #' @importFrom car Anova
-#'
-#' @export
-#'
-single_lmm <- function(
-  imp, y, formula,
-  model_template = NULL,
-  pvalues = TRUE,
-  weights = NULL,
-  lmm_control = lme4::lmerControl())
-  {
-
-  if (!is.null(weights) && !is.numeric(weights)) {
-    weights <- imp[, weights]
-  }
-
-  # Add (vertex) outcome to (single) dataset
-  imp[all.vars(formula)[1]] <- y
-
-  warning_msg <- NULL
-  error_msg <- NULL
-
-  # Fit linear mixed model using `lme4::lmer`
-  fit <- withCallingHandlers(
-    tryCatch(
-      {
-        if (!is.null(model_template)) {
-          stats::update(model_template, data = imp, weights = weights)
-        } else {
-          suppressMessages(lmer(formula = formula, data = imp,
-                                weights = weights, control = lmm_control))
-        }
-      },
-      error = function(e) {
-        error_msg <<- conditionMessage(e)
-        NULL
-      }
-    ),
-    warning = function(w) {
-      warning_msg <<- conditionMessage(w)
-      invokeRestart("muffleWarning")
-    }
-  )
-
-  if (!is.null(error_msg)) {
-    result <- list("stats" = NA, "resid" = NA, "error" = error_msg)
-    return(result)
-  }
-
-  # coef(fit)$id # A matrix of effects by random variable
-  # lme4::ranef(fit) # extract random effects (these should sum to 0)
-  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
-
-  # Extract estimates, standard errors and p-values
-  stats <- data.frame(
-    "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
-    "se" = as.matrix(summary(fit)$coefficients[, "Std. Error"]) # standard errors
-    # microbench
-    # sqrt(diag(summary(fit)$vcov))
-    # sqrt(diag(as.matrix(vcov(fit)))))
-  )
-
-  # "pval" = as.matrix(Anova(fit, type = 3)[, "Pr(>Chisq)"]) # Wald chi-square tests
-  # TODO: check pbkrtest:: Kenward-Roger and Satterthwaite Based estimation
-  # TODO: ask Bing: why type 3 and not 2
-  # -log10() ?
-  # TODO: implement stack of interest?
-
-  # Calculate p-values using t-as-z method
-  if (pvalues) {
-    stats$tval <- stats$qhat / stats$se
-    stats$pval <- 2 * (1 - pnorm(abs(stats$tval)))
-  }
-
-  # Save row.names (i.e. terms) as a column so these can be grouped later
-  stats <- data.frame("term" = row.names(stats), stats, row.names = NULL)
-
-  # Also extract model residuals for smoothness estimation
-  resid <- residuals(fit)
-
-  # Finally, extract residual degrees of freedom for Barnard-Rubin adjustment
-  # Normally, this would be the number of independent observation minus the
-  # number of fitted parameters, but not exactly what is done here.
-  # Following the `broom.mixed` package approach, which `mice::pool` relies on
-  # df <- df.residual(fit)
-
-  result <- list("stats" = stats, "resid" = resid, "warning" = warning_msg)
-
-  return(result)
 }
