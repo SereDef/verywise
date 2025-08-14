@@ -21,7 +21,7 @@ approach."><meta property="og:image" content="https://seredef.github.io/verywise
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,7 +87,7 @@ approach.</p>
 <span>  mcz_thr <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  cwp_thr <span class="op">=</span> <span class="fl">0.025</span>,</span>
 <span>  save_optional_cluster_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  save_ss <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  save_ss <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  save_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -121,8 +121,8 @@ vignette for details).</p></dd>
 
 <dt id="arg-outp-dir">outp_dir<a class="anchor" aria-label="anchor" href="#arg-outp-dir"></a></dt>
 <dd><p>Character string specifying the output directory for results.
-If <code>NULL</code> (default), creates a "verywise_results" subdirectory within
-<code>subj_dir</code>.</p></dd>
+If <code>NULL</code> (default), creates a "verywise_results" sub-directory in the
+current working directory (not recommended).</p></dd>
 
 
 <dt id="arg-hemi">hemi<a class="anchor" aria-label="anchor" href="#arg-hemi"></a></dt>
@@ -240,9 +240,11 @@ for details. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
-<dd><p>Logical indicating whether to save the super-subject matrix as
-an .rds file for faster future processing.
-Default: <code>TRUE</code> (recommended for repeated analyses).</p></dd>
+<dd><p>Logical indicating whether to save the super-subject matrix
+("ss") as an .rds file that can be then re-used in future analyses. This can
+also be a character string specifying the directory where ss should be saved.
+When <code>TRUE</code>, the ss matrix will be saved in <code>&lt;outp_dir&gt;/ss</code> by
+default. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-save-residuals">save_residuals<a class="anchor" aria-label="anchor" href="#arg-save-residuals"></a></dt>

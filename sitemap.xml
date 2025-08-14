@@ -13,6 +13,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/build_supersubject.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/check_pheno_obj.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/compute_clusters.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/convert_to_mgh.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/create_cortex_mask.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/estimate_fwhm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/fbm2mgh.html</loc></url>
@@ -25,6 +26,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/load_pheno_file.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/make_chunk_sequence.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/mask_cortex.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/move_result_files.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pipe.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pretty_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_vw_lmm.html</loc></url>
@@ -34,6 +36,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/simulate_freesurfer_data.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/simulate_long_pheno_data.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/single_lmm.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/subset_supersubject.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_pool.html</loc></url>
 </urlset>

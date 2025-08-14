@@ -13,7 +13,7 @@ analysis."><meta property="og:image" content="https://seredef.github.io/verywise
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@ analysis."><meta property="og:image" content="https://seredef.github.io/verywise
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run a single linear mixed model and extract statistics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/R/run_vw_lmm.R" class="external-link"><code>R/run_vw_lmm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/R/lmm_helpers.R" class="external-link"><code>R/lmm_helpers.R</code></a></small>
       <div class="d-none name"><code>single_lmm.Rd</code></div>
     </div>
 
@@ -59,7 +59,6 @@ analysis.</p>
 <span>  <span class="va">y</span>,</span>
 <span>  <span class="va">formula</span>,</span>
 <span>  model_template <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pvalues <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -93,11 +92,6 @@ computation time for large-scale vertex-wise analyses.
 Default: <code>NULL</code>.</p></dd>
 
 
-<dt id="arg-pvalues">pvalues<a class="anchor" aria-label="anchor" href="#arg-pvalues"></a></dt>
-<dd><p>Logical indicating whether to compute p-values using the
-*t-as-z* approximation (see Details). Default: <code>TRUE</code>.</p></dd>
-
-
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>Optional string or numeric vector of weights for the linear mixed model.
 You can use this argument to specify inverse-probability weights. If this
@@ -119,18 +113,14 @@ Default: (uses default settings).</p></dd>
     <p>A list with two elements:</p><ul><li><p><code>stats</code> - A data.frame with columns:</p><ul><li><p><code>term</code> - Fixed effect term names</p></li>
 <li><p><code>qhat</code> - Parameter estimates</p></li>
 <li><p><code>se</code> - Standard errors</p></li>
-<li><p><code>tval</code> - t-statistics (if <code>pvalues = TRUE</code>)</p></li>
-<li><p><code>pval</code> - p-values (if <code>pvalues = TRUE</code>)</p></li>
 </ul></li>
 <li><p><code>resid</code> - A numeric vector of model residuals</p></li>
+<li><p><code>warning</code> - Warning message(s) if any</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>No additional parameters are currently passed to the <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> call.
-P-values are estimated using the *t-as-z* approach. This is known
-to the anti-conservative for small sample sizes.sizes but provides a
-computationally efficient solution. Type I error control is addressed
-more rigorously at the cluster-forming stage.</p>
+    <p>Additional parameters are currently passed to the <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> call using
+the <code>lmm_control</code> argument.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
