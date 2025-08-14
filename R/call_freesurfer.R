@@ -93,7 +93,7 @@ compute_clusters <- function(stack_path,
                              mask = NULL,
                              verbose = FALSE) {
 
-  pval_mgh_file <- paste0(stack_path, ".p.mgh")
+  pval_mgh_file <- paste0(stack_path, ".-log10p.mgh")
 
   # Format montecarlo simulation threshold
   mcz_thr_str <- paste0("th", mcz_thr)

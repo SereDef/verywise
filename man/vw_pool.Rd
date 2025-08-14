@@ -4,18 +4,29 @@
 \alias{vw_pool}
 \title{Pool \code{lme4::lmer} model output across imputed datasets}
 \usage{
-vw_pool(out_stats, m)
+vw_pool(out_stats, m, pvalue_method = "t-as-z", min_pvalue = 2^-149)
 }
 \arguments{
-\item{out_stats}{: Output of \code{\link{single_lmm}}, i.e.: a list with two
-elements:
-\enumerate{
-\item \code{"stats"}: a dataframe with estimates, SEs and p-values for each
-fixed effect term)
-\item \code{"resid"}: a vector of residuals for the given model.
-}}
+\item{out_stats}{Output of \code{\link{single_lmm}}, i.e.: a list containing:
+\itemize{
+  \item \code{"stats"}: a dataframe with estimates and SEs for each fixed
+                        effect term)
+  \item \code{"resid"}: a vector of residuals for the given model.
+  \item \code{"warning"}: a character vector with warning messages (if any)
+}
+Note that if a model failed for that dataset \code{out_stats} has form
+\code{list("error"="Error message")}}
 
-\item{m}{: Number of imputed dataset (to avoid recomputing it)}
+\item{m}{Integer indicating the number of (imputed) dataset}
+
+\item{pvalue_method}{String indicating which approximation methods should be
+used to compute p-values. Options: \code{"t-as-z"}, \code{"wald-chi2"},
+\code{"satterthwaite"} (see Details). Default: \code{"t-as-z"}.}
+
+\item{min_pvalue}{Float, used to avoid pvalues == 0L for which log10 is Inf.
+Set this to 0L if no trimming should be applied.
+Default: \code{2^-149} ( == 1.401298e-45) the smallest positive subnormal
+float.}
 }
 \value{
 A list containing the pooled coefficients, SEs, t- and p- values.
@@ -28,10 +39,14 @@ The function was largely taken from \code{mice::pool()} and
 complete data model, and computes relevant statistics, following Rubin's
 rules (Rubin, 1987, p. 76).
 
-P-values are estimated using the *t-as-z* approach at the moment. This is known
-to the anti-conservative for small sample sizes. However we preferred a
-relatively lenient (and computationally inexpensive) solution at this stage.
-We will be addressing Type I error mores strictly at the cluster forming stage.
+\strong{P-values estimation}
+Default:
+P-values are estimated using the *t-as-z* approach. This is known
+to the anti-conservative for small sample sizes but provides a
+computationally efficient solution. Type I error control is addressed
+more rigorously at the cluster-forming stage.
+Wald Chi-square test
+Satterthwaite Approximation
 
 The residuals of the model are currently simply averaged across imputed
 datasets, for lack of a better idea of how to combine them.
