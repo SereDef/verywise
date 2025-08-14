@@ -296,6 +296,7 @@ subset_supersubject <- function(supsubj_dir,
                                 folder_ids,
                                 error_cutoff = 20,
                                 new_supsubj_dir,
+                                n_cores = 1,
                                 save_rds = FALSE,
                                 verbose = TRUE) {
 
@@ -372,7 +373,7 @@ subset_supersubject <- function(supsubj_dir,
         rows_to_keep = rows_to_keep,
         ss = ss,
         block.size = 1000,
-        ncores = 1
+        ncores = n_cores
     )
 
     utils::write.table(ss_rownames[rows_to_keep],

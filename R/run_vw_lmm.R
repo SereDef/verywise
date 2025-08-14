@@ -322,6 +322,7 @@ run_vw_lmm <- function(
       supsubj_file = ss_file,
       folder_ids = data1[, folder_id],
       new_supsubj_dir = ss_dir,
+      n_cores = n_cores,
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
       verbose = verbose)
