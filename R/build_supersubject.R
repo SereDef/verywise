@@ -363,14 +363,16 @@ subset_supersubject <- function(supsubj_dir,
 
     # Fill new ss matrix in chunks
     bigstatsr::big_apply(
-        X = ss,
-        a.FUN = function(X, ind, ind.row) {
-          new_ss[ind.row, ] <- X[ind,]
+        X = new_ss,
+        a.FUN = function(X, ind, ss, rows_to_keep) {
+          X[ind, ] <- ss[rows_to_keep[ind],]
           invisible(NULL)
         },
-        ind = rows_to_keep,
-        ind.row = seq_along(rows_to_keep),
+        ind = seq_along(rows_to_keep),
+        rows_to_keep = rows_to_keep,
+        ss = ss,
         block.size = 1000,
+        ncores = 1
     )
 
     utils::write.table(ss_rownames[rows_to_keep],

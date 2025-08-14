@@ -152,11 +152,13 @@ test_that("build_supersubject creates output files when save_rds = TRUE", {
 test_that("subset_supersubject works with matching IDs", {
 
   new_supsubj_dir <- file.path(tempdir(), 'subset')
+  id_subset_idx <- c(1, 3, 5, 10)
+  id_subset <- folder_ids[id_subset_idx]
 
   new_ss <- subset_supersubject(
     supsubj_dir = supsubj_dir,
     supsubj_file = supsubj_file,
-    folder_ids = folder_ids[1:6],
+    folder_ids = id_subset,
     new_supsubj_dir = new_supsubj_dir
 
   )
@@ -164,12 +166,12 @@ test_that("subset_supersubject works with matching IDs", {
   og_ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
 
   expect_s4_class(new_ss, "FBM")
-  expect_equal(og_ss[1:6, ], new_ss[])
+  expect_equal(og_ss[id_subset_idx, ], new_ss[])
 
   new_names <- scan(file.path(new_supsubj_dir, "lh.area.ss.rownames.csv"),
                     what = character(), sep = "\n", quiet = TRUE)
 
-  expect_length(new_names, 6)
+  expect_equal(new_names, id_subset)
 
   expect_true(file.exists(file.path(
     new_supsubj_dir, gsub('.rds$', '.bk', supsubj_file))))
