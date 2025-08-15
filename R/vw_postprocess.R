@@ -78,7 +78,7 @@ convert_to_mgh <- function(vw_results,
       fbm <- bigstatsr::FBM(nrow = vw_p$nrow,
                             ncol = vw_p$ncol,
                             type = vw_p$type_chr,
-                            backingfile = gsub(".p.", ".-log10p.",
+                            backingfile = gsub(".p.bk$", ".-log10p",
                                                vw_p$backingfile, fixed = TRUE))
 
       # fbm[] <- -1 * log10(vw_p[])
