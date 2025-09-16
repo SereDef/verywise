@@ -24,10 +24,10 @@ build_supersubject(
 \item{subj_dir}{: path to the FreeSurfer data, this expects a verywise structure.}
 
 \item{folder_ids}{: the vector of observations to include. This holds the relative
-path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").}
+path (from \code{subj_dir}) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").}
 
 \item{supsubj_dir}{: output path, where logs, backing files and the matrix itself
-(if `save_rds == TRUE`) will be stored.}
+(if \code{save_rds == TRUE}) will be stored.}
 
 \item{measure}{: vertex-wise measure, used to identify files.}
 
@@ -39,21 +39,23 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 \item{fs_template}{: (default = "fsaverage") template on which to register vertex-wise data.
 The following values are accepted:
- * fsaverage (default) = 163842 vertices (highest resolution),
- * fsaverage6 = 40962 vertices,
- * fsaverage5 = 10242 vertices,
- * fsaverage4 = 2562 vertices,
- * fsaverage3 = 642 vertices
+\itemize{
+\item fsaverage (default) = 163842 vertices (highest resolution),
+\item fsaverage6 = 40962 vertices,
+\item fsaverage5 = 10242 vertices,
+\item fsaverage4 = 2562 vertices,
+\item fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
-model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `fs_template = "fsaverage"`
-to avoid (small) imprecisions in vertex registration and smoothing.}
+model tuning. \code{verywise} expects the input data to be always registered on the "fsaverage"
+template and the final analyses should also be run using \code{fs_template = "fsaverage"}
+to avoid (small) imprecisions in vertex registration and smoothing.
+}}
 
-\item{backing}{: (default = `supsubj_dir`) location to save the matrix \code{backingfile}.}
+\item{backing}{: (default = \code{supsubj_dir}) location to save the matrix \code{backingfile}.}
 
 \item{error_cutoff}{: (default = 20) how many missing directories or brain surface files
-for the function to stop with an error. If < `error_cutoff` directories/files are not
-found a warning is thrown and missing files are registered in the `issues.log` file.}
+for the function to stop with an error. If < \code{error_cutoff} directories/files are not
+found a warning is thrown and missing files are registered in the \code{issues.log} file.}
 
 \item{save_rds}{: (default = FALSE) save the supersubject file metadata for re-use
 in other sessions.}

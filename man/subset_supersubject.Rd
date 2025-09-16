@@ -10,6 +10,7 @@ subset_supersubject(
   folder_ids,
   error_cutoff = 20,
   new_supsubj_dir,
+  n_cores = 1,
   save_rds = FALSE,
   verbose = TRUE
 )
@@ -36,6 +37,9 @@ Default: 20.}
 where the new supersubject files should be stored (either temporarily or
 permanently if \code{ save_rds == TRUE }. Created if it does not exist.}
 
+\item{n_cores}{Integer indicating the number of cores to use for parallel
+processing.}
+
 \item{save_rds}{Logical. If \code{TRUE}, the new ss is also saved to a
 \code{.rds} file inside \code{new_supsubj_dir}.}
 
@@ -46,7 +50,7 @@ A \link[bigstatsr]{FBM} object containing the subsetted supersubject matrix.
 }
 \description{
 This function subsets a \link[bigstatsr]{FBM} supersubject matrix that was
-created using \code{\link{build_supersubject}}, retaining only the rows that
+created using \code{\link[=build_supersubject]{build_supersubject()}}, retaining only the rows that
 correspond to a set of folder (or row) IDs.
 It reads row names from an associated \code{.csv} file, checks for missing IDs,
 and writes logs if any are not found. The new subsetted matrix can be saved
@@ -54,16 +58,18 @@ for future use.
 }
 \details{
 The function performs the following steps:
-1. Reads row names from the supersubject's `.csv` file.
-2. Checks whether all `folder_ids` exist in the supersubject.
-3. Logs missing IDs to `issues.log` in `new_supsubj_dir`.
-4. If the number of missing IDs exceeds `error_cutoff`, stops with an error.
-5. Creates a new FBM with only the matching rows, writing it blockwise to
-   avoid excessive RAM usage.
-6. Writes the filtered row names to `ss.rownames.csv` in `new_supsubj_dir`.
+\enumerate{
+\item Reads row names from the supersubject's \code{.csv} file.
+\item Checks whether all \code{folder_ids} exist in the supersubject.
+\item Logs missing IDs to \code{issues.log} in \code{new_supsubj_dir}.
+\item If the number of missing IDs exceeds \code{error_cutoff}, stops with an error.
+\item Creates a new FBM with only the matching rows, writing it blockwise to
+avoid excessive RAM usage.
+\item Writes the filtered row names to \code{ss.rownames.csv} in \code{new_supsubj_dir}.
+}
 }
 \examples{
-\dontrun{
+\dontshow{if (file.exists("path/to/original/ss/")) withAutoprint(\{ # examplesIf}
 # Subset a supersubject to a small set of IDs
 subset_supersubject(
   supsubj_dir = "path/to/original/ss/",
@@ -72,9 +78,7 @@ subset_supersubject(
   error_cutoff = 20,
   new_supsubj_dir = "path/to/subsetted/ss/",
   save_rds = TRUE
-)
-}
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \link{build_supersubject}

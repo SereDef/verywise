@@ -22,7 +22,7 @@
 #' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
 #' template and the final analyses should also be run using `fs_template = "fsaverage"`
 #' to avoid (small) imprecisions in vertex registration and smoothing.
-#' @param backing : (default = `supsubj_dir`) location to save the matrix \code{backingfile}.
+#' @param backing : (default = `supsubj_dir`) location to save the matrix `backingfile`.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
 #' for the function to stop with an error. If < `error_cutoff` directories/files are not
 #' found a warning is thrown and missing files are registered in the `issues.log` file.
@@ -235,7 +235,7 @@ build_supersubject <- function(subj_dir,
 #'
 #' @description
 #' This function subsets a \link[bigstatsr]{FBM} supersubject matrix that was
-#' created using \code{\link{build_supersubject}}, retaining only the rows that
+#' created using [build_supersubject()], retaining only the rows that
 #' correspond to a set of folder (or row) IDs.
 #' It reads row names from an associated \code{.csv} file, checks for missing IDs,
 #' and writes logs if any are not found. The new subsetted matrix can be saved
@@ -257,6 +257,8 @@ build_supersubject <- function(subj_dir,
 #' @param new_supsubj_dir Character string indicating the path to the directory
 #'   where the new supersubject files should be stored (either temporarily or
 #'   permanently if \code{ save_rds == TRUE }. Created if it does not exist.
+#' @param n_cores Integer indicating the number of cores to use for parallel
+#'   processing.
 #' @param save_rds Logical. If \code{TRUE}, the new ss is also saved to a
 #'   \code{.rds} file inside \code{new_supsubj_dir}.
 #' @param verbose Logical. Default: \code{TRUE}.
@@ -274,8 +276,7 @@ build_supersubject <- function(subj_dir,
 #'    avoid excessive RAM usage.
 #' 6. Writes the filtered row names to `ss.rownames.csv` in `new_supsubj_dir`.
 #'
-#' @examples
-#' \dontrun{
+#' @examplesIf file.exists("path/to/original/ss/")
 #' # Subset a supersubject to a small set of IDs
 #' subset_supersubject(
 #'   supsubj_dir = "path/to/original/ss/",
@@ -284,8 +285,6 @@ build_supersubject <- function(subj_dir,
 #'   error_cutoff = 20,
 #'   new_supsubj_dir = "path/to/subsetted/ss/",
 #'   save_rds = TRUE
-#' )
-#' }
 #'
 #' @seealso \link{build_supersubject}
 #'

@@ -97,8 +97,11 @@ convert_to_mgh <- function(vw_results,
     } else {
       fbm <- vw_results[[stat_name]]
     }
-
+    # Transform to .mgh
     fbm2mgh(fbm = fbm, fnames = stat_mgh_paths, mode = mode)
+
+    # Remove .bk files
+    file.remove(fbm$backingfile)
 
     invisible(NULL)
   })

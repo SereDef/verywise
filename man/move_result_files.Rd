@@ -16,8 +16,8 @@ Note: any required sub-directories will be created automatically.}
 }
 \value{
 Invisibly returns a logical vector indicating whether each file was
-  successfully copied.
-  Side effects: \code{.mgh} files are copied to \code{to_dir}.
+successfully copied.
+Side effects: \code{.mgh} files are copied to \code{to_dir}.
 }
 \description{
 The function searches through a \code{verywise} results directory for all files
@@ -28,12 +28,12 @@ sub-directory structure in the source results folder.
 \details{
 Files are matched using these regular expression patterns:
 \itemize{
-  \item \code{"[a-z]{1}h.[a-z]+.stack[0-9]{1,2}.cache.th30.abs.sig.ocn.mgh"}:
-        cluster files
-  \item \code{"[a-z]{1}h.[a-z]+.stack[0-9]{1,2}.coef.mgh"}:
-        coefficient (beta) maps
-  \item \code{"stack_names.txt"}:
-        stack names
+\item \code{"[a-z]{1}h.[a-z]+.stack[0-9]{1,2}.cache.th30.abs.sig.ocn.mgh"}:
+cluster files
+\item \code{"[a-z]{1}h.[a-z]+.stack[0-9]{1,2}.coef.mgh"}:
+coefficient (beta) maps
+\item \code{"stack_names.txt"}:
+stack names
 }
 }
 \examples{

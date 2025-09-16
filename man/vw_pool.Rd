@@ -9,10 +9,10 @@ vw_pool(out_stats, m, pvalue_method = "t-as-z", min_pvalue = 2^-149)
 \arguments{
 \item{out_stats}{Output of \code{\link{single_lmm}}, i.e.: a list containing:
 \itemize{
-  \item \code{"stats"}: a dataframe with estimates and SEs for each fixed
-                        effect term)
-  \item \code{"resid"}: a vector of residuals for the given model.
-  \item \code{"warning"}: a character vector with warning messages (if any)
+\item \code{"stats"}: a dataframe with estimates and SEs for each fixed
+effect term)
+\item \code{"resid"}: a vector of residuals for the given model.
+\item \code{"warning"}: a character vector with warning messages (if any)
 }
 Note that if a model failed for that dataset \code{out_stats} has form
 \code{list("error"="Error message")}}
@@ -41,7 +41,7 @@ rules (Rubin, 1987, p. 76).
 
 \strong{P-values estimation}
 Default:
-P-values are estimated using the *t-as-z* approach. This is known
+P-values are estimated using the \emph{t-as-z} approach. This is known
 to the anti-conservative for small sample sizes but provides a
 computationally efficient solution. Type I error control is addressed
 more rigorously at the cluster-forming stage.

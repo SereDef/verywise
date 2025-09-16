@@ -17,7 +17,7 @@ run_vw_meta(
 \arguments{
 \item{stack}{: Character or numeric identifier for the fixed term to meta-analyise.}
 
-\item{hemi}{: Character string, hemisphere to analyze (`"lh"` or `"rh"`).}
+\item{hemi}{: Character string, hemisphere to analyze (\code{"lh"} or \code{"rh"}).}
 
 \item{result_dirs}{: Character vector of directories containing the results files of each study.}
 
@@ -25,11 +25,13 @@ run_vw_meta(
 
 \item{fs_template}{: Character string specifying the FreeSurfer template surface.
 The following values are accepted:
- * fsaverage (default) = 163842 vertices (highest resolution),
- * fsaverage6 = 40962 vertices,
- * fsaverage5 = 10242 vertices,
- * fsaverage4 = 2562 vertices,
- * fsaverage3 = 642 vertices}
+\itemize{
+\item fsaverage (default) = 163842 vertices (highest resolution),
+\item fsaverage6 = 40962 vertices,
+\item fsaverage5 = 10242 vertices,
+\item fsaverage4 = 2562 vertices,
+\item fsaverage3 = 642 vertices
+}}
 
 \item{n_cores}{: Integer, number of CPU cores to use for parallel processing (default: 1).}
 
@@ -37,17 +39,17 @@ The following values are accepted:
 }
 \value{
 A named list with three \code{FBM} objects:
-  \describe{
-    \item{coef}{Meta-analytic effect size estimates at each vertex.}
-    \item{se}{Meta-analytic standard errors at each vertex.}
-    \item{p}{Meta-analytic p-values at each vertex.}
-  }
-  Additionally, these are exported as MGH files in the working directory.
+\describe{
+\item{coef}{Meta-analytic effect size estimates at each vertex.}
+\item{se}{Meta-analytic standard errors at each vertex.}
+\item{p}{Meta-analytic p-values at each vertex.}
+}
+Additionally, these are exported as MGH files in the working directory.
 }
 \description{
 This function runs a vertex-wise random-effects meta-analysis across multiple
 studies (sites or cohorts). Is expects individual study results as they are
-outputted but `verywise::run_vw_lmm` or by `QDECR`.
+outputted but \code{verywise::run_vw_lmm} or by \code{QDECR}.
 }
 \details{
 For each vertex, the function loads the effect size and standard error from each study, computes the variance,

@@ -26,19 +26,19 @@ Will be created if it does not exist.}
 \item{data_structure}{Named list defining cohorts/sites. Each element is a
 list with:
 \describe{
-  \item{\code{"sessions"}}{Character vector of session labels.}
-  \item{\code{"n_subjects"}}{Integer number of subjects.}
+\item{\code{"sessions"}}{Character vector of session labels.}
+\item{\code{"n_subjects"}}{Integer number of subjects.}
 }}
 
 \item{fs_template}{Character (default = \code{"fsaverage"}). FreeSurfer
 template for vertex registration. This is used to determine the size of
 the synthetic brain surface data. Options:
 \itemize{
-  \item \code{"fsaverage"} = 163842 vertices (highest resolution)
-  \item \code{"fsaverage6"} = 40962 vertices
-  \item \code{"fsaverage5"} = 10242 vertices
-  \item \code{"fsaverage4"} = 2562 vertices
-  \item \code{"fsaverage3"} = 642 vertices
+\item \code{"fsaverage"} = 163842 vertices (highest resolution)
+\item \code{"fsaverage6"} = 40962 vertices
+\item \code{"fsaverage5"} = 10242 vertices
+\item \code{"fsaverage4"} = 2562 vertices
+\item \code{"fsaverage3"} = 642 vertices
 }}
 
 \item{measure}{Character (default = \code{"thickness"}). Surface measure to

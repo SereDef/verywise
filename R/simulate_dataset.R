@@ -112,8 +112,8 @@ simulate_dataset <- function(path,
     } else if (is.character(simulate_association)) {
       parsed_ass <- strsplit(simulate_association, ' ', fixed = TRUE)[[1]]
       beta <- as.numeric(parsed_ass[1])
-      var_name <- parsed_ass[3]
-      simulate_association <- as.vector(beta * pheno[var_name])[[1]]
+      var_z <- scale(pheno[, parsed_ass[3]])
+      simulate_association <- as.vector(beta * var_z)
     } else {
       stop('`simulate_association` is not correctly specified.')
     }
@@ -189,7 +189,7 @@ simulate_long_pheno_data <- function(data_structure = list(
       id = 1:n_subjects,
       time = sessions[1],
       sex = sample(c("Male", "Female"), n_subjects, replace = TRUE),
-      age = round(stats::rnorm(n_subjects, mean = 40, sd = 10), 1)
+      age = round(stats::rnorm(n_subjects, mean = 40, sd = 1.5), 1)
     )
 
     if (length(sessions) == 1) {
@@ -201,7 +201,7 @@ simulate_long_pheno_data <- function(data_structure = list(
           id = baseline$id,
           time = sessions[s],
           sex = baseline$sex,
-          age = round(baseline$age + stats::rnorm(n_subjects, mean = s - 1, sd = 0.3))
+          age = round(baseline$age + stats::rnorm(n_subjects, mean = s+1, sd = 0.5))
         )
         t1 <- rbind(t1, t2)
       }
@@ -293,6 +293,24 @@ simulate_freesurfer_data <- function(path,
 
   file_counter <- 1
 
+  n_verts <- count_vertices(fs_template)
+
+  # First isolate some regions from annotation file in R/sysdata.rda
+  # Chose these because they are a small subset (~1.5%) of the surface
+  # The rest of the values are left to 0 so they won't be analysed
+  roi_locs <- locate_roi(rois=c('temporalpole', 'frontalpole',
+                                'entorhinal'), n_verts = n_verts,
+                         verbose = verbose)
+  # Associations only in my fav region
+  assoc_roi <- locate_roi(rois='entorhinal', n_verts = n_verts,
+                          verbose = verbose)
+
+  # File name
+  mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
+
+  # Start from a vector of type double, filled with 0s
+  vw_data <- numeric(n_verts)
+
   for (l in seq_along(data_structure)) {
     site <- names(data_structure[l])
     sess <- data_structure[[l]]$sessions
@@ -313,24 +331,7 @@ simulate_freesurfer_data <- function(path,
         dir.create(file.path(sub_dir, "surf"), recursive = TRUE, showWarnings = FALSE)
         # Not creating "stats" and "mri" subfolders
 
-        # File name
-        mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
-
-        n_verts <- count_vertices(fs_template)
-
-        # Start from a vector of type double, filled with 0s
-        vw_data <- numeric(n_verts)
-
         # Randomly generated vertex-wise data
-
-        # First isolate some regions from annotation file in R/sysdata.rda
-        # Chose these because they are a small subset (~1.5%) of the surface
-        # The rest of the values are left to 0 so they won't be analysed
-        locate_verbosity <- if (file_counter == 1) verbose else FALSE
-        roi_locs <- locate_roi(rois=c('temporalpole', 'frontalpole',
-                                      'entorhinal'), n_verts = n_verts,
-                               verbose = locate_verbosity)
-
         vw_data[roi_locs] <- stats::rnorm(sum(roi_locs),
                                           mean = vw_mean,
                                           sd = vw_sd)
@@ -341,12 +342,7 @@ simulate_freesurfer_data <- function(path,
           stopifnot(is.numeric(simulate_association) &&
                       (length(simulate_association) == total_n_files))
 
-          # Associations only in my fav region
-          assoc_roi <- locate_roi(rois='entorhinal', n_verts = n_verts,
-                                  verbose = locate_verbosity)
-
-          vw_data[assoc_roi] <- vw_data[assoc_roi] -
-            simulate_association[file_counter]
+          vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter]
         }
 
         file_counter <- file_counter + 1

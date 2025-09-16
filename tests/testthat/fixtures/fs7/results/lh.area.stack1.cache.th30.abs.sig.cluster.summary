@@ -1,7 +1,7 @@
 # Cluster Growing Summary (mri_surfcluster)
 # 7.4.1
 # 7.4.1
-# CreationTime 2025/08/13-14:06:01-GMT
+# CreationTime 2025/08/15-14:27:07-GMT
 # cmdline mri_surfcluster --in fixtures/fs7/results/lh.area.stack1.-log10p.mgh --csd /Applications/freesurfer/7.4.1/average/mult-comp-cor/fsaverage/lh/cortex/fwhm01/abs/th30/mc-z.csd --ocn fixtures/fs7/results/lh.area.stack1.cache.th30.abs.sig.ocn.mgh --sum fixtures/fs7/results/lh.area.stack1.cache.th30.abs.sig.cluster.summary --annot aparc --cwpvalthresh 0.025 --no-fixmni --surf white --mask fixtures/fs7/results/lh.area.finalMask.mgh 
 # cwd /Users/Serena/Desktop/Packages/verywise/tests/testthat
 # sysname  Darwin
@@ -33,15 +33,9 @@
 # CSD simtype  null-z
 # CSD contrast NA
 # CSD confint  90.000000
-# Overall max 44.8535 at vertex 258
+# Overall max 8.46208 at vertex 143518
 # Overall min 0 at vertex 0
-# NClusters          6
+# NClusters          0
 # FixMNI = 0
 # 
 # ClusterNo  Max   VtxMax   Size(mm^2)  MNIX   MNIY   MNIZ    CWP    CWPLow    CWPHi   NVtxs    WghtVtx   Annot
-   1       44.8535     333    508.58    -36.6   11.3  -32.7  0.00010  0.00000  0.00020   1044    21642.77  temporalpole
-   2       44.8535     258     82.67     -8.0   64.4   -2.3  0.00010  0.00000  0.00020    108     3450.33  frontalpole
-   3       44.8535    3653     35.35    -10.1   64.7   -4.0  0.00010  0.00000  0.00020     56     1641.36  frontalpole
-   4       11.4418   89698     18.55    -29.1  -16.8  -30.3  0.00010  0.00000  0.00020     40      215.32  entorhinal
-   5       44.8535  140995      4.03    -11.5   60.2   -8.1  0.02050  0.01870  0.02230      4       70.65  frontalpole
-   6       10.5820  113730      3.96    -32.1  -17.9  -29.3  0.02470  0.02270  0.02670      9       57.80  entorhinal

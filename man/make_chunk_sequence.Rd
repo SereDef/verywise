@@ -13,7 +13,7 @@ make_chunk_sequence(iv, chunk_size = 1000)
 }
 \value{
 A list with n_chunks elements. Each element is a vector of vertex
-  positions.
+positions.
 }
 \description{
 This function takes a vector of values representing the dimension of the

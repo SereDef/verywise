@@ -2,7 +2,7 @@
 % Please edit documentation in R/vw_postprocess.R
 \name{convert_to_mgh}
 \alias{convert_to_mgh}
-\title{Convert statistical result FBMs to FreeSurfer `.mgh` format}
+\title{Convert statistical result FBMs to FreeSurfer \code{.mgh} format}
 \usage{
 convert_to_mgh(
   vw_results,
@@ -31,11 +31,11 @@ transformation.}
 }
 \value{
 Invisibly returns \code{NULL}.
-  Side effects: \code{.mgh} files are written to disk.
+Side effects: \code{.mgh} files are written to disk.
 }
 \description{
 This function takes a list of \link[bigstatsr]{FBM} objects storing statistical
-results and writes them to FreeSurfer-compatible `.mgh` files.
+results and writes them to FreeSurfer-compatible \code{.mgh} files.
 It supports coefficient, standard error, p-value, and residual maps, with
 optional on-the-fly \eqn{-\log_{10}} transformation of p-values.
 }
@@ -44,7 +44,7 @@ For residuals, all rows are written into a single \code{.mgh} file. For other
 stats, data is written to one file per row (i.e. term).
 
 When computing \eqn{-\log_{10}(p)} values, the transformation is applied
-**in chunks of columns** to avoid loading the full FBM into memory.
+\strong{in chunks of columns} to avoid loading the full FBM into memory.
 }
 \examples{
 \dontrun{

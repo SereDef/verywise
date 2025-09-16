@@ -72,6 +72,8 @@ for (hemi in c('lh','rh')) {
 #    (163842 vertices)
 fs7_data_path <- file.path(temp_test_dir, "fs7")
 
+n_subs <- 10
+
 data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs))
 
@@ -82,9 +84,9 @@ for (hemi in c('lh','rh')) {
                    measure = measure,
                    hemi = hemi,
                    fwhmc = fwhmc,
-                   vw_mean = 6.5,
-                   vw_sd = 0.5,
-                   simulate_association = "0.05 * age",
+                   vw_mean = 0.6,
+                   vw_sd = 0.1,
+                   simulate_association = "0.5 * age",
                    verbose = verbosity)
 }
 

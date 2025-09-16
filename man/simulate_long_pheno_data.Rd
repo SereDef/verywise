@@ -15,8 +15,8 @@ simulate_long_pheno_data(
 \item{data_structure}{Named list defining cohorts/sites. Each element is a
 list with:
 \describe{
-  \item{\code{"sessions"}}{Character vector of session labels.}
-  \item{\code{"n_subjects"}}{Integer number of subjects.}
+\item{\code{"sessions"}}{Character vector of session labels.}
+\item{\code{"n_subjects"}}{Integer number of subjects.}
 }}
 
 \item{seed}{Integer (default = \code{3108}). Random seed.}
@@ -32,11 +32,11 @@ A \code{data.frame} in long format with columns:
 Generates synthetic phenotype data in long format for multiple cohorts/sites
 and multiple timepoints/sessions per subject. Each record contains:
 \itemize{
-  \item Subject ID
-  \item Session/timepoint
-  \item Sex
-  \item Age
-  \item A \code{folder_id} field matching the FreeSurfer directory structure
+\item Subject ID
+\item Session/timepoint
+\item Sex
+\item Age
+\item A \code{folder_id} field matching the FreeSurfer directory structure
 }
 }
 \seealso{

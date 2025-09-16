@@ -31,13 +31,15 @@ results are generated.}
 the cluster-wise p-value threshold on top of all corrections.}
 
 \item{mcz_thr}{: (default = 0.001) numeric value for the Monte Carlo simulation threshold.
-Any of the following are accepted (equivalent values separate by `/`):
- * 13 / 1.3 / 0.05,
- * 20 / 2.0 / 0.01,
+Any of the following are accepted (equivalent values separate by \code{/}):
+\itemize{
+\item 13 / 1.3 / 0.05,
+\item 20 / 2.0 / 0.01,
 . * 23 / 2.3 / 0.005,
- * 30 / 3.0 / 0.001, \* default
- * 33 / 3.3 / 0.0005,
- * 40 / 4.0 / 0.0001.}
+\item 30 / 3.0 / 0.001, \* default
+\item 33 / 3.3 / 0.0005,
+\item 40 / 4.0 / 0.0001.
+}}
 
 \item{csd_sign}{: (default = "abs")}
 

@@ -119,14 +119,14 @@ Defaults to \code{FREESURFER_HOME} environment variable.}
 smoothing kernel. Default: 10.}
 
 \item{mcz_thr}{Numeric value for Monte Carlo simulation threshold.
-  Any of the following are accepted (equivalent values separate by \code{/}):
-  \itemize{
-  \item 13 / 1.3 / 0.05,
-  \item 20 / 2.0 / 0.01,
-  \item 23 / 2.3 / 0.005,
-  \item 30 / 3.0 / 0.001, \* default
-  \item 33 / 3.3 / 0.0005,
-  \item 40 / 4.0 / 0.0001.
+Any of the following are accepted (equivalent values separate by \code{/}):
+\itemize{
+\item 13 / 1.3 / 0.05,
+\item 20 / 2.0 / 0.01,
+\item 23 / 2.3 / 0.005,
+\item 30 / 3.0 / 0.001, \* default
+\item 33 / 3.3 / 0.0005,
+\item 40 / 4.0 / 0.0001.
 }}
 
 \item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of
@@ -171,18 +171,18 @@ approach.
 The outcome specified in \code{formula} should be a brain surface metric
 among:
 \itemize{
-  \item \code{vw_thickness} - Cortical thickness
-  \item \code{vw_area} - Cortical surface area (white  surface)
-  \item \code{vw_area.pial} - Cortical surface area (pial surface)
-  \item \code{vw_curv} - Mean curvature
-  \item \code{vw_jacobian_white} - Jacobian determinant (white surface)
-  \item \code{vw_pial} - Pial surface coordinates
-  \item \code{vw_pial_lgi} - Local gyrification index (pial surface)
-  \item \code{vw_sulc} - Sulcal depth
-  \item \code{vw_volume} - Gray matter volume
-  \item \code{vw_w_g.pct} - White/gray matter intensity ratio
-  \item \code{vw_white.H} - Mean curvature (white surface)
-  \item \code{vw_white.K} - Gaussian curvature (white surface)
+\item \code{vw_thickness} - Cortical thickness
+\item \code{vw_area} - Cortical surface area (white  surface)
+\item \code{vw_area.pial} - Cortical surface area (pial surface)
+\item \code{vw_curv} - Mean curvature
+\item \code{vw_jacobian_white} - Jacobian determinant (white surface)
+\item \code{vw_pial} - Pial surface coordinates
+\item \code{vw_pial_lgi} - Local gyrification index (pial surface)
+\item \code{vw_sulc} - Sulcal depth
+\item \code{vw_volume} - Gray matter volume
+\item \code{vw_w_g.pct} - White/gray matter intensity ratio
+\item \code{vw_white.H} - Mean curvature (white surface)
+\item \code{vw_white.K} - Gaussian curvature (white surface)
 }
 
 \strong{Statistical Approach:}
@@ -203,7 +203,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation [COMING UP]).
+see vignette on parallelisation \link{COMING UP}).
 Within each hemisphere, vertices are divided into chunks of size
 \code{chunk_size} and processed in parallel across \code{n_cores} workers
 (when \code{n_cores > 1}). When multiple imputed datasets are present,
@@ -228,16 +228,16 @@ limits)
 
 \strong{Output Files:}
 Results are saved in FreeSurfer-compatible .mgh format for visualization
-with [verywiseWIZard](https://github.com/SereDef/verywise-wizard),
+with \href{https://github.com/SereDef/verywise-wizard}{verywiseWIZard},
 FreeView or other neuroimaging software.
 }
 \note{
 \itemize{
-  \item Ensure FreeSurfer is properly installed and the
-    \code{FREESURFER_HOME} environment variable is set.
-  \item Large datasets may require substantial memory. Consider adjusting
-    \code{chunk_size} and \code{n_cores} based on your system specifications.
-  \item For reproducibility, always specify a \code{seed}.
+\item Ensure FreeSurfer is properly installed and the
+\code{FREESURFER_HOME} environment variable is set.
+\item Large datasets may require substantial memory. Consider adjusting
+\code{chunk_size} and \code{n_cores} based on your system specifications.
+\item For reproducibility, always specify a \code{seed}.
 }
 }
 \examples{

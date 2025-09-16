@@ -395,7 +395,7 @@ run_vw_lmm <- function(
   res_bk_names <- c("coef", "se", "p", "resid") # "t",
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
-  on.exit(file.remove(paste0(res_bk_paths, ".bk")), add = TRUE)
+  # These files will be removed by "on.exit" by convert_to_mgh
 
   fbm_precision <- "float" # single precision – 32 bits
 

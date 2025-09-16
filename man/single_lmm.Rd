@@ -44,16 +44,16 @@ Default: (uses default settings).}
 }
 \value{
 A list with two elements:
-  \itemize{
-    \item \code{stats} - A data.frame with columns:
-      \itemize{
-        \item \code{term} - Fixed effect term names
-        \item \code{qhat} - Parameter estimates
-        \item \code{se} - Standard errors
-      }
-    \item \code{resid} - A numeric vector of model residuals
-    \item \code{warning} - Warning message(s) if any
-  }
+\itemize{
+\item \code{stats} - A data.frame with columns:
+\itemize{
+\item \code{term} - Fixed effect term names
+\item \code{qhat} - Parameter estimates
+\item \code{se} - Standard errors
+}
+\item \code{resid} - A numeric vector of model residuals
+\item \code{warning} - Warning message(s) if any
+}
 }
 \description{
 Fits a linear mixed model to a single vertex outcome using
