@@ -74,12 +74,12 @@ matrix with dimensions n_subjects x n_vertices.</p>
 
 <dt id="arg-folder-ids">folder_ids<a class="anchor" aria-label="anchor" href="#arg-folder-ids"></a></dt>
 <dd><p>: the vector of observations to include. This holds the relative
-path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").</p></dd>
+path (from <code>subj_dir</code>) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01").</p></dd>
 
 
 <dt id="arg-supsubj-dir">supsubj_dir<a class="anchor" aria-label="anchor" href="#arg-supsubj-dir"></a></dt>
 <dd><p>: output path, where logs, backing files and the matrix itself
-(if `save_rds == TRUE`) will be stored.</p></dd>
+(if <code>save_rds == TRUE</code>) will be stored.</p></dd>
 
 
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
@@ -100,26 +100,26 @@ path (from `subj_dir`) to the FreeSurfer data folder (e.g. "site1/sub-1_ses-01")
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
 <dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
-The following values are accepted:
- * fsaverage (default) = 163842 vertices (highest resolution),
- * fsaverage6 = 40962 vertices,
- * fsaverage5 = 10242 vertices,
- * fsaverage4 = 2562 vertices,
- * fsaverage3 = 642 vertices
+The following values are accepted:</p><ul><li><p>fsaverage (default) = 163842 vertices (highest resolution),</p></li>
+<li><p>fsaverage6 = 40962 vertices,</p></li>
+<li><p>fsaverage5 = 10242 vertices,</p></li>
+<li><p>fsaverage4 = 2562 vertices,</p></li>
+<li><p>fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
-model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using `fs_template = "fsaverage"`
-to avoid (small) imprecisions in vertex registration and smoothing.</p></dd>
+model tuning. <code>verywise</code> expects the input data to be always registered on the "fsaverage"
+template and the final analyses should also be run using <code>fs_template = "fsaverage"</code>
+to avoid (small) imprecisions in vertex registration and smoothing.</p></li>
+</ul></dd>
 
 
 <dt id="arg-backing">backing<a class="anchor" aria-label="anchor" href="#arg-backing"></a></dt>
-<dd><p>: (default = `supsubj_dir`) location to save the matrix <code>backingfile</code>.</p></dd>
+<dd><p>: (default = <code>supsubj_dir</code>) location to save the matrix <code>backingfile</code>.</p></dd>
 
 
 <dt id="arg-error-cutoff">error_cutoff<a class="anchor" aria-label="anchor" href="#arg-error-cutoff"></a></dt>
 <dd><p>: (default = 20) how many missing directories or brain surface files
-for the function to stop with an error. If &lt; `error_cutoff` directories/files are not
-found a warning is thrown and missing files are registered in the `issues.log` file.</p></dd>
+for the function to stop with an error. If &lt; <code>error_cutoff</code> directories/files are not
+found a warning is thrown and missing files are registered in the <code>issues.log</code> file.</p></dd>
 
 
 <dt id="arg-save-rds">save_rds<a class="anchor" aria-label="anchor" href="#arg-save-rds"></a></dt>
