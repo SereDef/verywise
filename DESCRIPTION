@@ -32,7 +32,6 @@ Suggests:
     parallelly (>= 1.38.0),
     testthat (>= 3.0.0),
     withr
-RoxygenNote: 7.3.3
 URL: https://github.com/SereDef/verywise, https://seredef.github.io/verywise/
 BugReports: https://github.com/SereDef/verywise/issues
 Depends: 
@@ -50,3 +49,4 @@ SystemRequirements: Unix (not supported on Windows), FreeSurfer
 Config/Needs/website: rmarkdown
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

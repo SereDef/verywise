@@ -276,15 +276,15 @@ build_supersubject <- function(subj_dir,
 #'    avoid excessive RAM usage.
 #' 6. Writes the filtered row names to `ss.rownames.csv` in `new_supsubj_dir`.
 #'
-#' @examplesIf file.exists("path/to/original/ss/")
-#' # Subset a supersubject to a small set of IDs
-#' subset_supersubject(
-#'   supsubj_dir = "path/to/original/ss/",
-#'   supsubj_file = "<hemi>.<measure>.<fsaverage>.supersubject.rds",
-#'   folder_ids = pheno_data[, "folder_id"],
-#'   error_cutoff = 20,
-#'   new_supsubj_dir = "path/to/subsetted/ss/",
-#'   save_rds = TRUE
+# #' @examplesIf file.exists("path/to/original/ss/")
+# #' # Subset a supersubject to a small set of IDs
+# #' subset_supersubject(
+# #'   supsubj_dir = "path/to/original/ss/",
+# #'   supsubj_file = "<hemi>.<measure>.<fsaverage>.supersubject.rds",
+# #'   folder_ids = pheno_data[, "folder_id"],
+# #'   error_cutoff = 20,
+# #'   new_supsubj_dir = "path/to/subsetted/ss/",
+# #'   save_rds = TRUE
 #'
 #' @seealso \link{build_supersubject}
 #'

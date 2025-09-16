@@ -9,6 +9,7 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Codecov test
 coverage](https://codecov.io/gh/SereDef/verywise/graph/badge.svg)](https://app.codecov.io/gh/SereDef/verywise)
+[![R-CMD-check](https://github.com/SereDef/verywise/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SereDef/verywise/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of `verywise` is to offer a flexible, user-friendly interface

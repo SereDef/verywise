@@ -1,4 +1,25 @@
-Attention: 1 observations speficied in phenotype were not found:
-fixtures/fs3/site1/missing_sub1
+Error: 12 observations failed to load! Replacing with NA.
+fixtures/fs3/site1/sub-1_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
 
+fixtures/fs3/site1/sub-2_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site1/sub-3_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site1/sub-1_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site1/sub-2_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site1/sub-3_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-1_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-2_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-3_ses-01/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-1_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-2_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
+
+fixtures/fs3/site2/sub-3_ses-02/surf/lh.area.fwhm10.fsaverage3.mgh could not find function "load.mgh" 
 

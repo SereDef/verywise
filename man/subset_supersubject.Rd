@@ -68,18 +68,6 @@ avoid excessive RAM usage.
 \item Writes the filtered row names to \code{ss.rownames.csv} in \code{new_supsubj_dir}.
 }
 }
-\examples{
-\dontshow{if (file.exists("path/to/original/ss/")) withAutoprint(\{ # examplesIf}
-# Subset a supersubject to a small set of IDs
-subset_supersubject(
-  supsubj_dir = "path/to/original/ss/",
-  supsubj_file = "<hemi>.<measure>.<fsaverage>.supersubject.rds",
-  folder_ids = pheno_data[, "folder_id"],
-  error_cutoff = 20,
-  new_supsubj_dir = "path/to/subsetted/ss/",
-  save_rds = TRUE
-\dontshow{\}) # examplesIf}
-}
 \seealso{
 \link{build_supersubject}
 }

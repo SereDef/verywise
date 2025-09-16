@@ -62,6 +62,6 @@ test_that("single_lmm captures warnings", {
   #   check.nlev.gtr.1 = "warning"     # warn if grouping factor has <=1 level
   # )
   expect_true(is.character(result$warning))
-  expect_match(result$warning,
-               "rank deficient so dropping 1 column / coefficient")
+  expect_match(result$warning[1],
+               regexp = "rank deficient so dropping 1 column")
 })

@@ -203,7 +203,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation \link{COMING UP}).
+see vignette on parallelisation ...COMING UP).
 Within each hemisphere, vertices are divided into chunks of size
 \code{chunk_size} and processed in parallel across \code{n_cores} workers
 (when \code{n_cores > 1}). When multiple imputed datasets are present,
@@ -239,19 +239,6 @@ FreeView or other neuroimaging software.
 \code{chunk_size} and \code{n_cores} based on your system specifications.
 \item For reproducibility, always specify a \code{seed}.
 }
-}
-\examples{
-# Basic cortical thickness analysis
-\dontrun{
-results <- run_vw_lmm(
-  formula = vw_thickness ~ age + sex + site + (1|participant_id),
-  pheno = "path/to/phentype/data", # or data.frame object
-  subj_dir = "/path/to/freesurfer/subjects",
-  outp_dir = "/path/to/output",
-  hemi = "lh",
-  n_cores = 4)
-}
-
 }
 \seealso{
 \code{\link{single_lmm}} for single-vertex modeling,
