@@ -98,6 +98,14 @@ test_that("build_supersubject works with parallel processing", {
   # cleanup_output(supsubj_dir, hemi, measure, fs_template)
   more_cores <- min(2, parallel::detectCores(logical = FALSE))
   if (more_cores < 2) skip("Not enough cores for parallel test")
+  
+  withr::local_envvar(c(
+    OPENBLAS_NUM_THREADS = 1,
+    OMP_NUM_THREADS = 1,
+    MKL_NUM_THREADS = 1,
+    VECLIB_MAXIMUM_THREADS = 1,
+    NUMEXPR_NUM_THREADS = 1
+  ))
 
   ss <- build_supersubject(
     subj_dir = subj_dir,
