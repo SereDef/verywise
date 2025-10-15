@@ -141,6 +141,23 @@ progress messages.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code><a href="simulate_freesurfer_data.html">simulate_freesurfer_data</a></code>.</p></dd>
 
+
+<dt id="arg-roi-subset">roi_subset<a class="anchor" aria-label="anchor" href="#arg-roi-subset"></a></dt>
+<dd><p>Character vector (default = c('temporalpole', 'frontalpole',
+'entorhinal')). Vertex-wise data is simulated by default only within a
+smaller subset (~1.5%) of the total surface. The rest of the vertex values
+are set to 0, so they won't be analysed, saving time during estimation.
+The region locations are extracted from the annotation files in that
+are distributed with FreeSurfer and saved internally in R/sysdata.rda.</p></dd>
+
+
+<dt id="arg-location-association">location_association<a class="anchor" aria-label="anchor" href="#arg-location-association"></a></dt>
+<dd><p>Optional string or character vector. If specified,
+the association is only present within these ROIs. The rest of the vertex values
+will be set to have no relationship with any of the predictors. The region
+locations are extracted from the annotation files in that are distributed with
+FreeSurfer and saved internally in R/sysdata.rda.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>

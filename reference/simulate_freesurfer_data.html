@@ -69,8 +69,12 @@ of an association with a phenotype variable.</p>
 <span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
 <span>  fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
 <span>  vw_mean <span class="op">=</span> <span class="fl">6.5</span>,</span>
-<span>  vw_sd <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  vw_sd <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  subj_sd <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  site_sd <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  roi_subset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"temporalpole"</span>, <span class="st">"frontalpole"</span>, <span class="st">"entorhinal"</span><span class="op">)</span>,</span>
 <span>  simulate_association <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  location_association <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -133,11 +137,38 @@ vertex-wise values.</p></dd>
 simulated vertex-wise values.</p></dd>
 
 
+<dt id="arg-subj-sd">subj_sd<a class="anchor" aria-label="anchor" href="#arg-subj-sd"></a></dt>
+<dd><p>Numeric (default = <code>0.2</code>). Standard deviation of the
+random intercept for subject (relevant in multi-session datasets).</p></dd>
+
+
+<dt id="arg-site-sd">site_sd<a class="anchor" aria-label="anchor" href="#arg-site-sd"></a></dt>
+<dd><p>Numeric (default = <code>0.1</code>). Standard deviation of the
+random intercept for site (relevant in multi-site datasets).</p></dd>
+
+
+<dt id="arg-roi-subset">roi_subset<a class="anchor" aria-label="anchor" href="#arg-roi-subset"></a></dt>
+<dd><p>Character vector (default = c('temporalpole', 'frontalpole',
+'entorhinal')). Vertex-wise data is simulated by default only within a
+smaller subset (~1.5%) of the total surface. The rest of the vertex values
+are set to 0, so they won't be analysed, saving time during estimation.
+The region locations are extracted from the annotation files in that
+are distributed with FreeSurfer and saved internally in R/sysdata.rda.</p></dd>
+
+
 <dt id="arg-simulate-association">simulate_association<a class="anchor" aria-label="anchor" href="#arg-simulate-association"></a></dt>
 <dd><p>Optional. If numeric, must be of length equal to
 the number of generated files; if character, must have the format
 <code>"&lt;beta&gt; * &lt;variable_name&gt;"</code>. Associations are injected into one small
 region (the entorhinal cortex).</p></dd>
+
+
+<dt id="arg-location-association">location_association<a class="anchor" aria-label="anchor" href="#arg-location-association"></a></dt>
+<dd><p>Optional string or character vector. If specified,
+the association is only present within these ROIs. The rest of the vertex values
+will be set to have no relationship with any of the predictors. The region
+locations are extracted from the annotation files in that are distributed with
+FreeSurfer and saved internally in R/sysdata.rda.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
