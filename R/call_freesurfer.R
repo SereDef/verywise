@@ -131,6 +131,7 @@ compute_clusters <- function(stack_path,
                      "--vwsig", other_files[["vwsig"]], # map of corrected voxel-wise significance
                      "--oannot", other_files[["oannot"]], # output clusters as an annotation
                      "--o", other_files[["o"]]) # input with non-clusters set to 0
+  
   }
 
   cmd_str <- if (!is.null(mask)) {
@@ -138,6 +139,8 @@ compute_clusters <- function(stack_path,
   } else {
     paste(cmd_str, "--cortex")
   }
+
+  cmd_str <- paste(cmd_str, "2>/dev/null") # avoid "supposed to be reproducible but seed not set" warning
 
   system(cmd_str, ignore.stdout = !verbose)
 
