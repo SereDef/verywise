@@ -13,8 +13,12 @@ simulate_freesurfer_data(
   hemi = "lh",
   fwhmc = "fwhm10",
   vw_mean = 6.5,
-  vw_sd = 0.5,
+  vw_sd = 1.5,
+  subj_sd = 0.2,
+  site_sd = 0.1,
+  roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
   simulate_association = NULL,
+  location_association = NULL,
   seed = 3108,
   verbose = TRUE
 )
@@ -56,10 +60,29 @@ vertex-wise values.}
 \item{vw_sd}{Numeric (default = \code{0.5}). Standard deviation of the
 simulated vertex-wise values.}
 
+\item{subj_sd}{Numeric (default = \code{0.2}). Standard deviation of the
+random intercept for subject (relevant in multi-session datasets).}
+
+\item{site_sd}{Numeric (default = \code{0.1}). Standard deviation of the
+random intercept for site (relevant in multi-site datasets).}
+
+\item{roi_subset}{Character vector (default = c('temporalpole', 'frontalpole',
+'entorhinal')). Vertex-wise data is simulated by default only within a
+smaller subset (~1.5\%) of the total surface. The rest of the vertex values
+are set to 0, so they won't be analysed, saving time during estimation.
+The region locations are extracted from the annotation files in that
+are distributed with FreeSurfer and saved internally in R/sysdata.rda.}
+
 \item{simulate_association}{Optional. If numeric, must be of length equal to
 the number of generated files; if character, must have the format
 \code{"<beta> * <variable_name>"}. Associations are injected into one small
 region (the entorhinal cortex).}
+
+\item{location_association}{Optional string or character vector. If specified,
+the association is only present within these ROIs. The rest of the vertex values
+will be set to have no relationship with any of the predictors. The region
+locations are extracted from the annotation files in that are distributed with
+FreeSurfer and saved internally in R/sysdata.rda.}
 
 \item{seed}{Integer (default = \code{3108}). Random seed.}
 

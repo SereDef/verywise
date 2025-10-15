@@ -26,7 +26,7 @@ progress messages.}
 }
 \value{
 A \code{data.frame} in long format with columns:
-\code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{folder_id}.
+\code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{wisdom}, \code{folder_id}.
 }
 \description{
 Generates synthetic phenotype data in long format for multiple cohorts/sites
@@ -36,7 +36,8 @@ and multiple timepoints/sessions per subject. Each record contains:
 \item Session/timepoint
 \item Sex
 \item Age
-\item A \code{folder_id} field matching the FreeSurfer directory structure
+\item Wisdom
+\item \code{folder_id} field matching the FreeSurfer directory structure
 }
 }
 \seealso{

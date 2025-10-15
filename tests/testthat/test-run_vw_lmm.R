@@ -6,13 +6,14 @@ set.seed(3108)
 subj_dir <- test_path("fixtures", "fs7")
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
 
-test_formula <- vw_area ~ sex + age + (1 | id)
+test_formula <- vw_area ~ sex + age + wisdom + (1 | id)
 fs_home = "/Applications/freesurfer/7.4.1" # mac only
 
 # ==============================================================================
 test_that("run_vw_lmm runs end-to-end with simulated data", {
-  skip_on_os("windows")
-  skip_on_os("linux")
+
+  skip_on_os("windows") # FreeSurfer not supported
+  skip_on_os("linux") # System settings implicit parallelism
 
   if (!dir.exists(fs_home)) {
     skip("FreeSurfer not found in FREESURFER_HOME")

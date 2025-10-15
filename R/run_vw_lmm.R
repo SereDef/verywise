@@ -558,7 +558,7 @@ run_vw_lmm <- function(
 
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
-    fs_verbosity <- if(stack_n == 1) verbose else FALSE
+    fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
     compute_clusters(stack_path = stack_path,
                      hemi = hemi,
                      fwhm = fwhm,

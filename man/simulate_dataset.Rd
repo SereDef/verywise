@@ -52,6 +52,19 @@ existing phenotype file.}
 progress messages.}
 
 \item{...}{Additional arguments passed to \code{\link{simulate_freesurfer_data}}.}
+
+\item{roi_subset}{Character vector (default = c('temporalpole', 'frontalpole',
+'entorhinal')). Vertex-wise data is simulated by default only within a
+smaller subset (~1.5\%) of the total surface. The rest of the vertex values
+are set to 0, so they won't be analysed, saving time during estimation.
+The region locations are extracted from the annotation files in that
+are distributed with FreeSurfer and saved internally in R/sysdata.rda.}
+
+\item{location_association}{Optional string or character vector. If specified,
+the association is only present within these ROIs. The rest of the vertex values
+will be set to have no relationship with any of the predictors. The region
+locations are extracted from the annotation files in that are distributed with
+FreeSurfer and saved internally in R/sysdata.rda.}
 }
 \value{
 Invisibly returns \code{NULL}. Data and phenotype files are written to

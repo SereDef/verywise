@@ -33,10 +33,21 @@
 #'     \item \code{"fsaverage4"} = 2562 vertices
 #'     \item \code{"fsaverage3"} = 642 vertices
 #'   }
+#' @param roi_subset Character vector (default = c('temporalpole', 'frontalpole',
+#'   'entorhinal')). Vertex-wise data is simulated by default only within a 
+#'   smaller subset (~1.5%) of the total surface. The rest of the vertex values
+#'   are set to 0, so they won't be analysed, saving time during estimation. 
+#'   The region locations are extracted from the annotation files in that 
+#'   are distributed with FreeSurfer and saved internally in R/sysdata.rda.
 #' @param simulate_association Optional. If numeric, must be of length equal to
 #'   the number of generated files; if character, must have the format
 #'   \code{"<beta> * <variable_name>"}. Associations are injected into one small
 #'   region (the entorhinal cortex).
+#' @param location_association Optional string or character vector. If specified, 
+#'   the association is only present within these ROIs. The rest of the vertex values
+#'   will be set to have no relationship with any of the predictors. The region
+#'   locations are extracted from the annotation files in that are distributed with
+#'   FreeSurfer and saved internally in R/sysdata.rda.
 #' @param overwrite Logical (default = \code{TRUE}). Whether to overwrite an
 #'   existing phenotype file.
 #' @param seed Integer (default = \code{3108}). Random seed.
@@ -69,7 +80,9 @@ simulate_dataset <- function(path,
                                )
                              ),
                              fs_template = "fsaverage",
+                             roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
                              simulate_association =  NULL,
+                             location_association = NULL,
                              overwrite = TRUE,
                              seed = 3108,
                              verbose = TRUE,
@@ -112,7 +125,13 @@ simulate_dataset <- function(path,
     } else if (is.character(simulate_association)) {
       parsed_ass <- strsplit(simulate_association, ' ', fixed = TRUE)[[1]]
       beta <- as.numeric(parsed_ass[1])
-      var_z <- scale(pheno[, parsed_ass[3]])
+      var <- pheno[, parsed_ass[3]]
+      var_z <- if (is.factor(var) || is.character(var)) {
+        as.numeric(as.factor(var)) - 1 # dummy code 
+      } else {
+        # scale(var) # Z-score 
+        var - mean(var) # mean - center
+      }
       simulate_association <- as.vector(beta * var_z)
     } else {
       stop('`simulate_association` is not correctly specified.')
@@ -124,7 +143,9 @@ simulate_dataset <- function(path,
     path = path,
     data_structure = data_structure,
     fs_template = fs_template,
+    roi_subset = roi_subset,
     simulate_association = simulate_association,
+    location_association = location_association,
     seed = seed,
     verbose = verbose,
     ...
@@ -143,14 +164,15 @@ simulate_dataset <- function(path,
 #'   \item Session/timepoint
 #'   \item Sex
 #'   \item Age
-#'   \item A \code{folder_id} field matching the FreeSurfer directory structure
+#'   \item Wisdom
+#'   \item \code{folder_id} field matching the FreeSurfer directory structure
 #' }
 #'
 #' @inheritParams simulate_dataset
 #'
 #' @return
 #' A \code{data.frame} in long format with columns:
-#' \code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{folder_id}.
+#' \code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{wisdom}, \code{folder_id}.
 #'
 #' @seealso
 #' \code{\link{simulate_dataset}}, \code{\link{simulate_freesurfer_data}}
@@ -176,38 +198,38 @@ simulate_long_pheno_data <- function(data_structure = list(
   vw_message(" * creating phenotype file...", verbose = verbose)
   set.seed(seed)
 
-  fake_data <- list()
-
-  # Loop through cohorts/sites
-  for (l in seq_along(data_structure)) {
-    site <- names(data_structure[l])
-    n_subjects <- data_structure[[l]]$n_subjects
-    sessions <- data_structure[[l]]$sessions
-
+  fake_data <- lapply(names(data_structure), function(site) {
+    n_subjects <- data_structure[[site]]$n_subjects
+    sessions <- data_structure[[site]]$sessions
+    
     # Create baseline dataset (session 1)
     baseline <- data.frame(
       id = 1:n_subjects,
       time = sessions[1],
       sex = sample(c("Male", "Female"), n_subjects, replace = TRUE),
-      age = round(stats::rnorm(n_subjects, mean = 40, sd = 1.5), 1)
+      age = round(stats::rnorm(n_subjects, mean = 20, sd = 2), 1),
+      wisdom = round(stats::rnorm(n_subjects, mean = 10, sd = 3), 1)
     )
 
     if (length(sessions) == 1) {
-      fake_data[[site]] <- baseline
+      return(baseline)
+    
     } else {
       t1 <- baseline
       for (s in seq(2, length(sessions))) {
-        t2 <- data.frame( # NOTE: removed dependency to dplyr
+        t2 <- data.frame(
           id = baseline$id,
           time = sessions[s],
           sex = baseline$sex,
-          age = round(baseline$age + stats::rnorm(n_subjects, mean = s+1, sd = 0.5))
+          age = round(baseline$age + stats::rnorm(n_subjects, mean = s*5, sd = 1.5)),
+          wisdom = baseline$wisdom
         )
         t1 <- rbind(t1, t2)
       }
-      fake_data[[site]] <- t1
+      return(t1)
     }
-  }
+  })
+  names(fake_data) <- names(data_structure)
 
   long_df <- dplyr::bind_rows(fake_data, .id = "site")
 
@@ -245,6 +267,10 @@ simulate_long_pheno_data <- function(data_structure = list(
 #'   vertex-wise values.
 #' @param vw_sd Numeric (default = \code{0.5}). Standard deviation of the
 #'   simulated vertex-wise values.
+#' @param subj_sd Numeric (default = \code{0.2}). Standard deviation of the
+#'   random intercept for subject (relevant in multi-session datasets).
+#' @param site_sd Numeric (default = \code{0.1}). Standard deviation of the
+#'   random intercept for site (relevant in multi-site datasets).
 #'
 #' @author Serena Defina, 2024.
 
@@ -273,8 +299,12 @@ simulate_freesurfer_data <- function(path,
                                      hemi = "lh",
                                      fwhmc = "fwhm10",
                                      vw_mean = 6.5,
-                                     vw_sd = 0.5,
+                                     vw_sd = 1.5,
+                                     subj_sd = 0.2, 
+                                     site_sd = 0.1,
+                                     roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
                                      simulate_association = NULL,
+                                     location_association = NULL,
                                      seed = 3108,
                                      verbose = TRUE) {
 
@@ -296,14 +326,31 @@ simulate_freesurfer_data <- function(path,
   n_verts <- count_vertices(fs_template)
 
   # First isolate some regions from annotation file in R/sysdata.rda
-  # Chose these because they are a small subset (~1.5%) of the surface
+  # Default: 'temporalpole', 'frontalpole', 'entorhinal'
+  # I chose these because they are a small subset (~1.5%) of the surface
   # The rest of the values are left to 0 so they won't be analysed
-  roi_locs <- locate_roi(rois=c('temporalpole', 'frontalpole',
-                                'entorhinal'), n_verts = n_verts,
-                         verbose = verbose)
-  # Associations only in my fav region
-  assoc_roi <- locate_roi(rois='entorhinal', n_verts = n_verts,
-                          verbose = verbose)
+  if (!is.null(roi_subset)) {
+    roi_locs <- locate_roi(rois = roi_subset, n_verts = n_verts, verbose = verbose)
+  } else {
+    # Everything
+    # roi_locs <- !logical(n_verts)
+
+    # All vertices with a little bit of cleanup
+    all_rois <- locate_roi()$roi_label
+    all_good_rois <- all_rois[!is.na(all_rois) & all_rois != 'unknown']
+    roi_locs <- locate_roi(rois = all_good_rois, n_verts = n_verts, verbose = verbose)
+  }
+  
+  if (!is.null(simulate_association)) {
+    if (!is.null(location_association)) {
+      # Associations only in your fav region
+      assoc_roi <- locate_roi(rois=location_association, n_verts = n_verts,
+        verbose = verbose)
+    } else {
+      # Associations across the whole subset
+      assoc_roi <- roi_locs
+    }
+  }
 
   # File name
   mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
@@ -311,10 +358,19 @@ simulate_freesurfer_data <- function(path,
   # Start from a vector of type double, filled with 0s
   vw_data <- numeric(n_verts)
 
+  # Simulate random intercepts per site
+  # TODO: let use specify std dev of random itercept?
+  ri_site <- if (length(data_structure) > 1) {
+    stats::rnorm(length(data_structure), mean = 0, sd = site_sd) } else { c(0L) }
+
   for (l in seq_along(data_structure)) {
     site <- names(data_structure[l])
     sess <- data_structure[[l]]$sessions
     n <- data_structure[[l]]$n_subjects
+
+    # Simulate random intercepts per subject
+    # TODO: let use specify std dev of random itercept?
+    ri_subj <- stats::rnorm(n, mean = 0, sd = subj_sd)
 
     # Create site / cohort folder  --------------------------------------------
     site_dir <- file.path(path, site)
@@ -332,9 +388,9 @@ simulate_freesurfer_data <- function(path,
         # Not creating "stats" and "mri" subfolders
 
         # Randomly generated vertex-wise data
-        vw_data[roi_locs] <- stats::rnorm(sum(roi_locs),
-                                          mean = vw_mean,
-                                          sd = vw_sd)
+        vw_data[roi_locs] <- vw_mean + # fixed
+                             ri_subj[i] + ri_site[l] + # random
+                             stats::rnorm(sum(roi_locs), mean = 0, sd = vw_sd) # error
         vw_data[vw_data < 0] <- 0.1 # make sure it is non-negative
 
         # Specify association cluster
@@ -342,7 +398,9 @@ simulate_freesurfer_data <- function(path,
           stopifnot(is.numeric(simulate_association) &&
                       (length(simulate_association) == total_n_files))
 
-          vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter]
+          vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter] + # fixed
+                                ri_subj[i] + ri_site[l] + # random
+                                stats::rnorm(sum(assoc_roi), mean = 0, sd = 0.5) # error
         }
 
         file_counter <- file_counter + 1

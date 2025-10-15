@@ -2,3 +2,4 @@
 1	"(Intercept)"
 2	"sexMale"
 3	"age"
+4	"wisdom"

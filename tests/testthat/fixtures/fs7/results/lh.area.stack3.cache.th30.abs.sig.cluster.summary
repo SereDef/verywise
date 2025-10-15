@@ -1,16 +1,16 @@
 # Cluster Growing Summary (mri_surfcluster)
 # 7.4.1
 # 7.4.1
-# CreationTime 2025/08/15-14:27:10-GMT
-# cmdline mri_surfcluster --in fixtures/fs7/results/lh.area.stack3.-log10p.mgh --csd /Applications/freesurfer/7.4.1/average/mult-comp-cor/fsaverage/lh/cortex/fwhm01/abs/th30/mc-z.csd --ocn fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.ocn.mgh --sum fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.cluster.summary --annot aparc --cwpvalthresh 0.025 --no-fixmni --surf white --mask fixtures/fs7/results/lh.area.finalMask.mgh 
-# cwd /Users/Serena/Desktop/Packages/verywise/tests/testthat
+# CreationTime 2025/10/15-14:30:04-GMT
+# cmdline mri_surfcluster --in /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack3.-log10p.mgh --csd /Applications/freesurfer/7.4.1/average/mult-comp-cor/fsaverage/lh/cortex/fwhm01/abs/th30/mc-z.csd --ocn /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.ocn.mgh --sum /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack3.cache.th30.abs.sig.cluster.summary --annot aparc --cwpvalthresh 0.025 --no-fixmni --surf white --mask /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.finalMask.mgh 
+# cwd /Users/Serena/Desktop/Packages/verywise
 # sysname  Darwin
-# hostname macbook-pro-5.erasmusmc.nl
+# hostname macbook-pro-9.erasmusmc.nl
 # machine  x86_64
 # FixVertexAreaFlag 1
 # FixSurfClusterArea 1
 # 
-# Input      fixtures/fs7/results/lh.area.stack3.-log10p.mgh
+# Input      /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack3.-log10p.mgh
 # Frame Number      0
 # srcsubj fsaverage
 # hemi lh
@@ -33,7 +33,7 @@
 # CSD simtype  null-z
 # CSD contrast NA
 # CSD confint  90.000000
-# Overall max 4.46467 at vertex 25011
+# Overall max 4.54005 at vertex 107526
 # Overall min 0 at vertex 0
 # NClusters          0
 # FixMNI = 0

@@ -8,7 +8,6 @@ message('Setting up test data at', temp_test_dir)
 # Setup
 measure = "area"
 fwhmc = "fwhm10"
-n_subs = 3
 
 verbosity = TRUE
 
@@ -16,6 +15,9 @@ verbosity = TRUE
 # 1. test all functionality except the FreeSurfer-related ones using fsaverage3
 #    (642 vertices)
 fs3_data_path <- file.path(temp_test_dir, "fs3")
+if (dir.exists(fs3_data_path)) {unlink(fs3_data_path, recursive = TRUE)}
+
+n_subs = 3
 
 data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs),
@@ -71,8 +73,9 @@ for (hemi in c('lh','rh')) {
 # 2. test FreeSurfer-related functionality using the "full" fsaverage template
 #    (163842 vertices)
 fs7_data_path <- file.path(temp_test_dir, "fs7")
+if (dir.exists(fs7_data_path)) {unlink(fs7_data_path, recursive = TRUE)}
 
-n_subs <- 10
+n_subs <- 30
 
 data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs))
@@ -84,9 +87,13 @@ for (hemi in c('lh','rh')) {
                    measure = measure,
                    hemi = hemi,
                    fwhmc = fwhmc,
-                   vw_mean = 0.6,
+                   vw_mean = 5,
                    vw_sd = 0.1,
-                   simulate_association = "0.5 * age",
+                   subj_sd = 0.02,
+                   site_sd = 0.01, # only one site: not used
+                   roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
+                   simulate_association = "3.5 * wisdom",
+                   location_association = 'frontalpole',
                    verbose = verbosity)
 }
 
