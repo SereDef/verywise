@@ -35,8 +35,18 @@ run_vw_lmm(
     save_optional_cluster_info = FALSE,
     save_ss = FALSE,
     save_residuals = FALSE,
-    verbose = TRUE
-)
+    verbose = TRUE)
+
+# Check tresults are as expected ---------------------------------------------------
+for (term in c("wisdom")) { #, "age", "sexMale", "(Intercept)")) {
+
+  p = plot_vw_map(res_dir = outp_dir,
+                  term = term,
+                  hemi = "lh",
+                  measure = "area",
+                  outline_rois = c('temporalpole', 'frontalpole','entorhinal'), 
+                  fs_home = fs_home)
+}
 
 # NOTE: find profiler that works well with parallel settings 
 # profvis::profvis({

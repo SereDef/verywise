@@ -4,7 +4,7 @@
 \alias{locate_roi}
 \title{Locate vertices belonging to specific cortical ROIs}
 \usage{
-locate_roi(rois = NULL, n_verts = 163842, verbose = TRUE)
+locate_roi(rois = NULL, n_verts = 163842, hemi = c("lh", "rh"), verbose = TRUE)
 }
 \arguments{
 \item{rois}{Optional character vector of ROI names to locate (e.g.,
@@ -13,6 +13,9 @@ returns a full ROI lookup table.}
 
 \item{n_verts}{Integer. Total number of surface vertices to consider
 (default: \code{163842} "fsaverage").}
+
+\item{hemi}{String: "lh" or "rh". Used to point to the hemisphere-specific
+aparc annotation file.}
 
 \item{verbose}{Logical (default: \code{TRUE}).}
 }
@@ -35,10 +38,10 @@ the selected ROIs.
 }
 \description{
 This function identifies which vertices in a cortical surface mesh correspond
-to one or more specified regions of interest (ROIs), based on the
-Desikan-Killiany atlas (\code{aparc.annot}). If no ROIs are specified, it
-returns a full lookup table of all ROIs with vertex counts, proportions, and
-lobe assignments.
+to one or more specified regions of interest (ROIs), based on the 36 regions of
+the Desikan-Killiany atlas distributed with FreeSurfer (\code{aparc.annot}).
+If no ROIs are specified, it returns a full lookup table of all ROIs with vertex
+counts, proportions, and lobe assignments.
 }
 \examples{
 # Get the full ROI lookup table

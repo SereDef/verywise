@@ -330,22 +330,22 @@ simulate_freesurfer_data <- function(path,
   # I chose these because they are a small subset (~1.5%) of the surface
   # The rest of the values are left to 0 so they won't be analysed
   if (!is.null(roi_subset)) {
-    roi_locs <- locate_roi(rois = roi_subset, n_verts = n_verts, verbose = verbose)
+    roi_locs <- locate_roi(rois = roi_subset, n_verts = n_verts, hemi = hemi, verbose = verbose)
   } else {
     # Everything
     # roi_locs <- !logical(n_verts)
 
     # All vertices with a little bit of cleanup
-    all_rois <- locate_roi()$roi_label
+    all_rois <- locate_roi(hemi = hemi)$roi_label
     all_good_rois <- all_rois[!is.na(all_rois) & all_rois != 'unknown']
-    roi_locs <- locate_roi(rois = all_good_rois, n_verts = n_verts, verbose = verbose)
+    roi_locs <- locate_roi(rois = all_good_rois, n_verts = n_verts, hemi = hemi, verbose = verbose)
   }
   
   if (!is.null(simulate_association)) {
     if (!is.null(location_association)) {
       # Associations only in your fav region
-      assoc_roi <- locate_roi(rois=location_association, n_verts = n_verts,
-        verbose = verbose)
+      assoc_roi <- locate_roi(rois=location_association, n_verts = n_verts, hemi = hemi,
+                              verbose = verbose)
     } else {
       # Associations across the whole subset
       assoc_roi <- roi_locs
@@ -379,8 +379,9 @@ simulate_freesurfer_data <- function(path,
     vw_message(" * ", site, ": ", n, " (subjects) x ", length(sess),
       " (sessions) cortical ", measure, " files", verbose = verbose)
 
-    for (i in seq_len(n)) {
-      for (t in sess) {
+    for (t in sess) {
+      for (i in seq_len(n)) {
+      
         # Create subject folder structure -------------------------------------
         sub_dir <- file.path(site_dir, paste0("sub-", i, "_ses-", t))
 
@@ -396,7 +397,7 @@ simulate_freesurfer_data <- function(path,
         # Specify association cluster
         if (!is.null(simulate_association)) {
           stopifnot(is.numeric(simulate_association) &&
-                      (length(simulate_association) == total_n_files))
+                   (length(simulate_association) == total_n_files))
 
           vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter] + # fixed
                                 ri_subj[i] + ri_site[l] + # random

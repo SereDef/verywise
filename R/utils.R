@@ -100,16 +100,18 @@ list.dirs.till <- function(path, n) {
 #'
 #' @description
 #' This function identifies which vertices in a cortical surface mesh correspond
-#' to one or more specified regions of interest (ROIs), based on the
-#' Desikan-Killiany atlas (\code{aparc.annot}). If no ROIs are specified, it
-#' returns a full lookup table of all ROIs with vertex counts, proportions, and
-#' lobe assignments.
+#' to one or more specified regions of interest (ROIs), based on the 36 regions of
+#' the Desikan-Killiany atlas distributed with FreeSurfer (\code{aparc.annot}). 
+#' If no ROIs are specified, it returns a full lookup table of all ROIs with vertex
+#' counts, proportions, and lobe assignments.
 #'
 #' @param rois Optional character vector of ROI names to locate (e.g.,
 #'   \code{c("insula", "precentral")}). If \code{NULL} (default), the function
 #'   returns a full ROI lookup table.
 #' @param n_verts Integer. Total number of surface vertices to consider
 #'   (default: \code{163842} "fsaverage").
+#' @param hemi String: "lh" or "rh". Used to point to the hemisphere-specific
+#'   aparc annotation file.
 #' @param verbose Logical (default: \code{TRUE}).
 #'
 #' @return
@@ -138,16 +140,19 @@ list.dirs.till <- function(path, n) {
 #'
 #' @export
 #'
-locate_roi <- function(rois = NULL, n_verts = 163842, verbose = TRUE) {
+locate_roi <- function(rois = NULL, n_verts = 163842, hemi = c('lh','rh'), verbose = TRUE) {
   # using Desikan-Killiany 36 regions
 
-  all_rois <- aparc.annot$vd_label[1:n_verts]
+  hemi <- match.arg(hemi)
+  annot <- aparc.annot[[hemi]]
+
+  all_rois <- annot$label_codes[1:n_verts]
   roi_counts <- as.data.frame(table(all_rois))
   names(roi_counts) <- c('roi_id', 'vw_count')
   roi_counts['vw_prop'] <- round(roi_counts[,'vw_count']/n_verts, 3)
 
-  notations <- aparc.annot$LUT[, c('LUT_labelname', 'LUT_value')]
-  names(notations) <- c('roi_label', 'roi_id')
+  notations <- annot$colortable_df[, c('struct_name', 'code', 'hex_color_string_rgb')]
+  names(notations) <- c('roi_label', 'roi_id', 'roi_color')
 
   roi_lookup <- merge(notations, roi_counts, by = 'roi_id',
                       all.x = FALSE, all.y = TRUE)
@@ -236,3 +241,16 @@ count_vertices <- function(fs_template) {
                     fsaverage3 = 642)
   return(n_verts)
 }
+
+
+# ==============================================================================
+# Read and save annotation files for internal use 
+# fs_home = "/Applications/freesurfer/7.4.1"
+# hemis <- c("lh", "rh")
+# aparc.annot <- lapply(hemis, function(hemi){
+#   annot_file <- file.path(fs_home, "subjects/fsaverage/label", 
+#                           paste0(hemi, ".aparc.annot"))
+#   freesurferformats::read.fs.annot(annot_file)})
+# names(aparc.annot) <- hemis
+# usethis::use_data(aparc.annot, internal = TRUE, overwrite = TRUE)
+# ==============================================================================

@@ -75,7 +75,7 @@ for (hemi in c('lh','rh')) {
 fs7_data_path <- file.path(temp_test_dir, "fs7")
 if (dir.exists(fs7_data_path)) {unlink(fs7_data_path, recursive = TRUE)}
 
-n_subs <- 30
+n_subs <- 10
 
 data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs))

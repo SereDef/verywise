@@ -30,6 +30,7 @@ Suggests:
     mi (>= 1.1),
     mice (>= 3.16.0),
     parallelly (>= 1.38.0),
+    reticulate,
     testthat (>= 3.0.0),
     withr
 URL: https://github.com/SereDef/verywise, https://seredef.github.io/verywise/
