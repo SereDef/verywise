@@ -295,6 +295,8 @@ run_vw_lmm <- function(
   # Save the stack names (i.e. fixed terms) to a lookup file
   check_stack_file(fixed_terms, outp_dir)
 
+  folder_ids <- data1[, folder_id, drop=TRUE] # ensure this is always a character vector 
+
   # Reproducibility baby =======================================================
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
@@ -318,7 +320,7 @@ run_vw_lmm <- function(
     ss <- subset_supersubject(
       supsubj_dir = subj_dir,
       supsubj_file = ss_file,
-      folder_ids = data1[, folder_id, drop=TRUE], # note: expect a char vector
+      folder_ids = folder_ids,
       new_supsubj_dir = ss_dir,
       n_cores = n_cores,
       save_rds = save_ss,
@@ -332,7 +334,7 @@ run_vw_lmm <- function(
 
     ss <- build_supersubject(
       subj_dir = subj_dir,
-      folder_ids = data1[, folder_id, drop=TRUE], # note: expect a char vector
+      folder_ids = folder_ids,
       supsubj_dir = ss_dir,
       measure = measure,
       hemi = hemi,
@@ -360,7 +362,7 @@ run_vw_lmm <- function(
                         '.ss.rownames.csv', ss$bk)
   data_list <- check_row_match(rownames_file = rownames_file,
                                data_list = data_list,
-                               folder_id = folder_id)
+                               folder_ids = folder_ids)
 
   data1 <- data_list[[1]]
 

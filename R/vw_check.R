@@ -237,12 +237,10 @@ check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer 
   }
 }
 
-check_row_match <- function(rownames_file, data_list, folder_id) {
+check_row_match <- function(rownames_file, data_list, folder_ids) {
 
   ss_rownames <- scan(file = rownames_file,
                       what = character(), sep = "\n", quiet = TRUE)
-
-  folder_ids <- data_list[[1]][, folder_id]
 
   if (!identical(ss_rownames, folder_ids)) {
 
