@@ -3,7 +3,7 @@
 ``` r
 library(verywise)
 #> Welcome, verywise user!
-#> This is version: 1.2.1
+#> This is version: 1.2.2
 #> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 
