@@ -318,7 +318,7 @@ run_vw_lmm <- function(
     ss <- subset_supersubject(
       supsubj_dir = subj_dir,
       supsubj_file = ss_file,
-      folder_ids = data1[, folder_id],
+      folder_ids = data1[, folder_id, drop=TRUE], # note: expect a char vector
       new_supsubj_dir = ss_dir,
       n_cores = n_cores,
       save_rds = save_ss,
@@ -332,7 +332,7 @@ run_vw_lmm <- function(
 
     ss <- build_supersubject(
       subj_dir = subj_dir,
-      folder_ids = data1[, folder_id],
+      folder_ids = data1[, folder_id, drop=TRUE], # note: expect a char vector
       supsubj_dir = ss_dir,
       measure = measure,
       hemi = hemi,
