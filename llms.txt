@@ -1,0 +1,201 @@
+# **`verywise`**
+
+### vertex-wise, whole-brain linear mixed models
+
+The goal of `verywise` is to offer a flexible, user-friendly interface
+to whole-brain analysis of neuro-imaging data that has been
+pre-processed using [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/).
+
+The package was specifically designed for the analysis of *longitudinal*
+(e.g. multi-session) and/or *multi-site* neuroimaging data.
+
+Currently, `verywise` allows the estimation of vertex-wise **Linear
+Mixed Models**, but will be extended to other statistical models in the
+future.
+
+It can handle imputed (phenotype) data from several packages (`mice`,
+`mi`, `amelia`, etc.).
+
+Multiple testing correction is currently achieved using MCZ simulations
+from FreeSurfer. This means that you will need FreeSurfer installed and
+correctly set up.
+
+## Installation
+
+You can install the development version of `verywise` from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("SereDef/verywise")
+```
+
+## Basic use
+
+``` r
+library(verywise)
+```
+
+``` r
+# Run a linear mixed model
+run_vw_lmm(
+  formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
+  subj_dir = "./VeryWiseUserUser/SimulatedExample", # Neuro-imaging data location
+  hemi = "both", # (default) which hemispheres to run
+  pheno = phenotype, # An R object already in memory or path to file 
+)
+```
+
+You can find more info and tutorials
+[here](https://seredef.github.io/verywise/index.html).
+
+## Visualization
+
+To inspect and plot your results you can use our interactive web
+application,
+[verywiseWIZard](https://github.com/SereDef/verywise-wizard). You can
+run this locally or try it out
+[here](https://seredef-verywise-wizard.share.connect.posit.cloud/).
+
+## Note
+
+This is a spin-off of the (more stable)
+[`QDECR`](https://www.qdecr.com/) package.
+
+## Funders
+
+![Funders](reference/figures/funders.png)
+
+This work was supported by the *FLAG-ERA* grant
+[**Infant2Adult**](https://www.infant2adult.com/home) and by The
+Netherlands Organization for Health Research and Development (ZonMw,
+grant number 16080606).
+
+All feedback and contributions are **very welcome!**.
+
+# Package index
+
+## All functions
+
+- [`as.mgh()`](https://seredef.github.io/verywise/reference/as.mgh.md) :
+  Create an object structured like an MGH object
+
+- [`barnard.rubin()`](https://seredef.github.io/verywise/reference/barnard.rubin.md)
+  : Pooled degrees of freedom calculation
+
+- [`build_supersubject()`](https://seredef.github.io/verywise/reference/build_supersubject.md)
+  : Build "supersubject" by stacking all vertex data in one large
+  file-backed matrix with dimensions n_subjects x n_vertices.
+
+- [`check_pheno_obj()`](https://seredef.github.io/verywise/reference/check_pheno_obj.md)
+  : Check that object exists in the global environment
+
+- [`compute_clusters()`](https://seredef.github.io/verywise/reference/compute_clusters.md)
+  : Compute significant clusters of vertices
+
+- [`convert_to_mgh()`](https://seredef.github.io/verywise/reference/convert_to_mgh.md)
+  :
+
+  Convert statistical result FBMs to FreeSurfer `.mgh` format
+
+- [`create_cortex_mask()`](https://seredef.github.io/verywise/reference/create_cortex_mask.md)
+  : @title Save logical cortex mask from FreeSurfer cortex.label files
+
+- [`estimate_fwhm()`](https://seredef.github.io/verywise/reference/estimate_fwhm.md)
+  : Estimate full-width half maximum (FWHM)
+
+- [`fbm2mgh()`](https://seredef.github.io/verywise/reference/fbm2mgh.md)
+  : Save file backed matrix (FBM) to MGH file
+
+- [`fbm_col_has_0()`](https://seredef.github.io/verywise/reference/fbm_col_has_0.md)
+  : Check if all row elements are 0 in FBM
+
+- [`get_terms()`](https://seredef.github.io/verywise/reference/get_terms.md)
+  :
+
+  Unpack `lme4` formula
+
+- [`imp2list()`](https://seredef.github.io/verywise/reference/imp2list.md)
+  : Convert imputation object to a list of dataframes
+
+- [`list.dirs.till()`](https://seredef.github.io/verywise/reference/list.dirs.till.md)
+  :
+
+  List sub-directories till depth `n`
+
+- [`load.mgh()`](https://seredef.github.io/verywise/reference/load.mgh.md)
+  : Load an MGH file into memory
+
+- [`load_pheno_file()`](https://seredef.github.io/verywise/reference/load_pheno_file.md)
+  : Load "phenotype" file into R based on its extension
+
+- [`locate_roi()`](https://seredef.github.io/verywise/reference/locate_roi.md)
+  : Locate vertices belonging to specific cortical ROIs
+
+- [`make_chunk_sequence()`](https://seredef.github.io/verywise/reference/make_chunk_sequence.md)
+  : Define chunks of vertices for analyses
+
+- [`mask_cortex()`](https://seredef.github.io/verywise/reference/mask_cortex.md)
+  : Clean out vertices that are not on the cortex
+
+- [`move_result_files()`](https://seredef.github.io/verywise/reference/move_result_files.md)
+  : Move key result files from one directory to another (for sharing and
+  visualization)
+
+- [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
+  : Plot vertex-wise coefficient maps on a 3D cortical surface
+
+- [`pretty_message()`](https://seredef.github.io/verywise/reference/pretty_message.md)
+  : Print pretty messages to console
+
+- [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
+  :
+
+  Run vertex-wise linear mixed model using
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+
+- [`run_vw_meta()`](https://seredef.github.io/verywise/reference/run_vw_meta.md)
+  : Vertex-wise Random-Effects Meta-Analysis Across Studies
+
+- [`save.mgh()`](https://seredef.github.io/verywise/reference/save.mgh.md)
+  : Save an MGH file from memory
+
+- [`simulate_dataset()`](https://seredef.github.io/verywise/reference/simulate_dataset.md)
+  : Simulate a longitudinal brain surface dataset with associated
+  phenotype data
+
+- [`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
+  : Simulate longitudinal FreeSurfer vertex-wise data
+
+- [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
+  : Simulate (longitudinal) phenotype data
+
+- [`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
+  : Run a single linear mixed model and extract statistics
+
+- [`subset_supersubject()`](https://seredef.github.io/verywise/reference/subset_supersubject.md)
+  : Subset an existing supersubject matrix by matching folder IDs
+
+- [`vw_message()`](https://seredef.github.io/verywise/reference/vw_message.md)
+  : Print message to console if verbose = TRUE
+
+- [`vw_pool()`](https://seredef.github.io/verywise/reference/vw_pool.md)
+  :
+
+  Pool [`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) model
+  output across imputed datasets
+
+# Articles
+
+### All vignettes
+
+- [Getting ready, step 1: Installation and system
+  requirements](https://seredef.github.io/verywise/articles/00-installation-sys-requirements.md):
+- [Getting ready, step 2: formatting input
+  data](https://seredef.github.io/verywise/articles/01-format-data.md):
+- [Optional: simulating
+  data](https://seredef.github.io/verywise/articles/02-simulate-data.md):
+- [Running vertex-wise linear mixed
+  models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.md):
+- [Visualizing \`verywise\` results:
+  BrainMapp](https://seredef.github.io/verywise/articles/04-visualize-results.md):

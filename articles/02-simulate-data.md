@@ -1,0 +1,86 @@
+# Optional: simulating data
+
+## Data poor? Simulate yourself some data, son
+
+If you are eager to get started with `verywise` but do not have access
+to a dataset (yet), you can generate both a set of ready-made FreeSurfer
+surface data files and a phenotype file to go with it.
+
+The simulated dataset will already be saved into a `verywise` structure.
+
+``` r
+library(verywise)
+#> Welcome, verywise user!
+#> This is version: 1.2.0
+#> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
+```
+
+## Only generate the brain data
+
+If you have a phenotype dataset already, but you are missing some
+FreeSurfer data, you can call the following function:
+
+``` r
+# Simulate FreeSurfer dataset
+my_dataset_structure = list("cohort1" = list("sessions" = c("01", "02"),
+                                             "n_subjects" = 100),
+                            "cohort2" = list("sessions" = c("01", "02"),
+                                             "n_subjects" = 150)
+                            )
+my_random_seed = 1984
+
+simulate_freesurfer_data(path = "./VeryWiseUser/SimulatedExample",
+                         data_structure = my_dataset_structure,
+                         vw_resolution = 163842,
+                         measure = "thickness",
+                         hemi = "lh",
+                         fwhmc = "fwhm10",
+                         target = "fsaverage",
+                         vw_mean = 6.5,
+                         vw_sd = 0.5,
+                         simulate_association = NULL,
+                         seed = my_random_seed)
+```
+
+In this example, we are going to generate 500 left hemisphere (`"lh"`)
+thickness maps. These maps belong to 250 fictional subjects, who all
+underwent 2 MRI sessions (`"01"` and `"02"`) and belong to two cohorts
+(`"cohort1"` and `"cohort2"`). The resolution of these fake surface maps
+is `163842` vertices (corresponding to the most detailed FreeSurfer
+template `"fsaverage"`), and they will have an overall mean of `6.5` (mm
+thickness) and a standard deviation of `0.5`.
+
+You can also use the function to specify a simulated association with a
+variable of your choice. TODO
+
+## Only generate the phenotype data
+
+On the other hand, if you already have some surfaces but you would like
+a phenotype to go with it you can use:
+
+``` r
+# Simulate phenotype dataset
+simulate_long_pheno_data(data_structure = my_dataset_structure,
+                         seed = my_random_seed)
+```
+
+This will generate a minimum “long format” dataframe with the variables
+you need, as well as simulated “sex” and “age” of the sample.
+
+## Alright, all in one go now
+
+``` r
+# Simulate FreeSurfer and phenotype dataset
+simulate_data(path = "./VeryWiseUser/SimulatedExample", 
+              data_structure = my_dataset_structure,
+              simulate_association =  0.05 * pheno$age,
+              overwrite = TRUE,
+              seed = my_random_seed)
+```
+
+This will call
+[`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
+and
+[`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
+to give you everything you need to play around with `verywise` model
+fitting.
