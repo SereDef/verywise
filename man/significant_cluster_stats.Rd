@@ -32,7 +32,7 @@ extracts relevant measurements for each cluster, and computes either the mean or
 for each subject in the supersubject data.
 }
 \examples{
-\dontshow{if (exists(ss_dir)) withAutoprint(\{ # examplesIf}
+\dontshow{if (dir.exists("path/to/ss_dir")) withAutoprint(\{ # examplesIf}
 result <- significant_cluster_stats(
   stat = "mean", 
   ss_dir = "path/to/ss_dir", 

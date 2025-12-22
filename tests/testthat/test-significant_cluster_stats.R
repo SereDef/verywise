@@ -1,5 +1,5 @@
 # Unit tests for the significant_cluster_stats function
-test_that("significant_cluster_stats handles invalid direct ories", {
+test_that("significant_cluster_stats handles invalid directories", {
   subj_dir <- test_path("fixtures", "fs7")
 
   expect_error(significant_cluster_stats("mean", "invalid_ss_dir", 
@@ -40,9 +40,9 @@ test_that("significant_cluster_stats works when clusters are found", {
                             hemi='lh',
                             measure = 'area')
   
-  expect_is(result, "data.frame")
-  expect_gt(nrow(result), 0)  # there's at least one row
-  expect_gt(ncol(result), 1)  # there are multiple columns
+  expect_s3_class(med_area, "data.frame")
+  expect_gt(nrow(med_area), 0)  # there's at least one row
+  expect_gt(ncol(med_area), 1)  # there are multiple columns
 })
 
 test_that("significant_cluster_stats works when clusters are not found", {

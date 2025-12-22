@@ -19,7 +19,7 @@
 #' @return A data frame with the computed statistics for each cluster and subject. The data frame 
 #'   contains one column for each computed statistic, indexed by the subject's folder ID.
 #'
-#' @examplesIf exists(ss_dir)
+#' @examplesIf dir.exists("path/to/ss_dir")
 #' result <- significant_cluster_stats(
 #'   stat = "mean", 
 #'   ss_dir = "path/to/ss_dir", 
@@ -79,9 +79,9 @@ significant_cluster_stats <- function(stat, ss_dir, res_dir, term, measure, hemi
     mask <- clusters == cluster
     ss_subset = ss[, mask]
     if (stat == 'mean') {
-      med_meas = rowMeans(ss_subset) 
+      med_meas <- rowMeans(ss_subset) 
     } else {
-      med_meas <- apply(ss_subset, 1, median)
+      med_meas <- apply(ss_subset, 1, stats::median)
     }
     output[paste(stat, hemi, measure, paste0('stack', stack), paste0('cluster', cluster))] <- med_meas
   }
