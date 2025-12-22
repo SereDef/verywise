@@ -83,7 +83,7 @@ significant_cluster_stats <- function(stat, ss_dir, res_dir, term, measure, hemi
     } else {
       med_meas <- apply(ss_subset, 1, stats::median)
     }
-    output[paste(stat, hemi, measure, paste0('stack', stack), paste0('cluster', cluster))] <- med_meas
+    output[paste(stat, hemi, measure, stack, paste0('cluster', cluster), sep='_')] <- med_meas
   }
   
   return(output)
