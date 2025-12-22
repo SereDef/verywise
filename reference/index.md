@@ -85,6 +85,9 @@
 - [`save.mgh()`](https://seredef.github.io/verywise/reference/save.mgh.md)
   : Save an MGH file from memory
 
+- [`significant_cluster_stats()`](https://seredef.github.io/verywise/reference/significant_cluster_stats.md)
+  : Calculate Significant Cluster Statistics
+
 - [`simulate_dataset()`](https://seredef.github.io/verywise/reference/simulate_dataset.md)
   : Simulate a longitudinal brain surface dataset with associated
   phenotype data

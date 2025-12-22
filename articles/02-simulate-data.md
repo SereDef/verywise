@@ -11,7 +11,7 @@ The simulated dataset will already be saved into a `verywise` structure.
 ``` r
 library(verywise)
 #> Welcome, verywise user!
-#> This is version: 1.2.2
+#> This is version: 1.2.3
 #> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 

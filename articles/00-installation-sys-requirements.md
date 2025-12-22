@@ -28,7 +28,7 @@ Finally, you can attach the package to make it easier to use, like so:
 ``` r
 library(verywise)
 #> Welcome, verywise user!
-#> This is version: 1.2.2
+#> This is version: 1.2.3
 #> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 
