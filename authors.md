@@ -18,14 +18,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/SereDef/verywise/blob/main/DESCRIPTION)
 
-Defina S, Lamballais S (2025). *verywise: Vertex-wise Statistical
+Defina S, Lamballais S (2026). *verywise: Vertex-wise Statistical
 Analysis of Neuroimaging data*. R package version 1.2.3,
 <https://github.com/SereDef/verywise>.
 
     @Manual{,
       title = {verywise: Vertex-wise Statistical Analysis of Neuroimaging data},
       author = {Serena Defina and Sander Lamballais},
-      year = {2025},
+      year = {2026},
       note = {R package version 1.2.3},
       url = {https://github.com/SereDef/verywise},
     }

@@ -10,9 +10,10 @@ or by `QDECR`.
 
 ``` r
 run_vw_meta(
-  stack,
-  hemi,
-  result_dirs,
+  term,
+  hemi = c("lh", "rh"),
+  measure = "area",
+  res_dirs,
   study_names,
   fs_template = "fsaverage",
   n_cores = 1,
@@ -22,27 +23,32 @@ run_vw_meta(
 
 ## Arguments
 
-- stack:
+- term:
 
-  : Character or numeric identifier for the fixed term to meta-analyise.
+  Character. Name of the model term to visualize (matches entries in
+  `stack_names.txt`).
 
 - hemi:
 
-  : Character string, hemisphere to analyze (`"lh"` or `"rh"`).
+  Character. Hemisphere to analyse (`"lh"` or `"rh"`).
 
-- result_dirs:
+- measure:
 
-  : Character vector of directories containing the results files of each
-  study.
+  Character. Surface measure, e.g. `'area'`, `'thickness'`, `'volume'`.
+  Defaults to `'area'`.
+
+- res_dirs:
+
+  Character vector. Path to the directories containing vertex-wise
+  result files (`*.mgh`) of each study.
 
 - study_names:
 
-  : Character vector of study names (must match the length of
-  `result_dirs`).
+  Character vector of study names (must match the length of `res_dirs`).
 
 - fs_template:
 
-  : Character string specifying the FreeSurfer template surface. The
+  Character string specifying the FreeSurfer template surface. The
   following values are accepted:
 
   - fsaverage (default) = 163842 vertices (highest resolution),
@@ -57,12 +63,12 @@ run_vw_meta(
 
 - n_cores:
 
-  : Integer, number of CPU cores to use for parallel processing
-  (default: 1).
+  Integer. Number of CPU cores to use for parallel processing (default:
+  1).
 
 - verbose:
 
-  : Logical, verbose execution (default: TRUE)
+  Logical. verbose execution (default: TRUE)
 
 ## Value
 
@@ -101,9 +107,10 @@ downstream neuroimaging analysis.
 ``` r
 if (FALSE) { # \dontrun{
 run_vw_meta(
-  stack = 1,
+  term = "age",
   hemi = "lh",
-  result_dirs = c("study1/results", "study2/results"),
+  measure = "area",
+  res_dirs = c("study1/results", "study2/results"),
   study_names = c("Study1", "Study2"),
   fs_template = "fsaverage",
   n_cores = 4

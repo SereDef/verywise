@@ -75,16 +75,21 @@
 
 <p>The goal of <code>verywise</code> is to offer a flexible, user-friendly interface to whole-brain analysis of neuro-imaging data that has been pre-processed using <a href="https://surfer.nmr.mgh.harvard.edu/" class="external-link">FreeSurfer</a>.</p>
 <p>The package was specifically designed for the analysis of <em>longitudinal</em> (e.g. multi-session) and/or <em>multi-site</em> neuroimaging data.</p>
-<p>Currently, <code>verywise</code> allows the estimation of vertex-wise <strong>Linear Mixed Models</strong>, but will be extended to other statistical models in the future.</p>
+<p>Currently, <code>verywise</code> allows the estimation of vertex-wise <strong>Linear Mixed Models</strong>, and <strong>meta-analysis</strong>, but will be extended to other statistical models in the future.</p>
 <p>It can handle imputed (phenotype) data from several packages (<code>mice</code>, <code>mi</code>, <code>amelia</code>, etc.).</p>
 <p>Multiple testing correction is currently achieved using MCZ simulations from FreeSurfer. This means that you will need FreeSurfer installed and correctly set up.</p>
+<p>You can find more info and extended <strong>tutorials</strong> <a href="https://seredef.github.io/verywise/index.html">here</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>You can install the development version of <code>verywise</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"SereDef/verywise"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># or </span></span>
+<span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"SereDef/verywise"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -96,21 +101,43 @@
 <code class="sourceCode R"><span><span class="co"># Run a linear mixed model</span></span>
 <span><span class="fu"><a href="reference/run_vw_lmm.html">run_vw_lmm</a></span><span class="op">(</span></span>
 <span>  formula <span class="op">=</span> <span class="va">vw_thickness</span> <span class="op">~</span> <span class="va">sex</span> <span class="op">*</span> <span class="va">age</span> <span class="op">+</span> <span class="va">site</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, <span class="co"># model formula</span></span>
-<span>  subj_dir <span class="op">=</span> <span class="st">"./VeryWiseUserUser/SimulatedExample"</span>, <span class="co"># Neuro-imaging data location</span></span>
-<span>  hemi <span class="op">=</span> <span class="st">"both"</span>, <span class="co"># (default) which hemispheres to run</span></span>
-<span>  pheno <span class="op">=</span> <span class="va">phenotype</span>, <span class="co"># An R object already in memory or path to file </span></span>
+<span>  pheno <span class="op">=</span> <span class="va">long_format_data</span>, <span class="co"># An R object already in memory, or "path/to/phentype/data"</span></span>
+<span>  subj_dir <span class="op">=</span> <span class="st">"/path/to/freesurfer/subjects"</span>, <span class="co"># Neuro-imaging data location</span></span>
+<span>  outp_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>, <span class="co"># Where you want to store results</span></span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
+<span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># parallel processing</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>You can find more info and tutorials <a href="https://seredef.github.io/verywise/index.html">here</a>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Run a meta-analysis</span></span>
+<span><span class="fu"><a href="reference/run_vw_meta.html">run_vw_meta</a></span><span class="op">(</span></span>
+<span>  term <span class="op">=</span> <span class="st">"age"</span>, <span class="co"># Which "term" / predictor / effect to pool</span></span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
+<span>  measure <span class="op">=</span> <span class="st">"area"</span>, <span class="co"># (default) or any available FreeSurfer metric.</span></span>
+<span>  res_dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"/path/to/study1/results"</span>, <span class="st">"/path/to/study2/results"</span><span class="op">)</span>,</span>
+<span>  study_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Study1"</span>, <span class="st">"Study2"</span><span class="op">)</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># parallel processing</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a>
 </h2>
-<p>To inspect and plot your results you can use our interactive web application, <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>. You can run this locally or try it out <a href="https://seredef-verywise-wizard.share.connect.posit.cloud/" class="external-link">here</a>.</p>
+<p>To inspect and plot your results, you can use our interactive web application, <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>. You can run this locally or try it out <a href="https://seredef-verywise-wizard.share.connect.posit.cloud/" class="external-link">here</a>.</p>
+<p>Plots can also be generated using <code>verywise</code> like so:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)</span></span>
+<span><span class="fu"><a href="reference/plot_vw_map.html">plot_vw_map</a></span><span class="op">(</span></span>
+<span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
+<span>  measure <span class="op">=</span> <span class="st">"area"</span>,</span>
+<span>  res_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>,</span>
+<span>  outline_rois <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entorhinal"</span>, <span class="st">"precuneus"</span><span class="op">)</span>,</span>
+<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a>
 </h2>
-<p>This is a spin-off of the (more stable) <a href="https://www.qdecr.com/" class="external-link"><code>QDECR</code></a> package.</p>
+<p>This is a spin-off of the <a href="https://www.qdecr.com/" class="external-link"><code>QDECR</code></a> package, which handles linear regression models.</p>
 </div>
 <div class="section level2">
 <h2 id="funders">Funders<a class="anchor" aria-label="anchor" href="#funders"></a>
