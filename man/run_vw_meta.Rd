@@ -5,9 +5,10 @@
 \title{Vertex-wise Random-Effects Meta-Analysis Across Studies}
 \usage{
 run_vw_meta(
-  stack,
-  hemi,
-  result_dirs,
+  term,
+  hemi = c("lh", "rh"),
+  measure = "area",
+  res_dirs,
   study_names,
   fs_template = "fsaverage",
   n_cores = 1,
@@ -15,15 +16,17 @@ run_vw_meta(
 )
 }
 \arguments{
-\item{stack}{: Character or numeric identifier for the fixed term to meta-analyise.}
+\item{term}{Character. Name of the model term to visualize (matches entries in \code{stack_names.txt}).}
 
-\item{hemi}{: Character string, hemisphere to analyze (\code{"lh"} or \code{"rh"}).}
+\item{hemi}{Character. Hemisphere to analyse (\code{"lh"} or \code{"rh"}).}
 
-\item{result_dirs}{: Character vector of directories containing the results files of each study.}
+\item{measure}{Character. Surface measure, e.g. \code{'area'}, \code{'thickness'}, \code{'volume'}. Defaults to \code{'area'}.}
 
-\item{study_names}{: Character vector of study names (must match the length of \code{result_dirs}).}
+\item{res_dirs}{Character vector. Path to the directories containing vertex-wise result files (\verb{*.mgh}) of each study.}
 
-\item{fs_template}{: Character string specifying the FreeSurfer template surface.
+\item{study_names}{Character vector of study names (must match the length of \code{res_dirs}).}
+
+\item{fs_template}{Character string specifying the FreeSurfer template surface.
 The following values are accepted:
 \itemize{
 \item fsaverage (default) = 163842 vertices (highest resolution),
@@ -33,9 +36,9 @@ The following values are accepted:
 \item fsaverage3 = 642 vertices
 }}
 
-\item{n_cores}{: Integer, number of CPU cores to use for parallel processing (default: 1).}
+\item{n_cores}{Integer. Number of CPU cores to use for parallel processing (default: 1).}
 
-\item{verbose}{: Logical, verbose execution (default: TRUE)}
+\item{verbose}{Logical. verbose execution (default: TRUE)}
 }
 \value{
 A named list with three \code{FBM} objects:
@@ -59,9 +62,10 @@ Filebacked Big Matrices (FBM) and as MGH files for downstream neuroimaging analy
 \examples{
 \dontrun{
 run_vw_meta(
-  stack = 1,
+  term = "age",
   hemi = "lh",
-  result_dirs = c("study1/results", "study2/results"),
+  measure = "area",
+  res_dirs = c("study1/results", "study2/results"),
   study_names = c("Study1", "Study2"),
   fs_template = "fsaverage",
   n_cores = 4

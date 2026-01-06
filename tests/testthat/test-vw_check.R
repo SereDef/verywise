@@ -16,6 +16,29 @@ test_that("check_formula works with valid and invalid input", {
                regexp = "should be a brain surface metric.")
 })
 
+test_that("check_measure handles valid metrics", {
+  # should not error for each allowed metric
+  valid_metrics <- c(
+    "thickness", "area", "area.pial", "curv", "jacobian_white", "pial",
+    "pial_lgi", "sulc", "volume", "w_g.pct", "white.H", "white.K"
+  )
+  
+  for (m in valid_metrics) {
+    expect_invisible(check_measure(m))
+    expect_no_error(check_measure(m))
+  }
+})
+
+test_that("check_measure rejects invalid metrics", {
+  invalid_metric <- "charliexcx"
+  
+  expect_error(
+    check_measure(invalid_metric),
+    regexp = "is not a valid metric",
+    fixed  = TRUE
+  )
+})
+
 test_that("check_data_list validates structure and contents", {
   df <- data.frame(folder_id = 1:3,
                    age = 20:22,

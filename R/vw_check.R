@@ -6,15 +6,21 @@ check_formula <- function(formula) {
   # TMP: Assume the brain measure is always the OUTCOME
   measure <- gsub("vw_", "", all.vars(formula)[1])
 
-  fs_metrics <- c("thickness", "area", "area.pial", "curv",
-                  "jacobian_white", "pial", "pial_lgi", "sulc", "volume",
-                  "w_g.pct", "white.H", "white.K")
+  check_measure(measure)
 
+  return(measure)
+}
+
+check_measure <- function(measure, 
+                          fs_metrics = c("thickness", "area", "area.pial", "curv", "jacobian_white", "pial", "pial_lgi", "sulc", "volume",
+                                         "w_g.pct", "white.H", "white.K")) {
+  
   if (!measure %in% fs_metrics) {
     stop(sprintf("The outcome in `formula` should be a brain surface metric. '%s' is not a valid metric. See `?run_vw_lmm`", measure))
   }
 
-  return(measure)
+  return(invisible(NULL))
+  
 }
 
 check_data_list <- function(data_list, folder_id, formula) {
@@ -185,8 +191,6 @@ check_cores <- function(n_cores){
 
   return(n_cores)
 }
-
-
 
 check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
   # Set up the necessary FreeSurfer global variables
