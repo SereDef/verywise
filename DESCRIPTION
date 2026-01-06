@@ -33,7 +33,7 @@ Suggests:
     reticulate,
     testthat (>= 3.0.0),
     withr
-URL: https://github.com/SereDef/verywise, https://seredef.github.io/verywise/
+URL: https://seredef.github.io/verywise/, https://github.com/SereDef/verywise
 BugReports: https://github.com/SereDef/verywise/issues
 Depends: 
     R (>= 4.0)

@@ -2,13 +2,13 @@
 #' Convert imputation object to a list of dataframes
 #'
 #' @description
-#' Converts known imputation objects (e.g., \code{amelia}, \code{aregImpute},
-#' \code{mi}, \code{mids}, \code{missForest}) to a \code{list} of dataframes.
+#' Converts known imputation objects (e.g., \code{mids}, \code{amelia},
+#' \code{mi}, \code{missForest}) to a \code{list} of dataframes.
 #'
 #' @details
 #' This function attempts to unify imputation object formats in supplying
 #' datasets. This is done by extracting the imputed datasets from the imputation
-#' object and assembling them into a \code{list}. If an unknown object is
+#' object and assembling them into a `list`. If an unknown object is
 #' supplied, the function will throw an error with the request to supply a list
 #' of data frames instead.
 #'

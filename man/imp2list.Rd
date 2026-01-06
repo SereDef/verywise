@@ -13,8 +13,8 @@ imp2list(obj)
 A list of imputed datasets
 }
 \description{
-Converts known imputation objects (e.g., \code{amelia}, \code{aregImpute},
-\code{mi}, \code{mids}, \code{missForest}) to a \code{list} of dataframes.
+Converts known imputation objects (e.g., \code{mids}, \code{amelia},
+\code{mi}, \code{missForest}) to a \code{list} of dataframes.
 }
 \details{
 This function attempts to unify imputation object formats in supplying
