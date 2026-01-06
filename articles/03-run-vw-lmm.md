@@ -1,11 +1,24 @@
 # Running vertex-wise linear mixed models
 
+> **Warning**  
+> `verywise` lets you run vertex-wise analyses however you want to. For
+> example, you can add interactions and splines / polynomials to your
+> models, as many random intercept and slopes as your heart desires…,
+> you can use liberal thresholds for multiple test correction and test
+> as many hypothesis as you have time for. Remember: this software is
+> just a tool, and it is up to you to use it sensibly.
+
+With your set-up and data ready, it is finally time to use some
+`verywise` functionality.
+
+First, load the package in our R sesssion, so we call its functions
+directly.
+
 ``` r
 library(verywise)
-#> Welcome, verywise user!
-#> This is version: 1.2.3
-#> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
+
+## Run a vertex-wise linear mixed model
 
 The main function in the `verywise` package is `run_vw_lmm` which fits a
 vertex-wise linear mixed model to the data. Here is an example:

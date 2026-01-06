@@ -1,15 +1,29 @@
-# Getting ready, step 1: Installation and system requirements
+# Get ready - step 1: Installation and system requirements
 
 ## Installation
 
-You can install the development version of `verywise` from
-[GitHub](https://github.com/).
+We are planning to submit `verywise` to
+[CRAN](https://cran.r-project.org/) soon.
 
-*Note*
+In the meantime, you can install the development version of `verywise`
+from [GitHub](https://github.com/) using either
+[`pak`](https://pak.r-lib.org/) or
+[`devtools`](https://devtools.r-lib.org/) (provided these packages are
+already installed on your system).
 
-: you may need to install the [`devtools`
-package](https://devtools.r-lib.org/) first (if it is not already
-installed).
+## 
+
+- using `pak`
+- using `devtools`
+
+``` r
+# Install pak (if not there yet)
+if (!requireNamespace("pak"))
+  install.packages('pak')
+
+# Install verywise
+pak::pak("SereDef/verywise")
+```
 
 ``` r
 # Install devtools (if not there yet)
@@ -20,28 +34,67 @@ if (!requireNamespace("devtools"))
 devtools::install_github("SereDef/verywise")
 ```
 
-This will also download some other R packages that are needed, so give
-it a little minute.
+## 
 
-Finally, you can attach the package to make it easier to use, like so:
+This will also download a few other R packages that are needed, so give
+it a teensy-weensy little minute to do its thing.
+
+Finally, you can attach the package in your session, to make it easier
+to use:
 
 ``` r
 library(verywise)
-#> Welcome, verywise user!
-#> This is version: 1.2.3
-#> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 
 ## System and software requirements
 
 In order for `verywise` to run smoothly, you will need:
 
-- **`R`** (version \>= **4.1**) installed (*Dah!*).
-- A **Unix system**: `verywise` works on Mac and on most Linux
-  distributions, but **not on Windows**. This is because we currently
-  rely on functions from the FreeSurfer suite which require Unix/Mac.
+- **`R`** (version \>= **4.0**) installed.
 - [**FreeSurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.
+- A **Unix system**: currently, `verywise` works on macOS and on most
+  Linux distributions, but **not on Windows**. This is because we rely
+  on functions from the FreeSurfer suite which require Unix.
+
+We also highly recommend to:
+
+- Set `FREESURFER_HOME` and `SUBJECTS_DIR` environment variables. This
+  is typically done when you configure Freesurfer, as described
+  extensively
+  [here](https://surfer.nmr.mgh.harvard.edu/fswiki/SetupConfiguration),
+  and briefly in the FreeSurfer installation instructions below.
+- Make sure a symbolic link to the target *template* (usually,
+  `fsaverage`) is in your `SUBJECTS_DIR`. This is typically done
+  automatically by `recon-all`, as briefly described in the next
+  article.
+- Run your analysis using a multi-core machine, as `verywise` is
+  especially designed to take advantage of parallel processing to speed
+  up computations.
 
 ### Installing and setting up FreeSurfer
 
-TODO
+You can find extensive instructions on how to install and use FreeSurfer
+on their
+[wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
+
+Here is a quick summary of what needs to happen:
+
+1.  Download and install FreeSurfer
+    ([instructions](https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall)).
+2.  Request a FreeSurfer license
+    [here](https://surfer.nmr.mgh.harvard.edu/registration.html).
+3.  (Optionally) set up the FreeSurfer environment variables
+    (`FREESURFER_HOME` and `SUBJECTS_DIR`) by adding the following lines
+    to your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`):
+
+``` sh
+export FREESURFER_HOME=/path/to/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+export SUBJECTS_DIR=/path/to/subjects_directory
+```
+
+## 
+
+Next article: [Preparing your data for
+`verywise`](https://seredef.github.io/verywise/articles/01-format-data.md)

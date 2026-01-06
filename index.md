@@ -20,9 +20,6 @@ Multiple testing correction is currently achieved using MCZ simulations
 from FreeSurfer. This means that you will need FreeSurfer installed and
 correctly set up.
 
-You can find more info and extended **tutorials**
-[here](https://seredef.github.io/verywise/index.html).
-
 ## Installation
 
 You can install the development version of `verywise` from
@@ -89,10 +86,38 @@ plot_vw_map(
 )
 ```
 
-## Note
+## Tutorials and documentation
+
+You can find more info and extended **tutorials** on the package
+[website](https://seredef.github.io/verywise/index.html). For example:
+
+- [Get ready: Installation and system
+  requirements](https://seredef.github.io/verywise/articles/00-installation-sys-requirements.html)
+- [Preparing your data for
+  `verywise`](https://seredef.github.io/verywise/articles/01-format-data.html)
+- [Running vertex-wise linear mixed
+  models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.html)
+- [Running vertex-wise
+  meta-analyses](https://seredef.github.io/verywise/)
+- [Running multiple models in
+  parallel](https://seredef.github.io/verywise/)
+- [Visualizing
+  results](https://seredef.github.io/verywise/articles/04-visualize-results.html)
+
+## License and credits
+
+`verywise` is open-source and free to use under the
+[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt). license.
 
 This is a spin-off of the [`QDECR`](https://www.qdecr.com/) package,
 which handles linear regression models.
+
+## Contributing
+
+If you spot a bug or you have a question, please let us know on the
+[GitHub issues page](https://github.com/SereDef/verywise/issues).
+
+We are always happy to get suggestions, ideas and help!
 
 ## Funders
 
@@ -102,5 +127,3 @@ This work was supported by the *FLAG-ERA* grant
 [**Infant2Adult**](https://www.infant2adult.com/home) and by The
 Netherlands Organization for Health Research and Development (ZonMw,
 grant number 16080606).
-
-All feedback and contributions are **very welcome!**.

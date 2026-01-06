@@ -1,7 +1,7 @@
 # Convert imputation object to a list of dataframes
 
-Converts known imputation objects (e.g., `amelia`, `aregImpute`, `mi`,
-`mids`, `missForest`) to a `list` of dataframes.
+Converts known imputation objects (e.g., `mids`, `amelia`, `mi`,
+`missForest`) to a `list` of dataframes.
 
 ## Usage
 

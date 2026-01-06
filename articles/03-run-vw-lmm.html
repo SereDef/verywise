@@ -38,8 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Getting ready, step 1: Installation and system requirements</a></li>
-    <li><a class="dropdown-item" href="../articles/01-format-data.html">Getting ready, step 2: formatting input data</a></li>
+<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Get ready - step 1: Installation and system requirements</a></li>
+    <li><a class="dropdown-item" href="../articles/01-format-data.html">Get ready - step 2: preparing your data</a></li>
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
@@ -75,11 +75,23 @@ Defina</h4>
 
     
     
+<blockquote>
+<p><strong>Warning</strong><br><code>verywise</code> lets you run vertex-wise analyses however you want
+to. For example, you can add interactions and splines / polynomials to
+your models, as many random intercept and slopes as your heart desires…,
+you can use liberal thresholds for multiple test correction and test as
+many hypothesis as you have time for. Remember: this software is just a
+tool, and it is up to you to use it sensibly.</p>
+</blockquote>
+<p>With your set-up and data ready, it is finally time to use some
+<code>verywise</code> functionality.</p>
+<p>First, load the package in our R sesssion, so we call its functions
+directly.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SereDef/verywise" class="external-link">verywise</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Welcome, verywise user!</span></span>
-<span><span class="co">#&gt; This is version: 1.2.3</span></span>
-<span><span class="co">#&gt; For questions, issues, and bug reports, please see https://github.com/SereDef/verywise</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="run-a-vertex-wise-linear-mixed-model">Run a vertex-wise linear mixed model<a class="anchor" aria-label="anchor" href="#run-a-vertex-wise-linear-mixed-model"></a>
+</h2>
 <p>The main function in the <code>verywise</code> package is
 <code>run_vw_lmm</code> which fits a vertex-wise linear mixed model to
 the data. Here is an example:</p>
@@ -128,6 +140,7 @@ for parallel processing.</li>
 i.e. <code>$FREESURFER_HOME</code>.</li>
 </ul>
 <p>Check out the output directory.</p>
+</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

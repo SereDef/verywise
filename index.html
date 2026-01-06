@@ -41,8 +41,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/00-installation-sys-requirements.html">Getting ready, step 1: Installation and system requirements</a></li>
-    <li><a class="dropdown-item" href="articles/01-format-data.html">Getting ready, step 2: formatting input data</a></li>
+<li><a class="dropdown-item" href="articles/00-installation-sys-requirements.html">Get ready - step 1: Installation and system requirements</a></li>
+    <li><a class="dropdown-item" href="articles/01-format-data.html">Get ready - step 2: preparing your data</a></li>
     <li><a class="dropdown-item" href="articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
@@ -78,7 +78,6 @@
 <p>Currently, <code>verywise</code> allows the estimation of vertex-wise <strong>Linear Mixed Models</strong>, and <strong>meta-analysis</strong>, but will be extended to other statistical models in the future.</p>
 <p>It can handle imputed (phenotype) data from several packages (<code>mice</code>, <code>mi</code>, <code>amelia</code>, etc.).</p>
 <p>Multiple testing correction is currently achieved using MCZ simulations from FreeSurfer. This means that you will need FreeSurfer installed and correctly set up.</p>
-<p>You can find more info and extended <strong>tutorials</strong> <a href="https://seredef.github.io/verywise/index.html">here</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -96,7 +95,7 @@
 <h2 id="basic-use">Basic use<a class="anchor" aria-label="anchor" href="#basic-use"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SereDef/verywise" class="external-link">verywise</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run a linear mixed model</span></span>
 <span><span class="fu"><a href="reference/run_vw_lmm.html">run_vw_lmm</a></span><span class="op">(</span></span>
@@ -135,16 +134,35 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a>
+<h2 id="tutorials-and-documentation">Tutorials and documentation<a class="anchor" aria-label="anchor" href="#tutorials-and-documentation"></a>
 </h2>
+<p>You can find more info and extended <strong>tutorials</strong> on the package <a href="https://seredef.github.io/verywise/index.html">website</a>. For example:</p>
+<ul>
+<li><a href="https://seredef.github.io/verywise/articles/00-installation-sys-requirements.html">Get ready: Installation and system requirements</a></li>
+<li><a href="https://seredef.github.io/verywise/articles/01-format-data.html">Preparing your data for <code>verywise</code></a></li>
+<li><a href="https://seredef.github.io/verywise/articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
+<li><a href="">Running vertex-wise meta-analyses</a></li>
+<li><a href="">Running multiple models in parallel</a></li>
+<li><a href="https://seredef.github.io/verywise/articles/04-visualize-results.html">Visualizing results</a></li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="license-and-credits">License and credits<a class="anchor" aria-label="anchor" href="#license-and-credits"></a>
+</h2>
+<p><code>verywise</code> is open-source and free to use under the <a href="https://www.apache.org/licenses/LICENSE-2.0.txt" class="external-link">Apache-2.0</a>. license.</p>
 <p>This is a spin-off of the <a href="https://www.qdecr.com/" class="external-link"><code>QDECR</code></a> package, which handles linear regression models.</p>
+</div>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>If you spot a bug or you have a question, please let us know on the <a href="https://github.com/SereDef/verywise/issues" class="external-link">GitHub issues page</a>.</p>
+<p>We are always happy to get suggestions, ideas and help!</p>
 </div>
 <div class="section level2">
 <h2 id="funders">Funders<a class="anchor" aria-label="anchor" href="#funders"></a>
 </h2>
 <p><img src="reference/figures/funders.png" align="right" height="100" alt="Funders"></p>
 <p>This work was supported by the <em>FLAG-ERA</em> grant <a href="https://www.infant2adult.com/home" class="external-link"><strong>Infant2Adult</strong></a> and by The Netherlands Organization for Health Research and Development (ZonMw, grant number 16080606).</p>
-<p>All feedback and contributions are <strong>very welcome!</strong>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

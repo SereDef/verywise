@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Getting ready, step 2: formatting input data • verywise</title>
+<title>Get ready - step 2: preparing your data • verywise</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting ready, step 2: formatting input data">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get ready - step 2: preparing your data">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -38,8 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Getting ready, step 1: Installation and system requirements</a></li>
-    <li><a class="dropdown-item" href="../articles/01-format-data.html">Getting ready, step 2: formatting input data</a></li>
+<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Get ready - step 1: Installation and system requirements</a></li>
+    <li><a class="dropdown-item" href="../articles/01-format-data.html">Get ready - step 2: preparing your data</a></li>
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
@@ -63,7 +63,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Getting ready, step 2: formatting input data</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Get ready - step 2: preparing your data</h1>
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
@@ -75,67 +75,152 @@ Defina</h4>
 
     
     
-<p><code>verywise</code> was developed to handle complex datasets, with
-<em>multiple cohorts/sites</em> as well as <em>repeated neuro-imaging
-measures</em>.</p>
+<p>The <code>verywise</code> package was specifically developed to
+handle <strong>complex datasets</strong>, with <em>multiple
+cohorts/sites/scanners</em> as well as <em>repeated neuro-imaging
+measures</em>. In order to run such bussin analyses however, you will
+need to prepare two data inputs:</p>
+<ol style="list-style-type: decimal">
+<li>The brain surface files (i.e. Freesurfer output files)</li>
+<li>The phenotype data: a dataset containing exposures, covariates,
+identifiers, etc.</li>
+</ol>
 <p>In this article we describe how the software expects the input data
 directory to look like, and what pre-processing steps are necessary to
 get both your <strong>neuro-imaging</strong> data and your
 <strong>phenotype</strong> data ready for analysis.</p>
 <div class="section level2">
-<h2 id="a-verywise-input-directory-structure">A <code>verywise</code> input directory structure<a class="anchor" aria-label="anchor" href="#a-verywise-input-directory-structure"></a>
+<h2 id="overview-a-verywise-input-directory-structure">Overview: a <code>verywise</code> input directory structure<a class="anchor" aria-label="anchor" href="#overview-a-verywise-input-directory-structure"></a>
 </h2>
 <p>Here is an example of a typical <code>verywise</code> input
 directory:</p>
 <p><img src="01-folder-structure.png" class="r-plt" alt="Example of a verywise input directory structure." width="606"></p>
 <p>This is also what you will see if you use our data simulation
-functions. The phenotype file does not need to be inside the same folder
-as the neuroimaging data, but we placed it in there to keep things
-tidy.</p>
-<p>If you have more than one neuroimaging site (or “cohort” or dataset,
-however you want to call it), then each site should have it’s own
-folder. Inside each site folder you should have one sub-folder for each
-individual measurement (or “session”). These sub-folders should follow
-the <a href="https://bids.neuroimaging.io/" class="external-link">BIDS convention</a>, so for
+functions (see tutorial <a href="02-simulate-data.html">here</a>).
+<ins>Note</ins>: the phenotype file does not <em>need</em> to be inside
+the same folder as the neuroimaging data, but we placed it in there to
+keep things tidy.</p>
+<p>If you have more than one neuroimaging “site” (or “cohort” or
+dataset, however you want to call it), then <strong>each site should
+have it’s own folder</strong>. Inside each site folder you should have
+one sub-folder for each individual measurement (or “session”). These
+sub-folders should follow the <a href="https://bids.neuroimaging.io/" class="external-link">BIDS convention</a>, so for
 example: <code>sub-47_ses-03</code> will have the 3rd measurement of
-subject #47. This will be done automatically by FreeSurfer (see next
-session)</p>
+subject #47. Inside each sub-folder <code>verywise</code> expects to
+find (at a minimum) a “surf” directory, where the FreeSurfer output for
+that subject-session is stored.</p>
+<p>If you have run FreeSurfer correctly (see next section), this should
+be already all set up for you.</p>
 </div>
 <div class="section level2">
 <h2 id="preparing-your-brain-data">Preparing your brain data<a class="anchor" aria-label="anchor" href="#preparing-your-brain-data"></a>
 </h2>
-<p>To obtain brain surface data, you should first run your subjects
-through FreeSurfer, using the following command:</p>
-<pre><code>recon-all -s &lt;subject-id&gt; -qcache</code></pre>
-<p>Don’t forget the <code>-qcache</code> flag! Full instructions can be
-found <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/QdecGroupAnalysis_freeview" class="external-link">here</a>,
-under the header “pre-smoothed fsaverage surfaces”.</p>
+<p>To obtain the brain surface data, you should first run your
+structural MRI data files through FreeSurfer’s cortical reconstruction
+process. In a nutshell, this can be done using the command:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">recon-all</span> <span class="at">-s</span> <span class="op">&lt;</span>subject-id<span class="op">&gt;</span> -qcache</span></code></pre></div>
+<p>Which should take about 10 minutes per subject. Don’t forget the
+<code>-qcache</code> flag!</p>
+<p>Full instructions can be found <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all" class="external-link">here</a>. See
+also this very useful <a href="https://andysbrainbook.readthedocs.io/en/latest/FreeSurfer/FS_ShortCourse/FS_03_ReconAll.html" class="external-link">tutorial</a>.</p>
+<p>The <code>recon-all</code> pipeline essentially transforms your “3D”
+T1-weighted MRI volumes into <em>2D</em> <strong>surface models</strong>
+made up of vertices and mapped onto a specific <em>template</em>
+(usually, <code>fsaverage</code>). At each vertex on this surface a
+number of “local” anatomical <strong>metrics</strong> are also
+calculated. These measures typically include: cortical thickness,
+surface area, curvature, sulcal depth / convexity, volume and
+gyrification index.</p>
 <p>The output folder should now look similar to the one you have seen
 above. Inside each subject-session sub-folder you should be able to find
-a “surf” directory where the brain surface maps for each hemisphere are
-saved as <code>.mgh</code> files. These are the files we will be using
-for our analysis.</p>
+a “surf” directory where these brain surface maps are saved as
+<code>.mgh</code> files (for each hemisphere and measure
+separately).</p>
+<p>These are the files we will be using for our analysis.</p>
 </div>
 <div class="section level2">
 <h2 id="preparing-your-phenotype-data">Preparing your phenotype data<a class="anchor" aria-label="anchor" href="#preparing-your-phenotype-data"></a>
 </h2>
-<p>So your brain data is all sorted, but you will also need to prepare a
-“phenotype” dataset where to store your variables of interest (i.e. the
-exposures and covariates). This can be either saved as a file (e.g.,
-<code>.rds</code> of <code>.csv</code>), or it can be an R data.frame
-that you have already loaded in memory.</p>
+<p>So the brain surface data is (pretty much all) sorted by running
+FreeSurfer, but you will also need to prepare a “phenotype” dataset
+where to store any other variable of interest (i.e. the exposures and
+covariates).</p>
+<p>In <code>verywise</code>, we expect the phenotype data to be some
+kind of tabular data structure (e.g. a <code>data.frame</code>, a
+<code>tibble</code> or a multiple imputation dataset) where each row
+corresponds to a specific observation (aka, a subject-session
+measurement), and each column corresponds to a variable (e.g. age, sex,
+site, diagnosis, etc.).</p>
+<p>The phenotype data can be either stored in a file (supported file
+types: <code>.rds</code>, <code>.csv</code>, <code>.sav</code>,
+<code>.txt</code>), or it can be an object loaded in memory.</p>
 <p>Either way, it should it should look something like this:</p>
-<p><img src="01-pheno-structure.png" class="r-plt" alt="Example of a phenotype data frame." width="769">
-So this should be in the <em>“long format”</em> with different
-timepoints/groups stacked row-wise.</p>
-<p>The <strong><code>folder_id</code></strong> column is important
-because it is used to link the phenotype to the correct brain data
-file.</p>
-<p>… TODO</p>
-<p>Note that the phenotype file/data object can also be an
-<strong>imputed dataset</strong>. <code>verywise</code> currently
-supports several mi dataset formats, including the outputs of mice, mi,
-amelia… TODO</p>
+<p><img src="01-pheno-structure.png" class="r-plt" alt="Example of a phenotype data frame." width="769"></p>
+<p>Some important characteristics of the phenotype data that we need to
+point out, so we can remain friends:</p>
+<div class="section level3">
+<h3 id="long-format-data">Long format data<a class="anchor" aria-label="anchor" href="#long-format-data"></a>
+</h3>
+<p>The phenotype data should be in the <em>“long format”</em> with
+different timepoints/sites/groups stacked row-wise. Each row in the data
+should correspond to a single data point, or a specific observation (for
+example, a subject-session measurement). This is a typical structure
+used for longitudinal data analysis.</p>
+<p>If necessary, you can convert your data from “wide” to long format
+using a variety of functions. E.g. the <code>tidyr</code> package offers
+<a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link"><code>pivot_longer()</code></a>,
+though I tend to prefer <a href="https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/reshape" class="external-link"><code>stats::reshape()</code></a>.</p>
+</div>
+<div class="section level3">
+<h3 id="essential-columns-and-naming-conventions">Essential columns and naming conventions<a class="anchor" aria-label="anchor" href="#essential-columns-and-naming-conventions"></a>
+</h3>
+<p>The phenotype data content will vary, of course, depending on what
+variables are of interest / needed in your analysis.</p>
+<p>The only requirement is that the phenotype must always include a
+<strong>folder ID</strong> column (by default, this is expected to be
+called <code>folder_id</code>). This column is important because it
+speficies link between the phenotype data to the (correct) brain surface
+data file. It should contain the <em>relative path</em> to the
+subject-session sub-folders inside your neuroimaging data directory (or
+<code>subj_dir</code>).</p>
+<p>For example, if your repeated measurement analysis includes only one
+site, the <code>folder_id</code> column could look like
+<code>"sub-001_ses-baseline", "sub-001_ses-F1", "sub-002_ses-baseline"...</code>.</p>
+<p>If multiple sites are included, and they are all stored inside the
+same main <code>subj_dir</code> folder, then the <code>folder_id</code>
+column could look like
+<code>"site1/sub-001_ses-baseline", "site1/sub-001_ses-F1", "site2/sub-001_ses-baseline"...</code>.</p>
+<p>This principle also generalies to messier data folder structures
+(though they are not recommended, for obvious reasons):
+e.g. <code>"path/to/site1/sub-001_ses-baseline", "path/to/site1/sub-001_ses-F1", "other_/path/to/site2/sub-001_ses-baseline"...</code></p>
+<p>Note that no duplicates or missing values are allowed in the
+<code>folder_id</code> column.</p>
+</div>
+<div class="section level3">
+<h3 id="multiple-imputation-support">Multiple imputation support<a class="anchor" aria-label="anchor" href="#multiple-imputation-support"></a>
+</h3>
+<p>Now something fairly dope: the phenotype data object can also be an
+<strong>imputed dataset</strong>.</p>
+<p><code>verywise</code> supports several of the most common multiple
+imputation data formats in R, including the outputs of
+<code>mice</code>, <code>mi</code>, <code>Amelia</code>, and
+<code>missForest</code>. This can also simply be a <em>list of
+data.frames</em>, where each data.frame corresponds to a single imputed
+dataset.</p>
+<p>Note that each dataset in the set must have identical dimentions, and
+contain all the required columns (including the
+<code>folder_id</code>).</p>
+<p>When using imputed data, <code>verywise</code> will automatically run
+the vertex-wise analysis on each imputed dataset separately, and then
+pool the results together using Rubin’s rules.</p>
+</div>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="section"></h2>
+<p>Optional read: <a href="02-simulate-data.html">Simulate data for
+<code>verywise</code></a></p>
+<p>Next article: <a href="03-run-vw-lmm.html">Run a vertex-wise linear
+mixed model</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

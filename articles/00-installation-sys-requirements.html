@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Getting ready, step 1: Installation and system requirements • verywise</title>
+<title>Get ready - step 1: Installation and system requirements • verywise</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting ready, step 1: Installation and system requirements">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get ready - step 1: Installation and system requirements">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -38,8 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Getting ready, step 1: Installation and system requirements</a></li>
-    <li><a class="dropdown-item" href="../articles/01-format-data.html">Getting ready, step 2: formatting input data</a></li>
+<li><a class="dropdown-item" href="../articles/00-installation-sys-requirements.html">Get ready - step 1: Installation and system requirements</a></li>
+    <li><a class="dropdown-item" href="../articles/01-format-data.html">Get ready - step 2: preparing your data</a></li>
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
@@ -63,7 +63,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Getting ready, step 1: Installation and system requirements</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Get ready - step 1: Installation and system requirements</h1>
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
@@ -78,29 +78,51 @@ Defina</h4>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <code>verywise</code> from
-<a href="https://github.com/" class="external-link">GitHub</a>.</p>
-<ins>
-Note
-</ins>
-<p>: you may need to install the <a href="https://devtools.r-lib.org/" class="external-link"><code>devtools</code> package</a>
-first (if it is not already installed).</p>
+<p>We are planning to submit <code>verywise</code> to <a href="https://cran.r-project.org/" class="external-link">CRAN</a> soon.</p>
+<p>In the meantime, you can install the development version of
+<code>verywise</code> from <a href="https://github.com/" class="external-link">GitHub</a>
+using either <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a> or <a href="https://devtools.r-lib.org/" class="external-link"><code>devtools</code></a> (provided
+these packages are already installed on your system).</p>
+</div>
+<div class="section level2 tabset unlisted unnumbered">
+<h2 class="tabset unlisted unnumbered" id="section"></h2>
+
+
+<ul class="nav nav-tabs" id="section" role="tablist">
+<li role="presentation" class="nav-item"><button data-bs-toggle="tab" data-bs-target="#using-pak" id="using-pak-tab" type="button" role="tab" aria-controls="using-pak" aria-selected="true" class="active nav-link">using <code>pak</code></button></li>
+<li role="presentation" class="nav-item"><button data-bs-toggle="tab" data-bs-target="#using-devtools" id="using-devtools-tab" type="button" role="tab" aria-controls="using-devtools" aria-selected="false" class="nav-link">using <code>devtools</code></button></li>
+</ul>
+<div class="tab-content">
+<div class="active  tab-pane" id="using-pak" role="tabpanel" aria-labelledby="using-pak-tab">
+
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install pak (if not there yet)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'pak'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install verywise</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"SereDef/verywise"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="tab-pane" id="using-devtools" role="tabpanel" aria-labelledby="using-devtools-tab">
+
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install devtools (if not there yet)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'devtools'</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Install verywise</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"SereDef/verywise"</span><span class="op">)</span></span></code></pre></div>
-<p>This will also download some other R packages that are needed, so
-give it a little minute.</p>
-<p>Finally, you can attach the package to make it easier to use, like
-so:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SereDef/verywise" class="external-link">verywise</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Welcome, verywise user!</span></span>
-<span><span class="co">#&gt; This is version: 1.2.3</span></span>
-<span><span class="co">#&gt; For questions, issues, and bug reports, please see https://github.com/SereDef/verywise</span></span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="section-1"></h2>
+<p>This will also download a few other R packages that are needed, so
+give it a teensy-weensy little minute to do its thing.</p>
+<p>Finally, you can attach the package in your session, to make it
+easier to use:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="system-and-software-requirements">System and software requirements<a class="anchor" aria-label="anchor" href="#system-and-software-requirements"></a>
@@ -109,21 +131,54 @@ so:</p>
 need:</p>
 <ul>
 <li>
-<strong><code>R</code></strong> (version &gt;= <strong>4.1</strong>)
-installed (<em>Dah!</em>).</li>
-<li>A <strong>Unix system</strong>: <code>verywise</code> works on Mac
-and on most Linux distributions, but <ins><em>not on Windows</em></ins>.
-This is because we currently rely on functions from the FreeSurfer suite
-which require Unix/Mac.</li>
+<strong><code>R</code></strong> (version &gt;= <strong>4.0</strong>)
+installed.</li>
 <li>
 <a href="https://surfer.nmr.mgh.harvard.edu/" class="external-link"><strong>FreeSurfer</strong></a>
 installed.</li>
+<li>A <strong>Unix system</strong>: currently, <code>verywise</code>
+works on macOS and on most Linux distributions, but <ins><em>not on
+Windows</em></ins>. This is because we rely on functions from the
+FreeSurfer suite which require Unix.</li>
+</ul>
+<p>We also highly recommend to:</p>
+<ul>
+<li>Set <code>FREESURFER_HOME</code> and <code>SUBJECTS_DIR</code>
+environment variables. This is typically done when you configure
+Freesurfer, as described extensively <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/SetupConfiguration" class="external-link">here</a>,
+and briefly in the FreeSurfer installation instructions below.</li>
+<li>Make sure a symbolic link to the target <em>template</em> (usually,
+<code>fsaverage</code>) is in your <code>SUBJECTS_DIR</code>. This is
+typically done automatically by <code>recon-all</code>, as briefly
+described in the next article.</li>
+<li>Run your analysis using a multi-core machine, as
+<code>verywise</code> is especially designed to take advantage of
+parallel processing to speed up computations.</li>
 </ul>
 <div class="section level3">
 <h3 id="installing-and-setting-up-freesurfer">Installing and setting up FreeSurfer<a class="anchor" aria-label="anchor" href="#installing-and-setting-up-freesurfer"></a>
 </h3>
-<p>TODO</p>
+<p>You can find extensive instructions on how to install and use
+FreeSurfer on their <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall" class="external-link">wiki</a>.</p>
+<p>Here is a quick summary of what needs to happen:</p>
+<ol style="list-style-type: decimal">
+<li>Download and install FreeSurfer (<a href="https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall" class="external-link">instructions</a>).</li>
+<li>Request a FreeSurfer license <a href="https://surfer.nmr.mgh.harvard.edu/registration.html" class="external-link">here</a>.</li>
+<li>(Optionally) set up the FreeSurfer environment variables
+(<code>FREESURFER_HOME</code> and <code>SUBJECTS_DIR</code>) by adding
+the following lines to your shell configuration file (e.g.,
+<code>~/.bashrc</code> or <code>~/.zshrc</code>):</li>
+</ol>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">FREESURFER_HOME</span><span class="op">=</span>/path/to/freesurfer</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="bu">source</span> <span class="va">$FREESURFER_HOME</span>/SetUpFreeSurfer.sh</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="bu">export</span> <span class="va">SUBJECTS_DIR</span><span class="op">=</span>/path/to/subjects_directory</span></code></pre></div>
 </div>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="section-2"></h2>
+<p>Next article: <a href="01-format-data.html">Preparing your data for
+<code>verywise</code></a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
