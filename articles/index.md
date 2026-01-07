@@ -10,5 +10,9 @@
   data](https://seredef.github.io/verywise/articles/02-simulate-data.md):
 - [Running vertex-wise linear mixed
   models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.md):
-- [Visualizing \`verywise\` results:
-  BrainMapp](https://seredef.github.io/verywise/articles/04-visualize-results.md):
+- [Run many \`verywise\` analyses in parallel (on
+  SLURM)](https://seredef.github.io/verywise/articles/04-run-slurm-array.md):
+- [Visualizing \`verywise\` results: plotting functions and the
+  WIZard](https://seredef.github.io/verywise/articles/05-visualize-results.md):
+- [Running vertex-wise
+  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.md):

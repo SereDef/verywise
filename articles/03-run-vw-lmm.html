@@ -42,7 +42,9 @@
     <li><a class="dropdown-item" href="../articles/01-format-data.html">Get ready - step 2: preparing your data</a></li>
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
-    <li><a class="dropdown-item" href="../articles/04-visualize-results.html">Visualizing `verywise` results: BrainMapp</a></li>
+    <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
+    <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Visualizing `verywise` results: plotting functions and the WIZard</a></li>
+    <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
   </ul>
 </li>
       </ul>
@@ -67,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-01-06</h4>
+            <h4 data-toc-skip class="date">2026-01-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/03-run-vw-lmm.Rmd" class="external-link"><code>vignettes/articles/03-run-vw-lmm.Rmd</code></a></small>
       <div class="d-none name"><code>03-run-vw-lmm.Rmd</code></div>
@@ -90,23 +92,46 @@ directly.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
+<h2 id="wait-what-is-a-linear-mixed-model-again">
+<em>Wait, what is a linear mixed model again?</em><a class="anchor" aria-label="anchor" href="#wait-what-is-a-linear-mixed-model-again"></a>
+</h2>
+<p>A linear mixed model (LMM) is a <strong>multilevel
+regression</strong> technique, that is especially useful when
+observations are <em>clustered</em> (e.g. across neuroimaging sites) or
+<em>repeated</em> (across time).</p>
+<p>In a nutshell, a LMM includes both <strong><em>fixed
+effects</em></strong> (parameters associated with the entire population)
+and <strong><em>random effects</em></strong> (parameters that vary
+across groups, such as subjects or sites).</p>
+<p>Later in this tutorial, I will point out a few important
+considerations to keep in mind when building and interpreting LMMs. If
+you want to learn more about the theory behind this funky technique,
+check out the resources at the end of this article.</p>
+</div>
+<div class="section level2">
 <h2 id="run-a-vertex-wise-linear-mixed-model">Run a vertex-wise linear mixed model<a class="anchor" aria-label="anchor" href="#run-a-vertex-wise-linear-mixed-model"></a>
 </h2>
 <p>The main function in the <code>verywise</code> package is
 <code>run_vw_lmm</code> which fits a vertex-wise linear mixed model to
-the data. Here is an example:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Run a linear mixed model</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">run_vw_lmm</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">formula =</span> vw_thickness <span class="sc">~</span> sex <span class="sc">*</span> age <span class="sc">+</span> site <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="co"># model formula</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">pheno =</span> phenotype, <span class="co"># An R object already in memory or a path to file</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">subj_dir =</span> <span class="st">"./VeryWiseUser/SimulatedExample"</span>, <span class="co"># Neuro-imaging data location</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">hemi =</span> <span class="st">"both"</span>, <span class="co"># (default) which hemispheres to run</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">4</span> <span class="co"># number of cores for parallel processing</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  ...</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>)</span></code></pre></div>
+the data.</p>
+<p>Let’s demonstrate a simple (and probably most common) example of a
+mixed model, in which we have a single grouping/cluster (participants)
+modelled as a random intercept.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Run a linear mixed model</span></span>
+<span><span class="fu"><a href="../reference/run_vw_lmm.html">run_vw_lmm</a></span><span class="op">(</span></span>
+<span>  formula <span class="op">=</span> <span class="va">vw_thickness</span> <span class="op">~</span> <span class="va">sex</span> <span class="op">*</span> <span class="va">age</span> <span class="op">+</span> <span class="va">site</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, <span class="co"># model formula</span></span>
+<span>  pheno <span class="op">=</span> <span class="st">"path/to/phentype/data.rds"</span>, <span class="co"># or an R object already in memory</span></span>
+<span>  subj_dir <span class="op">=</span> <span class="st">"/path/to/freesurfer/subjects"</span>, <span class="co"># Neuro-imaging data location</span></span>
+<span>  outp_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>, <span class="co"># Where you want to store results</span></span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
+<span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># number of cores for parallel processing</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>The function will first check the inputs and then run
-<code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> on every vertex in both hemispheres.</p>
+<code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> on every vertex in the left hemisphere.</p>
 <p>The most important parameters you need to know about:</p>
+<p>[TODO: this is is out of date, check function documentation
+instead]</p>
 <ul>
 <li>
 <strong><code>formula</code></strong>: the model formula specifying
@@ -128,7 +153,7 @@ path, where do you want results to be stored. If none is provided, a
 <code>subj_dir</code>.</li>
 <li>
 <strong><code>hemi</code></strong>: which hemispheres to run
-(default = “both”)</li>
+(default = “lh”)</li>
 <li>
 <strong><code>seed</code></strong>: (default = 3108) random
 seed.</li>
@@ -139,7 +164,193 @@ for parallel processing.</li>
 <strong><code>FS_HOME</code></strong>: FreeSurfer directory,
 i.e. <code>$FREESURFER_HOME</code>.</li>
 </ul>
-<p>Check out the output directory.</p>
+</div>
+<div class="section level2">
+<h2 id="verywise-output">
+<code>verywise</code> output<a class="anchor" aria-label="anchor" href="#verywise-output"></a>
+</h2>
+<p>Check out the output directory. You should see something like this
+[TODO: add image]</p>
+</div>
+<div class="section level2">
+<h2 id="a-little-more-theory-constructing-the-right-model">A little more theory: constructing the right model<a class="anchor" aria-label="anchor" href="#a-little-more-theory-constructing-the-right-model"></a>
+</h2>
+<p>The model specification is probably the most important step when
+running a LMM (or any model really). A poorly specified model can lead
+to biased estimates, incorrect inferences, and misleading conclusions.
+What complicates matters more is that you are now running hundreds of
+thousands of models (one per vertex), so you really want to get this
+right, ideally the first time around and consistently across the
+brain.</p>
+<div class="section level3">
+<h3 id="should-my-variables-be-fixed-or-random">Should my variables be fixed or random?<a class="anchor" aria-label="anchor" href="#should-my-variables-be-fixed-or-random"></a>
+</h3>
+<p>In many cases, the same variables could be considered either random
+or fixed effects (and sometimes even both at the same time, though I
+wouldn’t get too excited about that). The difference between these two
+modeling choices has little to do with the variables themselves, and a
+lot more to do with your study design / research question.</p>
+<p>In broad terms, fixed effects are variables that you are interested
+in, you want to know about their association with the brain metric of
+choice. Random effects are <em>grouping factors</em> (i.e. categorical
+variables) that you are not specifically interested in, but you know
+they might be influencing such brain measures (e.g. scanner, site,
+subject ID).</p>
+<p><ins>Note</ins>: You might <em>not</em> want to use random effects
+when the number of factor levels is very low (i.e. &lt; 5 is a commonly
+reported rule of thumb) or when you wouldn’t assume that your factor
+levels come from a common distribution (e.g. assuming that males and
+females come from a population of sexes, of which there is an infinite
+number and we are interested in an average). You can read more about
+this topic <a href="https://peerj.com/articles/12794/" class="external-link">here</a>, <a href="https://bookdown.org/steve_midway/DAR/random-effects.html" class="external-link">here</a>
+and <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#should-i-treat-factor-xxx-as-fixed-or-random" class="external-link">here</a>.</p>
+</div>
+<div class="section level3">
+<h3 id="random-structure-specification">Random structure specification<a class="anchor" aria-label="anchor" href="#random-structure-specification"></a>
+</h3>
+<p>The formula syntax adopted by <code>lme4</code> to specify random
+effects is very flexible. Almost *too flexible**, so it can be tricky to
+get your head around all the available options. Here is a quick
+cheatsheet adepted ( / stolen) from StackOverflow (RIP):</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="66%">
+</colgroup>
+<thead><tr class="header">
+<th><strong>formula</strong></th>
+<th><strong>meaning</strong></th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>(1 | group)</code></td>
+<td>random group intercept</td>
+</tr>
+<tr class="even">
+<td>
+<code>(x | group)</code> = <code>(1 + x | group)</code>
+</td>
+<td>random slope of x within group - with correlated intercept</td>
+</tr>
+<tr class="odd">
+<td><code>(0 + x | group)</code></td>
+<td>random slope of x within group - no variation in intercept</td>
+</tr>
+<tr class="even">
+<td><code>(1 | group) + (0 + x | group)</code></td>
+<td>
+<em>uncorrelated</em> random intercept and random slope within
+group</td>
+</tr>
+<tr class="odd">
+<td>
+<code>(1 | site/id)</code> =
+<code>(1 | site) + (1 | site:id)</code>
+</td>
+<td>intercept varying among sites and among people within sites
+(<em>nested random effects</em>)</td>
+</tr>
+<tr class="even">
+<td><code>site + (1 | site:id)</code></td>
+<td>fixed effect of sites plus random variation in intercept among
+people within sites</td>
+</tr>
+<tr class="odd">
+<td>
+<code>(x | site/id)</code> =
+<code>(x | site) + (x | site:id)</code>
+</td>
+<td>slope and intercept varying among sites and among people within
+sites</td>
+</tr>
+<tr class="even">
+<td><code>(x1 | site) + (x2 | id)</code></td>
+<td>two different effects, varying at different levels</td>
+</tr>
+<tr class="odd">
+<td><code>(1 | group1) + (1 | group2)</code></td>
+<td>intercept varying among <em>crossed random effects</em> (e.g. site,
+year)</td>
+</tr>
+</tbody>
+</table>
+<div class="section level4">
+<h4 id="nested-vs--crossed-random-effects">Nested vs. crossed random effects<a class="anchor" aria-label="anchor" href="#nested-vs--crossed-random-effects"></a>
+</h4>
+<p>The clustering patterns that can be modeled using random effects can
+take many forms.</p>
+<p>In some cases, clustering is <em>hierarchical</em> (i.e. clusters are
+<strong>nested</strong> within other clusters). A relevant example are
+multi-site longitudinal neuroimaging studies: repeated brain
+observations are nested within individulas, individulas are nested
+within sites, sites nested within cohorts and so on.</p>
+<p>In other cases, there is no nesting structure. For example, a study
+where participants complete the same set of tasks, observations are
+nested within individuals, but they are also clustered according to task
+type (…or image aquisition protocol or scanner etc.). These are commonly
+refered to as <strong>crossed</strong> random effects, i.e. when one
+level of a random effect can appear in conjunction with more than one
+level of another effect.</p>
+<p>Read more about this <a href="https://www.muscardinus.be/statistics/nested.html" class="external-link">here</a> and <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed" class="external-link">here</a></p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="can-i-trust-the-results">Can I trust the results?<a class="anchor" aria-label="anchor" href="#can-i-trust-the-results"></a>
+</h3>
+<div class="section level4">
+<h4 id="model-converge">Model converge<a class="anchor" aria-label="anchor" href="#model-converge"></a>
+</h4>
+<p>Get too greedy with model complexity, you may incur in convergence
+issues.</p>
+<p>These will be soon stored in the output –&gt; TODO</p>
+<p>A common problem we have seen is <strong>singular fits</strong>.
+These are typically caused by a number of random-effect levels that is
+too small (e.g. &lt; 5; see more info <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#singular-fits" class="external-link">here</a>)</p>
+</div>
+<div class="section level4">
+<h4 id="model-fit-information">Model fit information<a class="anchor" aria-label="anchor" href="#model-fit-information"></a>
+</h4>
+<p>These will be soon stored in the output –&gt; TODO</p>
+<p>BIC, AIC, logLik, deviance</p>
+<p>More on AIC in the context of LMM <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#can-i-use-aic-for-mixed-models-how-do-i-count-the-number-of-degrees-of-freedom-for-a-random-effect" class="external-link">here</a></p>
+<div class="section level5">
+<h5 id="icc">ICC<a class="anchor" aria-label="anchor" href="#icc"></a>
+</h5>
+<p>Intraclass correlation coefficient, indicates wether there is
+clustering in the data.</p>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="more-modeling-options-ml-vs-reml">More modeling options: ML vs REML<a class="anchor" aria-label="anchor" href="#more-modeling-options-ml-vs-reml"></a>
+</h3>
+<p>Restricted maximim likelihood [TODO: add info]</p>
+</div>
+<div class="section level3">
+<h3 id="a-note-on-p-values">A note on P values<a class="anchor" aria-label="anchor" href="#a-note-on-p-values"></a>
+</h3>
+<p>P values for fixed effects are calculated using the Satterthwaite’s
+method [TODO: add info]</p>
+<p>Read more about this <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#why-doesnt-lme4-display-denominator-degrees-of-freedomp-values-what-other-options-do-i-have" class="external-link">here</a>.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="resources">Resources<a class="anchor" aria-label="anchor" href="#resources"></a>
+</h2>
+<p>More on linear mixed models:</p>
+<ul>
+<li><a href="https://m-clark.github.io/mixed-models-with-R/introduction.html" class="external-link">Mixed
+Models with R</a></li>
+<li><a href="http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/" class="external-link"><code>lme4</code>
+model specification</a></li>
+<li><a href="https://rpsychologist.com/r-guide-longitudinal-lme-lmer" class="external-link"><code>lme4</code>
+model specification (2)</a></li>
+</ul>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="section"></h2>
+<p>Next article: <a href="04-run-slurm-array.html">Run <em>many</em>
+vertex-wise linear mixed models</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

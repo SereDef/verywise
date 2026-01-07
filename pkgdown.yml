@@ -6,8 +6,10 @@ articles:
   articles/01-format-data: 01-format-data.html
   articles/02-simulate-data: 02-simulate-data.html
   articles/03-run-vw-lmm: 03-run-vw-lmm.html
-  articles/04-visualize-results: 04-visualize-results.html
-last_built: 2026-01-06T18:09Z
+  articles/04-run-slurm-array: 04-run-slurm-array.html
+  articles/05-visualize-results: 05-visualize-results.html
+  articles/06-run-vw-meta: 06-run-vw-meta.html
+last_built: 2026-01-07T16:53Z
 urls:
   reference: https://seredef.github.io/verywise/reference
   article: https://seredef.github.io/verywise/articles
