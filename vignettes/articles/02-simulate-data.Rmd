@@ -14,61 +14,95 @@ knitr::opts_chunk$set(
 ## Data poor? Simulate yourself some data, son
 
 If you are eager to get started with `verywise` but do not have access to a dataset (yet), 
-you can generate both a set of ready-made FreeSurfer surface data files and a phenotype file to go with it. 
+you can generate both a set of ready-made FreeSurfer **brain surface files** and a **phenotype file** to go with them. 
 
-The simulated dataset will already be saved into a `verywise` structure. 
+The simulated dataset will automatically be stored into a `verywise` directory structure and will be ready for you to analyse.
+
+Let's see how to get there. First, load the package:
 
 ```{r setup}
 library(verywise)
 ```
 
-## Only generate the brain data 
-If you have a phenotype dataset already, but you are missing some FreeSurfer data, you can call the following function:
+Now, decide what data you want to generate. In this (small) example, I will simulate a dataset with 250 subjects, who belong to two cohorts (including 100 and 150 subjects respectively) and all underwent two MRI sessions (`"01"` and `"02"`). I am only interested in surface area, so I will only be genetating `"area"` maps. The resolution of these fake surface maps is 163842 vertices (corresponding to the most detailed FreeSurfer template `"fsaverage"`). 
 
-```{r simulate brain, eval = FALSE}
-# Simulate FreeSurfer dataset
-my_dataset_structure = list("cohort1" = list("sessions" = c("01", "02"),
-                                             "n_subjects" = 100),
-                            "cohort2" = list("sessions" = c("01", "02"),
-                                             "n_subjects" = 150)
-                            )
-my_random_seed = 1984
-
-simulate_freesurfer_data(path = "./VeryWiseUser/SimulatedExample",
-                         data_structure = my_dataset_structure,
-                         vw_resolution = 163842,
-                         measure = "thickness",
-                         hemi = "lh",
-                         fwhmc = "fwhm10",
-                         target = "fsaverage",
-                         vw_mean = 6.5,
-                         vw_sd = 0.5,
-                         simulate_association = NULL,
-                         seed = my_random_seed)
-```
-In this example, we are going to generate 500 left hemisphere (`"lh"`) thickness maps. These maps belong to 250 fictional subjects, who all underwent 2 MRI sessions (`"01"` and `"02"`) and belong to two cohorts (`"cohort1"` and `"cohort2"`). The resolution of these fake surface maps is `163842` vertices (corresponding to the most detailed FreeSurfer template `"fsaverage"`), and they will have an overall mean of `6.5` (mm thickness) and a standard deviation of `0.5`.
-
-You can also use the function to specify a simulated association with a variable of your choice.
-TODO
-
-## Only generate the phenotype data
-On the other hand, if you already have some surfaces but you would like a phenotype to go with it you can use:
-```{r simulate pheno, eval = FALSE}
-# Simulate phenotype dataset
-simulate_long_pheno_data(data_structure = my_dataset_structure,
-                         seed = my_random_seed)
-```
-This will generate a minimum "long format" dataframe with the variables you need, as well as simulated "sex" and "age" of the sample.
-
-## Alright, all in one go now
+To make this more realistic, I want to inject a positive association between `"age"` and surface area in my data (beta = 3.5). This association will only be present in the `"frontalpole"` region from the Desikan-Killiany atlas.
 
 ```{r simulate everything, eval = FALSE}
-# Simulate FreeSurfer and phenotype dataset
-simulate_data(path = "./VeryWiseUser/SimulatedExample", 
-              data_structure = my_dataset_structure,
-              simulate_association =  0.05 * pheno$age,
-              overwrite = TRUE,
-              seed = my_random_seed)
+
+data_structure <- list("cohort1" = list("n_subjects" = 100, 
+                                        "sessions" = c("01","02")),
+                       "cohort2" = list("n_subjects" = 150, 
+                                        "sessions" = c("01","02")))
+
+# Simulate FreeSurfer and phenotype dataset for both hemispheres
+for (hemi in c('lh','rh')) {
+  simulate_dataset(path = "path/to/verywise/simulated_example",
+                   data_structure = data_structure,
+                   measure = "area",
+                   hemi = hemi,
+                   fs_template = "fsaverage", # FreeSurfer template (largest available: 163842 vertices)
+                   vw_mean = 5, # mean surface area value
+                   vw_sd = 0.1, # standard deviation of surface area values
+                   subj_sd = 0.02, # variability between subjects
+                   site_sd = 0.01, # variability between sites
+                   # (optionally) only simulate data within certain ROIs:
+                   # roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'), 
+                   simulate_association = "3.5 * age",
+                   location_association = "frontalpole")
+}
 ```
 
-This will call `simulate_long_pheno_data()` and `simulate_freesurfer_data()` to give you everything you need to play around with `verywise` model fitting.
+This should give you everything you need to play around with `verywise` model fitting. If you do run a model using this data now, you should be able to recover an association with age located in a single cluster, perfectly overlapping with the frontal pole region. How *neat*.
+
+Under the hood, `simulate_dataset()` will call two functions:
+
+* `simulate_freesurfer_data()` to generate the brain surface files, and 
+* `simulate_long_pheno_data()` to generate the phenotype data
+
+You can also call these two functions separately, in case you only need one of the two data sources.
+
+## Only generate the brain data 
+If you have a phenotype dataset already, but you are waiting for the FreeSurfer data to cook. 
+
+In this case I have a sigle dataset / cohort called `"my_site"` with 100 subjects who underwent three MRI sessions (`"baseline"`, `"F1"` and `"F2"`). The phenotype data is ready and stored in a CSV file located at `"path/to/my_phenotype_data.rds"`. This dataset should contain 300 rows (100 subjects x 3 sessions), and a few variables of interest, including `"wisdom"`.
+
+Let's simulate left hemisphere thickness maps, smoothed at `10mm` FWHM, with an overall mean of `6.5` (mm thickness) and a standard deviation of `1.5`. This time, to save us some time, I will use a smaller surface template (`"fsaverage3"`), which has only `40962` vertices in total.
+
+I also want to inject a positive association between `"wisdom"` and thickness (beta = 10) in the `"entorhinal"` and `"temporalpole"` regions.
+
+```{r simulate brain, eval = FALSE}
+
+phenotype_data <- readRDS("path/to/my_phenotype_data.rds")
+
+data_structure <- list("my_site" = list("sessions" = c("baseline", "F1", "F2"),
+                                        "n_subjects" = 100))
+
+# Simulate FreeSurfer dataset
+simulate_freesurfer_data(path = "path/to/simulated_FreeSurfer_output",
+                         data_structure = data_structure,
+                         fs_template = "fsaverage3",
+                         measure = "thickness",
+                         hemi = "lh",
+                         fwhmc = "fwhm10", # smoothness level
+                         vw_mean = 6.5,
+                         vw_sd = 1.5,
+                         subj_sd = 0.2, 
+                         site_sd = 0.1,
+                         simulate_association = 10 * phenotype$wisdom,
+                         location_association = c('temporalpole', 'entorhinal'),
+                         seed = my_random_seed_I_did_not_forget_to_set)
+```
+
+
+## Only generate the phenotype data
+On the other hand, if you already have some surfaces to use but you would like a phenotype to go with it, you can generate a minimal "long format" dataframe (with variables: `folder_id`, `id`, `site`, `age`, `sex`, `wisdom`).
+
+```{r simulate pheno, eval = FALSE}
+# Simulate phenotype dataset, using the same data_structure as above
+phenotype_data <- simulate_long_pheno_data(data_structure = data_structure,
+                                           seed = my_random_seed_I_did_not_forget_to_set)
+```
+
+## {-}
+Next article: [Run a vertex-wise linear mixed model](03-run-vw-lmm.html)

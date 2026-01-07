@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
 > **Warning**  
 > `verywise` lets you run vertex-wise analyses however you want to. For example, you can add interactions and splines / polynomials to your models, as many random intercept and slopes as your heart desires..., you can use liberal thresholds for multiple test correction and test as many hypothesis as you have time for. Remember: this software is just a tool, and it is up to you to use it sensibly. 
 
-
 With your set-up and data ready, it is finally time to use some `verywise` functionality. 
 
 First, load the package in our R sesssion, so we call its functions directly. 
@@ -26,27 +25,37 @@ First, load the package in our R sesssion, so we call its functions directly.
 library(verywise)
 ```
 
+## *Wait, what is a linear mixed model again?*
+A linear mixed model (LMM) is a **multilevel regression** technique, that is especially useful when observations are *clustered* (e.g. across neuroimaging sites) or *repeated* (across time). 
+
+In a nutshell, a LMM includes both ***fixed effects*** (parameters associated with the entire population) and ***random effects*** (parameters that vary across groups, such as subjects or sites). 
+
+Later in this tutorial, I will point out a few important considerations to keep in mind when building and interpreting LMMs. If you want to learn more about the theory behind this funky technique, check out the resources at the end of this article.
+
 ## Run a vertex-wise linear mixed model
-The main function in the `verywise` package is `run_vw_lmm` which fits a vertex-wise linear mixed model to the data. Here is an example:
+The main function in the `verywise` package is `run_vw_lmm` which fits a vertex-wise linear mixed model to the data. 
+
+Let's demonstrate a simple (and probably most common) example of a mixed model, in which we have a single grouping/cluster (participants) modelled as a random intercept.
 
 ```{r lmm, eval=FALSE}
 # Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
-  pheno = phenotype, # An R object already in memory or a path to file
-  subj_dir = "./VeryWiseUser/SimulatedExample", # Neuro-imaging data location
-  hemi = "both", # (default) which hemispheres to run
-  n_cores = 4 # number of cores for parallel processing
-  ...
+  pheno = "path/to/phentype/data.rds", # or an R object already in memory
+  subj_dir = "/path/to/freesurfer/subjects", # Neuro-imaging data location
+  outp_dir = "/path/to/output", # Where you want to store results
+  hemi = "lh", # (default) or "rh": which hemisphere to run
+  n_cores = 4  # number of cores for parallel processing
 )
 ```
 
-The function will first check the inputs and then run `lme4::lmer` on
-every vertex in both hemispheres.
+The function will first check the inputs and then run `lme4::lmer` on every vertex in the left hemisphere.
 
 The most important parameters you need to know about:
 
--   **`formula`**: the model formula specifying the linear mixed model. This uses `lme4` syntax.
+[TODO: this is is out of date, check function documentation instead]
+
+- **`formula`**: the model formula specifying the linear mixed model. This uses `lme4` syntax.
 - **`pheno`** : either the phenotype data object (already loaded in the global environment) or a string containing a file path.
 Supported file extensions are: rds, csv, txt and sav. 
 - **`subj_dir`** : a string containing the path to the FreeSurfer data, this expects a verywise structure. 
@@ -54,9 +63,85 @@ Supported file extensions are: rds, csv, txt and sav.
 You can optionally also specify: 
 
 - **`outp_dir`**: a string containing the path, where do you want results to be stored. If none is provided, a "results" sub-directory will be created inside `subj_dir`. 
-- **`hemi`**: which hemispheres to run (default = "both") 
+- **`hemi`**: which hemispheres to run (default = "lh") 
 - **`seed`**: (default = 3108) random seed.
 - **`n_cores`**: (default = 1) number of cores for parallel processing.
 - **`FS_HOME`**: FreeSurfer directory, i.e. `$FREESURFER_HOME`.
 
-Check out the output directory. 
+## `verywise` output
+
+Check out the output directory. You should see something like this
+[TODO: add image]
+
+## A little more theory: constructing the right model
+The model specification is probably the most important step when running a LMM (or any model really). A poorly specified model can lead to biased estimates, incorrect inferences, and misleading conclusions. What complicates matters more is that you are now running hundreds of thousands of models (one per vertex), so you really want to get this right, ideally the first time around and consistently across the brain.
+
+### Should my variables be fixed or random?
+In many cases, the same variables could be considered either random or fixed effects (and sometimes even both at the same time, though I wouldn't get too excited about that). The difference between these two modeling choices has little to do with the variables themselves, and a lot more to do with your study design / research question. 
+
+In broad terms, fixed effects are variables that you are interested in, you want to know about their association with the brain metric of choice. Random effects are *grouping factors* (i.e. categorical variables) that you are not specifically interested in, but you know they might be influencing such brain measures (e.g. scanner, site, subject ID). 
+
+ <ins>Note</ins>: You might *not* want to use random effects when the number of factor levels is very low (i.e. < 5 is a commonly reported rule of thumb) or when you wouldn't assume that your factor levels come from a common distribution (e.g. assuming that males and females come from a population of sexes, of which there is an infinite number and we are interested in an average). You can read more about this topic [here](https://peerj.com/articles/12794/), [here](https://bookdown.org/steve_midway/DAR/random-effects.html) and [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#should-i-treat-factor-xxx-as-fixed-or-random).
+
+### Random structure specification
+The formula syntax adopted by `lme4` to specify random effects is very flexible. Almost *too flexible**, so it can be tricky to get your head around all the available options. Here is a quick cheatsheet adepted ( / stolen) from StackOverflow (RIP):
+
+| **formula**                        | **meaning**                                                             |
+|------------------------------------|-------------------------------------------------------------------------|
+| `(1 | group)`                      | random group intercept                                                  |
+| `(x | group)` = `(1 + x | group)`  | random slope of x within group - with correlated intercept              |
+| `(0 + x | group)`                  | random slope of x within group - no variation in intercept              |
+| `(1 | group) + (0 + x | group)`    | *uncorrelated* random intercept and random slope within group           |
+| `(1 | site/id)` = `(1 | site) + (1 | site:id)` | intercept varying among sites and among people within sites (*nested random effects*) |
+| `site + (1 | site:id)`             | fixed effect of sites plus random variation in intercept among people within sites |
+| `(x | site/id)` = `(x | site) + (x | site:id)` | slope and intercept varying among sites and among people within sites  |
+| `(x1 | site) + (x2 | id)`          | two different effects, varying at different levels                      |
+| `(1 | group1) + (1 | group2)`      | intercept varying among *crossed random effects* (e.g. site, year)      |
+
+#### Nested vs. crossed random effects
+The clustering patterns that can be modeled using random effects can take many forms. 
+
+In some cases, clustering is *hierarchical* (i.e. clusters are **nested** within other clusters). A relevant example are multi-site longitudinal neuroimaging studies: repeated brain observations are nested within individulas, individulas are nested within sites, sites nested within cohorts and so on.
+
+In other cases, there is no nesting structure. For example, a study where participants complete the same set of tasks, observations are nested within individuals, but they are also clustered according to task type (...or image aquisition protocol or scanner etc.). These are commonly refered to as **crossed** random effects, i.e. when one level of a random effect can appear in conjunction with more than one level of another effect. 
+
+Read more about this [here](https://www.muscardinus.be/statistics/nested.html) and [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed)
+
+### Can I trust the results?
+
+#### Model converge 
+Get too greedy with model complexity, you may incur in convergence issues. 
+
+These will be soon stored in the output --> TODO
+
+A common problem we have seen is **singular fits**. These are typically caused by a number of random-effect levels that is too small (e.g. < 5; see more info [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#singular-fits))
+
+#### Model fit information 
+
+These will be soon stored in the output --> TODO
+
+BIC, AIC, logLik, deviance
+
+More on AIC in the context of LMM [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#can-i-use-aic-for-mixed-models-how-do-i-count-the-number-of-degrees-of-freedom-for-a-random-effect)
+
+##### ICC
+Intraclass correlation coefficient, indicates wether there is clustering in the data.
+
+### More modeling options: ML vs REML 
+Restricted maximim likelihood [TODO: add info]
+
+### A note on P values 
+P values for fixed effects are calculated using the Satterthwaite's method [TODO: add info]
+
+Read more about this [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#why-doesnt-lme4-display-denominator-degrees-of-freedomp-values-what-other-options-do-i-have).
+
+## Resources
+
+More on linear mixed models: 
+
+- [Mixed Models with R](https://m-clark.github.io/mixed-models-with-R/introduction.html)
+- [`lme4` model specification](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)
+- [`lme4` model specification (2)](https://rpsychologist.com/r-guide-longitudinal-lme-lmer)
+
+## {-}
+Next article: [Run *many* vertex-wise linear mixed models](04-run-slurm-array.html)

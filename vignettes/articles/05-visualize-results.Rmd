@@ -1,0 +1,14 @@
+---
+title: "Visualizing `verywise` results: plotting functions and the WIZard"
+author: "Serena Defina"
+date: "`r Sys.Date()`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+TODO

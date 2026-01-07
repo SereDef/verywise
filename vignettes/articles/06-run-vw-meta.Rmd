@@ -1,5 +1,5 @@
 ---
-title: "Visualizing `verywise` results: BrainMapp"
+title: "Running vertex-wise meta-analyses"
 author: "Serena Defina"
 date: "`r Sys.Date()`"
 ---
@@ -10,5 +10,8 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+
+`verywise` implements vertex-wise meta-analysis via the `metafor` package
 
 TODO

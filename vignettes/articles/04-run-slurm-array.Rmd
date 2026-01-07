@@ -1,0 +1,14 @@
+---
+title: "Run many `verywise` analyses in parallel (on SLURM)"
+author: "Serena Defina"
+date: "`r Sys.Date()`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+TODO
