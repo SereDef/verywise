@@ -87,7 +87,7 @@ build_supersubject <- function(subj_dir,
   }
 
   # FreeSurfer output "w-g.pct" needs special treatment:
-  if(measure == "w_g.pct") measure_file <- "w-g.pct" else measure_file <- measure
+  if(measure == "w_g.pct") measure_file <- "w-g.pct.mgh" else measure_file <- measure
 
   mgh_file_name <- paste0(
     hemi, ".", measure_file,
