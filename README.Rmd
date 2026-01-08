@@ -98,9 +98,9 @@ You can find more info and extended **tutorials** on the package [website](https
 - [Get ready: Installation and system requirements](https://seredef.github.io/verywise/articles/00-installation-sys-requirements.html)
 - [Preparing your data for `verywise`](https://seredef.github.io/verywise/articles/01-format-data.html)
 - [Running vertex-wise linear mixed models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.html)
-- [Running vertex-wise meta-analyses]()
-- [Running multiple models in parallel]()
-- [Visualizing results](https://seredef.github.io/verywise/articles/04-visualize-results.html)
+- [Running vertex-wise meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.html)
+- [Running *many* analyses in parallel](https://seredef.github.io/verywise/articles/04-run-slurm-array.html)
+- [Inspecting and visualizing results](https://seredef.github.io/verywise/articles/05-visualize-results.html)
 
 ## License and credits
 `verywise` is open-source and free to use under the [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt). license.

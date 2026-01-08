@@ -107,10 +107,12 @@ You can find more info and extended **tutorials** on the package
   `verywise`](https://seredef.github.io/verywise/articles/01-format-data.html)
 - [Running vertex-wise linear mixed
   models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.html)
-- [Running vertex-wise meta-analyses]()
-- [Running multiple models in parallel]()
-- [Visualizing
-  results](https://seredef.github.io/verywise/articles/04-visualize-results.html)
+- [Running vertex-wise
+  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.html)
+- [Running *many* analyses in
+  parallel](https://seredef.github.io/verywise/articles/04-run-slurm-array.html)
+- [Inspecting and visualizing
+  results](https://seredef.github.io/verywise/articles/05-visualize-results.html)
 
 ## License and credits
 

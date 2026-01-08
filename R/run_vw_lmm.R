@@ -28,9 +28,8 @@
 #' @param outp_dir Character string specifying the output directory for results.
 #'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 #'   current working directory (not recommended).
-#' @param hemi Character string specifying which hemisphere(s) to analyze.
-#'   Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
-#'   (right only).
+#' @param hemi Character string specifying which hemisphere to analyze.
+#'   Options: `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
 #' @param fs_template Character string specifying the FreeSurfer template for
 #'   vertex registration. Options:
 #'   \itemize{
@@ -67,7 +66,7 @@
 #' @param lmm_control Optional list (of correct class, resulting from
 #'   \code{lmerControl()} containing control parameters to be passed to
 #'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
-#'   see the \code{*lmerControl} documentation for details.
+#'   see the \code{?lmerControl} documentation for details.
 #'   Default: (uses default settings).
 #' @param seed Integer specifying the random seed for reproducibility
 #'   Default: 3108.
@@ -82,8 +81,8 @@
 #'   Defaults to \code{FREESURFER_HOME} environment variable.
 #' @param fwhm Numeric value specifying the full-width half-maximum for
 #'   smoothing kernel. Default: 10.
-#' @param mcz_thr Numeric value for Monte Carlo simulation threshold.
-#'   Any of the following are accepted (equivalent values separate by \code{/}):
+#' @param mcz_thr Numeric value for the Monte Carlo simulation threshold. 
+#' Any of the following are accepted (equivalent values are separated by `/`):
 #'   \itemize{
 #'   \item 13 / 1.3 / 0.05,
 #'   \item 20 / 2.0 / 0.01,
@@ -92,10 +91,10 @@
 #'   \item 33 / 3.3 / 0.0005,
 #'   \item 40 / 4.0 / 0.0001.
 #' }
-#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of
-#'   all corrections). Set this to 0.025 when both hemispheres are analyzed,
-#'   0.05 for single hemisphere.
-#'   Default: 0.025.
+#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of all
+#'  corrections). Set this should be set to `0.025` when both hemispheres are analyzed,
+#'  and `0.05` for single hemisphere analyses.
+#'  Default: `0.025`.
 #' @param save_optional_cluster_info Logical indicating whether to save additional
 #'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
 #'  for details. Default: \code{FALSE}.
@@ -146,7 +145,7 @@
 #' Left and right cortical hemispheres are processed sequentially by default.
 #' Parallel processing of the two hemispheres (and/or different metrics, models)
 #' should be handled by the user (e.g., using SLURM job arrays or similar,
-#' see vignette on parallelisation ...COMING UP).
+#' see vignette on parallelisation).
 #' Within each hemisphere, vertices are divided into chunks of size
 #' \code{chunk_size} and processed in parallel across \code{n_cores} workers
 #' (when \code{n_cores > 1}). When multiple imputed datasets are present,
