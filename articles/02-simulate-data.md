@@ -14,7 +14,7 @@ Let’s see how to get there. First, load the package:
 ``` r
 library(verywise)
 #> Welcome, verywise user!
-#> This is version: 1.2.3
+#> This is version: 1.2.4
 #> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 
