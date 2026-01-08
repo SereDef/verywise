@@ -53,9 +53,6 @@ build_supersubject <- function(subj_dir,
                                save_rds = FALSE,
                                verbose = TRUE) {
 
-  # TODO: check measure names! measure2 <- measure
-  # if(measure2 == "w_g.pct") measure2 <- "w-g.pct"
-
   # Identify brain surface files to load ---------------------------------------
   vw_message(" * retrieving ", length(folder_ids), " brain surface files...",
              verbose = verbose)
@@ -89,8 +86,11 @@ build_supersubject <- function(subj_dir,
     "\n   See issues.log file for datails.")
   }
 
+  # FreeSurfer output "w-g.pct" needs special treatment:
+  if(measure == "w_g.pct") measure_file <- "w-g.pct" else measure_file <- measure
+
   mgh_file_name <- paste0(
-    hemi, ".", measure,
+    hemi, ".", measure_file,
     if (fwhmc != "") { paste0(".", fwhmc)}, ".", fs_template, ".mgh")
 
   mgh_files <- file.path(folders_found, "surf", mgh_file_name)
