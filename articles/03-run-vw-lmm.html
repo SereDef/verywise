@@ -43,7 +43,7 @@
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
-    <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Visualizing `verywise` results: plotting functions and the WIZard</a></li>
+    <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
     <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
   </ul>
 </li>
@@ -69,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-01-07</h4>
+            <h4 data-toc-skip class="date">2026-01-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/03-run-vw-lmm.Rmd" class="external-link"><code>vignettes/articles/03-run-vw-lmm.Rmd</code></a></small>
       <div class="d-none name"><code>03-run-vw-lmm.Rmd</code></div>
@@ -130,47 +130,212 @@ modelled as a random intercept.</p>
 <p>The function will first check the inputs and then run
 <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> on every vertex in the left hemisphere.</p>
 <p>The most important parameters you need to know about:</p>
-<p>[TODO: this is is out of date, check function documentation
-instead]</p>
+<div class="section level5">
+<h5 id="formula">
+<code>formula</code><a class="anchor" aria-label="anchor" href="#formula"></a>
+</h5>
+<p>A model formula object. Use this to specify the LMM you wish to run,
+using <a href="https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf" class="external-link"><code>lme4</code>
+syntax</a>, for example:
+<code>vw_area ~ sex * age + site + (1 | id/site)</code>. See the next
+section for some advice, cheatsheets and references on model
+specification.</p>
+<p>The <strong>outcome</strong> variable should be one of the supported
+brain surface metrics computed by FreeSurfer, prefixed by
+<code>vw_</code>:</p>
 <ul>
 <li>
-<strong><code>formula</code></strong>: the model formula specifying
-the linear mixed model. This uses <code>lme4</code> syntax.</li>
+<code>vw_thickness</code> - Cortical thickness</li>
 <li>
-<strong><code>pheno</code></strong> : either the phenotype data
-object (already loaded in the global environment) or a string containing
-a file path. Supported file extensions are: rds, csv, txt and sav.</li>
+<code>vw_area</code> - Cortical surface area (white surface)</li>
 <li>
-<strong><code>subj_dir</code></strong> : a string containing the
-path to the FreeSurfer data, this expects a verywise structure.</li>
+<code>vw_area.pial</code> - Cortical surface area (pial
+surface)</li>
+<li>
+<code>vw_curv</code> - Mean curvature</li>
+<li>
+<code>vw_jacobian_white</code> - Jacobian determinant (white
+surface)</li>
+<li>
+<code>vw_pial</code> - Pial surface coordinates</li>
+<li>
+<code>vw_pial_lgi</code> - Local gyrification index (pial
+surface)</li>
+<li>
+<code>vw_sulc</code> - Sulcal depth</li>
+<li>
+<code>vw_volume</code> - Gray matter volume</li>
+<li>
+<code>vw_w_g.pct</code> - White/gray matter intensity ratio</li>
+<li>
+<code>vw_white.H</code> - Mean curvature (white surface)</li>
+<li>
+<code>vw_white.K</code> - Gaussian curvature (white surface)</li>
 </ul>
-<p>You can optionally also specify:</p>
+<p>It is currently only possible to have brain metrics as outcome
+variables.</p>
+</div>
+<div class="section level5">
+<h5 id="pheno">
+<code>pheno</code><a class="anchor" aria-label="anchor" href="#pheno"></a>
+</h5>
+<p>The phenotype data. This is either the name of an R
+<strong>object</strong> already loaded in your environment, or as a
+string containing the <strong>path</strong> to a data file, that will
+then be read in memory for you (supported file extensions are:
+<code>rds</code>, <code>csv</code>, <code>txt</code> and
+<code>sav</code>).</p>
+<p>More information about the format requirements for the phenotype data
+can be found in the <a href="01-format-data.html">Data format
+article</a>. Brifly, we support both <strong>single datasets</strong>
+(e.g. a <code>data.frame</code>) and <strong>multiple imputed
+datasets</strong> (i.e. a <code>mids</code> object or list of
+dataframes). Either way, the data shoud be in <strong>long
+format</strong> and it should contain all the variables specified in the
+<code>formula</code> plus the <code>folder_id</code> column.</p>
+</div>
+<div class="section level5">
+<h5 id="subj_dir">
+<code>subj_dir</code><a class="anchor" aria-label="anchor" href="#subj_dir"></a>
+</h5>
+<p>The path to the FreeSurfer data directory. This must follow the
+<code>verywise</code> directory structure (see <a href="01-format-data.html">Data format article</a> for details).</p>
+</div>
+<div class="section level5">
+<h5 id="other-arguments-you-may-want-to-specify">Other arguments you may want to specify<a class="anchor" aria-label="anchor" href="#other-arguments-you-may-want-to-specify"></a>
+</h5>
+<p>These argments are optional, but you may want to specify them
+explicitly depending on your analysis:</p>
 <ul>
-<li>
-<strong><code>outp_dir</code></strong>: a string containing the
-path, where do you want results to be stored. If none is provided, a
-“results” sub-directory will be created inside
-<code>subj_dir</code>.</li>
-<li>
-<strong><code>hemi</code></strong>: which hemispheres to run
-(default = “lh”)</li>
-<li>
-<strong><code>seed</code></strong>: (default = 3108) random
-seed.</li>
-<li>
-<strong><code>n_cores</code></strong>: (default = 1) number of cores
-for parallel processing.</li>
-<li>
-<strong><code>FS_HOME</code></strong>: FreeSurfer directory,
-i.e. <code>$FREESURFER_HOME</code>.</li>
+<li><p><strong><code>outp_dir</code></strong>: a character string
+specifying the path to the output directory, where results will be
+stored. If <code>NULL</code> (default), the function creates a
+“verywise_results” sub-directory in the current working directory
+(though this is not recommended for tidyness reasons).</p></li>
+<li><p><strong><code>hemi</code></strong>: a character string specifying
+which hemisphere to analyze. Options: <code>"lh"</code> (left
+hemisphere: default), <code>"rh"</code> (right hemisphere).</p></li>
+<li><p><strong><code>folder_id</code></strong>: a character string
+specifying the column name in <code>pheno</code> that contains subject
+directory names of the input neuroimaging data
+(e.g. “sub-001_ses-baseline” or “site1/sub-010_ses-F1”). These are
+expected to be nested inside <code>subj_dir</code>. Default:
+<code>"folder_id"</code>.</p></li>
+<li><p><strong><code>n_cores</code></strong>: an integer specifying the
+number of CPU cores for parallel processing. Default:
+<code>1</code>.</p></li>
+<li><p><strong><code>weights</code></strong>: a string or a numeric
+vector of weights for the linear mixed model. You can use this argument
+to specify inverse-probability weights. If this is a string, the
+function look for a column with that name in the phenotype data. Note
+that these weights are not normalized or standardized in any way. If
+this is a vector, it should be of the same length as the number of rows
+in your data. Default: <code>NULL</code> (no weights).</p></li>
+<li><p><strong><code>seed</code></strong>: an integer specifying the
+random seed for reproducibility. Default: <code>3108</code>.</p></li>
+<li><p><strong><code>save_ss</code></strong>: whether to save the
+super-subject matrix (“ss”) as an .rds file that can be then re-used in
+future analyses. This can also be a character string specifying the
+directory where ss should be saved. When <code>TRUE</code>, the ss
+matrix will be saved in <code>&lt;outp_dir&gt;/ss</code> by default.
+Default: <code>FALSE</code>.</p></li>
 </ul>
 </div>
-<div class="section level2">
-<h2 id="verywise-output">
-<code>verywise</code> output<a class="anchor" aria-label="anchor" href="#verywise-output"></a>
-</h2>
-<p>Check out the output directory. You should see something like this
-[TODO: add image]</p>
+<div class="section level4">
+<h4 id="even-more-arguments-for-fine-grained-control">Even more arguments for fine-grained control<a class="anchor" aria-label="anchor" href="#even-more-arguments-for-fine-grained-control"></a>
+</h4>
+<p>These are more advanced arguments that you typically won’t need, but
+you may want to tweak depending on your analytical (and control)
+needs:</p>
+<ul>
+<li>
+<p><strong><code>fs_template</code></strong>: a character string
+specifying the FreeSurfer template for vertex registration. Options:</p>
+<ul>
+<li>
+<code>"fsaverage"</code> (default) = 163842 vertices (–&gt; highest
+resolution),</li>
+<li>
+<code>"fsaverage6"</code> = 40962 vertices,</li>
+<li>
+<code>"fsaverage5"</code> = 10242 vertices,</li>
+<li>
+<code>"fsaverage4"</code> = 2562 vertices,</li>
+<li>
+<code>"fsaverage3"</code> = 642 vertices</li>
+</ul>
+<p>Note that lower resolutions should be only used to downsample the
+brain map, for faster model tuning. The final analyses should run using
+<code>fs_template = "fsaverage"</code> to avoid (small) imprecisions in
+vertex registration and smoothing.</p>
+</li>
+<li><p><strong><code>apply_cortical_mask</code></strong>: whether to
+exclude non-cortical vertices from analysis. Default: <code>TRUE</code>
+(recommended).</p></li>
+<li><p><strong><code>tolerate_surf_not_found</code></strong>: an integer
+indicating how many brain surface files listed in the
+<code>folder_id</code> column can be missing from <code>subj_dir</code>.
+If the number of missing or corrupted files is
+<code>&gt; tolerate_surf_not_found</code> execution will stop. Default:
+<code>20</code>.</p></li>
+<li><p><strong><code>use_model_template</code></strong>: whether to
+pre-compile the model template for faster estimation. Default:
+<code>TRUE</code> (recommended).</p></li>
+<li><p><strong><code>lmm_control</code></strong>: cptional list (of
+correct class, resulting from <code>lmerControl()</code>) containing
+control parameters to be passed to <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
+(e.g. optimizer choice, convergence criteria, see the
+<code>?lmerControl</code> documentation for details. Default: (uses
+default settings).</p></li>
+<li><p><strong><code>chunk_size</code></strong>: an integer specifying
+the number of vertices processed sequentially in each chunk (used for
+parallel operations). Larger values use more memory but may be faster
+depending on your resources (i.e. <code>n_cores</code>). Default:
+<code>1000</code>.</p></li>
+<li><p><strong><code>FS_HOME</code></strong>: a character string
+specifying the FreeSurfer home directory. Defaults to
+<code>$FREESURFER_HOME</code> environment variable, if this was set up
+correctly during FreeSurfer installation (see <a href="00-installation-sys-requirements.html">Set-up article</a> for
+details).</p></li>
+<li><p><strong><code>fwhm</code></strong>: a numeric value specifying
+the full-width half-maximum for the smoothing kernel. Default:
+<code>10</code>.</p></li>
+<li>
+<p><strong><code>mcz_thr</code></strong>: a numeric value for the
+Monte Carlo simulation threshold. Any of the following are accepted
+(equivalent values are separated by <code>/</code>):</p>
+<ul>
+<li>
+<code>13 / 1.3 / 0.05</code>,</li>
+<li>
+<code>20 / 2.0 / 0.01</code>,</li>
+<li>
+<code>23 / 2.3 / 0.005</code>,</li>
+<li>
+<code>30 / 3.0 / 0.001</code>, –&gt; default</li>
+<li>
+<code>33 / 3.3 / 0.0005</code>,</li>
+<li>
+<code>40 / 4.0 / 0.0001</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>cwp_thr</code></strong>: a numeric value for
+cluster-wise p-value threshold (on top of all corrections). Set this
+should be set to <code>0.025</code> when both hemispheres are analyzed,
+and <code>0.05</code> for single hemisphere analyses. Default:
+<code>0.025</code>.</p></li>
+<li><p><strong><code>save_optional_cluster_info</code></strong>: whether
+to save additional output form <code>mri_surfcluster</code> FreeSurfer
+call. See <code>compute_clusters</code> function documentation for
+details. Default: <code>FALSE</code>.</p></li>
+<li><p><strong><code>save_residuals</code></strong>: Logical indicating
+whether to save the <code>residuals.mgh</code> file. Default:
+<code>FALSE</code> (recommended, as these files can be quite
+large).</p></li>
+<li><p><strong><code>verbose</code></strong>: whether to display
+progress messages. Default: <code>TRUE</code>.</p></li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="a-little-more-theory-constructing-the-right-model">A little more theory: constructing the right model<a class="anchor" aria-label="anchor" href="#a-little-more-theory-constructing-the-right-model"></a>
@@ -295,7 +460,7 @@ level of another effect.</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="can-i-trust-the-results">Can I trust the results?<a class="anchor" aria-label="anchor" href="#can-i-trust-the-results"></a>
+<h3 id="can-i-trust-the-results-todo-finsh-this-section">Can I trust the results? [TODO: finsh this section]<a class="anchor" aria-label="anchor" href="#can-i-trust-the-results-todo-finsh-this-section"></a>
 </h3>
 <div class="section level4">
 <h4 id="model-converge">Model converge<a class="anchor" aria-label="anchor" href="#model-converge"></a>
@@ -345,6 +510,9 @@ Models with R</a></li>
 model specification</a></li>
 <li><a href="https://rpsychologist.com/r-guide-longitudinal-lme-lmer" class="external-link"><code>lme4</code>
 model specification (2)</a></li>
+<li><a href="https://ourcodingclub.github.io/tutorials/mixed-models/" class="external-link uri">https://ourcodingclub.github.io/tutorials/mixed-models/</a></li>
+<li><a href="https://gkhajduk.github.io/2017-03-09-mixed-models/" class="external-link uri">https://gkhajduk.github.io/2017-03-09-mixed-models/</a></li>
+<li><a href="https://meghan.rbind.io/blog/2022-06-28-a-beginners-guide-to-mixed-effects-models/" class="external-link uri">https://meghan.rbind.io/blog/2022-06-28-a-beginners-guide-to-mixed-effects-models/</a></li>
 </ul>
 </div>
 <div class="section level2 unnumbered">

@@ -43,7 +43,7 @@
     <li><a class="dropdown-item" href="../articles/02-simulate-data.html">Optional: simulating data</a></li>
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
-    <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Visualizing `verywise` results: plotting functions and the WIZard</a></li>
+    <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
     <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
   </ul>
 </li>
@@ -69,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-01-07</h4>
+            <h4 data-toc-skip class="date">2026-01-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/06-run-vw-meta.Rmd" class="external-link"><code>vignettes/articles/06-run-vw-meta.Rmd</code></a></small>
       <div class="d-none name"><code>06-run-vw-meta.Rmd</code></div>
@@ -77,9 +77,19 @@ Defina</h4>
 
     
     
-<p><code>verywise</code> implements vertex-wise meta-analysis via the
-<code>metafor</code> package</p>
-<p>TODO</p>
+<p><code>verywise</code> also implements vertex-wise meta-analysis via
+the <code>metafor</code> package</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Run a meta-analysis</span></span>
+<span><span class="fu"><a href="../reference/run_vw_meta.html">run_vw_meta</a></span><span class="op">(</span></span>
+<span>  term <span class="op">=</span> <span class="st">"age"</span>, <span class="co"># Which "term" / predictor / effect to pool</span></span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
+<span>  measure <span class="op">=</span> <span class="st">"area"</span>, <span class="co"># (default) or any available FreeSurfer metric.</span></span>
+<span>  res_dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"/path/to/study1/results"</span>, <span class="st">"/path/to/study2/results"</span><span class="op">)</span>,</span>
+<span>  study_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Study1"</span>, <span class="st">"Study2"</span><span class="op">)</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># parallel processing</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>[TODO: expand with more details]</p>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

@@ -1,3 +1,57 @@
-# Visualizing \`verywise\` results: plotting functions and the WIZard
+# Extracting and visualizing \`verywise\` results
 
-TODO
+## `verywise` output
+
+Check out the output directory. You should see something like this
+\[TODO: add image\]
+
+## Extracting mean/median cluster values
+
+Sometimes, you may want to extract the mean or the median value of a
+specific cluster from your results, for example to use this in further
+analysis. You can do this in `verywise` using the
+[`significant_cluster_stats()`](https://seredef.github.io/verywise/reference/significant_cluster_stats.md)
+function.
+
+*Note*: ideally, you should run your analyses with `save_ss = TRUE` or
+`save_ss = "path/to/ss"`, or you have called
+[`build_supersubject()`](https://seredef.github.io/verywise/reference/build_supersubject.md)
+in your pipeline, for this to sun smoothly.
+
+``` r
+# Extract mean from significant clusters
+df <- significant_cluster_stats(stat = "mean", # or "median"
+                                ss_dir = "path/to/ss_directory", 
+                                res_dir = "path/to/results", 
+                                term = "age", # term of interest 
+                                measure = "thickness", 
+                                hemi = "lh")
+```
+
+## Visualizing results
+
+To inspect and plot your results, you can use our interactive web
+application,
+[verywiseWIZard](https://github.com/SereDef/verywise-wizard). You can
+run this locally or try it out
+[here](https://seredef-verywise-wizard.share.connect.posit.cloud/).
+
+Note: if you are using the online version of the WIZard, with results
+hosten on GitHub, you may want to look into the
+[`move_result_files()`](https://seredef.github.io/verywise/reference/move_result_files.md)
+helper function, to organise your results in a way that is safe (i.e.,
+does not expose individual level data) and quick.
+
+Plots can also be generated using `verywise` like so:
+
+``` r
+# Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)
+plot_vw_map(
+  term = "age",
+  hemi = "lh",
+  measure = "area",
+  res_dir = "/path/to/output",
+  outline_rois = c("entorhinal", "precuneus"),
+  fs_home = "/path/to/FREESURFER_HOME"
+)
+```

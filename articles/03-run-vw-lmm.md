@@ -60,30 +60,172 @@ in the left hemisphere.
 
 The most important parameters you need to know about:
 
-\[TODO: this is is out of date, check function documentation instead\]
+##### `formula`
 
-- **`formula`**: the model formula specifying the linear mixed model.
-  This uses `lme4` syntax.
-- **`pheno`** : either the phenotype data object (already loaded in the
-  global environment) or a string containing a file path. Supported file
-  extensions are: rds, csv, txt and sav.
-- **`subj_dir`** : a string containing the path to the FreeSurfer data,
-  this expects a verywise structure.
+A model formula object. Use this to specify the LMM you wish to run,
+using [`lme4`
+syntax](https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf),
+for example: `vw_area ~ sex * age + site + (1 | id/site)`. See the next
+section for some advice, cheatsheets and references on model
+specification.
 
-You can optionally also specify:
+The **outcome** variable should be one of the supported brain surface
+metrics computed by FreeSurfer, prefixed by `vw_`:
 
-- **`outp_dir`**: a string containing the path, where do you want
-  results to be stored. If none is provided, a “results” sub-directory
-  will be created inside `subj_dir`.
-- **`hemi`**: which hemispheres to run (default = “lh”)
-- **`seed`**: (default = 3108) random seed.
-- **`n_cores`**: (default = 1) number of cores for parallel processing.
-- **`FS_HOME`**: FreeSurfer directory, i.e. `$FREESURFER_HOME`.
+- `vw_thickness` - Cortical thickness
+- `vw_area` - Cortical surface area (white surface)
+- `vw_area.pial` - Cortical surface area (pial surface)
+- `vw_curv` - Mean curvature
+- `vw_jacobian_white` - Jacobian determinant (white surface)
+- `vw_pial` - Pial surface coordinates
+- `vw_pial_lgi` - Local gyrification index (pial surface)
+- `vw_sulc` - Sulcal depth
+- `vw_volume` - Gray matter volume
+- `vw_w_g.pct` - White/gray matter intensity ratio
+- `vw_white.H` - Mean curvature (white surface)
+- `vw_white.K` - Gaussian curvature (white surface)
 
-## `verywise` output
+It is currently only possible to have brain metrics as outcome
+variables.
 
-Check out the output directory. You should see something like this
-\[TODO: add image\]
+##### `pheno`
+
+The phenotype data. This is either the name of an R **object** already
+loaded in your environment, or as a string containing the **path** to a
+data file, that will then be read in memory for you (supported file
+extensions are: `rds`, `csv`, `txt` and `sav`).
+
+More information about the format requirements for the phenotype data
+can be found in the [Data format
+article](https://seredef.github.io/verywise/articles/01-format-data.md).
+Brifly, we support both **single datasets** (e.g. a `data.frame`) and
+**multiple imputed datasets** (i.e. a `mids` object or list of
+dataframes). Either way, the data shoud be in **long format** and it
+should contain all the variables specified in the `formula` plus the
+`folder_id` column.
+
+##### `subj_dir`
+
+The path to the FreeSurfer data directory. This must follow the
+`verywise` directory structure (see [Data format
+article](https://seredef.github.io/verywise/articles/01-format-data.md)
+for details).
+
+##### Other arguments you may want to specify
+
+These argments are optional, but you may want to specify them explicitly
+depending on your analysis:
+
+- **`outp_dir`**: a character string specifying the path to the output
+  directory, where results will be stored. If `NULL` (default), the
+  function creates a “verywise_results” sub-directory in the current
+  working directory (though this is not recommended for tidyness
+  reasons).
+
+- **`hemi`**: a character string specifying which hemisphere to analyze.
+  Options: `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
+
+- **`folder_id`**: a character string specifying the column name in
+  `pheno` that contains subject directory names of the input
+  neuroimaging data (e.g. “sub-001_ses-baseline” or
+  “site1/sub-010_ses-F1”). These are expected to be nested inside
+  `subj_dir`. Default: `"folder_id"`.
+
+- **`n_cores`**: an integer specifying the number of CPU cores for
+  parallel processing. Default: `1`.
+
+- **`weights`**: a string or a numeric vector of weights for the linear
+  mixed model. You can use this argument to specify inverse-probability
+  weights. If this is a string, the function look for a column with that
+  name in the phenotype data. Note that these weights are not normalized
+  or standardized in any way. If this is a vector, it should be of the
+  same length as the number of rows in your data. Default: `NULL` (no
+  weights).
+
+- **`seed`**: an integer specifying the random seed for reproducibility.
+  Default: `3108`.
+
+- **`save_ss`**: whether to save the super-subject matrix (“ss”) as an
+  .rds file that can be then re-used in future analyses. This can also
+  be a character string specifying the directory where ss should be
+  saved. When `TRUE`, the ss matrix will be saved in `<outp_dir>/ss` by
+  default. Default: `FALSE`.
+
+#### Even more arguments for fine-grained control
+
+These are more advanced arguments that you typically won’t need, but you
+may want to tweak depending on your analytical (and control) needs:
+
+- **`fs_template`**: a character string specifying the FreeSurfer
+  template for vertex registration. Options:
+
+  - `"fsaverage"` (default) = 163842 vertices (–\> highest resolution),
+  - `"fsaverage6"` = 40962 vertices,
+  - `"fsaverage5"` = 10242 vertices,
+  - `"fsaverage4"` = 2562 vertices,
+  - `"fsaverage3"` = 642 vertices
+
+  Note that lower resolutions should be only used to downsample the
+  brain map, for faster model tuning. The final analyses should run
+  using `fs_template = "fsaverage"` to avoid (small) imprecisions in
+  vertex registration and smoothing.
+
+- **`apply_cortical_mask`**: whether to exclude non-cortical vertices
+  from analysis. Default: `TRUE` (recommended).
+
+- **`tolerate_surf_not_found`**: an integer indicating how many brain
+  surface files listed in the `folder_id` column can be missing from
+  `subj_dir`. If the number of missing or corrupted files is
+  `> tolerate_surf_not_found` execution will stop. Default: `20`.
+
+- **`use_model_template`**: whether to pre-compile the model template
+  for faster estimation. Default: `TRUE` (recommended).
+
+- **`lmm_control`**: cptional list (of correct class, resulting from
+  `lmerControl()`) containing control parameters to be passed to
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+  (e.g. optimizer choice, convergence criteria, see the `?lmerControl`
+  documentation for details. Default: (uses default settings).
+
+- **`chunk_size`**: an integer specifying the number of vertices
+  processed sequentially in each chunk (used for parallel operations).
+  Larger values use more memory but may be faster depending on your
+  resources (i.e. `n_cores`). Default: `1000`.
+
+- **`FS_HOME`**: a character string specifying the FreeSurfer home
+  directory. Defaults to `$FREESURFER_HOME` environment variable, if
+  this was set up correctly during FreeSurfer installation (see [Set-up
+  article](https://seredef.github.io/verywise/articles/00-installation-sys-requirements.md)
+  for details).
+
+- **`fwhm`**: a numeric value specifying the full-width half-maximum for
+  the smoothing kernel. Default: `10`.
+
+- **`mcz_thr`**: a numeric value for the Monte Carlo simulation
+  threshold. Any of the following are accepted (equivalent values are
+  separated by `/`):
+
+  - `13 / 1.3 / 0.05`,
+  - `20 / 2.0 / 0.01`,
+  - `23 / 2.3 / 0.005`,
+  - `30 / 3.0 / 0.001`, –\> default
+  - `33 / 3.3 / 0.0005`,
+  - `40 / 4.0 / 0.0001`.
+
+- **`cwp_thr`**: a numeric value for cluster-wise p-value threshold (on
+  top of all corrections). Set this should be set to `0.025` when both
+  hemispheres are analyzed, and `0.05` for single hemisphere analyses.
+  Default: `0.025`.
+
+- **`save_optional_cluster_info`**: whether to save additional output
+  form `mri_surfcluster` FreeSurfer call. See `compute_clusters`
+  function documentation for details. Default: `FALSE`.
+
+- **`save_residuals`**: Logical indicating whether to save the
+  `residuals.mgh` file. Default: `FALSE` (recommended, as these files
+  can be quite large).
+
+- **`verbose`**: whether to display progress messages. Default: `TRUE`.
 
 ## A little more theory: constructing the right model
 
@@ -161,7 +303,7 @@ Read more about this
 [here](https://www.muscardinus.be/statistics/nested.html) and
 [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed)
 
-### Can I trust the results?
+### Can I trust the results? \[TODO: finsh this section\]
 
 #### Model converge
 
@@ -211,6 +353,9 @@ More on linear mixed models:
   specification](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)
 - [`lme4` model specification
   (2)](https://rpsychologist.com/r-guide-longitudinal-lme-lmer)
+- <https://ourcodingclub.github.io/tutorials/mixed-models/>
+- <https://gkhajduk.github.io/2017-03-09-mixed-models/>
+- <https://meghan.rbind.io/blog/2022-06-28-a-beginners-guide-to-mixed-effects-models/>
 
 ## 
 
