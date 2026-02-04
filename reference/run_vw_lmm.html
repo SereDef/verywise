@@ -21,7 +21,7 @@ approach."><meta property="og:image" content="https://seredef.github.io/verywise
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,7 +112,8 @@ supported brain surface metrics (see Details). Example:
 string specifying the file path to phenotype data. Supported file formats:
 .rds, .csv, .txt, .sav (SPSS).
 The data should be in <strong>long</strong> format and it should contain all the
-variables specified in the <code>formula</code> plus the <code>folder_id</code> column.</p></dd>
+variables specified in the left-hand side of the <code>formula</code> (i.e., after the <code>~</code>)
+plus the <code>folder_id</code> column.</p></dd>
 
 
 <dt id="arg-subj-dir">subj_dir<a class="anchor" aria-label="anchor" href="#arg-subj-dir"></a></dt>
@@ -128,9 +129,8 @@ current working directory (not recommended).</p></dd>
 
 
 <dt id="arg-hemi">hemi<a class="anchor" aria-label="anchor" href="#arg-hemi"></a></dt>
-<dd><p>Character string specifying which hemisphere(s) to analyze.
-Options: <code>"both"</code> (default), <code>"lh"</code> (left only), <code>"rh"</code>
-(right only).</p></dd>
+<dd><p>Character string specifying which hemisphere to analyze.
+Options: <code>"lh"</code> (left hemisphere: default), <code>"rh"</code> (right hemisphere).</p></dd>
 
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
@@ -185,7 +185,7 @@ Default: <code>NULL</code> (no weights).</p></dd>
 <dd><p>Optional list (of correct class, resulting from
 <code>lmerControl()</code> containing control parameters to be passed to
 <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> (e.g. optimizer choice, convergence criteria,
-see the <code>*lmerControl</code> documentation for details.
+see the <code>?lmerControl</code> documentation for details.
 Default: (uses default settings).</p></dd>
 
 
@@ -218,8 +218,8 @@ smoothing kernel. Default: 10.</p></dd>
 
 
 <dt id="arg-mcz-thr">mcz_thr<a class="anchor" aria-label="anchor" href="#arg-mcz-thr"></a></dt>
-<dd><p>Numeric value for Monte Carlo simulation threshold.
-Any of the following are accepted (equivalent values separate by <code>/</code>):</p><ul><li><p>13 / 1.3 / 0.05,</p></li>
+<dd><p>Numeric value for the Monte Carlo simulation threshold.
+Any of the following are accepted (equivalent values are separated by <code>/</code>):</p><ul><li><p>13 / 1.3 / 0.05,</p></li>
 <li><p>20 / 2.0 / 0.01,</p></li>
 <li><p>23 / 2.3 / 0.005,</p></li>
 <li><p>30 / 3.0 / 0.001, \* default</p></li>
@@ -229,10 +229,10 @@ Any of the following are accepted (equivalent values separate by <code>/</code>)
 
 
 <dt id="arg-cwp-thr">cwp_thr<a class="anchor" aria-label="anchor" href="#arg-cwp-thr"></a></dt>
-<dd><p>Numeric value for cluster-wise p-value threshold (on top of
-all corrections). Set this to 0.025 when both hemispheres are analyzed,
-0.05 for single hemisphere.
-Default: 0.025.</p></dd>
+<dd><p>Numeric value for cluster-wise p-value threshold (on top of all
+corrections). Set this should be set to <code>0.025</code> when both hemispheres are analyzed,
+and <code>0.05</code> for single hemisphere analyses.
+Default: <code>0.025</code>.</p></dd>
 
 
 <dt id="arg-save-optional-cluster-info">save_optional_cluster_info<a class="anchor" aria-label="anchor" href="#arg-save-optional-cluster-info"></a></dt>
@@ -297,7 +297,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation ...COMING UP).
+see vignette on parallelisation).
 Within each hemisphere, vertices are divided into chunks of size
 <code>chunk_size</code> and processed in parallel across <code>n_cores</code> workers
 (when <code>n_cores &gt; 1</code>). When multiple imputed datasets are present,

@@ -9,7 +9,7 @@ articles:
   articles/04-run-slurm-array: 04-run-slurm-array.html
   articles/05-visualize-results: 05-visualize-results.html
   articles/06-run-vw-meta: 06-run-vw-meta.html
-last_built: 2026-01-08T16:17Z
+last_built: 2026-02-04T19:03Z
 urls:
   reference: https://seredef.github.io/verywise/reference
   article: https://seredef.github.io/verywise/articles

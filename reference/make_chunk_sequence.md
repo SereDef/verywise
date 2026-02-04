@@ -1,8 +1,8 @@
 # Define chunks of vertices for analyses
 
-This function takes a vector of values representing the dimension of the
-vertex-wise data to use and splits it into chunks for memory-efficient
-parallel processing.
+Split a vector of vertex indices into chunks for memory-efficient
+parallel processing. Each chunk is annotated with attributes that
+facilitate progress reporting (chunk index and 25/50/75% milestones).
 
 ## Usage
 
@@ -14,16 +14,16 @@ make_chunk_sequence(iv, chunk_size = 1000)
 
 - iv:
 
-  : indices of the vertex-wise brain data to use.
+  Integer vector of vertex indices to use.
 
 - chunk_size:
 
-  : (default = 1000) how big are the chunks
+  Integer; target size of each chunk (default = 1000).
 
 ## Value
 
-A list with n_chunks elements. Each element is a vector of vertex
-positions.
+A list of integer vectors, each containing vertex indices and progress
+marks attributes.
 
 ## Author
 

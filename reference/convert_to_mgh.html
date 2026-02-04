@@ -13,7 +13,7 @@ optional on-the-fly \(-\log_{10}\) transformation of p-values."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,10 @@ Side effects: <code>.mgh</code> files are written to disk.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For residuals, all rows are written into a single <code>.mgh</code> file. For other
-stats, data is written to one file per row (i.e. term).</p>
+stats, data is written to one file per row (i.e. term).
+Note, by default, the p vector is cast down to float (single precision, 32‑bit),
+meaning about 7 significant decimal digits are stored (accurately). This is done
+to cut disk space needed for the results in half.</p>
 <p>When computing \(-\log_{10}(p)\) values, the transformation is applied
 <strong>in chunks of columns</strong> to avoid loading the full FBM into memory.</p>
     </div>

@@ -173,6 +173,9 @@ grant number 16080606).
 - [`imp2list()`](https://seredef.github.io/verywise/reference/imp2list.md)
   : Convert imputation object to a list of dataframes
 
+- [`init_progress_tracker()`](https://seredef.github.io/verywise/reference/init_progress_tracker.md)
+  : Initialize per-chunk progress tracking
+
 - [`list.dirs.till()`](https://seredef.github.io/verywise/reference/list.dirs.till.md)
   :
 
@@ -197,11 +200,20 @@ grant number 16080606).
   : Move key result files from one directory to another (for sharing and
   visualization)
 
+- [`parallelize()`](https://seredef.github.io/verywise/reference/parallelize.md)
+  : Run a chunked foreach loop sequentially or in parallel
+
 - [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
   : Plot vertex-wise coefficient maps on a 3D cortical surface
 
 - [`pretty_message()`](https://seredef.github.io/verywise/reference/pretty_message.md)
   : Print pretty messages to console
+
+- [`run_voxw_lmm()`](https://seredef.github.io/verywise/reference/run_voxw_lmm.md)
+  :
+
+  Run voxel-wise linear mixed model using
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
 
 - [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
   :
@@ -233,6 +245,9 @@ grant number 16080606).
 
 - [`subset_supersubject()`](https://seredef.github.io/verywise/reference/subset_supersubject.md)
   : Subset an existing supersubject matrix by matching folder IDs
+
+- [`update_progress_tracker()`](https://seredef.github.io/verywise/reference/update_progress_tracker.md)
+  : Update within-chunk progress for a (milestone) vertex
 
 - [`vw_message()`](https://seredef.github.io/verywise/reference/vw_message.md)
   : Print message to console if verbose = TRUE

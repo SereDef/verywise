@@ -57,8 +57,8 @@ run_vw_lmm(
   already loaded in the global environment), or a string specifying the
   file path to phenotype data. Supported file formats: .rds, .csv, .txt,
   .sav (SPSS). The data should be in **long** format and it should
-  contain all the variables specified in the `formula` plus the
-  `folder_id` column.
+  contain all the variables specified in the left-hand side of the
+  `formula` (i.e., after the `~`) plus the `folder_id` column.
 
 - subj_dir:
 
@@ -74,8 +74,8 @@ run_vw_lmm(
 
 - hemi:
 
-  Character string specifying which hemisphere(s) to analyze. Options:
-  `"both"` (default), `"lh"` (left only), `"rh"` (right only).
+  Character string specifying which hemisphere to analyze. Options:
+  `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
 
 - fs_template:
 
@@ -134,7 +134,7 @@ run_vw_lmm(
   Optional list (of correct class, resulting from `lmerControl()`
   containing control parameters to be passed to
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (e.g.
-  optimizer choice, convergence criteria, see the `*lmerControl`
+  optimizer choice, convergence criteria, see the `?lmerControl`
   documentation for details. Default: (uses default settings).
 
 - seed:
@@ -164,8 +164,8 @@ run_vw_lmm(
 
 - mcz_thr:
 
-  Numeric value for Monte Carlo simulation threshold. Any of the
-  following are accepted (equivalent values separate by `/`):
+  Numeric value for the Monte Carlo simulation threshold. Any of the
+  following are accepted (equivalent values are separated by `/`):
 
   - 13 / 1.3 / 0.05,
 
@@ -182,8 +182,9 @@ run_vw_lmm(
 - cwp_thr:
 
   Numeric value for cluster-wise p-value threshold (on top of all
-  corrections). Set this to 0.025 when both hemispheres are analyzed,
-  0.05 for single hemisphere. Default: 0.025.
+  corrections). Set this should be set to `0.025` when both hemispheres
+  are analyzed, and `0.05` for single hemisphere analyses. Default:
+  `0.025`.
 
 - save_optional_cluster_info:
 
@@ -263,11 +264,11 @@ while avoiding the performance penalties associated with nested
 parallelization. Left and right cortical hemispheres are processed
 sequentially by default. Parallel processing of the two hemispheres
 (and/or different metrics, models) should be handled by the user (e.g.,
-using SLURM job arrays or similar, see vignette on parallelisation
-...COMING UP). Within each hemisphere, vertices are divided into chunks
-of size `chunk_size` and processed in parallel across `n_cores` workers
-(when `n_cores > 1`). When multiple imputed datasets are present, these
-are processed sequentially within each vertex.
+using SLURM job arrays or similar, see vignette on parallelisation).
+Within each hemisphere, vertices are divided into chunks of size
+`chunk_size` and processed in parallel across `n_cores` workers (when
+`n_cores > 1`). When multiple imputed datasets are present, these are
+processed sequentially within each vertex.
 
 Note that, on some systems, implicit parallelism in low-level matrix
 algebra libraries (BLAS/LAPACK) can interfere with explicit

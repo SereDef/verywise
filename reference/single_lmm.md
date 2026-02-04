@@ -55,7 +55,7 @@ single_lmm(
   Optional list (of correct class, resulting from `lmerControl()`
   containing control parameters to be passed to
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (e.g.
-  optimizer choice, convergence criteria, see the `*lmerControl`
+  optimizer choice, convergence criteria, see the `?lmerControl`
   documentation for details. Default: (uses default settings).
 
 ## Value
