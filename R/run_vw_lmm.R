@@ -21,7 +21,8 @@
 #'   string specifying the file path to phenotype data. Supported file formats:
 #'   .rds, .csv, .txt, .sav (SPSS).
 #'   The data should be in \strong{long} format and it should contain all the
-#'   variables specified in the \code{formula} plus the \code{folder_id} column.
+#'   variables specified in the left-hand side of the \code{formula} (i.e., after the `~`) 
+#'   plus the \code{folder_id} column.
 #' @param subj_dir Character string specifying the path to FreeSurfer data
 #'   directory. Must follow the verywise directory structure (see package
 #'   vignette for details).
@@ -203,9 +204,8 @@
 #'
 #' @author Serena Defina, 2024.
 #'
-#' @importFrom foreach foreach
 #' @importFrom foreach %dopar%
-#'
+#' 
 #' @export
 #'
 run_vw_lmm <- function(
@@ -267,6 +267,16 @@ run_vw_lmm <- function(
   # check_numeric_param(mcz_thr, lower = 0)
   # check_numeric_param(cwp_thr, lower = 0)
 
+  # Other set-up stuff =========================================================
+
+  # Avoid bigstatsr wanrining about lost precision (float vs. double)
+  old_opts <- options(bigstatsr.downcast.warning = FALSE)
+  on.exit(options(old_opts), add = TRUE)
+
+  # Esure reproducible seeds in parallel settings
+  RNGkind("L'Ecuyer-CMRG")
+  set.seed(seed)
+
   # Read phenotype data (if not already loaded) ================================
   vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
 
@@ -295,10 +305,6 @@ run_vw_lmm <- function(
   check_stack_file(fixed_terms, outp_dir)
 
   folder_ids <- data1[, folder_id, drop=TRUE] # ensure this is always a character vector 
-
-  # Reproducibility baby =======================================================
-  RNGkind("L'Ecuyer-CMRG")
-  set.seed(seed)
 
   # Read and clean vertex data =================================================
 
@@ -352,7 +358,7 @@ run_vw_lmm <- function(
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss)
+  problem_verts <- fbm_col_has_0(ss, n_cores = n_cores)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
@@ -423,99 +429,66 @@ run_vw_lmm <- function(
   progress_file <- paste0(result_path, ".progress.log")
   on.exit(file.remove(progress_file), add = TRUE)
 
-  if (n_cores > 1) vw_message(" * preparing cluster of ", n_cores, " workers...",
-                              verbose = verbose)
-  # Set up parallel processing
-  cluster <- parallel::makeCluster(n_cores, type = "FORK",
-                                   outfile = progress_file)
-  # NOTE: would not work on Windows anyway till freesurfer dependency is needed
-  # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
-
-  doParallel::registerDoParallel(cluster)
-  # Perform %dopar% as %dorng% loops, for reproducible random numbers
-  doRNG::registerDoRNG(seed)
-
-  # Sync library paths: ensures all workers look for packages in the same place
-  # as the main session
-  # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
-
   # Progress bar setup # note progressr only works with doFuture not doParallel
   vw_message(" * fitting linear mixed models...\n",
              "   this may take some time, check the ", basename(progress_file),
              " file for updates.", verbose = verbose)
 
-  chunk <- NULL
-  foreach::foreach(chunk = chunk_seq,
-                   .packages = c("bigstatsr"),
-                   .export = c("single_lmm", "vw_pool", "vw_message")
-                   ) %dopar% {
+  with_parallel(n_cores = n_cores, 
+    progress_file = progress_file,
+    seed = seed,
+    verbose = verbose, 
+    expr = {
+      foreach::foreach(chunk = chunk_seq, 
+        .packages = c("bigstatsr"), 
+        .export = c("single_lmm", "vw_pool",
+                    "init_progress_tracker", "update_progress_tracker")
+    ) %dopar% { # Only parallel if n_cores > 1
 
-    # Progress updates
-    if (verbose) {
-      chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
-      worker_id <- Sys.getpid() # useful for debugging
+      # Progress updates
+      progress_tracker <- init_progress_tracker(chunk, chunk_seq, verbose=TRUE)
 
-      vw_message(sprintf("- Processing chunk %d/%d (worker: %s)",
-                         chunk_idx, length(chunk_seq), worker_id))
-      utils::flush.console()
+      for (v in chunk) {
 
-      progress_tracker <- list()
-      for (update_freq in c('25%','50%','75%')){
-        progress_tracker[update_freq] <- as.integer(
-          attr(chunk, paste0('chunk_',update_freq))
-          )
-      }
-    }
+        update_progress_tracker(v, progress_tracker, verbose)
 
-    for (v in chunk) {
+        # NOTE: ss does not need to be copied to each worker with doParallel
+        vertex <- ss[, v]
 
-      if (verbose) {
-        milestone <- names(which(progress_tracker == v))
-        if (length(milestone) == 1) {
-          vw_message(sprintf("--- chunk %d/%d is %s done.",
-                             chunk_idx, length(chunk_seq), milestone))
-          utils::flush.console()
+        # Loop through imputed datasets and run analyses
+        out_stats <- lapply(data_list, single_lmm,
+                            y = vertex,
+                            formula = formula,
+                            model_template = model_template,
+                            weights = weights,
+                            lmm_control = lmm_control)
+
+        # Pool results
+        pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
+
+        # Log errors (if any)
+        if (is.character(pooled_stats)) {
+          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
+              append = TRUE)
+          # & skip to the next value of v
+          next
         }
+
+        # Log warnings (if any)
+        if (pooled_stats$warning != "") {
+          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
+              append = TRUE)
+        }
+
+        # Write results to their respective FBM
+        c_vw[, v] <- pooled_stats$coef
+        s_vw[, v] <- pooled_stats$se
+        # t_vw[, v] <- pooled_stats$t
+        p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
+        r_vw[, v] <- pooled_stats$resid
       }
-      # NOTE: ss does not need to be copied to each worker with doParallel
-      vertex <- ss[, v]
-
-      # Loop through imputed datasets and run analyses
-      out_stats <- lapply(data_list, single_lmm,
-                          y = vertex,
-                          formula = formula,
-                          model_template = model_template,
-                          weights = weights,
-                          lmm_control = lmm_control)
-
-      # Pool results
-      pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
-
-      # Log errors (if any)
-      if (is.character(pooled_stats)) {
-        cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
-            append = TRUE)
-        # & skip to the next value of v
-        next
-      }
-
-      # Log warnings (if any)
-      if (pooled_stats$warning != "") {
-        cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
-            append = TRUE)
-      }
-
-      # Write results to their respective FBM
-      c_vw[, v] <- pooled_stats$coef
-      s_vw[, v] <- pooled_stats$se
-      # t_vw[, v] <- pooled_stats$t
-      p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
-      r_vw[, v] <- pooled_stats$resid
-
     }
-  }
-
-  parallel::stopCluster(cluster)
+  })
 
   out <- list(c_vw, s_vw, p_vw, r_vw) # t_vw,
   # "coefficients", "standard_errors", "t_values", "p_values", "residuals"
@@ -574,4 +547,4 @@ run_vw_lmm <- function(
   vw_message(pretty_message("All done! :)"))
 
   return(out)
-}
+    }

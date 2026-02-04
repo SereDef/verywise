@@ -1,7 +1,7 @@
 Package: verywise
 Type: Package
 Title: Vertex-wise Statistical Analysis of Neuroimaging data
-Version: 1.2.5
+Version: 1.2.6
 Authors@R: c(
     person("Serena", "Defina", 
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
@@ -24,6 +24,7 @@ License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
 Suggests:
+    bigreadr,
     haven,
     here,
     metafor,

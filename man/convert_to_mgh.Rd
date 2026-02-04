@@ -42,6 +42,9 @@ optional on-the-fly \eqn{-\log_{10}} transformation of p-values.
 \details{
 For residuals, all rows are written into a single \code{.mgh} file. For other
 stats, data is written to one file per row (i.e. term).
+Note, by default, the p vector is cast down to float (single precision, 32‑bit),
+meaning about 7 significant decimal digits are stored (accurately). This is done
+to cut disk space needed for the results in half.
 
 When computing \eqn{-\log_{10}(p)} values, the transformation is applied
 \strong{in chunks of columns} to avoid loading the full FBM into memory.

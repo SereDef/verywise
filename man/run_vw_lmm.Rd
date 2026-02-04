@@ -41,7 +41,8 @@ supported brain surface metrics (see Details). Example:
 string specifying the file path to phenotype data. Supported file formats:
 .rds, .csv, .txt, .sav (SPSS).
 The data should be in \strong{long} format and it should contain all the
-variables specified in the \code{formula} plus the \code{folder_id} column.}
+variables specified in the left-hand side of the \code{formula} (i.e., after the \code{~})
+plus the \code{folder_id} column.}
 
 \item{subj_dir}{Character string specifying the path to FreeSurfer data
 directory. Must follow the verywise directory structure (see package
@@ -51,9 +52,8 @@ vignette for details).}
 If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 current working directory (not recommended).}
 
-\item{hemi}{Character string specifying which hemisphere(s) to analyze.
-Options: \code{"both"} (default), \code{"lh"} (left only), \code{"rh"}
-(right only).}
+\item{hemi}{Character string specifying which hemisphere to analyze.
+Options: \code{"lh"} (left hemisphere: default), \code{"rh"} (right hemisphere).}
 
 \item{fs_template}{Character string specifying the FreeSurfer template for
 vertex registration. Options:
@@ -97,7 +97,7 @@ Default: \code{NULL} (no weights).}
 \item{lmm_control}{Optional list (of correct class, resulting from
 \code{lmerControl()} containing control parameters to be passed to
 \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
-see the \code{*lmerControl} documentation for details.
+see the \code{?lmerControl} documentation for details.
 Default: (uses default settings).}
 
 \item{seed}{Integer specifying the random seed for reproducibility
@@ -118,8 +118,8 @@ Defaults to \code{FREESURFER_HOME} environment variable.}
 \item{fwhm}{Numeric value specifying the full-width half-maximum for
 smoothing kernel. Default: 10.}
 
-\item{mcz_thr}{Numeric value for Monte Carlo simulation threshold.
-Any of the following are accepted (equivalent values separate by \code{/}):
+\item{mcz_thr}{Numeric value for the Monte Carlo simulation threshold.
+Any of the following are accepted (equivalent values are separated by \code{/}):
 \itemize{
 \item 13 / 1.3 / 0.05,
 \item 20 / 2.0 / 0.01,
@@ -129,10 +129,10 @@ Any of the following are accepted (equivalent values separate by \code{/}):
 \item 40 / 4.0 / 0.0001.
 }}
 
-\item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of
-all corrections). Set this to 0.025 when both hemispheres are analyzed,
-0.05 for single hemisphere.
-Default: 0.025.}
+\item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of all
+corrections). Set this should be set to \code{0.025} when both hemispheres are analyzed,
+and \code{0.05} for single hemisphere analyses.
+Default: \code{0.025}.}
 
 \item{save_optional_cluster_info}{Logical indicating whether to save additional
 output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
@@ -203,7 +203,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation ...COMING UP).
+see vignette on parallelisation).
 Within each hemisphere, vertices are divided into chunks of size
 \code{chunk_size} and processed in parallel across \code{n_cores} workers
 (when \code{n_cores > 1}). When multiple imputed datasets are present,

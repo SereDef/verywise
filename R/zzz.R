@@ -6,4 +6,4 @@
   "\nFor questions, issues, and bug reports, please see https://github.com/SereDef/verywise")
 }
 
-utils::globalVariables(c("roi_lobe", "vw_count", "vw_prop"))
+utils::globalVariables(c("roi_lobe", "vw_count", "vw_prop", "chunk"))

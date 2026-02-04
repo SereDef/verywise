@@ -39,7 +39,7 @@ Default: \code{NULL} (no weights).}
 \item{lmm_control}{Optional list (of correct class, resulting from
 \code{lmerControl()} containing control parameters to be passed to
 \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
-see the \code{*lmerControl} documentation for details.
+see the \code{?lmerControl} documentation for details.
 Default: (uses default settings).}
 }
 \value{

@@ -34,18 +34,16 @@ fbm_col_has_0 <- function(X, n_cores = 1,
   if (!is.null(col.mask)) col.ind <- col.ind[col.mask]
 
   problem_verts <- bigstatsr::big_apply(X,
-                                        a.FUN = function(X, ind) {
-                                          apply(
-                                            X[row.ind, col.ind[ind]], 2,
-                                            function(q) any(q == 0e-5)
-                                          )
+                                        a.FUN = function(X, ind, row.ind) {
+                                          apply(X[row.ind, ind, drop = FALSE], 2,
+                                            function(q) any(q == 0e-5, na.rm = TRUE))
                                         },
                                         a.combine = "c",
                                         ncores = n_cores,
-                                        ind = seq_along(col.ind)
-  )
+                                        ind = col.ind,
+                                        row.ind = row.ind)
 
-  if (sum(problem_verts) > 0) {
+  if (sum(problem_verts, na.rm = TRUE) > 0) {
     vw_message(" * Ignoring ", sum(problem_verts),
                " vertices that contained 0 values.\n   These may be located",
                " at the edge of the cortical map and\n   are potentially",

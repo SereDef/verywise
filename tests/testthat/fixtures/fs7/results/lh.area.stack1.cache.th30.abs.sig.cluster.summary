@@ -1,7 +1,7 @@
 # Cluster Growing Summary (mri_surfcluster)
 # 7.4.1
 # 7.4.1
-# CreationTime 2025/10/16-14:10:14-GMT
+# CreationTime 2026/02/04-18:53:20-GMT
 # cmdline mri_surfcluster --in /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack1.-log10p.mgh --csd /Applications/freesurfer/7.4.1/average/mult-comp-cor/fsaverage/lh/cortex/fwhm01/abs/th30/mc-z.csd --ocn /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack1.cache.th30.abs.sig.ocn.mgh --sum /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.stack1.cache.th30.abs.sig.cluster.summary --annot aparc --cwpvalthresh 0.025 --no-fixmni --surf white --mask /Users/Serena/Desktop/Packages/verywise/tests/testthat/fixtures/fs7/results/lh.area.finalMask.mgh 
 # cwd /Users/Serena/Desktop/Packages/verywise
 # sysname  Darwin
