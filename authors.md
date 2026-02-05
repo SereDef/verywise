@@ -16,7 +16,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/SereDef/verywise/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/SereDef/verywise/blob/v1.2.6/DESCRIPTION)
 
 Defina S, Lamballais S (2026). *verywise: Vertex-wise Statistical
 Analysis of Neuroimaging data*. R package version 1.2.6,
