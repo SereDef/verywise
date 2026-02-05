@@ -1,0 +1,9 @@
+bibentry(
+  bibtype = "Manual",
+  title = "verywise: vertex / voxel-wise linear mixed models",
+  author = person("Serena", "Defina"),
+  year = "2026",
+  note = "R package version 1.2.6",
+  doi = "10.5281/zenodo.18496337",
+  url = "https://doi.org/10.5281/zenodo.18496337"
+)

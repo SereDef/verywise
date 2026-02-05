@@ -12,8 +12,8 @@ fs_home = "/Applications/freesurfer/7.4.1" # mac only
 # ==============================================================================
 test_that("run_vw_lmm runs end-to-end with simulated data", {
 
-  skip_on_os("windows") # FreeSurfer not supported
-  skip_on_os("linux") # System settings implicit parallelism
+  # skip_on_os("windows") # FreeSurfer not supported
+  # skip_on_os("linux") # System settings implicit parallelism
 
   if (!dir.exists(fs_home)) {
     skip("FreeSurfer not found in FREESURFER_HOME")

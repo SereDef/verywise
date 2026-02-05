@@ -11,3 +11,6 @@
 ^\.github$
 ^codecov\.yml$
 ^LICENSE\.md$
+^CITATION\.cff$
+^CLAUDE\.md$
+^codemeta\.json$

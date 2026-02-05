@@ -5,9 +5,9 @@ Version: 1.2.6
 Authors@R: c(
     person("Serena", "Defina", 
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
-            comment = c(ORCID = " 0000-0003-3344-6597")),
+            comment = c(ORCID = "0000-0003-3344-6597")),
     person("Sander", "Lamballais", 
-           email = "s.lamballaistessensohn@erasmusmc.nl", role = "aut"),
+           email = "s.lamballaistessensohn@erasmusmc.nl", role = "ctb"),
     person("Bing", "Xu", 
            email = "b.xu@erasmusmc.nl", role = "ctb"),
     person("Annet", "Dijkzeul", 
