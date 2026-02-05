@@ -10,6 +10,7 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 [![Codecov test
 coverage](https://codecov.io/gh/SereDef/verywise/graph/badge.svg)](https://app.codecov.io/gh/SereDef/verywise)
 [![R-CMD-check](https://github.com/SereDef/verywise/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SereDef/verywise/actions/workflows/R-CMD-check.yaml)
+[![DOI](https://zenodo.org/badge/829478601.svg)](https://doi.org/10.5281/zenodo.18496336)
 <!-- badges: end -->
 
 The goal of `verywise` is to offer a flexible, user-friendly interface
