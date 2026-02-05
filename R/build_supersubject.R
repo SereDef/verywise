@@ -34,8 +34,8 @@
 #'
 #' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
 #' n_subjects x n_vertices)
-
-#' @import bigstatsr
+#' 
+#' @importFrom foreach %dopar%
 #'
 #' @author Serena Defina, 2024.
 #' @export
@@ -155,49 +155,38 @@ build_supersubject <- function(subj_dir,
   )
 
   vw_message(" * populating super-subject matrix...", verbose = verbose)
+  
+  # with_parallel helper handles cluster setup and cleanup
+  with_parallel(
+   n_cores = n_cores,
+   progress_file = NULL,
+   seed = 3108, # should not be needed here actually
+   verbose = verbose,
+   expr = {
+     failed_to_load <- foreach::foreach(
+      i = seq_along(files_found), .combine = "c", .export = "load.mgh"
+     ) %dopar% {
+       
+       file_path <- files_found[i]
+       failure_log <- character(0)
 
-  # Temporarily disable parallel BLAS (and other) to prevent accidental implicit
-  # parallelism
-  with_tmp_sysenv(code = {
-    failed_to_load <- bigstatsr::big_parallelize(
-    X = ss,
-    p.FUN = function(X, ind, files_found, n_verts, fs_template) {
+       tryCatch({
+         if (fs_template != 'fsaverage') {
+           ss[i, ] <- load.mgh(file_path)$x[1:n_verts]
+         } else {  # avoid sub-setting if not necessary
+           ss[i, ] <- load.mgh(file_path)$x
+         }
+       }, error = function(e) {
+         # Track failed observations
+         failure_log <<- c(failure_log, paste(file_path, e$message, '\n'))
+         # Fill with NA to maintain shape
+         ss[i, ] <- NA_real_
+       })
 
-      failure_log <- character(0)
+       return(failure_log)
 
-      # Process each observation assigned to this worker
-      for (i in ind){
-        file_path <- files_found[i]
-
-        tryCatch({
-          # Write to FBM
-          if (fs_template != 'fsaverage') {
-            X[i, ] <- load.mgh(file_path)$x[1:n_verts]
-
-          } else { # avoid sub-setting if not necessary
-            X[i, ] <- load.mgh(file_path)$x
-          }
-        }, error = function(e) {
-          # Track failed observations
-          failure_log <<- c(failure_log, paste(file_path, e$message, '\n'))
-
-          # Fill with NA to maintain shape
-          X[i, ] <- NA_real_
-        })
-
-      }
-
-      return(failure_log)
-    },
-    ncores = as.integer(n_cores),
-    ind = seq_along(files_found),
-    # Pass data to workers
-    files_found = files_found,
-    n_verts = n_verts,
-    fs_template = fs_template,
-    p.combine = "c"  # Combine logs from all cores
-  )
-  })
+     }
+   })
 
   # Write combined logs from main process (doing this outside parallel process
   # to avoid race conditions)

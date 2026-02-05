@@ -8,12 +8,51 @@ set.seed(3108)
 temp_test_dir <- system.file("tests/testthat/fixtures", package = "verywise")
 
 subj_dir <- file.path(temp_test_dir, "fs7")
-outp_dir <- file.path(subj_dir, 'results')
+outp_dir <- file.path('~/Desktop/vw_tmp_results')
 
 test_formula <- vw_area ~ sex + age + wisdom + (1 | id)
 
 fs_home = "/Applications/freesurfer/7.4.1" # mac only
 
+pheno = read.csv(file.path(subj_dir, "phenotype.csv"))
+measure = 'area'
+hemi = 'lh'
+fs_template = "fsaverage"
+fwhm = 10
+
+# ss1 <- build_supersubject(
+#       subj_dir = subj_dir,
+#       folder_ids = pheno[,'folder_id'],
+#       supsubj_dir = file.path(outp_dir, 'ss1'),
+#       measure = measure,
+#       hemi = hemi,
+#       fs_template = fs_template,
+#       n_cores = 1,
+#       fwhmc = paste0("fwhm", fwhm),
+#       save_rds = FALSE,
+#       error_cutoff = 20,
+#       verbose = TRUE
+#     )
+ss2 <- build_supersubject(
+      subj_dir = subj_dir,
+      folder_ids = pheno[,'folder_id'],
+      supsubj_dir = file.path(outp_dir, 'ss2'),
+      measure = measure,
+      hemi = hemi,
+      fs_template = fs_template,
+      n_cores = 4,
+      fwhmc = paste0("fwhm", fwhm),
+      save_rds = FALSE,
+      error_cutoff = 20,
+      verbose = TRUE
+    )
+
+# dim(ss1) 
+# dim(ss2)
+
+# expect_equal(ss1[,2], ss2[, 2], tolerance = 1e-10)
+
+# Test the main function runs ================================================
 res = run_vw_lmm(
     formula = test_formula,
     pheno = read.csv(file.path(subj_dir, "phenotype.csv")),
@@ -27,7 +66,7 @@ res = run_vw_lmm(
     use_model_template = TRUE,
     weights = NULL,
     seed = 42,
-    n_cores = 1,
+    n_cores = 4,
     chunk_size = 1000,
     FS_HOME = fs_home,
     fwhm = 10,
@@ -38,6 +77,7 @@ res = run_vw_lmm(
     save_residuals = FALSE,
     verbose = TRUE)
 
+# Profile it (sequential required) ===========================================
 profvis::profvis({
   run_vw_lmm(
     formula = test_formula,

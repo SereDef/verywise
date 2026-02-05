@@ -89,7 +89,19 @@ with_parallel <- function(n_cores,
   # old_name <- foreach::getDoParName()
   # old_workers <- foreach::getDoParWorkers()
 
+
   if (n_cores > 1) {
+    # Check if a backend is already registered and clean it up
+    if (foreach::getDoParRegistered()) {
+      current_backend <- foreach::getDoParName()
+      vw_message("   ! cleaning up existing parallel backend: ", current_backend,
+                 verbose = verbose)
+      # Unregister by switching to sequential
+      foreach::registerDoSEQ()
+      # Small delay to ensure cleanup completes
+      Sys.sleep(0.1)
+    }
+
     vw_message(" * preparing cluster of ", n_cores, " workers...", verbose = verbose)
     
     cl <- parallel::makeCluster(n_cores, type = "FORK", 
@@ -97,7 +109,7 @@ with_parallel <- function(n_cores,
     # NOTE: would not work on Windows anyway till freesurfer dependency is needed
     # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
 
-    on.exit(stopCluster(cl), add = TRUE)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
 
     doParallel::registerDoParallel(cl)
 
@@ -203,4 +215,29 @@ update_progress_tracker <- function(v, progress_tracker, verbose) {
   }
   
   invisible(NULL)
+}
+
+
+# ========================== External environment ==============================
+# Temporarily disable parallel BLAS (and other) to prevent accidental implicit
+# parallelism
+# NOTE, not used. Leave that to the user insted 
+with_tmp_sysenv <- function(tmp_sysenv = c(OMP_NUM_THREADS = 1,
+                                           MKL_NUM_THREADS = 1,
+                                           OPENBLAS_NUM_THREADS = 1,
+                                           VECLIB_MAXIMUM_THREADS = 1,
+                                           NUMEXPR_NUM_THREADS = 1),
+                            code) {
+  sysenv <- Sys.getenv(names(tmp_sysenv), unset = NA, names = TRUE)
+
+  for (nm in names(tmp_sysenv)) Sys.setenv(nm = tmp_sysenv[[nm]])
+
+  on.exit({
+    for (nm in names(sysenv)) {
+      if (is.na(sysenv[[nm]])) Sys.unsetenv(nm)
+      else Sys.setenv(nm = sysenv[[nm]])
+    }
+  }, add = TRUE)
+
+  force(code)
 }

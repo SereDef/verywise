@@ -1,25 +1,5 @@
 
-# ========================== External environment ==============================
 
-with_tmp_sysenv <- function(tmp_sysenv = c(OMP_NUM_THREADS = 1,
-                                           MKL_NUM_THREADS = 1,
-                                           OPENBLAS_NUM_THREADS = 1,
-                                           VECLIB_MAXIMUM_THREADS = 1,
-                                           NUMEXPR_NUM_THREADS = 1),
-                            code) {
-  sysenv <- Sys.getenv(names(tmp_sysenv), unset = NA, names = TRUE)
-
-  for (nm in names(tmp_sysenv)) Sys.setenv(nm = tmp_sysenv[[nm]])
-
-  on.exit({
-    for (nm in names(sysenv)) {
-      if (is.na(sysenv[[nm]])) Sys.unsetenv(nm)
-      else Sys.setenv(nm = sysenv[[nm]])
-    }
-  }, add = TRUE)
-
-  force(code)
-}
 
 # ============================= Folder navigators =============================
 #' @title

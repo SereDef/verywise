@@ -344,7 +344,7 @@ run_vw_lmm <- function(
       measure = measure,
       hemi = hemi,
       fs_template = fs_template,
-      n_cores = n_cores,
+      n_cores = 1, # n_cores
       fwhmc = paste0("fwhm", fwhm),
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
@@ -389,7 +389,7 @@ run_vw_lmm <- function(
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
   model_template <- precompile_model(use_model_template,
-    formula = formula, tmp_data = data1, tmp_y = ss[,1],
+    formula = formula, tmp_data = data1, tmp_y = ss[, good_verts[1]],
     measure = measure, lmm_control = lmm_control, verbose = verbose)
 
   # Prepare FBM output =========================================================

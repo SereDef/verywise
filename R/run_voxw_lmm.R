@@ -246,7 +246,7 @@ run_voxw_lmm <- function(
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
   model_template <- precompile_model(use_model_template = TRUE,
-    formula = formula, tmp_data = data1, tmp_y = ss[,1],
+    formula = formula, tmp_data = data1, tmp_y = ss[,good_voxels[1]],
     measure = 'value', lmm_control = lmm_control, verbose = verbose)
 
   # Prepare FBM output =========================================================
