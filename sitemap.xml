@@ -32,7 +32,6 @@
 <url><loc>https://seredef.github.io/verywise/reference/make_chunk_sequence.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/mask_cortex.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/move_result_files.html</loc></url>
-<url><loc>https://seredef.github.io/verywise/reference/parallelize.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pipe.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/plot_vw_map.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pretty_message.html</loc></url>
@@ -49,5 +48,6 @@
 <url><loc>https://seredef.github.io/verywise/reference/update_progress_tracker.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_pool.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/with_parallel.html</loc></url>
 </urlset>
 

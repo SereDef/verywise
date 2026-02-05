@@ -70,9 +70,6 @@
   : Move key result files from one directory to another (for sharing and
   visualization)
 
-- [`parallelize()`](https://seredef.github.io/verywise/reference/parallelize.md)
-  : Run a chunked foreach loop sequentially or in parallel
-
 - [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
   : Plot vertex-wise coefficient maps on a 3D cortical surface
 
@@ -127,3 +124,6 @@
 
   Pool [`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) model
   output across imputed datasets
+
+- [`with_parallel()`](https://seredef.github.io/verywise/reference/with_parallel.md)
+  : Run a chunked foreach loop sequentially or in parallel
