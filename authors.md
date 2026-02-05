@@ -5,7 +5,7 @@
 - **Serena Defina**. Maintainer, author.
   [](https://orcid.org/0000-0003-3344-6597)
 
-- **Sander Lamballais**. Author.
+- **Sander Lamballais**. Contributor.
 
 - **Bing Xu**. Contributor.
 
@@ -16,16 +16,17 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/SereDef/verywise/blob/v1.2.6/DESCRIPTION)
+[`inst/CITATION`](https://github.com/SereDef/verywise/blob/main/inst/CITATION)
 
-Defina S, Lamballais S (2026). *verywise: Vertex-wise Statistical
-Analysis of Neuroimaging data*. R package version 1.2.6,
-<https://seredef.github.io/verywise/>.
+Defina S (2026). *verywise: vertex / voxel-wise linear mixed models*.
+[doi:10.5281/zenodo.18496337](https://doi.org/10.5281/zenodo.18496337),
+R package version 1.2.6, <https://doi.org/10.5281/zenodo.18496337>.
 
     @Manual{,
-      title = {verywise: Vertex-wise Statistical Analysis of Neuroimaging data},
-      author = {Serena Defina and Sander Lamballais},
+      title = {verywise: vertex / voxel-wise linear mixed models},
+      author = {Serena Defina},
       year = {2026},
       note = {R package version 1.2.6},
-      url = {https://seredef.github.io/verywise/},
+      doi = {10.5281/zenodo.18496337},
+      url = {https://doi.org/10.5281/zenodo.18496337},
     }
