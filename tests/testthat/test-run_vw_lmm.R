@@ -34,7 +34,6 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
     apply_cortical_mask = TRUE,
     folder_id = "folder_id",
     tolerate_surf_not_found = 20,
-    use_model_template = TRUE,
     weights = NULL,
     # prioritize speed over accuracy
     lmm_control = lme4::lmerControl(calc.derivs = FALSE,
@@ -65,10 +64,11 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
 
   # Structure tests
   expect_type(result, "list")
-  expect_named(result, c("coef", "se", "p", "resid"))
+  expect_named(result, c("coef", "se", "p", "fitstats", "resid"))
   expect_s4_class(result$coef, "FBM")
   expect_s4_class(result$se, "FBM")
   expect_s4_class(result$p, "FBM")
+  expect_s4_class(result$fitstats, "FBM")
   expect_s4_class(result$resid, "FBM")
 
   expect_true(file.exists(

@@ -103,22 +103,32 @@ with_parallel <- function(n_cores,
     }
 
     vw_message(" * preparing cluster of ", n_cores, " workers...", verbose = verbose)
-    
-    cl <- parallel::makeCluster(n_cores, type = "FORK", 
-                                outfile = if (is.null(progress_file)) "" else progress_file)
-    # NOTE: would not work on Windows anyway till freesurfer dependency is needed
-    # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
 
-    on.exit(parallel::stopCluster(cl), add = TRUE)
+    # Try to create FORK cluster; on failure, fall back to sequential
+    cl <- tryCatch(
+      parallel::makeCluster(n_cores, type = "FORK",
+        outfile = if (is.null(progress_file)) "" else progress_file),
+        # NOTE: would not work on Windows anyway till freesurfer dependency is needed
+        # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
+      error = function(e) {
+        vw_message("   ! parallel backend failed (", conditionMessage(e),
+                   "); falling back to sequential processing...", verbose = verbose)
+        NULL
+      }
+    )
 
-    doParallel::registerDoParallel(cl)
-
-    # Perform %dopar% as %dorng% loops, for reproducible random numbers
-    doRNG::registerDoRNG(seed)
-
-    # Sync library paths: ensures all workers look for packages in the same place
-    # as the main session
-    # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
+    if (!is.null(cl)) {
+      on.exit(parallel::stopCluster(cl), add = TRUE)
+      doParallel::registerDoParallel(cl)
+      # Perform %dopar% as %dorng% loops, for reproducible random numbers
+      doRNG::registerDoRNG(seed)
+      
+      # Sync library paths: ensures all workers look for packages in the same place
+      # as the main session
+      # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
+    } else {
+      foreach::registerDoSEQ()
+    }
 
   } else {
     vw_message(" * note: sequential processing...", verbose = verbose)

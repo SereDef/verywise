@@ -56,9 +56,6 @@
 #'   the number of missing or corrupted files is
 #'   \code{ > tolerate_surf_not_found } execution will stop.
 #'   Default: \code{20L}.
-#' @param use_model_template Logical indicating whether to pre-compile the model
-#'   template for faster estimation.
-#'   Default: \code{TRUE} (recommended).
 #' @param weights Optional string or numeric vector of weights for the linear mixed model.
 #'   You can use this argument to specify inverse-probability weights. If this
 #'   is a string, the function look for a column with that name in the phenotype
@@ -69,6 +66,9 @@
 #'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
 #'   see the \code{?lmerControl} documentation for details.
 #'   Default: (uses default settings).
+#' @param REML Logical specifying wetherto optimize the REML criterion (as opposed to
+#'   the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend to do model
+#'   comparison (using AIC output).
 #' @param seed Integer specifying the random seed for reproducibility
 #'   Default: 3108.
 #' @param n_cores Integer specifying the number of CPU cores for parallel
@@ -221,9 +221,9 @@ run_vw_lmm <- function(
   folder_id = "folder_id",
   tolerate_surf_not_found = 20,
   # Modeling settings
-  use_model_template = TRUE,
   weights = NULL,
-  lmm_control = lme4::lmerControl(),
+  lmm_control = lme4::lmerControl(calc.derivs=FALSE),
+  REML = TRUE,
   # Reproducibility and parallel processing
   seed = 3108,
   n_cores = 1,
@@ -344,7 +344,7 @@ run_vw_lmm <- function(
       measure = measure,
       hemi = hemi,
       fs_template = fs_template,
-      n_cores = 1, # n_cores
+      n_cores = n_cores,
       fwhmc = paste0("fwhm", fwhm),
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
@@ -388,16 +388,16 @@ run_vw_lmm <- function(
   # cache the model frame to avoid re-generating it them each time
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  model_template <- precompile_model(use_model_template,
-    formula = formula, tmp_data = data1, tmp_y = ss[, good_verts[1]],
-    measure = measure, lmm_control = lmm_control, verbose = verbose)
+  model_template <- precompile_model(formula = formula, tmp_data = data1, 
+    tmp_y = ss[, good_verts[1]], measure = measure, 
+    lmm_control = lmm_control, REML = REML, verbose = verbose)
 
   # Prepare FBM output =========================================================
 
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
   # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "resid") # "t",
+  res_bk_names <- c("coef", "se", "p", "fitstats", "resid") # "t",
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
   # These files will be removed by "on.exit" by convert_to_mgh
@@ -408,13 +408,14 @@ run_vw_lmm <- function(
                          backingfile = res_bk_paths["coef"])  # Coefficients
   s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["se"])    # Standard errors
-  # t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
-  #                        backingfile = res_bk_paths["t"])     # t values
   p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
                          backingfile = res_bk_paths["p"])     # P values
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["resid"]) # Residuals
-
+  # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
+  f_vw <- bigstatsr::FBM(5, vw_n, init = 0, type = fbm_precision,
+                         backingfile = res_bk_paths["fitstats"])   
+  
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
   # Prepare chunk sequence =====================================================
@@ -427,7 +428,7 @@ run_vw_lmm <- function(
              " (of ", vw_n, " total) vertices.", verbose = verbose)
 
   progress_file <- paste0(result_path, ".progress.log")
-  on.exit(file.remove(progress_file), add = TRUE)
+  on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
   vw_message(" * fitting linear mixed models...\n",
@@ -458,10 +459,9 @@ run_vw_lmm <- function(
         # Loop through imputed datasets and run analyses
         out_stats <- lapply(data_list, single_lmm,
                             y = vertex,
-                            formula = formula,
+                            y_name = paste0("vw_", measure),
                             model_template = model_template,
-                            weights = weights,
-                            lmm_control = lmm_control)
+                            weights = weights)
 
         # Pool results
         pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
@@ -483,20 +483,21 @@ run_vw_lmm <- function(
         # Write results to their respective FBM
         c_vw[, v] <- pooled_stats$coef
         s_vw[, v] <- pooled_stats$se
-        # t_vw[, v] <- pooled_stats$t
         p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
+        f_vw[, v] <- pooled_stats$fitstats
         r_vw[, v] <- pooled_stats$resid
       }
     }
   })
 
-  out <- list(c_vw, s_vw, p_vw, r_vw) # t_vw,
-  # "coefficients", "standard_errors", "t_values", "p_values", "residuals"
+  out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
+  # "coefficients", "standard_errors", "p_values", "fit_statistics",", "residuals"
   names(out) <- res_bk_names
 
   # Post-processing ============================================================
 
   # Save model statistics into separate .mgh files
+  
   convert_to_mgh(out,
                  result_path,
                  stacks = seq_along(fixed_terms),
@@ -547,4 +548,4 @@ run_vw_lmm <- function(
   vw_message(pretty_message("All done! :)"))
 
   return(out)
-    }
+}

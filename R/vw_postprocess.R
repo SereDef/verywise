@@ -68,6 +68,11 @@ convert_to_mgh <- function(vw_results,
       stat_mgh_paths <- paste(result_path, "residuals.mgh", sep = ".")
       mode <- "allrows.1file"
       vw_message(" * converting residuals to .mgh format...", verbose = verbose)
+    } else if (stat_name == 'fitstats') {
+      stat_mgh_paths <- paste(result_path, c('singular_fit','aic', 'icc', 'r2_marginal', 'r2_conditional'), 
+                              "mgh", sep = ".")
+       mode <- "1row.1file"
+    
     } else {
       stat_mgh_paths <- paste(result_path, paste0("stack", stacks),
                               stat_name, "mgh", sep = ".")

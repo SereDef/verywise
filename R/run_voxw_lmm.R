@@ -245,7 +245,7 @@ run_voxw_lmm <- function(
   # cache the model frame to avoid re-generating it them each time
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  model_template <- precompile_model(use_model_template = TRUE,
+  model_template <- precompile_model(
     formula = formula, tmp_data = data1, tmp_y = ss[,good_voxels[1]],
     measure = 'value', lmm_control = lmm_control, verbose = verbose)
 
@@ -315,11 +315,9 @@ run_voxw_lmm <- function(
 
         # Loop through imputed datasets and run analyses
         out_stats <- lapply(data_list, single_lmm,
-                            y = voxel,
-                            formula = formula,
+                            y = voxel, y_name = 'vw_value',
                             model_template = model_template,
-                            weights = weights,
-                            lmm_control = lmm_control)
+                            weights = weights)
 
         # Pool results
         pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")

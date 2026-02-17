@@ -52,6 +52,7 @@
 #' @author Serena Defina, 2024.
 #'
 #' @export
+#' 
 #'
 #' @references
 #' Rubin, D.B. (1987). \emph{Multiple Imputation for Nonresponse in Surveys}.
@@ -61,23 +62,20 @@ vw_pool <- function(out_stats, m,
                     pvalue_method = "t-as-z",
                     min_pvalue =  2^-149
                     ) {
-
-  fails <- vapply(out_stats,
-                  function(i) if (!is.null(i$error)) i$error else NA_character_,
-                  character(1))
-  num_failed <- sum(!is.na(fails))
-
-  if (num_failed > 0) {
-    unique_errors <- paste(num_failed, " of ", m, " imputations failed. Errors: ",
-                           paste(unique(stats::na.omit(fails)), collapse = " || "))
-    return(unique_errors)
+  
+  fails <- Filter(Negate(is.null), lapply(out_stats, `[[`, "error"))
+  num_failed <- length(fails)                                                                 
+                                                                                               
+  if (num_failed > 0) {                                                                        
+    error_msg <- paste(unique(unlist(fails)), collapse = " || ")                              
+    prefix <- if (m == 1) "Model failed" else paste(num_failed, "/", m, "imputations failed")  
+    return(paste0(prefix, ". Errors: ", error_msg))
   }
 
-  #
-
   if (m == 1) {
+    out_stats <- out_stats[[1]]
     # No pooling needed, just reformat output (no pooling needed)
-    s <- out_stats[[1]]$stats
+    s <- out_stats$stats
     tval <- s$qhat / s$se
     # TODO: # https://www.r-bloggers.com/2014/02/three-ways-to-get-parameter-specific-p-values-from-lmer/
     if (pvalue_method == "t-as-z") {
@@ -105,8 +103,9 @@ vw_pool <- function(out_stats, m,
       coef = s$qhat,
       se = s$se, # t = s$tval,
       p = s$pval,
-      resid = as.vector(out_stats[[1]]$resid),
-      warning = paste(out_stats[[1]]$warning, collapse = " || ")
+      fitstats = out_stats$model_fit,
+      resid = as.vector(out_stats$resid),
+      warning = paste(out_stats$warning, collapse = " || ")
     )
     return(stats)
   }
@@ -120,7 +119,7 @@ vw_pool <- function(out_stats, m,
     # Replace only floating point numbers with <NUM>
     normalized_warnings <- gsub("\\b\\d+\\.\\d+(e[+-]?\\d+)?\\b", "<NUM>",
                                 unlist(warnings, use.names = FALSE))
-    warning_msg <- paste(warning_count, " of ", m, " imputations gave Warnings: ",
+    warning_msg <- paste(warning_count, " / ", m, " imputations gave Warning(s): ",
                          paste(unique(normalized_warnings), collapse = " || "))
   } else {
     warning_msg <- ""
@@ -174,12 +173,17 @@ vw_pool <- function(out_stats, m,
   # pval = 2 * pt(-abs(tval), df = pooled_stats$df)
 
   # Average residuals across imputed datasets
-  resid <- as.matrix(colMeans(do.call(rbind, lapply(out_stats, `[[`, 2))))
+  resid <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'resid')), na.rm=TRUE)
+
+  model_fit <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'model_fit')), na.rm=TRUE)
+
+  model_output <- do.call(rbind, lapply(out_stats, `[[`, "stats"))
 
   list(
     "coef" = coef,
-    "se" = se, # "t" = tval,
+    "se" = se,
     "p" = pval,
+    "fitstats" = model_fit,
     "resid" = resid,
     "warning" = warning_msg
   )

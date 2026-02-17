@@ -3,22 +3,18 @@ out_stats <- list(
   list(
     stats = data.frame(term = "x",
                        qhat = 1,
-                       se = 0.5,
-                       tval = 1.5,
-                       pval = 0.5),
+                       se = 0.5),
     resid = c(1, 2, 3),
-    warning = NULL,
-    error = NULL
+    model_fit = c(0, 1.5, 0, 0.1, 0.1),
+    warning = character(0)
   ),
   list(
     stats = data.frame(term = "x",
                        qhat = 2,
-                       se = 2,
-                       tval = 1.5,
-                       pval = 0.5),
+                       se = 2),
     resid = c(2, 3, 4),
-    warning = NULL,
-    error = NULL
+    model_fit = c(1, 3, 0.1, 0.4, 0.5),
+    warning = character(0)
   )
 )
 
@@ -26,14 +22,15 @@ out_stats_with_warning <- out_stats
 out_stats_with_warning[[1]]$warning <- "Convergence warning"
 
 out_stats_with_error <- out_stats
-out_stats_with_error[[2]]$error <- "Singular fit"
+out_stats_with_error[[3]] <- list(error = 'You suck')
 
 test_that("vw_pool returns pooled stats for valid input", {
   result <- vw_pool(out_stats, m = 2)
-  expect_named(result, c("coef", "se", "p", "resid", "warning"))
+  expect_named(result, c("coef", "se", "p", "fitstats", "resid",  "warning"))
   expect_true(is.numeric(result$coef))
   expect_true(is.numeric(result$se))
   expect_true(is.numeric(result$p))
+  expect_true(is.numeric(result$fitstats))
   expect_true(is.matrix(result$resid) || is.numeric(result$resid))
   expect_equal(result$warning, "")
 })
@@ -45,9 +42,9 @@ test_that("vw_pool returns warning string if warnings present", {
 })
 
 test_that("vw_pool returns error info and empty output if errors present", {
-  result <- vw_pool(out_stats_with_error, m = 2)
+  result <- vw_pool(out_stats_with_error, m = 3)
   expect_true(is.character(result))
-  expect_match(result, "Singular fit")
+  expect_match(result, "1 / 3 imputations failed. Errors: You suck")
 })
 
 test_that("barnard.rubin returns finite degrees of freedom", {

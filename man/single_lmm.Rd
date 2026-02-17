@@ -4,14 +4,7 @@
 \alias{single_lmm}
 \title{Run a single linear mixed model and extract statistics}
 \usage{
-single_lmm(
-  imp,
-  y,
-  formula,
-  model_template = NULL,
-  weights = NULL,
-  lmm_control = lme4::lmerControl()
-)
+single_lmm(imp, y, y_name, model_template = NULL, weights = NULL)
 }
 \arguments{
 \item{imp}{A data.frame containing the phenotype dataset
@@ -20,27 +13,19 @@ single_lmm(
 \item{y}{A numeric vector of outcome values representing a single
 vertex from the super-subject matrix.}
 
-\item{formula}{An R formula object describing the linear mixed model using
-\code{lme4} notation.}
+\item{y_name}{String with the outcome name (as specified in the formula)}
 
-\item{model_template}{Optional pre-compiled model object for faster
-estimation. When provided, \code{single_lmm} will use an "update"-based
+\item{model_template}{Pre-compiled model object for faster
+estimation. \code{single_lmm} uses an "update"-based
 workflow instead of refitting the model from scratch. This minimizes
 repeated parsing and model construction overhead, significantly reducing
-computation time for large-scale vertex-wise analyses.
-Default: \code{NULL}.}
+computation time for large-scale vertex-wise analyses.}
 
 \item{weights}{Optional string or numeric vector of weights for the linear mixed model.
 You can use this argument to specify inverse-probability weights. If this
 is a string, the function look for a column with that name in the phenotype
 data. Note that these are not normalized or standardized in any way.
 Default: \code{NULL} (no weights).}
-
-\item{lmm_control}{Optional list (of correct class, resulting from
-\code{lmerControl()} containing control parameters to be passed to
-\code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
-see the \code{?lmerControl} documentation for details.
-Default: (uses default settings).}
 }
 \value{
 A list with two elements:
@@ -60,10 +45,6 @@ Fits a linear mixed model to a single vertex outcome using
 \code{lme4::lmer()} and extracts fixed effects statistics. This function
 is called repeatedly across all cortical vertices during vertex-wise
 analysis.
-}
-\details{
-Additional parameters are currently passed to the \code{lme4::lmer} call using
-the \code{lmm_control} argument.
 }
 \seealso{
 \code{\link{run_vw_lmm}} for the main interface.

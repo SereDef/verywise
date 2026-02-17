@@ -14,9 +14,9 @@ run_vw_lmm(
   apply_cortical_mask = TRUE,
   folder_id = "folder_id",
   tolerate_surf_not_found = 20,
-  use_model_template = TRUE,
   weights = NULL,
-  lmm_control = lme4::lmerControl(),
+  lmm_control = lme4::lmerControl(calc.derivs = FALSE),
+  REML = TRUE,
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
@@ -84,10 +84,6 @@ the number of missing or corrupted files is
 \code{ > tolerate_surf_not_found } execution will stop.
 Default: \code{20L}.}
 
-\item{use_model_template}{Logical indicating whether to pre-compile the model
-template for faster estimation.
-Default: \code{TRUE} (recommended).}
-
 \item{weights}{Optional string or numeric vector of weights for the linear mixed model.
 You can use this argument to specify inverse-probability weights. If this
 is a string, the function look for a column with that name in the phenotype
@@ -99,6 +95,10 @@ Default: \code{NULL} (no weights).}
 \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
 see the \code{?lmerControl} documentation for details.
 Default: (uses default settings).}
+
+\item{REML}{Logical specifying wetherto optimize the REML criterion (as opposed to
+the log-likelihood). Default: TRUE. Use \code{REML = FALSE} if you intend to do model
+comparison (using AIC output).}
 
 \item{seed}{Integer specifying the random seed for reproducibility
 Default: 3108.}

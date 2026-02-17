@@ -11,19 +11,17 @@
 #'   (in verywise format).
 #' @param y A numeric vector of outcome values representing a single
 #'   vertex from the super-subject matrix.
-#' @param formula An R formula object describing the linear mixed model using
-#'   \code{lme4} notation.
-#' @param model_template Optional pre-compiled model object for faster
-#'   estimation. When provided, \code{single_lmm} will use an "update"-based
+#' @param y_name String with the outcome name (as specified in the formula)
+#' @param model_template Pre-compiled model object for faster
+#'   estimation. \code{single_lmm} uses an "update"-based
 #'   workflow instead of refitting the model from scratch. This minimizes
 #'   repeated parsing and model construction overhead, significantly reducing
 #'   computation time for large-scale vertex-wise analyses.
-#'   Default: \code{NULL}.
-#' @inheritParams run_vw_lmm
-#'
-#' @details
-#' Additional parameters are currently passed to the \code{lme4::lmer} call using
-#' the \code{lmm_control} argument.
+#' @param weights Optional string or numeric vector of weights for the linear mixed model.
+#'   You can use this argument to specify inverse-probability weights. If this
+#'   is a string, the function look for a column with that name in the phenotype
+#'   data. Note that these are not normalized or standardized in any way.
+#'   Default: \code{NULL} (no weights).
 #'
 #' @return A list with two elements:
 #'   \itemize{
@@ -39,17 +37,16 @@
 #'
 #' @seealso \code{\link{run_vw_lmm}} for the main interface.
 #'
-#' @importFrom lme4 lmer
-#' @importFrom lme4 fixef
-#' @importFrom stats residuals
-#'
+#' @importFrom lme4 lmer fixef isSingular
+#' @importFrom stats update vcov residuals AIC
+#' @importFrom insight get_variance
+#' 
 #' @export
 #'
 single_lmm <- function(
-    imp, y, formula,
+    imp, y, y_name,
     model_template = NULL,
-    weights = NULL,
-    lmm_control = lme4::lmerControl())
+    weights = NULL)
 {
 
   if (!is.null(weights) && !is.numeric(weights)) {
@@ -57,35 +54,26 @@ single_lmm <- function(
   }
 
   # Add (vertex) outcome to (single) dataset
-  imp[all.vars(formula)[1]] <- y
+  imp[y_name] <- y
 
 
   error_msg <- NULL
   warning_msg <- character(0)
-  message_msg <- character(0)
 
   # Fit linear mixed model using `lme4::lmer`
   fit <- withCallingHandlers(
     tryCatch(
-      {
-        if (!is.null(model_template)) {
-          stats::update(model_template, data = imp, weights = weights)
-        } else {
-          lmer(formula = formula, data = imp, weights = weights,
-               control = lmm_control)
-        }
-      },
-      error = function(e) {
+      update(model_template, data = imp, weights = weights),
+      error = function(e) { 
         error_msg <<- conditionMessage(e)
         NULL
-      }
-    ),
+      }),
     warning = function(w) {
       warning_msg <<- c(warning_msg, conditionMessage(w))
       invokeRestart("muffleWarning")
     },
     message = function(m) {
-      message_msg <<- c(message_msg, conditionMessage(m))
+      warning_msg <<- c(warning_msg, conditionMessage(m))
       invokeRestart("muffleMessage")
     }
   )
@@ -95,36 +83,62 @@ single_lmm <- function(
     return(result)
   }
 
-  # coef(fit)$id # A matrix of effects by random variable
-  # lme4::ranef(fit) # extract random effects (these should sum to 0)
-  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
+  coefs <- fixef(fit) # Fixed effects estimates
+  ses   <- sqrt(diag(as.matrix(vcov(fit)))) # Their standard errors
+  
+  fixed_stats <- data.frame(
+    term = names(coefs),
+    qhat = as.numeric(coefs),
+    se   = as.numeric(ses),
+    row.names = NULL,
+    check.names = FALSE)
+  
+  # Also extract model residuals for smoothness estimation
+  resid <- residuals(fit)
 
-  # Extract estimates, standard errors and p-values
-  outp_stats <- data.frame(
-    "qhat" = as.matrix(fixef(fit)), # Fixed effects estimates
-    "se" = as.matrix(summary(fit)$coefficients[, "Std. Error"]) # standard error
-  )
+  # Model performance ------------------------------------
+  
+  is_singular <- as.numeric(isSingular(fit))
 
-  # TODO: implement "stack of interest"?
+  # Add singularity to performance grid, but do not print the warning
+  if (is_singular) {
+    warning_msg <- warning_msg[!grepl("boundary (singular) fit", warning_msg, 
+                                      fixed = TRUE)]
+  }
 
+  # Add model performance metrics 
+  aic <- AIC(fit)
+  # icc <- icc(fit)[['ICC_adjusted']]
+  # r2 <- t(r2_nakagawa(fit))
+  
+  varpart <- get_variance(fit, tolerance = 1e-12) # more lenient than default
+
+  icc <- safe_calc(varpart$var.random / (varpart$var.random + varpart$var.residual))
+
+  r2_margin <- safe_calc(varpart$var.fixed / 
+    (varpart$var.fixed + varpart$var.random + varpart$var.residual))
+  
+  r2_condit <- safe_calc((varpart$var.fixed + varpart$var.random) /
+        (varpart$var.fixed + varpart$var.random + varpart$var.residual))
+  
+  # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
+  perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
+  
   # Extract residual degrees of freedom for Barnard-Rubin adjustment
   # Normally, this would be the number of independent observation minus the
   # number of fitted parameters, but not exactly what is done here.
   # Following the `broom.mixed` package approach, which `mice::pool` relies on
   # resid_df <- df.residual(fit)
 
-  # Save row.names (i.e. terms) as a column so these can be grouped later
-  outp_stats <- data.frame("term" = row.names(outp_stats), outp_stats,
-                           row.names = NULL)
+  # TODO: implement "stack of interest"?
 
-  # Also extract model residuals for smoothness estimation
-  resid <- residuals(fit)
+  # coef(fit)$id # A matrix of effects by random variable
+  # lme4::ranef(fit) # extract random effects (these should sum to 0)
+  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
 
-  result <- list("stats" = outp_stats,
-                 "resid" = resid,
-                 "warning" = c(warning_msg, message_msg))
+  list("stats" = fixed_stats, "resid" = resid, "model_fit" = perf,
+       "warning" = warning_msg)
 
-  return(result)
 }
 
 
@@ -152,15 +166,13 @@ get_terms <- function(formula, dset) {
   return(fixed_terms)
 }
 
-precompile_model <- function(use_model_template,
-                             formula,
+precompile_model <- function(formula,
                              tmp_data,
                              tmp_y,
                              measure,
-                             lmm_control,
+                             REML = TRUE,
+                             lmm_control = lme4::lmerControl(calc.derivs=FALSE),
                              verbose) {
-
-  if (!use_model_template) return(NULL)
 
   vw_message(" * construct model template", verbose = verbose)
   tmp_data[paste0("vw_", measure)] <- tmp_y  # dummy outcome
@@ -169,8 +181,19 @@ precompile_model <- function(use_model_template,
   model_template <- suppressMessages(
     lme4::lmer(formula = formula,
                data = tmp_data,
+               REML = REML,
                control = lmm_control)
   )
 
+  # Embed the control settings into the call so update() can access them    
+  model_template@call$control <- lmm_control
+  model_template@call$REML <- REML
+
   return(model_template)
+}
+
+# Safe calculation helper - returns NA if any inputs are NULL/invalid
+safe_calc <- function(expr) {
+  result <- tryCatch(expr, error = function(e) NA_real_)
+  if (is.null(result) || length(result) == 0) NA_real_ else result
 }
