@@ -78,9 +78,9 @@ approach.</p>
 <span>  apply_cortical_mask <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  folder_id <span class="op">=</span> <span class="st">"folder_id"</span>,</span>
 <span>  tolerate_surf_not_found <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  use_model_template <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span>calc.derivs <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
@@ -167,12 +167,6 @@ the number of missing or corrupted files is
 Default: <code>20L</code>.</p></dd>
 
 
-<dt id="arg-use-model-template">use_model_template<a class="anchor" aria-label="anchor" href="#arg-use-model-template"></a></dt>
-<dd><p>Logical indicating whether to pre-compile the model
-template for faster estimation.
-Default: <code>TRUE</code> (recommended).</p></dd>
-
-
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>Optional string or numeric vector of weights for the linear mixed model.
 You can use this argument to specify inverse-probability weights. If this
@@ -187,6 +181,12 @@ Default: <code>NULL</code> (no weights).</p></dd>
 <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> (e.g. optimizer choice, convergence criteria,
 see the <code>?lmerControl</code> documentation for details.
 Default: (uses default settings).</p></dd>
+
+
+<dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
+<dd><p>Logical specifying wetherto optimize the REML criterion (as opposed to
+the log-likelihood). Default: TRUE. Use <code>REML = FALSE</code> if you intend to do model
+comparison (using AIC output).</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

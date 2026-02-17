@@ -8,14 +8,7 @@ cortical vertices during vertex-wise analysis.
 ## Usage
 
 ``` r
-single_lmm(
-  imp,
-  y,
-  formula,
-  model_template = NULL,
-  weights = NULL,
-  lmm_control = lme4::lmerControl()
-)
+single_lmm(imp, y, y_name, model_template = NULL, weights = NULL)
 ```
 
 ## Arguments
@@ -29,18 +22,17 @@ single_lmm(
   A numeric vector of outcome values representing a single vertex from
   the super-subject matrix.
 
-- formula:
+- y_name:
 
-  An R formula object describing the linear mixed model using `lme4`
-  notation.
+  String with the outcome name (as specified in the formula)
 
 - model_template:
 
-  Optional pre-compiled model object for faster estimation. When
-  provided, `single_lmm` will use an "update"-based workflow instead of
-  refitting the model from scratch. This minimizes repeated parsing and
-  model construction overhead, significantly reducing computation time
-  for large-scale vertex-wise analyses. Default: `NULL`.
+  Pre-compiled model object for faster estimation. `single_lmm` uses an
+  "update"-based workflow instead of refitting the model from scratch.
+  This minimizes repeated parsing and model construction overhead,
+  significantly reducing computation time for large-scale vertex-wise
+  analyses.
 
 - weights:
 
@@ -49,14 +41,6 @@ single_lmm(
   weights. If this is a string, the function look for a column with that
   name in the phenotype data. Note that these are not normalized or
   standardized in any way. Default: `NULL` (no weights).
-
-- lmm_control:
-
-  Optional list (of correct class, resulting from `lmerControl()`
-  containing control parameters to be passed to
-  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (e.g.
-  optimizer choice, convergence criteria, see the `?lmerControl`
-  documentation for details. Default: (uses default settings).
 
 ## Value
 
@@ -73,12 +57,6 @@ A list with two elements:
 - `resid` - A numeric vector of model residuals
 
 - `warning` - Warning message(s) if any
-
-## Details
-
-Additional parameters are currently passed to the
-[`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) call using the
-`lmm_control` argument.
 
 ## See also
 

@@ -25,9 +25,9 @@ run_vw_lmm(
   apply_cortical_mask = TRUE,
   folder_id = "folder_id",
   tolerate_surf_not_found = 20,
-  use_model_template = TRUE,
   weights = NULL,
-  lmm_control = lme4::lmerControl(),
+  lmm_control = lme4::lmerControl(calc.derivs = FALSE),
+  REML = TRUE,
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
@@ -116,11 +116,6 @@ run_vw_lmm(
   files is ` > tolerate_surf_not_found ` execution will stop. Default:
   `20L`.
 
-- use_model_template:
-
-  Logical indicating whether to pre-compile the model template for
-  faster estimation. Default: `TRUE` (recommended).
-
 - weights:
 
   Optional string or numeric vector of weights for the linear mixed
@@ -136,6 +131,12 @@ run_vw_lmm(
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (e.g.
   optimizer choice, convergence criteria, see the `?lmerControl`
   documentation for details. Default: (uses default settings).
+
+- REML:
+
+  Logical specifying wetherto optimize the REML criterion (as opposed to
+  the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend
+  to do model comparison (using AIC output).
 
 - seed:
 

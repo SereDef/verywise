@@ -56,14 +56,7 @@ analysis.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">single_lmm</span><span class="op">(</span></span>
-<span>  <span class="va">imp</span>,</span>
-<span>  <span class="va">y</span>,</span>
-<span>  <span class="va">formula</span>,</span>
-<span>  model_template <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lmm_control <span class="op">=</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lmerControl</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">single_lmm</span><span class="op">(</span><span class="va">imp</span>, <span class="va">y</span>, <span class="va">y_name</span>, model_template <span class="op">=</span> <span class="cn">NULL</span>, weights <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -80,18 +73,16 @@ analysis.</p>
 vertex from the super-subject matrix.</p></dd>
 
 
-<dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>An R formula object describing the linear mixed model using
-<code>lme4</code> notation.</p></dd>
+<dt id="arg-y-name">y_name<a class="anchor" aria-label="anchor" href="#arg-y-name"></a></dt>
+<dd><p>String with the outcome name (as specified in the formula)</p></dd>
 
 
 <dt id="arg-model-template">model_template<a class="anchor" aria-label="anchor" href="#arg-model-template"></a></dt>
-<dd><p>Optional pre-compiled model object for faster
-estimation. When provided, <code>single_lmm</code> will use an "update"-based
+<dd><p>Pre-compiled model object for faster
+estimation. <code>single_lmm</code> uses an "update"-based
 workflow instead of refitting the model from scratch. This minimizes
 repeated parsing and model construction overhead, significantly reducing
-computation time for large-scale vertex-wise analyses.
-Default: <code>NULL</code>.</p></dd>
+computation time for large-scale vertex-wise analyses.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
@@ -100,14 +91,6 @@ You can use this argument to specify inverse-probability weights. If this
 is a string, the function look for a column with that name in the phenotype
 data. Note that these are not normalized or standardized in any way.
 Default: <code>NULL</code> (no weights).</p></dd>
-
-
-<dt id="arg-lmm-control">lmm_control<a class="anchor" aria-label="anchor" href="#arg-lmm-control"></a></dt>
-<dd><p>Optional list (of correct class, resulting from
-<code>lmerControl()</code> containing control parameters to be passed to
-<code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> (e.g. optimizer choice, convergence criteria,
-see the <code>?lmerControl</code> documentation for details.
-Default: (uses default settings).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -119,11 +102,6 @@ Default: (uses default settings).</p></dd>
 <li><p><code>resid</code> - A numeric vector of model residuals</p></li>
 <li><p><code>warning</code> - Warning message(s) if any</p></li>
 </ul></div>
-    <div class="section level2">
-    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Additional parameters are currently passed to the <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code> call using
-the <code>lmm_control</code> argument.</p>
-    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="run_vw_lmm.html">run_vw_lmm</a></code> for the main interface.</p></div>
