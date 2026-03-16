@@ -418,6 +418,19 @@
       ],
       "Hash": "de949855009e2d4d0e52a844e30617ae"
     },
+    "insight": {
+      "Package": "insight",
+      "Version": "1.4.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "c3c6595dfc27f57a0031a6548076e0d8"
+    },
     "isoband": {
       "Package": "isoband",
       "Version": "0.2.7",
