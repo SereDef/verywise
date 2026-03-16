@@ -40,8 +40,12 @@ devtools::install_github("SereDef/verywise")
 library(verywise)
 ```
 
+There are many settings that benefit from the multilevel structure
+implemented in `verywise`
+
+### Run a linear mixed model (e.g. longitudinal analysis)
+
 ``` r
-# Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
   pheno = long_format_data, # An R object already in memory, or "path/to/phentype/data"
@@ -52,8 +56,11 @@ run_vw_lmm(
 )
 ```
 
+![](reference/figures/meta-mega-fed.png)
+
+### Run a (traditional) meta-analysis
+
 ``` r
-# Run a meta-analysis
 run_vw_meta(
   term = "age", # Which "term" / predictor / effect to pool
   hemi = "lh", # (default) or "rh": which hemisphere to run
@@ -63,6 +70,44 @@ run_vw_meta(
   n_cores = 4  # parallel processing
 )
 ```
+
+### Run a federated / distributed analysis
+
+#### STEP 1: at each local site
+
+``` r
+s1_res = run_vw_fed_local( 
+  site_name = "site1",
+  formula = vw_area ~ sex + age,
+  pheno = pheno_site1,
+  subj_dir = "/path/to/site1/local/data",
+  outp_dir = "/path/to/site1/partial/results",
+  hemi = "lh",
+  fs_template = "fsaverage", 
+  n_cores = 1)
+
+# [...] Run other models, e.g. rh, thickness... once done: 
+compress_local("/path/to/site1/partial/results", "site1")
+
+# Send the "site1.tar.gz" the the aggregating center
+```
+
+#### STEP 2: at the aggregating center
+
+``` r
+tot_res <- run_vw_fed_aggr(
+  site_names = c('site1', 'site2', 'site3'),  
+  formula = vw_area ~ sex + age,
+  inpt_dir = "/path/to/tarred/partial/results",
+  outp_dir = "/path/to/final/results",
+  hemi = "lh",
+  fs_template = "fsaverage"
+  n_cores = 1)
+```
+
+Note: `verywise` implements a lossless algorithm (i.e. `tot_res`
+identical to running the model on the entire dataset, as on
+*mega-analysis*, but privacy preserving).
 
 ## Visualization
 
@@ -97,12 +142,14 @@ You can find more info and extended **tutorials** on the package
   `verywise`](https://seredef.github.io/verywise/articles/01-format-data.html)
 - [Running vertex-wise linear mixed
   models](https://seredef.github.io/verywise/articles/03-run-vw-lmm.html)
-- [Running vertex-wise
-  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.html)
 - [Running *many* analyses in
   parallel](https://seredef.github.io/verywise/articles/04-run-slurm-array.html)
 - [Inspecting and visualizing
   results](https://seredef.github.io/verywise/articles/05-visualize-results.html)
+- [Running vertex-wise
+  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.html)
+- [Running vertex-wise federated
+  analyses](https://seredef.github.io/verywise/): TODO
 
 ## License and credits
 
