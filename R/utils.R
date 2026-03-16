@@ -27,7 +27,7 @@ list.dirs.till <- function(path, n) {
   }
 }
 
-# ======================== Simulation helpers ==================================
+# ======================== Brain helpers ==================================
 
 #' @title
 #' Locate vertices belonging to specific cortical ROIs
@@ -176,6 +176,28 @@ count_vertices <- function(fs_template) {
   return(n_verts)
 }
 
+outcome_name <- function(hemi, measure) {
+
+  hemi_name <- if (hemi == "lh") "Left" else "Right"
+
+  meas_name <- switch(measure, 
+    thickness = 'Cortical thickness',
+    area = 'Cortical surface area (white surface)',
+    area.pial = 'Cortical surface area (pial surface)',
+    curv = 'Mean curvature',
+    jacobian_white = 'Jacobian determinant (white surface)', # how much the white surface was distorted in order to register to the spherical atlas during the -surfreg step
+    pial = 'Pial surface coordinates',
+    pial_lgi = 'Local gyrification index (pial surface)', # not in QDECR?
+    sulc = 'Sulcal depth',
+    volume = 'Cortical gray matter volume',
+    w_g.pct = 'White/gray matter intensity ratio',
+    white.H = 'Mean curvature (white surface)',
+    white.K = 'Gaussian curvature (white surface)'
+  )
+
+  paste(hemi_name, 'hemisphere ~', meas_name)
+  
+}
 
 # ==============================================================================
 # Read and save annotation files for internal use 

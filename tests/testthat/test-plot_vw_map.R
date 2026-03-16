@@ -1,5 +1,5 @@
 test_that("plot_vw_map basic input validation works", {
-  skip_if(is.null(Sys.getenv("FREESURFER_HOME")))
+  skip_if(Sys.getenv("FREESURFER_HOME") == "")
   skip_if_not_installed("reticulate")
 
   # Skip if required Python modules are not available

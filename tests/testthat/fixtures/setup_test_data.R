@@ -25,7 +25,7 @@ data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs))
 
 for (hemi in c('lh','rh')) {
-  verywise::simulate_dataset(path = fs3_data_path,
+  verywise::simulate_longit_dataset(path = fs3_data_path,
                    data_structure = data_structure,
                    fs_template = "fsaverage3",
                    hemi = hemi,
@@ -81,7 +81,7 @@ data_structure = list("site1" = list("sessions" = c("01",'02'),
                                      "n_subjects" = n_subs))
 
 for (hemi in c('lh','rh')) {
-  verywise::simulate_dataset(path = fs7_data_path,
+  verywise::simulate_longit_dataset(path = fs7_data_path,
                    data_structure = data_structure,
                    fs_template = "fsaverage",
                    measure = measure,
@@ -111,5 +111,38 @@ for (hemi in c('lh','rh')) {
     fwhmc = fwhmc,
     fs_template = "fsaverage",
     save_rds = TRUE,
+    verbose = verbosity)
+}
+
+# ----------------------------------------------------------------------------
+# 3. test distributed modeling functionality (also using the "full" fsaverage 
+#    template (163842 vertices) but a single region
+fed_data_path <- file.path(temp_test_dir, "fed")
+if (dir.exists(fed_data_path)) {unlink(fed_data_path, recursive = TRUE)}
+
+site_sizes = c(
+   site1 = 30, 
+   site2 = 15, 
+   site3 = 5
+)
+
+for (hemi in c('lh','rh')) {
+
+  truth <- simulate_distrib_dataset(
+    path = fed_data_path,
+    site_sizes = site_sizes,
+    fs_template = 'fsaverage',
+    measure = measure,
+    hemi = hemi,
+    fwhmc = fwhmc,
+    vw_mean = 5,
+    vw_sd = 0.1,
+    tau2 = 0.1, # Between-site variance of the random intercept
+    sigma2 = 0.05, # Within-site residual variance
+    betas = c(sex = -0.5, age = 0.8),
+    roi_subset = 'frontalpole',
+    location_association = 'frontalpole',
+    overwrite = TRUE,
+    seed = 42,
     verbose = verbosity)
 }

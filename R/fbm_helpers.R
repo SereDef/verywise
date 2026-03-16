@@ -26,7 +26,7 @@ fbm_col_has_0 <- function(X, n_cores = 1,
                           row.ind = bigstatsr::rows_along(X),
                           col.ind = bigstatsr::cols_along(X),
                           row.mask = NULL, col.mask = NULL,
-                          verbose = TRUE) {
+                          verbose = FALSE) {
   # Any sub-selection?
   if (is.numeric(row.mask)) row.mask <- as.logical(row.mask)
   if (is.numeric(col.mask)) col.mask <- as.logical(col.mask)

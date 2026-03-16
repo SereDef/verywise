@@ -11,7 +11,7 @@ fbm_col_has_0(
   col.ind = bigstatsr::cols_along(X),
   row.mask = NULL,
   col.mask = NULL,
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{

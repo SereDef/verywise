@@ -143,6 +143,8 @@ ps <- profvis::profvis({
 single_lmm(pheno, y = vertex,
   y_name = "vw_area", model_template = model_template, weights = NULL)
 })
+htmlwidgets::saveWidget(ps, file.path(outp_dir, "profvis_single.html"))
+browseURL(file.path(outp_dir, "profvis_single.html"))
 
 pooled_stats <- vw_pool(list(outp, outp), m = 2, pvalue_method="t-as-z")
 

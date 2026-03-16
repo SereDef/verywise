@@ -143,28 +143,46 @@ single_lmm <- function(
 
 
 #' @title
-#' Unpack \code{lme4} formula
+#' Unpack R formula
 #'
 #' @description
-#' Get the terms for the fixed effect for the given formula.
+#' Get the terms for the (fixed) effect for the given formula.
+#' Wors for `lme4` as well as regular `lm` style formulas.
 #'
-#' @param formula : model formula object (this should specify a LME model)
-#' @param dset : the data.frame, for example the first element in the list
-#' output of \code{\link{imp2list}}.
+#' @param formula A formula object, for example specifying a LME model.
+#' @param df A data.frame, for example the first element in the list
+#'   output of \code{\link{imp2list}}.
+#' @param return_X Logical. Whether to return the whole design matrix or
+#'   just the (fixed) term names.
 #'
-#' @return A character vector of fixed terms.
+#' @return A design matrix or a character vector of (fixed) term names.
 #'
-#' @author Serena Defina, 2024.
+#' @author Serena Defina, 2026.
 #'
-get_terms <- function(formula, dset) {
-  # Add a placeholder for vw_* outcome
-  dset[all.vars(formula)[1]] <- 999
-  # Unpack the formula
-  lf <- lme4::lFormula(formula = formula, data = dset)
-  fixed_terms <- colnames(lf$X) # fixed-effects design matrix
+unpack_formula <- function(formula, df, return_X = FALSE) {
 
-  return(fixed_terms)
+  # 1. Drop random terms (if present)
+  # width.cutoff to ensure long formulas are returned as a single 
+  # character string rather than split after 60 char.
+  if (any(grepl("\\|", deparse(formula, width.cutoff = 500L)))) {
+    formula <- lme4::nobars(formula)
+  }
+
+  # 2. Drop response (lhs)
+  rhs <- stats::delete.response(stats::terms(formula))
+
+  # 3. Build design matrix 
+  X <- stats::model.matrix(rhs, data = df)
+
+  if (return_X) {
+    return(X)
+  } else {
+    # Extract term names
+    fixed_terms <- colnames(X)
+    return(fixed_terms)
+  }
 }
+
 
 precompile_model <- function(formula,
                              tmp_data,

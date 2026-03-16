@@ -238,16 +238,17 @@ run_vw_lmm <- function(
   save_ss = FALSE,
   save_residuals = FALSE,
   verbose = TRUE) {
+  
+  # Check user input ===========================================================
 
   hemi <- match.arg(hemi)
-
-  hemi_name <- if (hemi == "lh") "left" else "right"
-  vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose = verbose)
-
-  # Check user input ===========================================================
-  vw_message("Checking user inputs...", verbose = verbose)
-
   measure <- check_formula(formula)
+
+  vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
+  vw_message('* Model: ', deparse(formula), verbose = verbose)
+  # vw_pretty_message('', fill = '-', verbose = verbose)
+
+  vw_message("Checking user inputs...", verbose = verbose)
 
   ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
 
@@ -298,7 +299,7 @@ run_vw_lmm <- function(
 
   check_weights(weights, data1)
 
-  fixed_terms <- get_terms(formula, data1)
+  fixed_terms <- unpack_formula(formula, data1)
 
   # Check that the stacks are not overwritten by mistake and
   # Save the stack names (i.e. fixed terms) to a lookup file
@@ -334,7 +335,7 @@ run_vw_lmm <- function(
 
   } else {
 
-    vw_message("Building (", hemi_name, " hemisphere) super-subject matrix...",
+    vw_message("Building ", outcome_name(hemi, measure), " super-subject matrix...",
                verbose = verbose)
 
     ss <- build_supersubject(
@@ -358,15 +359,12 @@ run_vw_lmm <- function(
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss, n_cores = n_cores)
+  problem_verts <- fbm_col_has_0(ss, n_cores = n_cores, verbose = verbose)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
   # Ensure phenotype and ss row order matches ==================================
-  rownames_file <- gsub('.fsaverage\\d*\\.supersubject.bk',
-                        '.ss.rownames.csv', ss$bk)
-  data_list <- check_row_match(rownames_file = rownames_file,
-                               data_list = data_list,
+  data_list <- check_row_match(ss_file = ss$bk, pheno = data_list, 
                                folder_ids = folder_ids)
 
   data1 <- data_list[[1]]
@@ -400,7 +398,7 @@ run_vw_lmm <- function(
   res_bk_names <- c("coef", "se", "p", "fitstats", "resid") # "t",
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
-  # These files will be removed by "on.exit" by convert_to_mgh
+  # These files will be removed "on.exit" by convert_to_mgh
 
   fbm_precision <- "float" # single precision – 32 bits
 
@@ -545,7 +543,7 @@ run_vw_lmm <- function(
                      verbose = fs_verbosity)
   }
 
-  vw_message(pretty_message("All done! :)"))
+  vw_pretty_message("Done! :)")
 
   return(out)
 }

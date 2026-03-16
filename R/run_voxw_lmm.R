@@ -193,7 +193,7 @@ run_voxw_lmm <- function(
 
   check_weights(weights, data1)
 
-  fixed_terms <- get_terms(formula, data1)
+  fixed_terms <- unpack_formula(formula, data1)
 
   # Check that the stacks are not overwritten by mistake and
   # Save the stack names (i.e. fixed terms) to a lookup file
@@ -220,10 +220,8 @@ run_voxw_lmm <- function(
   good_voxels <- 1:brain_template # TMP
 
   # Ensure phenotype and ss row order matches ==================================
-  # rownames_file <- gsub('.fsaverage\\d*\\.supersubject.bk',
-  #                       '.ss.rownames.csv', ss$bk)
-  # data_list <- check_row_match(rownames_file = rownames_file,
-  #                              data_list = data_list,
+  # data_list <- check_row_match(ss_file = ss$bk,
+  #                              data = data_list,
   #                              folder_ids = folder_ids)
 
   data1 <- data_list[[1]]
@@ -284,8 +282,7 @@ run_voxw_lmm <- function(
              " (of ", vw_n, " total) vertices.", verbose = verbose)
 
   progress_file <- paste0(result_path, "/progress.log")
-  on.exit(file.remove(progress_file), add = TRUE)
-
+  on.exit(if(file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
   vw_message(" * fitting linear mixed models...\n",
@@ -399,7 +396,7 @@ run_voxw_lmm <- function(
   #                    verbose = fs_verbosity)
   # }
 
-  vw_message(pretty_message("All done! :)"))
+  vw_pretty_message("Done! :)")
 
   return(out)
 }

@@ -129,7 +129,7 @@ run_vw_meta <- function(term,
                                    type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
   doParallel::registerDoParallel(cluster)
   on.exit({
-    message(pretty_message("All done! :)"))
+    vw_pretty_message("Done! :)")
     parallel::stopCluster(cluster)
   }, add = TRUE)
 

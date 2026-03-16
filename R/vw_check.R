@@ -31,26 +31,9 @@ check_data_list <- function(data_list, folder_id, formula) {
 
   data1 <- data_list[[1]]
 
-  if (!(folder_id %in% names(data1))) {
-    stop(sprintf("Folder ID '%s' not found in data.", folder_id))
-  }
+  check_data_frame(data1, folder_id, formula)
 
-  if (any(is.na(data1[folder_id]))) {
-    stop(sprintf("Folder ID '%s' contains missing values. This is not allowed, please remove any NAs.",
-                 folder_id))
-  }
-
-  if (any(duplicated(data1[folder_id]))) {
-    stop(sprintf("Folder IDs must be unique.'%s' contains duplicates.", folder_id))
-  }
-
-  terms <- all.vars(formula)[-1] # first is the vw_measure that is not in the pheno
-  missing_vars <- !(terms %in% names(data1))
-
-  if (any(missing_vars)) {
-    stop(sprintf("Variables: '%s' are specified in the formula but not present in the data.",
-                 terms[missing_vars]))
-  }
+  # TODO: check that is in "long" format ...?
 
   # Ensure all data.frames are equivalent to data1
   if (!all(vapply(data_list,
@@ -59,7 +42,33 @@ check_data_list <- function(data_list, folder_id, formula) {
     stop("Each data.frame in `data_list` must have identical dimentions.")
   }
 
-  # TODO: check that is in "long" format ...?
+  invisible(NULL)
+}
+
+check_data_frame <- function(data, folder_id, formula) {
+
+  stopifnot(inherits(data, "data.frame"))
+
+  if (!(folder_id %in% names(data))) {
+    stop(sprintf("Folder ID '%s' not found in data.", folder_id))
+  }
+
+  if (any(is.na(data[folder_id]))) {
+    stop(sprintf("Folder ID '%s' contains missing values. This is not allowed, please remove any NAs.",
+                 folder_id))
+  }
+
+  if (any(duplicated(data[folder_id]))) {
+    stop(sprintf("Folder IDs must be unique.'%s' contains duplicates.", folder_id))
+  }
+
+  terms <- all.vars(formula)[-1] # first is the vw_measure that is not in the pheno
+  missing_vars <- !(terms %in% names(data))
+
+  if (any(missing_vars)) {
+    stop(sprintf("Variables: '%s' are specified in the formula but not present in the data.",
+                 terms[missing_vars]))
+  }
 
   invisible(NULL)
 }
@@ -241,7 +250,10 @@ check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer 
   }
 }
 
-check_row_match <- function(rownames_file, data_list, folder_ids) {
+check_row_match <- function(ss_file, pheno, folder_ids) {
+
+  rownames_file <- gsub('.fsaverage\\d*\\.supersubject.bk',
+                        '.ss.rownames.csv', ss_file)
 
   ss_rownames <- scan(file = rownames_file,
                       what = character(), sep = "\n", quiet = TRUE)
@@ -250,16 +262,19 @@ check_row_match <- function(rownames_file, data_list, folder_ids) {
 
     vw_message(' * matching phenotype with brain surface data')
 
-    # Note there should be no NA in match(ss_rownames, folder_ids) because these
-    # are thre are no ss_rownames that are not in folder_id
+    # There should be no NA in match(ss_rownames, folder_ids) because
+    # there should be no ss_rownames that are not in folder_id
     # (see build_supersubject and subset_supersubject functions)
     matching_key <- match(ss_rownames, folder_ids)
-    if (any(is.na(matching_key))) stop("Error filtering rows in ss.")
-
-    # Also folder_id should be identical in all dfs (see check_data_list)
-    data_list <- lapply(data_list,
-                        function(df) {  # Match the row names in ss
-                          return(df[matching_key, ])})
+    if (any(is.na(matching_key))) stop("Some rows in ss are not in `folder_id`.")
+    
+    # Match the row names in ss
+    if (inherits(pheno, "data.frame")) {
+       pheno <- pheno[matching_key, ]
+    } else {
+      # folder_id should be identical in all dfs (see check_data_list)
+      pheno <- lapply(pheno, function(df) { return(df[matching_key, ])})
+    }
 
     # Note the user was already notified and an error should have already occurred
     # if the drop was above the cutoff
@@ -269,7 +284,7 @@ check_row_match <- function(rownames_file, data_list, folder_ids) {
     }
   }
 
-  return(data_list)
+  return(pheno)
 }
 
 # validate_hemi_vw_lmm_inputs <- function(formula, data_list, subj_dir, outp_dir,
@@ -285,3 +300,16 @@ check_row_match <- function(rownames_file, data_list, folder_ids) {
 #   check_numeric_param(seed, "seed", integer = TRUE)
 #   check_numeric_param(n_cores, "n_cores", lower = 1, integer = TRUE)
 # }
+
+check_lambda_grid <- function(lambda_grid) {
+
+  # Auto grid: wide but not absurd; assumes lambda mostly in [1e-6, 1e2]
+  if (is.null(lambda_grid)) {
+    lambda_grid <- c(0, 10^seq(-6, 2, length.out = 40))
+  } else {
+    lambda_grid <- as.numeric(lambda_grid)
+    if (any(!is.finite(lambda_grid)) || any(lambda_grid < 0)) stop("lambda_grid must be finite and >= 0.")
+  }
+
+  lambda_grid
+}

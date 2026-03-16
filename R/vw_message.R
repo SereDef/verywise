@@ -13,7 +13,7 @@
 #'
 #' @author Serena Defina, 2025.
 #'
-pretty_message <- function(content, fill = "=", tot_nchar = 60, center = TRUE) {
+prettify_message <- function(content, fill = "=", tot_nchar = 80, center = TRUE) {
 
   # Add space around the content
   content <- paste0(" ", content, " ")
@@ -44,6 +44,19 @@ pretty_message <- function(content, fill = "=", tot_nchar = 60, center = TRUE) {
   # TODO: make sure this always has the same nchar...?
 
   return(pretty_message)
+}
+
+
+#' @title
+#' Print decorated message to console if verbose = TRUE
+#'
+#' @param msg Content to print
+#' @param ... Other arguments to pass to prettify_message
+#' @param verbose (default = TRUE)
+#'
+vw_pretty_message <- function(msg, ..., verbose = TRUE) {
+  if (verbose) message(prettify_message(msg, ...))
+  invisible()
 }
 
 
