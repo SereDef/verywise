@@ -140,7 +140,7 @@ FreeSurfer-compatible format.
 
 ## See also
 
-[`simulate_dataset`](https://seredef.github.io/verywise/reference/simulate_dataset.md),
+[`simulate_longit_dataset`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md),
 [`simulate_long_pheno_data`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
 
 ## Author

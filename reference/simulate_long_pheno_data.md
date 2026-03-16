@@ -56,7 +56,7 @@ A `data.frame` in long format with columns: `site`, `id`, `time`, `sex`,
 
 ## See also
 
-[`simulate_dataset`](https://seredef.github.io/verywise/reference/simulate_dataset.md),
+[`simulate_longit_dataset`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md),
 [`simulate_freesurfer_data`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
 
 ## Author

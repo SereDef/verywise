@@ -15,6 +15,12 @@
 - [`check_pheno_obj()`](https://seredef.github.io/verywise/reference/check_pheno_obj.md)
   : Check that object exists in the global environment
 
+- [`chunk_Ymats()`](https://seredef.github.io/verywise/reference/chunk_Ymats.md)
+  : Compute the sum and sum of squares of Y
+
+- [`compress_local()`](https://seredef.github.io/verywise/reference/compress_local.md)
+  : Compress a site's results into a tar.gz archive
+
 - [`compute_clusters()`](https://seredef.github.io/verywise/reference/compute_clusters.md)
   : Compute significant clusters of vertices
 
@@ -34,11 +40,6 @@
 
 - [`fbm_col_has_0()`](https://seredef.github.io/verywise/reference/fbm_col_has_0.md)
   : Check if all row elements are 0 in FBM
-
-- [`get_terms()`](https://seredef.github.io/verywise/reference/get_terms.md)
-  :
-
-  Unpack `lme4` formula
 
 - [`imp2list()`](https://seredef.github.io/verywise/reference/imp2list.md)
   : Convert imputation object to a list of dataframes
@@ -73,7 +74,7 @@
 - [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
   : Plot vertex-wise coefficient maps on a 3D cortical surface
 
-- [`pretty_message()`](https://seredef.github.io/verywise/reference/pretty_message.md)
+- [`prettify_message()`](https://seredef.github.io/verywise/reference/prettify_message.md)
   : Print pretty messages to console
 
 - [`run_voxw_lmm()`](https://seredef.github.io/verywise/reference/run_voxw_lmm.md)
@@ -81,6 +82,12 @@
 
   Run voxel-wise linear mixed model using
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+
+- [`run_vw_fed_aggr()`](https://seredef.github.io/verywise/reference/run_vw_fed_aggr.md)
+  : Run federated aggregation for vertex-wise distributed LMM
+
+- [`run_vw_fed_local()`](https://seredef.github.io/verywise/reference/run_vw_fed_local.md)
+  : Run vertex-wise linear model on local site data
 
 - [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
   :
@@ -97,9 +104,9 @@
 - [`significant_cluster_stats()`](https://seredef.github.io/verywise/reference/significant_cluster_stats.md)
   : Calculate Significant Cluster Statistics
 
-- [`simulate_dataset()`](https://seredef.github.io/verywise/reference/simulate_dataset.md)
-  : Simulate a longitudinal brain surface dataset with associated
-  phenotype data
+- [`simulate_distrib_dataset()`](https://seredef.github.io/verywise/reference/simulate_distrib_dataset.md)
+  : Simulate a distributed (multi-site) cross-sectional brain surface
+  dataset
 
 - [`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
   : Simulate longitudinal FreeSurfer vertex-wise data
@@ -107,11 +114,18 @@
 - [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
   : Simulate (longitudinal) phenotype data
 
+- [`simulate_longit_dataset()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md)
+  : Simulate a longitudinal brain surface dataset with associated
+  phenotype data
+
 - [`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
   : Run a single linear mixed model and extract statistics
 
 - [`subset_supersubject()`](https://seredef.github.io/verywise/reference/subset_supersubject.md)
   : Subset an existing supersubject matrix by matching folder IDs
+
+- [`unpack_formula()`](https://seredef.github.io/verywise/reference/unpack_formula.md)
+  : Unpack R formula
 
 - [`update_progress_tracker()`](https://seredef.github.io/verywise/reference/update_progress_tracker.md)
   : Update within-chunk progress for a (milestone) vertex
@@ -124,6 +138,9 @@
 
   Pool [`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) model
   output across imputed datasets
+
+- [`vw_pretty_message()`](https://seredef.github.io/verywise/reference/vw_pretty_message.md)
+  : Print decorated message to console if verbose = TRUE
 
 - [`with_parallel()`](https://seredef.github.io/verywise/reference/with_parallel.md)
   : Run a chunked foreach loop sequentially or in parallel

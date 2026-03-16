@@ -14,7 +14,7 @@ Let’s see how to get there. First, load the package:
 ``` r
 library(verywise)
 #> Welcome, verywise user!
-#> This is version: 1.2.6
+#> This is version: 1.3.0
 #> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
 ```
 
@@ -61,9 +61,7 @@ model fitting. If you do run a model using this data now, you should be
 able to recover an association with age located in a single cluster,
 perfectly overlapping with the frontal pole region. How *neat*.
 
-Under the hood,
-[`simulate_dataset()`](https://seredef.github.io/verywise/reference/simulate_dataset.md)
-will call two functions:
+Under the hood, `simulate_dataset()` will call two functions:
 
 - [`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
   to generate the brain surface files, and
