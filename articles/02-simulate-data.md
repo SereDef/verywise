@@ -13,9 +13,7 @@ Let’s see how to get there. First, load the package:
 
 ``` r
 library(verywise)
-#> Welcome, verywise user!
-#> This is version: 1.3.1
-#> For questions, issues, and bug reports, please see https://github.com/SereDef/verywise
+#> Loaded verywise 1.3.1
 ```
 
 Now, decide what data you want to generate. In this (small) example, I
