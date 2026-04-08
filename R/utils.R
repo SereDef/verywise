@@ -199,6 +199,91 @@ outcome_name <- function(hemi, measure) {
   
 }
 
+probe_data_resolution <- function(subj_surf_dir,
+                                   hemi,
+                                   measure_file,
+                                   fwhmc,
+                                   fs_template) {
+
+  mgh_file_pattern <- paste0("^", hemi, "\\.", measure_file, 
+                             ".*\\.fsaverage.*\\.mgh$")
+  hits <- list.files(subj_surf_dir, pattern = mgh_file_pattern)
+
+  if (length(hits) == 0L) {
+    stop("No fsaverage*.mgh surface files found in: ", subj_surf_dir,
+         "\nPlease check your measure, hemi, and fwhm settings.")
+  }
+
+  # Extract template (fsaverageX) and fwhm tags
+  found_templates <- sub(".*\\.(fsaverage[^.]*)\\.mgh$", "\\1", hits)
+  found_fwhm <- ifelse(
+    grepl("fwhm[0-9]+", hits),
+    sub(".*(fwhm[0-9]+).*", "\\1", hits),
+    NA_character_
+  )
+
+  # Template selection ---------------------------------------------------------
+  if (fs_template %in% found_templates) {
+    tmpl <- fs_template
+  } else {
+    # Define resolution ranking (lower index = higher resolution)
+    tmpl_order <- paste0('fsaverage', c('', 6:3))
+    rank_tmpl <- function(x) match(x, tmpl_order)
+
+    req_rank <- rank_tmpl(fs_template)
+
+    found_ranks <- rank_tmpl(found_templates)
+    non_na <- !is.na(found_ranks)
+
+    # If requested is known and all found are lower-res (higher rank number)
+    if (!is.na(req_rank) && any(non_na)) {
+      min_found_rank <- min(found_ranks[non_na])
+      if (req_rank < min_found_rank) {
+        stop(
+          "Requested fs_template '", fs_template,
+          "' (higher resolution) not found in surf/.\n",
+          "Only lower-resolution templates available: ",
+          paste(unique(found_templates), collapse = ", "), ".\n",
+          "Please either rerun FreeSurfer with '", fs_template,
+          "' or adjust your fs_template argument."
+        )
+      }
+    }
+
+    # Otherwise, fall back to first available
+    tmpl <- found_templates[1L]
+    warning("Requested fs_template '", fs_template,
+            "' not found. Will subset from '", tmpl, "' instead.")
+  }
+
+  # Restrict hits to chosen template
+  idx_tmpl   <- found_templates == tmpl
+  tmpl_hits  <- hits[idx_tmpl]
+  tmpl_fwhm  <- found_fwhm[idx_tmpl]
+
+  # FWHM selection ------------------------------------------------------------
+  fh <- fwhmc
+  available_fwhm <- unique(stats::na.omit(tmpl_fwhm))
+
+  if (length(available_fwhm) == 0L) {
+    if (!is.null(fwhmc) && nzchar(fwhmc)) {
+      warning("No fwhm* tag found for template '", tmpl,
+              "', ignoring requested fwhmc='", fwhmc, "'.")
+    }
+    fh <- ""
+  } else {
+    if (!is.null(fwhmc) && nzchar(fwhmc) && fwhmc %in% tmpl_fwhm) {
+      fh <- fwhmc
+    } else {
+      fh <- available_fwhm[1L]
+      if (!is.null(fwhmc) && nzchar(fwhmc) && fwhmc != fh) {
+        warning("Requested fwhm '", fwhmc,
+                "' not found. Using '", fh, "' instead.")
+      }
+    }
+  }
+  list(fs_template = tmpl, fwhmc = paste0(fh,'.'))
+}
 # ==============================================================================
 # Read and save annotation files for internal use 
 # fs_home = "/Applications/freesurfer/7.4.1"

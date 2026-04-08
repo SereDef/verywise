@@ -41,6 +41,7 @@ Depends:
     R (>= 4.1)
 Imports: 
     bigstatsr,
+    cli,
     doParallel,
     doRNG (>= 1.5),
     dplyr,

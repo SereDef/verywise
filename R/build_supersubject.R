@@ -89,9 +89,15 @@ build_supersubject <- function(subj_dir,
   # FreeSurfer output "w-g.pct" needs special treatment:
   if(measure == "w_g.pct") measure_file <- "w-g.pct.mgh" else measure_file <- measure
 
+  # Note evaluate available fs template and smoothing based on 1st folder!
+  data_resolution <- probe_data_resolution(
+    subj_surf_dir = file.path(folders_found[1L], "surf"),
+    hemi = hemi, measure_file = measure_file,
+    fwhmc = fwhmc, fs_template = fs_template)
+  
   mgh_file_name <- paste0(
-    hemi, ".", measure_file,
-    if (fwhmc != "") { paste0(".", fwhmc)}, ".", fs_template, ".mgh")
+    hemi, ".", measure_file, ".", 
+    data_resolution$fwhmc, data_resolution$fs_template, ".mgh")
 
   mgh_files <- file.path(folders_found, "surf", mgh_file_name)
 
