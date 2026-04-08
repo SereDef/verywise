@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 With your set-up and data ready, it is finally time to use some `verywise` functionality. 
 
-First, load the package in our R sesssion, so we call its functions directly. 
+First, load the package in our R session, so we call its functions directly. 
 
 ```{r setup, eval=FALSE}
 library(verywise)
@@ -41,7 +41,7 @@ Let's demonstrate a simple (and probably most common) example of a mixed model, 
 # Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
-  pheno = "path/to/phentype/data.rds", # or an R object already in memory
+  pheno = "path/to/phenotype/data.rds", # or an R object already in memory
   subj_dir = "/path/to/freesurfer/subjects", # Neuro-imaging data location
   outp_dir = "/path/to/output", # Where you want to store results
   hemi = "lh", # (default) or "rh": which hemisphere to run
@@ -76,16 +76,16 @@ It is currently only possible to have brain metrics as outcome variables.
 ##### `pheno`
 The phenotype data. This is either the name of an R **object** already loaded in your environment, or as a string containing the **path** to a data file, that will then be read in memory for you (supported file extensions are: `rds`, `csv`, `txt` and `sav`).
 
-More information about the format requirements for the phenotype data can be found in the [Data format article](01-format-data.html). Brifly, we support both **single datasets** (e.g. a `data.frame`) and **multiple imputed datasets** (i.e. a `mids` object or list of dataframes). Either way, the data shoud be in **long format** and it should contain all the variables specified in the `formula` plus the `folder_id` column.
+More information about the format requirements for the phenotype data can be found in the [Data format article](01-format-data.html). Briefly, we support both **single datasets** (e.g. a `data.frame`) and **multiple imputed datasets** (i.e. a `mids` object or list of dataframes). Either way, the data should be in **long format** and it should contain all the variables specified in the `formula` plus the `folder_id` column.
 
 ##### `subj_dir`
 The path to the FreeSurfer data directory. This must follow the `verywise` directory structure (see [Data format article](01-format-data.html) for details).
 
 
 ##### Other arguments you may want to specify 
-These argments are optional, but you may want to specify them explicitly depending on your analysis: 
+These arguments are optional, but you may want to specify them explicitly depending on your analysis: 
 
-- **`outp_dir`**: a character string specifying the path to the output directory, where results will be stored. If `NULL` (default), the function creates a "verywise_results" sub-directory in the current working directory (though this is not recommended for tidyness reasons).
+- **`outp_dir`**: a character string specifying the path to the output directory, where results will be stored. If `NULL` (default), the function creates a "verywise_results" sub-directory in the current working directory (though this is not recommended for tidiness reasons).
 
 - **`hemi`**: a character string specifying which hemisphere to analyze. Options: `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
 
@@ -119,7 +119,7 @@ These are more advanced arguments that you typically won't need, but you may wan
 
 - **`use_model_template`**: whether to pre-compile the model template for faster estimation. Default: `TRUE` (recommended).
 
-- **`lmm_control`**: cptional list (of correct class, resulting from `lmerControl()`) containing control parameters to be passed to `lme4::lmer()` (e.g. optimizer choice, convergence criteria, see the `?lmerControl` documentation for details. Default: (uses default settings).
+- **`lmm_control`**: optional list (of correct class, resulting from `lmerControl()`) containing control parameters to be passed to `lme4::lmer()` (e.g. optimizer choice, convergence criteria, see the `?lmerControl` documentation for details. Default: (uses default settings).
 
 - **`chunk_size`**: an integer specifying the number of vertices processed sequentially in each chunk (used for parallel operations). Larger values use more memory but may be faster depending on your resources (i.e. `n_cores`). Default: `1000`.
 
@@ -155,7 +155,7 @@ In broad terms, fixed effects are variables that you are interested in, you want
  <ins>Note</ins>: You might *not* want to use random effects when the number of factor levels is very low (i.e. < 5 is a commonly reported rule of thumb) or when you wouldn't assume that your factor levels come from a common distribution (e.g. assuming that males and females come from a population of sexes, of which there is an infinite number and we are interested in an average). You can read more about this topic [here](https://peerj.com/articles/12794/), [here](https://bookdown.org/steve_midway/DAR/random-effects.html) and [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#should-i-treat-factor-xxx-as-fixed-or-random).
 
 ### Random structure specification
-The formula syntax adopted by `lme4` to specify random effects is very flexible. Almost *too flexible**, so it can be tricky to get your head around all the available options. Here is a quick cheatsheet adepted ( / stolen) from StackOverflow (RIP):
+The formula syntax adopted by `lme4` to specify random effects is very flexible. Almost *too flexible**, so it can be tricky to get your head around all the available options. Here is a quick cheatsheet adapted ( / stolen) from StackOverflow (RIP):
 
 | **formula**                        | **meaning**                                                             |
 |------------------------------------|-------------------------------------------------------------------------|
@@ -172,13 +172,13 @@ The formula syntax adopted by `lme4` to specify random effects is very flexible.
 #### Nested vs. crossed random effects
 The clustering patterns that can be modeled using random effects can take many forms. 
 
-In some cases, clustering is *hierarchical* (i.e. clusters are **nested** within other clusters). A relevant example are multi-site longitudinal neuroimaging studies: repeated brain observations are nested within individulas, individulas are nested within sites, sites nested within cohorts and so on.
+In some cases, clustering is *hierarchical* (i.e. clusters are **nested** within other clusters). A relevant example are multi-site longitudinal neuroimaging studies: repeated brain observations are nested within individuals, individuals are nested within sites, sites nested within cohorts and so on.
 
-In other cases, there is no nesting structure. For example, a study where participants complete the same set of tasks, observations are nested within individuals, but they are also clustered according to task type (...or image aquisition protocol or scanner etc.). These are commonly refered to as **crossed** random effects, i.e. when one level of a random effect can appear in conjunction with more than one level of another effect. 
+In other cases, there is no nesting structure. For example, a study where participants complete the same set of tasks, observations are nested within individuals, but they are also clustered according to task type (...or image acquisition protocol or scanner etc.). These are commonly referred to as **crossed** random effects, i.e. when one level of a random effect can appear in conjunction with more than one level of another effect. 
 
 Read more about this [here](https://www.muscardinus.be/statistics/nested.html) and [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed)
 
-### Can I trust the results? [TODO: finsh this section]
+### Can I trust the results? [TODO: finish this section]
 
 #### Model converge 
 Get too greedy with model complexity, you may incur in convergence issues. 
@@ -196,10 +196,10 @@ BIC, AIC, logLik, deviance
 More on AIC in the context of LMM [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#can-i-use-aic-for-mixed-models-how-do-i-count-the-number-of-degrees-of-freedom-for-a-random-effect)
 
 ##### ICC
-Intraclass correlation coefficient, indicates wether there is clustering in the data.
+Intra-class correlation coefficient, indicates whether there is clustering in the data.
 
 ### More modeling options: ML vs REML 
-Restricted maximim likelihood [TODO: add info]
+Restricted maximum likelihood [TODO: add info]
 
 ### A note on P values 
 P values for fixed effects are calculated using the Satterthwaite's method [TODO: add info]
