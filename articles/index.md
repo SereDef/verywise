@@ -14,5 +14,5 @@
   SLURM)](https://seredef.github.io/verywise/articles/04-run-slurm-array.md):
 - [Extracting and visualizing \`verywise\`
   results](https://seredef.github.io/verywise/articles/05-visualize-results.md):
-- [Running vertex-wise
-  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta.md):
+- [Running vertex-wise federated analyses and
+  meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta-and-fed.md):

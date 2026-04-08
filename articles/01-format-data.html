@@ -44,7 +44,7 @@
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
     <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
-    <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/06-run-vw-meta-and-fed.html">Running vertex-wise federated analyses and meta-analyses</a></li>
   </ul>
 </li>
       </ul>
@@ -69,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-03-16</h4>
+            <h4 data-toc-skip class="date">2026-04-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/01-format-data.Rmd" class="external-link"><code>vignettes/articles/01-format-data.Rmd</code></a></small>
       <div class="d-none name"><code>01-format-data.Rmd</code></div>
@@ -164,10 +164,10 @@ point out, so we can remain friends:</p>
 <h3 id="long-format-data">Long format data<a class="anchor" aria-label="anchor" href="#long-format-data"></a>
 </h3>
 <p>The phenotype data should be in the <em>“long format”</em> with
-different timepoints/sites/groups stacked row-wise. Each row in the data
-should correspond to a single data point, or a specific observation (for
-example, a subject-session measurement). This is a typical structure
-used for longitudinal data analysis.</p>
+different time-points/sites/groups stacked row-wise. Each row in the
+data should correspond to a single data point, or a specific observation
+(for example, a subject-session measurement). This is a typical
+structure used for longitudinal data analysis.</p>
 <p>If necessary, you can convert your data from “wide” to long format
 using a variety of functions. E.g. the <code>tidyr</code> package offers
 <a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link"><code>pivot_longer()</code></a>,
@@ -181,7 +181,7 @@ variables are of interest / needed in your analysis.</p>
 <p>The only requirement is that the phenotype must always include a
 <strong>folder ID</strong> column (by default, this is expected to be
 called <code>folder_id</code>). This column is important because it
-speficies link between the phenotype data to the (correct) brain surface
+specifies link between the phenotype data to the (correct) brain surface
 data file. It should contain the <em>relative path</em> to the
 subject-session sub-folders inside your neuroimaging data directory (or
 <code>subj_dir</code>).</p>
@@ -192,7 +192,7 @@ site, the <code>folder_id</code> column could look like
 same main <code>subj_dir</code> folder, then the <code>folder_id</code>
 column could look like
 <code>"site1/sub-001_ses-baseline", "site1/sub-001_ses-F1", "site2/sub-001_ses-baseline"...</code>.</p>
-<p>This principle also generalies to messier data folder structures
+<p>This principle also generalizes to messier data folder structures
 (though they are not recommended, for obvious reasons):
 e.g. <code>"path/to/site1/sub-001_ses-baseline", "path/to/site1/sub-001_ses-F1", "other_/path/to/site2/sub-001_ses-baseline"...</code></p>
 <p>Note that no duplicates or missing values are allowed in the
@@ -209,7 +209,7 @@ imputation data formats in R, including the outputs of
 <code>missForest</code>. This can also simply be a <em>list of
 data.frames</em>, where each data.frame corresponds to a single imputed
 dataset.</p>
-<p>Note that each dataset in the set must have identical dimentions, and
+<p>Note that each dataset in the set must have identical dimensions, and
 contain all the required columns (including the
 <code>folder_id</code>).</p>
 <p>When using imputed data, <code>verywise</code> will automatically run

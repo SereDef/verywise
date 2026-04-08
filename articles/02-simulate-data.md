@@ -7,7 +7,7 @@ to a dataset (yet), you can generate both a set of ready-made FreeSurfer
 **brain surface files** and a **phenotype file** to go with them.
 
 The simulated dataset will automatically be stored into a `verywise`
-directory structure and will be ready for you to analyse.
+directory structure and will be ready for you to analyze.
 
 Let’s see how to get there. First, load the package:
 
@@ -22,7 +22,7 @@ Now, decide what data you want to generate. In this (small) example, I
 will simulate a dataset with 250 subjects, who belong to two cohorts
 (including 100 and 150 subjects respectively) and all underwent two MRI
 sessions (`"01"` and `"02"`). I am only interested in surface area, so I
-will only be genetating `"area"` maps. The resolution of these fake
+will only be generating `"area"` maps. The resolution of these fake
 surface maps is 163842 vertices (corresponding to the most detailed
 FreeSurfer template `"fsaverage"`).
 
@@ -40,19 +40,22 @@ data_structure <- list("cohort1" = list("n_subjects" = 100,
 
 # Simulate FreeSurfer and phenotype dataset for both hemispheres
 for (hemi in c('lh','rh')) {
-  simulate_dataset(path = "path/to/verywise/simulated_example",
-                   data_structure = data_structure,
-                   measure = "area",
-                   hemi = hemi,
-                   fs_template = "fsaverage", # FreeSurfer template (largest available: 163842 vertices)
-                   vw_mean = 5, # mean surface area value
-                   vw_sd = 0.1, # standard deviation of surface area values
-                   subj_sd = 0.02, # variability between subjects
-                   site_sd = 0.01, # variability between sites
-                   # (optionally) only simulate data within certain ROIs:
-                   # roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'), 
-                   simulate_association = "3.5 * age",
-                   location_association = "frontalpole")
+
+  simulate_longit_dataset(
+    path = "path/to/verywise/simulated_example",
+    data_structure = data_structure,
+    measure = "area",
+    hemi = hemi,
+    fs_template = "fsaverage", # FreeSurfer template (largest available: 163842 vertices)
+    vw_mean = 5, # mean surface area value
+    vw_sd = 0.1, # standard deviation of surface area values
+    subj_sd = 0.02, # variability between subjects
+    site_sd = 0.01, # variability between sites
+    # (optionally) only simulate data within certain ROIs:
+    # roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'), 
+    simulate_association = "3.5 * age",
+    location_association = "frontalpole")
+
 }
 ```
 
@@ -76,8 +79,8 @@ one of the two data sources.
 If you have a phenotype dataset already, but you are waiting for the
 FreeSurfer data to cook.
 
-In this case I have a sigle dataset / cohort called `"my_site"` with 100
-subjects who underwent three MRI sessions (`"baseline"`, `"F1"` and
+In this case I have a single dataset / cohort called `"my_site"` with
+100 subjects who underwent three MRI sessions (`"baseline"`, `"F1"` and
 `"F2"`). The phenotype data is ready and stored in a CSV file located at
 `"path/to/my_phenotype_data.rds"`. This dataset should contain 300 rows
 (100 subjects x 3 sessions), and a few variables of interest, including
@@ -126,6 +129,43 @@ format” dataframe (with variables: `folder_id`, `id`, `site`, `age`,
 # Simulate phenotype dataset, using the same data_structure as above
 phenotype_data <- simulate_long_pheno_data(data_structure = data_structure,
                                            seed = my_random_seed_I_did_not_forget_to_set)
+```
+
+## Simulate “distributed” data
+
+`verywise` also handles datasets that are not accessible by a single
+analyst (distributed framework). To simulate a similar dataset for
+testing:
+
+``` r
+site_sizes = c(
+   site1 = 50, 
+   site2 = 100, 
+   site3 = 5
+)
+
+for (hemi in c('rh','lh')) {
+
+  true_estimates <- simulate_distrib_dataset(
+    path = "path/to/testing/folder",
+    site_sizes = site_sizes,
+    fs_template = 'fsaverage',
+    measure = 'area',
+    hemi = hemi,
+    fwhmc = 'fwhm10',
+    vw_mean = 5,
+    vw_sd = 0.1,
+    tau2 = 0.1, # Between-site variance of the random intercept
+    sigma2 = 0.05, # Within-site residual variance
+
+    betas = c(sex = -0.5, age = 0.8),
+    roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
+    location_association = 'frontalpole',
+    overwrite = TRUE,
+    seed = 42,
+    verbose = TRUE)
+  
+}
 ```
 
 ## 

@@ -100,7 +100,7 @@ point out, so we can remain friends:
 ### Long format data
 
 The phenotype data should be in the *“long format”* with different
-timepoints/sites/groups stacked row-wise. Each row in the data should
+time-points/sites/groups stacked row-wise. Each row in the data should
 correspond to a single data point, or a specific observation (for
 example, a subject-session measurement). This is a typical structure
 used for longitudinal data analysis.
@@ -118,7 +118,7 @@ variables are of interest / needed in your analysis.
 
 The only requirement is that the phenotype must always include a
 **folder ID** column (by default, this is expected to be called
-`folder_id`). This column is important because it speficies link between
+`folder_id`). This column is important because it specifies link between
 the phenotype data to the (correct) brain surface data file. It should
 contain the *relative path* to the subject-session sub-folders inside
 your neuroimaging data directory (or `subj_dir`).
@@ -131,8 +131,8 @@ If multiple sites are included, and they are all stored inside the same
 main `subj_dir` folder, then the `folder_id` column could look like
 `"site1/sub-001_ses-baseline", "site1/sub-001_ses-F1", "site2/sub-001_ses-baseline"...`.
 
-This principle also generalies to messier data folder structures (though
-they are not recommended, for obvious reasons):
+This principle also generalizes to messier data folder structures
+(though they are not recommended, for obvious reasons):
 e.g. `"path/to/site1/sub-001_ses-baseline", "path/to/site1/sub-001_ses-F1", "other_/path/to/site2/sub-001_ses-baseline"...`
 
 Note that no duplicates or missing values are allowed in the `folder_id`
@@ -148,7 +148,7 @@ formats in R, including the outputs of `mice`, `mi`, `Amelia`, and
 `missForest`. This can also simply be a *list of data.frames*, where
 each data.frame corresponds to a single imputed dataset.
 
-Note that each dataset in the set must have identical dimentions, and
+Note that each dataset in the set must have identical dimensions, and
 contain all the required columns (including the `folder_id`).
 
 When using imputed data, `verywise` will automatically run the

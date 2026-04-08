@@ -44,7 +44,7 @@
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
     <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
-    <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/06-run-vw-meta-and-fed.html">Running vertex-wise federated analyses and meta-analyses</a></li>
   </ul>
 </li>
       </ul>
@@ -69,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-03-16</h4>
+            <h4 data-toc-skip class="date">2026-04-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/03-run-vw-lmm.Rmd" class="external-link"><code>vignettes/articles/03-run-vw-lmm.Rmd</code></a></small>
       <div class="d-none name"><code>03-run-vw-lmm.Rmd</code></div>
@@ -87,7 +87,7 @@ tool, and it is up to you to use it sensibly.</p>
 </blockquote>
 <p>With your set-up and data ready, it is finally time to use some
 <code>verywise</code> functionality.</p>
-<p>First, load the package in our R sesssion, so we call its functions
+<p>First, load the package in our R session, so we call its functions
 directly.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span></code></pre></div>
@@ -121,7 +121,7 @@ modelled as a random intercept.</p>
 <code class="sourceCode R"><span><span class="co"># Run a linear mixed model</span></span>
 <span><span class="fu"><a href="../reference/run_vw_lmm.html">run_vw_lmm</a></span><span class="op">(</span></span>
 <span>  formula <span class="op">=</span> <span class="va">vw_thickness</span> <span class="op">~</span> <span class="va">sex</span> <span class="op">*</span> <span class="va">age</span> <span class="op">+</span> <span class="va">site</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, <span class="co"># model formula</span></span>
-<span>  pheno <span class="op">=</span> <span class="st">"path/to/phentype/data.rds"</span>, <span class="co"># or an R object already in memory</span></span>
+<span>  pheno <span class="op">=</span> <span class="st">"path/to/phenotype/data.rds"</span>, <span class="co"># or an R object already in memory</span></span>
 <span>  subj_dir <span class="op">=</span> <span class="st">"/path/to/freesurfer/subjects"</span>, <span class="co"># Neuro-imaging data location</span></span>
 <span>  outp_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>, <span class="co"># Where you want to store results</span></span>
 <span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
@@ -187,10 +187,10 @@ then be read in memory for you (supported file extensions are:
 <code>sav</code>).</p>
 <p>More information about the format requirements for the phenotype data
 can be found in the <a href="01-format-data.html">Data format
-article</a>. Brifly, we support both <strong>single datasets</strong>
+article</a>. Briefly, we support both <strong>single datasets</strong>
 (e.g. a <code>data.frame</code>) and <strong>multiple imputed
 datasets</strong> (i.e. a <code>mids</code> object or list of
-dataframes). Either way, the data shoud be in <strong>long
+dataframes). Either way, the data should be in <strong>long
 format</strong> and it should contain all the variables specified in the
 <code>formula</code> plus the <code>folder_id</code> column.</p>
 </div>
@@ -204,14 +204,14 @@ format</strong> and it should contain all the variables specified in the
 <div class="section level5">
 <h5 id="other-arguments-you-may-want-to-specify">Other arguments you may want to specify<a class="anchor" aria-label="anchor" href="#other-arguments-you-may-want-to-specify"></a>
 </h5>
-<p>These argments are optional, but you may want to specify them
+<p>These arguments are optional, but you may want to specify them
 explicitly depending on your analysis:</p>
 <ul>
 <li><p><strong><code>outp_dir</code></strong>: a character string
 specifying the path to the output directory, where results will be
 stored. If <code>NULL</code> (default), the function creates a
 “verywise_results” sub-directory in the current working directory
-(though this is not recommended for tidyness reasons).</p></li>
+(though this is not recommended for tidiness reasons).</p></li>
 <li><p><strong><code>hemi</code></strong>: a character string specifying
 which hemisphere to analyze. Options: <code>"lh"</code> (left
 hemisphere: default), <code>"rh"</code> (right hemisphere).</p></li>
@@ -281,7 +281,7 @@ If the number of missing or corrupted files is
 <li><p><strong><code>use_model_template</code></strong>: whether to
 pre-compile the model template for faster estimation. Default:
 <code>TRUE</code> (recommended).</p></li>
-<li><p><strong><code>lmm_control</code></strong>: cptional list (of
+<li><p><strong><code>lmm_control</code></strong>: optional list (of
 correct class, resulting from <code>lmerControl()</code>) containing
 control parameters to be passed to <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
 (e.g. optimizer choice, convergence criteria, see the
@@ -376,7 +376,7 @@ and <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#should-i-tr
 <p>The formula syntax adopted by <code>lme4</code> to specify random
 effects is very flexible. Almost *too flexible**, so it can be tricky to
 get your head around all the available options. Here is a quick
-cheatsheet adepted ( / stolen) from StackOverflow (RIP):</p>
+cheatsheet adapted ( / stolen) from StackOverflow (RIP):</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -447,20 +447,20 @@ take many forms.</p>
 <p>In some cases, clustering is <em>hierarchical</em> (i.e. clusters are
 <strong>nested</strong> within other clusters). A relevant example are
 multi-site longitudinal neuroimaging studies: repeated brain
-observations are nested within individulas, individulas are nested
+observations are nested within individuals, individuals are nested
 within sites, sites nested within cohorts and so on.</p>
 <p>In other cases, there is no nesting structure. For example, a study
 where participants complete the same set of tasks, observations are
 nested within individuals, but they are also clustered according to task
-type (…or image aquisition protocol or scanner etc.). These are commonly
-refered to as <strong>crossed</strong> random effects, i.e. when one
-level of a random effect can appear in conjunction with more than one
-level of another effect.</p>
+type (…or image acquisition protocol or scanner etc.). These are
+commonly referred to as <strong>crossed</strong> random effects,
+i.e. when one level of a random effect can appear in conjunction with
+more than one level of another effect.</p>
 <p>Read more about this <a href="https://www.muscardinus.be/statistics/nested.html" class="external-link">here</a> and <a href="https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed" class="external-link">here</a></p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="can-i-trust-the-results-todo-finsh-this-section">Can I trust the results? [TODO: finsh this section]<a class="anchor" aria-label="anchor" href="#can-i-trust-the-results-todo-finsh-this-section"></a>
+<h3 id="can-i-trust-the-results-todo-finish-this-section">Can I trust the results? [TODO: finish this section]<a class="anchor" aria-label="anchor" href="#can-i-trust-the-results-todo-finish-this-section"></a>
 </h3>
 <div class="section level4">
 <h4 id="model-converge">Model converge<a class="anchor" aria-label="anchor" href="#model-converge"></a>
@@ -481,7 +481,7 @@ too small (e.g. &lt; 5; see more info <a href="https://bbolker.github.io/mixedm
 <div class="section level5">
 <h5 id="icc">ICC<a class="anchor" aria-label="anchor" href="#icc"></a>
 </h5>
-<p>Intraclass correlation coefficient, indicates wether there is
+<p>Intra-class correlation coefficient, indicates whether there is
 clustering in the data.</p>
 </div>
 </div>
@@ -489,7 +489,7 @@ clustering in the data.</p>
 <div class="section level3">
 <h3 id="more-modeling-options-ml-vs-reml">More modeling options: ML vs REML<a class="anchor" aria-label="anchor" href="#more-modeling-options-ml-vs-reml"></a>
 </h3>
-<p>Restricted maximim likelihood [TODO: add info]</p>
+<p>Restricted maximum likelihood [TODO: add info]</p>
 </div>
 <div class="section level3">
 <h3 id="a-note-on-p-values">A note on P values<a class="anchor" aria-label="anchor" href="#a-note-on-p-values"></a>

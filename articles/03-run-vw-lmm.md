@@ -11,7 +11,7 @@
 With your set-up and data ready, it is finally time to use some
 `verywise` functionality.
 
-First, load the package in our R sesssion, so we call its functions
+First, load the package in our R session, so we call its functions
 directly.
 
 ``` r
@@ -46,7 +46,7 @@ modelled as a random intercept.
 # Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
-  pheno = "path/to/phentype/data.rds", # or an R object already in memory
+  pheno = "path/to/phenotype/data.rds", # or an R object already in memory
   subj_dir = "/path/to/freesurfer/subjects", # Neuro-imaging data location
   outp_dir = "/path/to/output", # Where you want to store results
   hemi = "lh", # (default) or "rh": which hemisphere to run
@@ -98,9 +98,9 @@ extensions are: `rds`, `csv`, `txt` and `sav`).
 More information about the format requirements for the phenotype data
 can be found in the [Data format
 article](https://seredef.github.io/verywise/articles/01-format-data.md).
-Brifly, we support both **single datasets** (e.g. a `data.frame`) and
+Briefly, we support both **single datasets** (e.g. a `data.frame`) and
 **multiple imputed datasets** (i.e. a `mids` object or list of
-dataframes). Either way, the data shoud be in **long format** and it
+dataframes). Either way, the data should be in **long format** and it
 should contain all the variables specified in the `formula` plus the
 `folder_id` column.
 
@@ -113,13 +113,13 @@ for details).
 
 ##### Other arguments you may want to specify
 
-These argments are optional, but you may want to specify them explicitly
-depending on your analysis:
+These arguments are optional, but you may want to specify them
+explicitly depending on your analysis:
 
 - **`outp_dir`**: a character string specifying the path to the output
   directory, where results will be stored. If `NULL` (default), the
   function creates a “verywise_results” sub-directory in the current
-  working directory (though this is not recommended for tidyness
+  working directory (though this is not recommended for tidiness
   reasons).
 
 - **`hemi`**: a character string specifying which hemisphere to analyze.
@@ -181,7 +181,7 @@ may want to tweak depending on your analytical (and control) needs:
 - **`use_model_template`**: whether to pre-compile the model template
   for faster estimation. Default: `TRUE` (recommended).
 
-- **`lmm_control`**: cptional list (of correct class, resulting from
+- **`lmm_control`**: optional list (of correct class, resulting from
   `lmerControl()`) containing control parameters to be passed to
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
   (e.g. optimizer choice, convergence criteria, see the `?lmerControl`
@@ -266,7 +266,7 @@ interested in an average). You can read more about this topic
 The formula syntax adopted by `lme4` to specify random effects is very
 flexible. Almost \*too flexible\*\*, so it can be tricky to get your
 head around all the available options. Here is a quick cheatsheet
-adepted ( / stolen) from StackOverflow (RIP):
+adapted ( / stolen) from StackOverflow (RIP):
 
 | **formula**                                    | **meaning**                                                                           |
 |------------------------------------------------|---------------------------------------------------------------------------------------|
@@ -288,22 +288,22 @@ take many forms.
 In some cases, clustering is *hierarchical* (i.e. clusters are
 **nested** within other clusters). A relevant example are multi-site
 longitudinal neuroimaging studies: repeated brain observations are
-nested within individulas, individulas are nested within sites, sites
+nested within individuals, individuals are nested within sites, sites
 nested within cohorts and so on.
 
 In other cases, there is no nesting structure. For example, a study
 where participants complete the same set of tasks, observations are
 nested within individuals, but they are also clustered according to task
-type (…or image aquisition protocol or scanner etc.). These are commonly
-refered to as **crossed** random effects, i.e. when one level of a
-random effect can appear in conjunction with more than one level of
+type (…or image acquisition protocol or scanner etc.). These are
+commonly referred to as **crossed** random effects, i.e. when one level
+of a random effect can appear in conjunction with more than one level of
 another effect.
 
 Read more about this
 [here](https://www.muscardinus.be/statistics/nested.html) and
 [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#nested-or-crossed)
 
-### Can I trust the results? \[TODO: finsh this section\]
+### Can I trust the results? \[TODO: finish this section\]
 
 #### Model converge
 
@@ -328,12 +328,12 @@ More on AIC in the context of LMM
 
 ##### ICC
 
-Intraclass correlation coefficient, indicates wether there is clustering
-in the data.
+Intra-class correlation coefficient, indicates whether there is
+clustering in the data.
 
 ### More modeling options: ML vs REML
 
-Restricted maximim likelihood \[TODO: add info\]
+Restricted maximum likelihood \[TODO: add info\]
 
 ### A note on P values
 

@@ -44,7 +44,7 @@
     <li><a class="dropdown-item" href="../articles/03-run-vw-lmm.html">Running vertex-wise linear mixed models</a></li>
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
     <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
-    <li><a class="dropdown-item" href="../articles/06-run-vw-meta.html">Running vertex-wise meta-analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/06-run-vw-meta-and-fed.html">Running vertex-wise federated analyses and meta-analyses</a></li>
   </ul>
 </li>
       </ul>
@@ -69,7 +69,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-03-16</h4>
+            <h4 data-toc-skip class="date">2026-04-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/04-run-slurm-array.Rmd" class="external-link"><code>vignettes/articles/04-run-slurm-array.Rmd</code></a></small>
       <div class="d-none name"><code>04-run-slurm-array.Rmd</code></div>
@@ -80,11 +80,11 @@ Defina</h4>
 <p>The <code>run_vw_*()"</code> functions from <code>verywise</code> are
 designed to run a single vertex-wise analysis: i.e. a single model and
 in only one hemisphere. This is done on purpose, to keep things simple
-and modular, and maximise computational efficiency, while avoiding
+and modular, and maximize computational efficiency, while avoiding
 issues with nested parallelization.</p>
 <p>However, in practice, you will probably want to run more that a
 single hemisphere vertex-wise analysis, for example, you likely want to
-analyse both left and right hemispheres, and possibly assess multiple
+analyze both left and right hemispheres, and possibly assess multiple
 models (i.e. looking a more than one brain outcome, or at more than one
 set of predictors and so on).</p>
 <p>You can do this <em>sequentially</em> of course, just by calling the
@@ -102,7 +102,7 @@ called by each job in the SLURM array. This will change quite a bit
 depending on your specific analyses, but here is an example of what it
 could look like.</p>
 <p>We start by defining some constants: things that will be the same
-across all the analysises (note: you don’t really <em>need</em> to set
+across all the analyses (note: you don’t really <em>need</em> to set
 these up as variables, but I think it makes the code cleaner and easier
 to maintain, and I am in charge here so we do this how I like it).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -133,11 +133,11 @@ which catch the array task ID and number of CPUs from the SLURM
 environment. These are used to select <em>which of our many
 analyses</em> to run, and how many resources can be used to run it. We
 will define these values in the SLURM job script below.</p>
-<p>Now, let’s organise all our analyses into a <strong><em>grid of
+<p>Now, let’s organize all our analyses into a <strong><em>grid of
 analysis specifications</em></strong> (i.e. combinations of hemispheres,
 outcomes, models, datasets etc). Each row of this grid will correspond
 to a single analysis.</p>
-<p>In this example I want to analyse both hemispheres (<code>lh</code>
+<p>In this example I want to analyze both hemispheres (<code>lh</code>
 and <code>rh</code>), three different outcomes (<code>thickness</code>,
 <code>area</code> and <code>w_g.pct</code>), and a two model
 specifications: one including an interaction between sex and age

@@ -55,3 +55,10 @@ plot_vw_map(
   fs_home = "/path/to/FREESURFER_HOME"
 )
 ```
+
+\[TODO: expand with more details\]
+
+## 
+
+Next article: [Run vertex-wise federated / meta-
+analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta-and-fed.md)

@@ -2,12 +2,12 @@
 
 The `run_vw_*()"` functions from `verywise` are designed to run a single
 vertex-wise analysis: i.e. a single model and in only one hemisphere.
-This is done on purpose, to keep things simple and modular, and maximise
+This is done on purpose, to keep things simple and modular, and maximize
 computational efficiency, while avoiding issues with nested
 parallelization.
 
 However, in practice, you will probably want to run more that a single
-hemisphere vertex-wise analysis, for example, you likely want to analyse
+hemisphere vertex-wise analysis, for example, you likely want to analyze
 both left and right hemispheres, and possibly assess multiple models
 (i.e. looking a more than one brain outcome, or at more than one set of
 predictors and so on).
@@ -29,7 +29,7 @@ your specific analyses, but here is an example of what it could look
 like.
 
 We start by defining some constants: things that will be the same across
-all the analysises (note: you don’t really *need* to set these up as
+all the analyses (note: you don’t really *need* to set these up as
 variables, but I think it makes the code cleaner and easier to maintain,
 and I am in charge here so we do this how I like it).
 
@@ -64,12 +64,12 @@ select *which of our many analyses* to run, and how many resources can
 be used to run it. We will define these values in the SLURM job script
 below.
 
-Now, let’s organise all our analyses into a ***grid of analysis
+Now, let’s organize all our analyses into a ***grid of analysis
 specifications*** (i.e. combinations of hemispheres, outcomes, models,
 datasets etc). Each row of this grid will correspond to a single
 analysis.
 
-In this example I want to analyse both hemispheres (`lh` and `rh`),
+In this example I want to analyze both hemispheres (`lh` and `rh`),
 three different outcomes (`thickness`, `area` and `w_g.pct`), and a two
 model specifications: one including an interaction between sex and age
 (`*`), and one without this interaction (`+`).
