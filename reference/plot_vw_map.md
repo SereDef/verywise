@@ -27,7 +27,7 @@ plot_vw_map(
 
 - res_dir:
 
-  Character. Path to the directory containing Freesurfer-style
+  Character. Path to the directory containing FreeSurfer-style
   vertex-wise result files (`*.mgh`).
 
 - term:
@@ -46,8 +46,8 @@ plot_vw_map(
 
 - surface:
 
-  Character. Surface mesh to plot on (`"inflated"` or `"pial"`). Deaults
-  to `"inflated"`.
+  Character. Surface mesh to plot on (`"inflated"` or `"pial"`).
+  Defaults to `"inflated"`.
 
 - outline_rois:
 
@@ -58,7 +58,7 @@ plot_vw_map(
 
 - fs_home:
 
-  Character. Path to the Freesurfer installation (`$FREESURFER_HOME`).
+  Character. Path to the FreeSurfer installation (`$FREESURFER_HOME`).
 
 - show_in_browser:
 
@@ -80,10 +80,10 @@ The function:
 2.  Loads them with **nibabel** via `{reticulate}`.
 
 3.  Displays the coefficient map interactively on the fsaverage inflated
-    surface using **`nilearn`**’s `plot_surf_stat_map()` (Plotly
+    surface using **`nilearn`**'s `plot_surf_stat_map()` (Plotly
     engine).
 
-4.  Optionally outlines regions from the Freesurfer annotation (via
+4.  Optionally outlines regions from the FreeSurfer annotation (via
     `verywise`).
 
 Python dependencies (`nibabel`, `nilearn`, `matplotlib`, `plotly`,

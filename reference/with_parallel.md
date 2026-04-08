@@ -7,7 +7,7 @@ expression passed in `expr` is evaluated for each chunk in `chuck_seq`.
 ## Usage
 
 ``` r
-with_parallel(n_cores, expr, progress_file = NULL, seed = 3108, verbose = TRUE)
+with_parallel(n_cores, expr, seed = 3108, verbose = TRUE)
 ```
 
 ## Arguments
@@ -21,11 +21,6 @@ with_parallel(n_cores, expr, progress_file = NULL, seed = 3108, verbose = TRUE)
 - expr:
 
   An expression to be evaluated in parallel or in sequence.
-
-- progress_file:
-
-  Optional character string specifying a log file path. If `NULL`,
-  worker output is discarded.
 
 - seed:
 

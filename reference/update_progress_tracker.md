@@ -6,7 +6,12 @@ within-chunk milestones (25\\ message if so.
 ## Usage
 
 ``` r
-update_progress_tracker(v, progress_tracker, verbose)
+update_progress_tracker(
+  v,
+  progress_tracker,
+  progress_file = "",
+  verbose = TRUE
+)
 ```
 
 ## Arguments
@@ -20,6 +25,11 @@ update_progress_tracker(v, progress_tracker, verbose)
   List returned by
   [`init_progress_tracker`](https://seredef.github.io/verywise/reference/init_progress_tracker.md),
   containing `chunk_idx_str` and `milestone_markers`.
+
+- progress_file:
+
+  Optional character string specifying a log file path. If `NULL`,
+  worker output is discarded.
 
 - verbose:
 

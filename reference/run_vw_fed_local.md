@@ -2,9 +2,9 @@
 
 This the "local" function for conducting a distributed linear model
 analyses on brain surface metrics. It will first check use inputs,
-prepare the phenotype data and compute vertwx-wise sufficient statistics
+prepare the phenotype data and compute vertex-wise sufficient statistics
 for the specified hemisphere. These can be then compressed, shared and
-finally aggregatedusing using the
+finally aggregated using using the
 [`run_vw_fed_aggr`](https://seredef.github.io/verywise/reference/run_vw_fed_aggr.md)
 function.
 
@@ -41,7 +41,7 @@ run_vw_fed_local(
 
   A model formula object. This should specify a linear model. The
   outcome variable should be one of the supported brain surface metrics
-  (see Details). Example: `vw_thickness ~ age * sex + ethinicy`.
+  (see Details). Example: `vw_thickness ~ age * sex + ethnicity`.
 
 - pheno:
 
@@ -143,7 +143,7 @@ run_vw_fed_local(
 
 ## Value
 
-A list of site-speficic information summary matrices, of which some are
+A list of site-specific information summary matrices, of which some are
 ([`bigstatsr::FBM`](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
 objects). These should be compressed before sending them to the
 aggregation center.
@@ -151,7 +151,7 @@ aggregation center.
 ## Details
 
 The function does not currently support multiple imputed datasets or IPW
-weights (this is for future developement)
+weights (this is for future development)
 
 **Supported Brain Surface Metrics:** The outcome specified in `formula`
 should be a brain surface metric among:
@@ -186,7 +186,7 @@ while avoiding the performance penalties associated with nested
 parallelization. Left and right cortical hemispheres are processed
 sequentially by default. Parallel processing of the two hemispheres
 (and/or different metrics, models) should be handled by the user (e.g.,
-using SLURM job arrays or similar, see vignette on parallelisation).
+using SLURM job arrays or similar, see vignette on parallelization).
 Within each hemisphere, vertices are divided into chunks of size
 `chunk_size` and processed in parallel across `n_cores` workers (when
 `n_cores > 1`). When multiple imputed datasets are present, these are

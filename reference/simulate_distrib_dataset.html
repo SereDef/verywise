@@ -65,7 +65,7 @@ phenotype.csv as pheno."><meta property="og:image" content="https://seredef.gith
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -222,7 +222,7 @@ Default: <code>c("temporalpole", "frontalpole", "entorhinal")</code>.</p></dd>
 <dd><p>Character vector (optional). If supplied, the
 signal encoded in <code>betas</code> is injected <em>only</em> within these ROIs;
 the remaining active vertices (<code>roi_subset</code>) are generated under a
-null model (\(\beta = 0\)). Useful for testing spatial localisation of
+null model (\(\beta = 0\)). Useful for testing spatial localization of
 discovered effects.</p></dd>
 
 
@@ -314,22 +314,36 @@ indicating which global vertex indices received a non-zero fixed effect
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu">simulate_fed_dataset</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"fed_sim_"</span><span class="op">)</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu">simulate_distrib_dataset</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"fed_simulation"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  site_sizes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>site1 <span class="op">=</span> <span class="fl">80</span>, site2 <span class="op">=</span> <span class="fl">120</span>, site3 <span class="op">=</span> <span class="fl">60</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  betas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fl">0.3</span>, sex <span class="op">=</span> <span class="op">-</span><span class="fl">0.2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  tau2 <span class="op">=</span> <span class="fl">0.5</span>,</span></span>
-<span class="r-in"><span>  sigma2 <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>  fs_template <span class="op">=</span> <span class="st">"fsaverage5"</span>  <span class="co"># fast; use "fsaverage" for final analyses</span></span></span>
+<span class="r-in"><span>  tau2 <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span>  sigma2 <span class="op">=</span> <span class="fl">0.1</span>,</span></span>
+<span class="r-in"><span>  fs_template <span class="op">=</span> <span class="st">"fsaverage3"</span>  <span class="co"># 642 vertices</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * the `path` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a') does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    I'll try to create it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * selected 11 vertices (1.7%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site1') does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    I'll try to create it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * [site1] writing 80 surface files...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site2') does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    I'll try to create it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * [site2] writing 120 surface files...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site3') does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    I'll try to create it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  * [site3] writing 60 surface files...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Done.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ground-truth ICC summary across active vertices</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">icc</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.3333  0.3333  0.3333  0.3333  0.3333  0.3333 </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Recovered site random intercepts (K x V_roi matrix)</span></span></span>
+<span class="r-in"><span><span class="co"># Recovered site random intercepts (n_sites x n_vertices matrix)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">u</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  3 11</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

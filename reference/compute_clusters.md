@@ -11,6 +11,7 @@ compute_clusters(
   hemi,
   fwhm,
   FS_HOME,
+  fs_template = "fsaverage",
   cwp_thr = 0.025,
   mcz_thr = 30,
   csd_sign = "abs",
@@ -38,6 +39,10 @@ compute_clusters(
 - FS_HOME:
 
   : FreeSurfer directory, i.e. `$FREESURFER_HOME`
+
+- fs_template:
+
+  : (default = "fsaverage") data template.
 
 - cwp_thr:
 

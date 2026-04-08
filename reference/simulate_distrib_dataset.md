@@ -128,7 +128,7 @@ simulate_distrib_dataset(
   Character vector (optional). If supplied, the signal encoded in
   `betas` is injected *only* within these ROIs; the remaining active
   vertices (`roi_subset`) are generated under a null model (\\\beta =
-  0\\). Useful for testing spatial localisation of discovered effects.
+  0\\). Useful for testing spatial localization of discovered effects.
 
 - measure:
 
@@ -225,20 +225,34 @@ Serena Defina, 2026.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-truth <- simulate_fed_dataset(
-  path = tempfile("fed_sim_"),
+truth <- simulate_distrib_dataset(
+  path = tempfile("fed_simulation"),
   site_sizes = c(site1 = 80, site2 = 120, site3 = 60),
   betas = c(age = 0.3, sex = -0.2),
-  tau2 = 0.5,
-  sigma2 = 1,
-  fs_template = "fsaverage5"  # fast; use "fsaverage" for final analyses
+  tau2 = 0.05,
+  sigma2 = 0.1,
+  fs_template = "fsaverage3"  # 642 vertices
 )
+#>  * the `path` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a') does not exist.
+#>    I'll try to create it.
+#>  * selected 11 vertices (1.7%)
+#>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site1') does not exist.
+#>    I'll try to create it.
+#>  * [site1] writing 80 surface files...
+#>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site2') does not exist.
+#>    I'll try to create it.
+#>  * [site2] writing 120 surface files...
+#>  * the `site_dir` specified ('/tmp/Rtmpwv8CVd/fed_simulation1b95498cf43a/site3') does not exist.
+#>    I'll try to create it.
+#>  * [site3] writing 60 surface files...
+#> Done.
 
 # Ground-truth ICC summary across active vertices
 summary(truth$icc)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>  0.3333  0.3333  0.3333  0.3333  0.3333  0.3333 
 
-# Recovered site random intercepts (K x V_roi matrix)
+# Recovered site random intercepts (n_sites x n_vertices matrix)
 dim(truth$u)
-} # }
+#> [1]  3 11
 ```

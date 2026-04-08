@@ -21,7 +21,7 @@ approach."><meta property="og:image" content="https://seredef.github.io/verywise
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -184,7 +184,7 @@ Default: (uses default settings).</p></dd>
 
 
 <dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
-<dd><p>Logical specifying wetherto optimize the REML criterion (as opposed to
+<dd><p>Logical specifying whether to optimize the REML criterion (as opposed to
 the log-likelihood). Default: TRUE. Use <code>REML = FALSE</code> if you intend to do model
 comparison (using AIC output).</p></dd>
 
@@ -297,7 +297,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation).
+see vignette on parallelization).
 Within each hemisphere, vertices are divided into chunks of size
 <code>chunk_size</code> and processed in parallel across <code>n_cores</code> workers
 (when <code>n_cores &gt; 1</code>). When multiple imputed datasets are present,

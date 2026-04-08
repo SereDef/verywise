@@ -15,7 +15,7 @@ using FreeSurfer annotation information (i.e. 36 regions Desikan-Killiany atlas)
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@ using FreeSurfer annotation information (i.e. 36 regions Desikan-Killiany atlas)
 
 
 <dl><dt id="arg-res-dir">res_dir<a class="anchor" aria-label="anchor" href="#arg-res-dir"></a></dt>
-<dd><p>Character. Path to the directory containing Freesurfer-style
+<dd><p>Character. Path to the directory containing FreeSurfer-style
 vertex-wise result files (<code>*.mgh</code>).</p></dd>
 
 
@@ -95,7 +95,7 @@ in <code>stack_names.txt</code>).</p></dd>
 
 
 <dt id="arg-surface">surface<a class="anchor" aria-label="anchor" href="#arg-surface"></a></dt>
-<dd><p>Character. Surface mesh to plot on (<code>"inflated"</code> or <code>"pial"</code>). Deaults
+<dd><p>Character. Surface mesh to plot on (<code>"inflated"</code> or <code>"pial"</code>). Defaults
 to <code>"inflated"</code>.</p></dd>
 
 
@@ -106,7 +106,7 @@ available ROIs.</p></dd>
 
 
 <dt id="arg-fs-home">fs_home<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
-<dd><p>Character. Path to the Freesurfer installation (<code>$FREESURFER_HOME</code>).</p></dd>
+<dd><p>Character. Path to the FreeSurfer installation (<code>$FREESURFER_HOME</code>).</p></dd>
 
 
 <dt id="arg-show-in-browser">show_in_browser<a class="anchor" aria-label="anchor" href="#arg-show-in-browser"></a></dt>
@@ -124,8 +124,8 @@ or further modified via <code>reticulate</code>.</p>
     <p>The function:</p><ol><li><p>Locates the appropriate MGH files for a given model term and hemisphere.</p></li>
 <li><p>Loads them with <strong>nibabel</strong> via <code>{reticulate}</code>.</p></li>
 <li><p>Displays the coefficient map interactively on the fsaverage inflated surface
-using <strong><code>nilearn</code></strong>’s <code>plot_surf_stat_map()</code> (Plotly engine).</p></li>
-<li><p>Optionally outlines regions from the Freesurfer annotation (via <code>verywise</code>).</p></li>
+using <strong><code>nilearn</code></strong>'s <code>plot_surf_stat_map()</code> (Plotly engine).</p></li>
+<li><p>Optionally outlines regions from the FreeSurfer annotation (via <code>verywise</code>).</p></li>
 </ol><p>Python dependencies (<code>nibabel</code>, <code>nilearn</code>, <code>matplotlib</code>, <code>plotly</code>, <code>numpy</code>)
 must be installed in the active <code>{reticulate}</code> environment.</p>
     </div>

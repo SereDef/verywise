@@ -134,9 +134,9 @@ run_vw_lmm(
 
 - REML:
 
-  Logical specifying wetherto optimize the REML criterion (as opposed to
-  the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend
-  to do model comparison (using AIC output).
+  Logical specifying whether to optimize the REML criterion (as opposed
+  to the log-likelihood). Default: TRUE. Use `REML = FALSE` if you
+  intend to do model comparison (using AIC output).
 
 - seed:
 
@@ -265,7 +265,7 @@ while avoiding the performance penalties associated with nested
 parallelization. Left and right cortical hemispheres are processed
 sequentially by default. Parallel processing of the two hemispheres
 (and/or different metrics, models) should be handled by the user (e.g.,
-using SLURM job arrays or similar, see vignette on parallelisation).
+using SLURM job arrays or similar, see vignette on parallelization).
 Within each hemisphere, vertices are divided into chunks of size
 `chunk_size` and processed in parallel across `n_cores` workers (when
 `n_cores > 1`). When multiple imputed datasets are present, these are

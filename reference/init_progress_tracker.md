@@ -7,7 +7,7 @@ processed and returns markers for 25\\ that chunk.
 ## Usage
 
 ``` r
-init_progress_tracker(chunk, chunk_seq, verbose)
+init_progress_tracker(chunk, chunk_seq, progress_file = "", verbose = TRUE)
 ```
 
 ## Arguments
@@ -22,6 +22,11 @@ init_progress_tracker(chunk, chunk_seq, verbose)
 
   Full list of chunks (as returned by `make_chunk_sequence`), used to
   compute the total number of chunks.
+
+- progress_file:
+
+  Optional character string specifying a log file path. If `NULL`,
+  worker output is discarded.
 
 - verbose:
 
