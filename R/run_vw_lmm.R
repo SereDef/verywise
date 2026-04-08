@@ -539,6 +539,7 @@ run_vw_lmm <- function(
                      FS_HOME = FS_HOME,
                      mcz_thr = mcz_thr,
                      cwp_thr = cwp_thr,
+                     fs_template = fs_template,
                      full_surfcluster_output = save_optional_cluster_info,
                      mask = paste0(result_path, ".finalMask.mgh"),
                      verbose = fs_verbosity)
