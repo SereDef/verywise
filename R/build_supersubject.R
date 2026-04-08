@@ -159,7 +159,6 @@ build_supersubject <- function(subj_dir,
   # with_parallel helper handles cluster setup and cleanup
   with_parallel(
    n_cores = n_cores,
-   progress_file = NULL,
    seed = 3108, # should not be needed here actually
    verbose = verbose,
    expr = {

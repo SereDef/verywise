@@ -4,7 +4,12 @@
 \alias{update_progress_tracker}
 \title{Update within-chunk progress for a (milestone) vertex}
 \usage{
-update_progress_tracker(v, progress_tracker, verbose)
+update_progress_tracker(
+  v,
+  progress_tracker,
+  progress_file = "",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{v}{Integer; current vertex index.}
@@ -12,6 +17,9 @@ update_progress_tracker(v, progress_tracker, verbose)
 \item{progress_tracker}{List returned by
 \code{\link{init_progress_tracker}}, containing \code{chunk_idx_str}
 and \code{milestone_markers}.}
+
+\item{progress_file}{Optional character string specifying a log file path.
+If \code{NULL}, worker output is discarded.}
 
 \item{verbose}{Logical; if \code{TRUE}, prints progress messages.}
 }

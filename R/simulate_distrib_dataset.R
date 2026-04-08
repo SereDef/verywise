@@ -80,7 +80,7 @@
 #' @param location_association Character vector (optional). If supplied, the
 #'   signal encoded in \code{betas} is injected \emph{only} within these ROIs;
 #'   the remaining active vertices (\code{roi_subset}) are generated under a
-#'   null model (\eqn{\beta = 0}). Useful for testing spatial localisation of
+#'   null model (\eqn{\beta = 0}). Useful for testing spatial localization of
 #'   discovered effects.
 #' @param measure Character string. Surface measure; used for file naming only.
 #'   Default: \code{"thickness"}.
@@ -127,26 +127,25 @@
 #' \code{\link{simulate_longit_dataset}} for the longitudinal (multi-session) variant.
 #'
 #' @examples
-#' \dontrun{
-#' truth <- simulate_fed_dataset(
-#'   path = tempfile("fed_sim_"),
+#' truth <- simulate_distrib_dataset(
+#'   path = tempfile("fed_simulation"),
 #'   site_sizes = c(site1 = 80, site2 = 120, site3 = 60),
 #'   betas = c(age = 0.3, sex = -0.2),
-#'   tau2 = 0.5,
-#'   sigma2 = 1,
-#'   fs_template = "fsaverage5"  # fast; use "fsaverage" for final analyses
+#'   tau2 = 0.05,
+#'   sigma2 = 0.1,
+#'   fs_template = "fsaverage3"  # 642 vertices
 #' )
 #'
 #' # Ground-truth ICC summary across active vertices
 #' summary(truth$icc)
 #'
-#' # Recovered site random intercepts (K x V_roi matrix)
+#' # Recovered site random intercepts (n_sites x n_vertices matrix)
 #' dim(truth$u)
-#' }
 #'
 #' @author Serena Defina, 2026.
 #'
 #' @export
+#' 
 simulate_distrib_dataset <- function(path,
     site_sizes = c(site1 = 80L, site2 = 120L, site3 = 60L),
     betas = c(sex = -0.2, age = 0.3),

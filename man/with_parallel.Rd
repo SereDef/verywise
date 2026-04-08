@@ -4,7 +4,7 @@
 \alias{with_parallel}
 \title{Run a chunked foreach loop sequentially or in parallel}
 \usage{
-with_parallel(n_cores, expr, progress_file = NULL, seed = 3108, verbose = TRUE)
+with_parallel(n_cores, expr, seed = 3108, verbose = TRUE)
 }
 \arguments{
 \item{n_cores}{Integer number of CPU cores to use. Values greater than
@@ -12,9 +12,6 @@ with_parallel(n_cores, expr, progress_file = NULL, seed = 3108, verbose = TRUE)
 execution via \code{registerDoSEQ()}.}
 
 \item{expr}{An expression to be evaluated in parallel or in sequence.}
-
-\item{progress_file}{Optional character string specifying a log file path.
-If \code{NULL}, worker output is discarded.}
 
 \item{seed}{Optional integer seed for reproducible \code{\%dopar\%} loops
 via \code{doRNG::registerDoRNG()}.}

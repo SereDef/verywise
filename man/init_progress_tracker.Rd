@@ -4,7 +4,7 @@
 \alias{init_progress_tracker}
 \title{Initialize per-chunk progress tracking}
 \usage{
-init_progress_tracker(chunk, chunk_seq, verbose)
+init_progress_tracker(chunk, chunk_seq, progress_file = "", verbose = TRUE)
 }
 \arguments{
 \item{chunk}{Integer vector of vertex indices for the current chunk.
@@ -13,6 +13,9 @@ Expected to be an element of \code{chunk_seq} created by
 
 \item{chunk_seq}{Full list of chunks (as returned by
 \code{make_chunk_sequence}), used to compute the total number of chunks.}
+
+\item{progress_file}{Optional character string specifying a log file path.
+If \code{NULL}, worker output is discarded.}
 
 \item{verbose}{Logical; if \code{TRUE}, prints progress messages.}
 }

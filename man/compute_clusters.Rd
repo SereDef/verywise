@@ -9,6 +9,7 @@ compute_clusters(
   hemi,
   fwhm,
   FS_HOME,
+  fs_template = "fsaverage",
   cwp_thr = 0.025,
   mcz_thr = 30,
   csd_sign = "abs",
@@ -26,6 +27,8 @@ results are generated.}
 \item{fwhm}{: full-width half maximum estimate of data smoothness.}
 
 \item{FS_HOME}{: FreeSurfer directory, i.e. \code{$FREESURFER_HOME}}
+
+\item{fs_template}{: (default = "fsaverage") data template.}
 
 \item{cwp_thr}{: (default = 0.025, when both hemispheres are ran, else 0.05)
 the cluster-wise p-value threshold on top of all corrections.}

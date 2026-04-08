@@ -39,7 +39,7 @@ check_data_list <- function(data_list, folder_id, formula) {
   if (!all(vapply(data_list,
                   function(df) { identical(df[,folder_id], data1[,folder_id]) &&
                       identical(names(df), names(data1)) }, logical(1)))) {
-    stop("Each data.frame in `data_list` must have identical dimentions.")
+    stop("Each data.frame in `data_list` must have identical dimensions.")
   }
 
   invisible(NULL)
@@ -214,7 +214,7 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
 
   } else {
 
-    vw_message("Setting up FreeSurfer evironment...", verbose=verbose)
+    vw_message("Setting up FreeSurfer environment...", verbose=verbose)
     exit_code <- system(paste("source",
                               file.path(FS_HOME, "SetUpFreeSurfer.sh")))
     if (exit_code != 0) { # --> sourcing failed

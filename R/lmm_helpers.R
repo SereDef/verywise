@@ -165,7 +165,8 @@ unpack_formula <- function(formula, df, return_X = FALSE) {
   # width.cutoff to ensure long formulas are returned as a single 
   # character string rather than split after 60 char.
   if (any(grepl("\\|", deparse(formula, width.cutoff = 500L)))) {
-    formula <- lme4::nobars(formula)
+    
+    formula <- drop_random_terms(formula)
   }
 
   # 2. Drop response (lhs)
@@ -214,4 +215,22 @@ precompile_model <- function(formula,
 safe_calc <- function(expr) {
   result <- tryCatch(expr, error = function(e) NA_real_)
   if (is.null(result) || length(result) == 0) NA_real_ else result
+}
+
+
+drop_random_terms <- function(formula) {
+  # Remove (... | ...) bar terms 
+  rhs_str <- deparse(formula[[length(formula)]], width.cutoff = 500L)
+  
+  # Remove each (expr | group) block, including surrounding +
+  rhs_str <- gsub("\\s*\\+\\s*\\([^)]*\\|[^)]*\\)", "", rhs_str)
+  rhs_str <- gsub("\\([^)]*\\|[^)]*\\)\\s*\\+\\s*", "", rhs_str)
+  rhs_str <- gsub("^\\([^)]*\\|[^)]*\\)$", "1", rhs_str)
+  rhs_str <- trimws(rhs_str)
+  if (nchar(rhs_str) == 0L) rhs_str <- "1"
+
+  response <- if (length(formula) == 3L) deparse(formula[[2L]]) else NULL
+  f <- stats::reformulate(rhs_str, response = response)
+  environment(f) <- environment(formula)
+  f
 }

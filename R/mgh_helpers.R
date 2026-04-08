@@ -183,3 +183,30 @@ save.mgh <- function(vol, file_name) {
 
   writeBin(vol$x, fid, size = 4, endian = "big")
 }
+
+write_mask_mgh <- function(vertex_idx, fs_template = 'fsaverage', file_name) {
+
+  n_verts = count_vertices(fs_template)
+  
+  mask_vec <- rep(0, n_verts)
+  mask_vec[vertex_idx] <- 1
+  
+  fid <- file(file_name, open = "wb", blocking = TRUE)
+  on.exit(close(fid))
+  
+  writeBin(as.integer(1),       fid, size = 4, endian = "big")  # version
+  writeBin(as.integer(n_verts), fid, size = 4, endian = "big")  # ndim1
+  writeBin(as.integer(1),       fid, size = 4, endian = "big")  # ndim2 (height)
+  writeBin(as.integer(1),       fid, size = 4, endian = "big")  # ndim3 (depth)
+  writeBin(as.integer(1),       fid, size = 4, endian = "big")  # nframes
+  writeBin(as.integer(3),       fid, size = 4, endian = "big")  # MRI.FLOAT
+  writeBin(as.integer(1),       fid, size = 4, endian = "big")  # dof
+  
+  UNUSED.SPACE.SIZE <- 256
+  unused.space.size <- UNUSED.SPACE.SIZE - 2
+  writeBin(as.integer(0), fid, size = 2, endian = "big") # ras_good_flag = 0
+  writeBin(as.integer(rep.int(0, unused.space.size)), fid, size = 1)
+  
+  writeBin(as.numeric(mask_vec), fid, size = 4, endian = "big")
+}
+

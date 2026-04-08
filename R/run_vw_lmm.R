@@ -66,7 +66,7 @@
 #'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
 #'   see the \code{?lmerControl} documentation for details.
 #'   Default: (uses default settings).
-#' @param REML Logical specifying wetherto optimize the REML criterion (as opposed to
+#' @param REML Logical specifying whether to optimize the REML criterion (as opposed to
 #'   the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend to do model
 #'   comparison (using AIC output).
 #' @param seed Integer specifying the random seed for reproducibility
@@ -146,7 +146,7 @@
 #' Left and right cortical hemispheres are processed sequentially by default.
 #' Parallel processing of the two hemispheres (and/or different metrics, models)
 #' should be handled by the user (e.g., using SLURM job arrays or similar,
-#' see vignette on parallelisation).
+#' see vignette on parallelization).
 #' Within each hemisphere, vertices are divided into chunks of size
 #' \code{chunk_size} and processed in parallel across \code{n_cores} workers
 #' (when \code{n_cores > 1}). When multiple imputed datasets are present,
@@ -294,7 +294,7 @@ run_vw_lmm <- function(
   # Extract first dataset
   data1 <- data_list[[1]]
 
-  vw_message(" * ", length(data_list), " datasets of dimention: ", nrow(data1),
+  vw_message(" * ", length(data_list), " datasets of dimension: ", nrow(data1),
              " x ", ncol(data1), verbose = verbose)
 
   check_weights(weights, data1)
@@ -359,7 +359,7 @@ run_vw_lmm <- function(
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss, n_cores = n_cores, verbose = verbose)
+  problem_verts <- fbm_col_has_0(ss, n_cores = 1L, verbose = verbose)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
@@ -434,22 +434,23 @@ run_vw_lmm <- function(
              " file for updates.", verbose = verbose)
 
   with_parallel(n_cores = n_cores, 
-    progress_file = progress_file,
     seed = seed,
     verbose = verbose, 
     expr = {
       foreach::foreach(chunk = chunk_seq, 
         .packages = c("bigstatsr"), 
         .export = c("single_lmm", "vw_pool",
-                    "init_progress_tracker", "update_progress_tracker")
+          "progress_file", "init_progress_tracker", "update_progress_tracker")
     ) %dopar% { # Only parallel if n_cores > 1
 
       # Progress updates
-      progress_tracker <- init_progress_tracker(chunk, chunk_seq, verbose=TRUE)
+      progress_tracker <- init_progress_tracker(chunk, chunk_seq, 
+        progress_file = progress_file, verbose=verbose)
 
       for (v in chunk) {
 
-        update_progress_tracker(v, progress_tracker, verbose)
+        update_progress_tracker(v, progress_tracker, 
+          progress_file = progress_file, verbose = verbose)
 
         # NOTE: ss does not need to be copied to each worker with doParallel
         vertex <- ss[, v]

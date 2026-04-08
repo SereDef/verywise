@@ -44,6 +44,8 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
   return(chunk_seq)
 }
 
+# ============================= Parallel backend ===============================
+
 #' @title
 #' Run a chunked foreach loop sequentially or in parallel
 #'
@@ -56,8 +58,6 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
 #'   1 enable parallel execution via a fork cluster; 1 forces sequential
 #'   execution via \code{registerDoSEQ()}.
 #' @param expr An expression to be evaluated in parallel or in sequence. 
-#' @param progress_file Optional character string specifying a log file path. 
-#'   If \code{NULL}, worker output is discarded.
 #' @param seed Optional integer seed for reproducible \code{\%dopar\%} loops
 #'   via \code{doRNG::registerDoRNG()}.
 #' @param verbose Logical; if \code{TRUE}, prints basic messages about the
@@ -77,7 +77,6 @@ make_chunk_sequence <- function(iv, chunk_size = 1000) {
 #' 
 with_parallel <- function(n_cores,
                           expr,
-                          progress_file = NULL,
                           seed = 3108,
                           verbose = TRUE) {
   # capture the expression and caller env
@@ -88,7 +87,6 @@ with_parallel <- function(n_cores,
   # was_registered <- foreach::getDoParRegistered()
   # old_name <- foreach::getDoParName()
   # old_workers <- foreach::getDoParWorkers()
-
 
   if (n_cores > 1) {
     # Check if a backend is already registered and clean it up
@@ -107,7 +105,7 @@ with_parallel <- function(n_cores,
     # Try to create FORK cluster; on failure, fall back to sequential
     cl <- tryCatch(
       parallel::makeCluster(n_cores, type = "FORK",
-        outfile = if (is.null(progress_file)) "" else progress_file),
+        outfile = if (interactive()) "" else "/dev/null"),
         # NOTE: would not work on Windows anyway till freesurfer dependency is needed
         # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
       error = function(e) {
@@ -157,6 +155,8 @@ with_parallel <- function(n_cores,
 #'   \code{\link{make_chunk_sequence}}.
 #' @param chunk_seq Full list of chunks (as returned by
 #'   \code{make_chunk_sequence}), used to compute the total number of chunks.
+#' @param progress_file Optional character string specifying a log file path. 
+#'   If \code{NULL}, worker output is discarded.
 #' @param verbose Logical; if \code{TRUE}, prints progress messages.
 #'
 #' @return
@@ -171,7 +171,8 @@ with_parallel <- function(n_cores,
 #'
 #' @author Serena Defina, 2026.
 #' 
-init_progress_tracker <- function(chunk, chunk_seq, verbose) {
+init_progress_tracker <- function(chunk, chunk_seq, 
+  progress_file = "", verbose = TRUE) {
 
   if (verbose) {
     chunk_idx <- as.integer(attr(chunk, 'chunk_idx'))
@@ -179,9 +180,10 @@ init_progress_tracker <- function(chunk, chunk_seq, verbose) {
 
     chunk_idx_str <- sprintf("%d/%d", chunk_idx, length(chunk_seq))
 
-    vw_message(sprintf("- Processing chunk %s (worker: %s)", 
-                       chunk_idx_str, worker_id))
-    utils::flush.console()
+    # vw_message(...)
+    cat(sprintf("- Processing chunk %s (worker: %s)", chunk_idx_str, worker_id), 
+        file = progress_file, append = TRUE)
+    # utils::flush.console()
   
     update_freqs <- c("25%", "50%", "75%")
 
@@ -207,6 +209,8 @@ init_progress_tracker <- function(chunk, chunk_seq, verbose) {
 #' @param progress_tracker List returned by
 #'   \code{\link{init_progress_tracker}}, containing \code{chunk_idx_str}
 #'   and \code{milestone_markers}.
+#' @param progress_file Optional character string specifying a log file path. 
+#'   If \code{NULL}, worker output is discarded.
 #' @param verbose Logical; if \code{TRUE}, prints progress messages.
 #'
 #' @return
@@ -214,13 +218,16 @@ init_progress_tracker <- function(chunk, chunk_seq, verbose) {
 #'
 #' @author Serena Defina, 2026.
 #' 
-update_progress_tracker <- function(v, progress_tracker, verbose) {
+update_progress_tracker <- function(v, progress_tracker, 
+  progress_file = "", verbose = TRUE) {
 
   if (verbose) {
     milestone <- names(which(progress_tracker$milestone_markers == v))
     if (length(milestone) == 1) {
-      vw_message(sprintf("--- chunk %s is %s done.", progress_tracker$chunk_idx_str, milestone))
-      utils::flush.console()
+      cat(sprintf("--- chunk %s is %s done.", progress_tracker$chunk_idx_str, milestone), 
+          file = progress_file, append = TRUE)
+      # vw_message(sprintf("--- chunk %s is %s done.", progress_tracker$chunk_idx_str, milestone))
+      # utils::flush.console()
     }
   }
   

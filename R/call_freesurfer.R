@@ -36,15 +36,20 @@ estimate_fwhm <- function(result_path,
                    "--dat", fwhm_estim_path,
                    "--out-mask", final_mask_path)
 
-  if (!is.null(mask)) paste(cmd_str, "--mask", mask)
-
+  if (!is.null(mask)) {
+    mask_mgh_path <- paste0(result_path, ".inputMask.mgh")
+    write_mask_mgh(mask, fs_template = fs_template, file_name = mask_mgh_path)
+    on.exit(if (file.exists(mask_mgh_path)) file.remove(mask_mgh_path), add = TRUE)
+    cmd_str <- paste(cmd_str, "--mask", mask_mgh_path)
+  }
+  
   # message2(verbose = verbose, cmdStr)
   system(cmd_str, ignore.stdout = !verbose)
 
   tryCatch({fwhm <- round(utils::read.table(fwhm_estim_path))},
            error = function(e) {
              message("mris_fwhm command not running correctly")
-             # Choose a return value in case of error
+             # TODO: choose a return value in case of error?
              NA} )
 
   return(fwhm)
@@ -61,6 +66,7 @@ estimate_fwhm <- function(result_path,
 #' @param hemi : hemisphere.
 #' @param fwhm : full-width half maximum estimate of data smoothness.
 #' @param FS_HOME : FreeSurfer directory, i.e. \code{$FREESURFER_HOME}
+#' @param fs_template : (default = "fsaverage") data template.
 #' @param mcz_thr : (default = 0.001) numeric value for the Monte Carlo simulation threshold.
 #' Any of the following are accepted (equivalent values separate by `/`):
 #'  * 13 / 1.3 / 0.05,
@@ -86,6 +92,7 @@ compute_clusters <- function(stack_path,
                              hemi,
                              fwhm,
                              FS_HOME,
+                             fs_template = "fsaverage",
                              cwp_thr = 0.025,
                              mcz_thr = 30,
                              csd_sign = "abs",
@@ -101,7 +108,7 @@ compute_clusters <- function(stack_path,
   # Format FWHM (esure a leading 0 if < 10)
   fwhm_str <- paste0("fwhm", sprintf("%02d", as.integer(fwhm)))
 
-  csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", "fsaverage", hemi,
+  csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", fs_template, hemi,
                         "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
 
   outp_prefix <- paste0(stack_path, ".cache.th", mcz_thr, ".", csd_sign, ".sig.")

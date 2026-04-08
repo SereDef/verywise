@@ -215,18 +215,16 @@ run_vw_fed_aggr <- function(
              " * dimentions: ", N, " observations x ", length(good_verts),
              " (of ", vw_n, " total) vertices.", verbose = verbose)
 
-  progress_file <- paste0(result_path, ".progress.log")
-  on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
+  # progress_file <- paste0(result_path, ".progress.log")
+  # on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   with_parallel(n_cores = n_cores, 
-    progress_file = progress_file,
     seed = seed,
     verbose = verbose, 
     expr = {
       foreach::foreach(chunk = chunk_seq, 
         .packages = c("bigstatsr"), 
         .export = c("chunk_dlmm")
-                   # "init_progress_tracker", "update_progress_tracker")
     ) %dopar% { # Only parallel if n_cores > 1
 
       # Progress updates

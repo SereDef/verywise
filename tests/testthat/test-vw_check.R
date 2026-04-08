@@ -54,11 +54,11 @@ test_that("check_data_list validates structure and contents", {
 
   bad_data_list <- list(df, df[, -2])
   expect_error(check_data_list(bad_data_list, "folder_id", good_formula),
-               regexp = " must have identical dimentions")
+               regexp = " must have identical dimensions")
 
   shuffled_data_list <- list(df, df[sample(1:nrow(df), nrow(df)), ])
   expect_error(check_data_list(shuffled_data_list, "folder_id", good_formula),
-               regexp = " must have identical dimentions")
+               regexp = " must have identical dimensions")
 
   # check_data_list errors on missing folder_id
   df_wrongID <- df; names(df_wrongID)[1] <- 'id'

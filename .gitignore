@@ -8,5 +8,6 @@
 .quarto
 ./inst/*
 docs
+.vscode/settings.json
 
 CLAUDE.md

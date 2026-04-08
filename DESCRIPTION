@@ -1,7 +1,7 @@
 Package: verywise
 Type: Package
 Title: Vertex-wise Statistical Analysis of Neuroimaging data
-Version: 1.3.0
+Version: 1.3.1
 Authors@R: c(
     person("Serena", "Defina", 
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
@@ -18,9 +18,9 @@ Authors@R: c(
 Description: Whole-brain (vertex-wise) multilevel modeling. 
  The package allows for vertex- (or voxel-)wise application of several statistical models, 
  including (distributed) linear mixed models and random-effect meta-analyses. 
-  It reads brain data from FreeSurfer MGH format or plain matrices. 
-  It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
-  Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
+ It reads brain data from FreeSurfer MGH format or plain matrices. 
+ It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
+ Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
 License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
@@ -38,7 +38,7 @@ Suggests:
 URL: https://seredef.github.io/verywise/, https://github.com/SereDef/verywise
 BugReports: https://github.com/SereDef/verywise/issues
 Depends: 
-    R (>= 4.0)
+    R (>= 4.1)
 Imports: 
     bigstatsr,
     doParallel,

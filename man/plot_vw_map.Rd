@@ -16,7 +16,7 @@ plot_vw_map(
 )
 }
 \arguments{
-\item{res_dir}{Character. Path to the directory containing Freesurfer-style
+\item{res_dir}{Character. Path to the directory containing FreeSurfer-style
 vertex-wise result files (\verb{*.mgh}).}
 
 \item{term}{Character. Name of the model term to visualize (matches entries
@@ -27,14 +27,14 @@ in \code{stack_names.txt}).}
 \item{measure}{Character. Surface measure, e.g. \code{'area'}, \code{'thickness'},
 \code{'volume'}. Defaults to \code{'area'}.}
 
-\item{surface}{Character. Surface mesh to plot on (\code{"inflated"} or \code{"pial"}). Deaults
+\item{surface}{Character. Surface mesh to plot on (\code{"inflated"} or \code{"pial"}). Defaults
 to \code{"inflated"}.}
 
 \item{outline_rois}{Optional character vector. ROI names to outline on the
 surface plot. You can use call \code{verywise::locate_roi()} to see the names of all
 available ROIs.}
 
-\item{fs_home}{Character. Path to the Freesurfer installation (\verb{$FREESURFER_HOME}).}
+\item{fs_home}{Character. Path to the FreeSurfer installation (\verb{$FREESURFER_HOME}).}
 
 \item{show_in_browser}{Logical (default = TRUE). Open the Figure in browser.
 This can be invoked manually as well using \verb{$show()}.}
@@ -57,8 +57,8 @@ The function:
 \item Locates the appropriate MGH files for a given model term and hemisphere.
 \item Loads them with \strong{nibabel} via \code{{reticulate}}.
 \item Displays the coefficient map interactively on the fsaverage inflated surface
-using \strong{\code{nilearn}}’s \code{plot_surf_stat_map()} (Plotly engine).
-\item Optionally outlines regions from the Freesurfer annotation (via \code{verywise}).
+using \strong{\code{nilearn}}'s \code{plot_surf_stat_map()} (Plotly engine).
+\item Optionally outlines regions from the FreeSurfer annotation (via \code{verywise}).
 }
 
 Python dependencies (\code{nibabel}, \code{nilearn}, \code{matplotlib}, \code{plotly}, \code{numpy})

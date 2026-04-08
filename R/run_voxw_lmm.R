@@ -290,7 +290,6 @@ run_voxw_lmm <- function(
              " file for updates.", verbose = verbose)
   
   with_parallel(n_cores = n_cores, 
-    progress_file = progress_file,
     seed = seed,
     verbose = verbose, 
     expr = {
@@ -301,11 +300,13 @@ run_voxw_lmm <- function(
     ) %dopar% { # Only parallel if n_cores > 1
 
       # Progress updates
-      progress_tracker <- init_progress_tracker(chunk, chunk_seq, verbose)
+      progress_tracker <- init_progress_tracker(chunk, chunk_seq, 
+        progress_file = progress_file, verbose=verbose)
 
       for (v in chunk) {
 
-        update_progress_tracker(v, progress_tracker, verbose)
+        update_progress_tracker(v, progress_tracker, 
+          progress_file = progress_file, verbose = verbose)
 
         # NOTE: ss does not need to be copied to each worker with doParallel
         voxel <- ss[, v]

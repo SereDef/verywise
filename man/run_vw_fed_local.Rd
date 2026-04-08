@@ -29,7 +29,7 @@ run_vw_fed_local(
 \item{formula}{A model formula object. This should specify a linear
 model. The outcome variable should be one of the
 supported brain surface metrics (see Details). Example:
-\code{vw_thickness ~ age * sex + ethinicy}.}
+\code{vw_thickness ~ age * sex + ethnicity}.}
 
 \item{pheno}{Either a \code{data.frame}/\code{tibble} containing the
 "phenotype" data (i.e., already loaded in the global environment), or a
@@ -103,20 +103,20 @@ default. Default: \code{FALSE}.}
 Default: \code{TRUE}.}
 }
 \value{
-A list of site-speficic information summary matrices, of which
+A list of site-specific information summary matrices, of which
 some are (\code{bigstatsr::FBM} objects). These should be compressed
 before sending them to the aggregation center.
 }
 \description{
 This the "local" function for conducting a distributed linear model
 analyses on brain surface metrics. It will first check use inputs, prepare
-the phenotype data and compute vertwx-wise sufficient statistics for the
+the phenotype data and compute vertex-wise sufficient statistics for the
 specified hemisphere. These can be then compressed, shared and finally
-aggregatedusing using the \code{\link{run_vw_fed_aggr}} function.
+aggregated using using the \code{\link{run_vw_fed_aggr}} function.
 }
 \details{
 The function does not currently support multiple imputed datasets or IPW weights
-(this is for future developement)
+(this is for future development)
 
 \strong{Supported Brain Surface Metrics:}
 The outcome specified in \code{formula} should be a brain surface metric
@@ -143,7 +143,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation).
+see vignette on parallelization).
 Within each hemisphere, vertices are divided into chunks of size
 \code{chunk_size} and processed in parallel across \code{n_cores} workers
 (when \code{n_cores > 1}). When multiple imputed datasets are present,

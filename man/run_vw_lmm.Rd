@@ -96,7 +96,7 @@ Default: \code{NULL} (no weights).}
 see the \code{?lmerControl} documentation for details.
 Default: (uses default settings).}
 
-\item{REML}{Logical specifying wetherto optimize the REML criterion (as opposed to
+\item{REML}{Logical specifying whether to optimize the REML criterion (as opposed to
 the log-likelihood). Default: TRUE. Use \code{REML = FALSE} if you intend to do model
 comparison (using AIC output).}
 
@@ -203,7 +203,7 @@ performance penalties associated with nested parallelization.
 Left and right cortical hemispheres are processed sequentially by default.
 Parallel processing of the two hemispheres (and/or different metrics, models)
 should be handled by the user (e.g., using SLURM job arrays or similar,
-see vignette on parallelisation).
+see vignette on parallelization).
 Within each hemisphere, vertices are divided into chunks of size
 \code{chunk_size} and processed in parallel across \code{n_cores} workers
 (when \code{n_cores > 1}). When multiple imputed datasets are present,

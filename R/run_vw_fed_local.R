@@ -3,15 +3,15 @@
 #' @description
 #' This the "local" function for conducting a distributed linear model
 #' analyses on brain surface metrics. It will first check use inputs, prepare
-#' the phenotype data and compute vertwx-wise sufficient statistics for the
+#' the phenotype data and compute vertex-wise sufficient statistics for the
 #' specified hemisphere. These can be then compressed, shared and finally
-#' aggregatedusing using the \code{\link{run_vw_fed_aggr}} function.
+#' aggregated using using the \code{\link{run_vw_fed_aggr}} function.
 #'
 #' @param site_name A character string indicating the site name or ID.
 #' @param formula A model formula object. This should specify a linear
 #'   model. The outcome variable should be one of the
 #'   supported brain surface metrics (see Details). Example:
-#'   \code{vw_thickness ~ age * sex + ethinicy}.
+#'   \code{vw_thickness ~ age * sex + ethnicity}.
 #' @param pheno Either a \code{data.frame}/\code{tibble} containing the
 #'   "phenotype" data (i.e., already loaded in the global environment), or a
 #'   string specifying the file path to phenotype data. Supported file formats:
@@ -72,7 +72,7 @@
 #'
 #' @details
 #' The function does not currently support multiple imputed datasets or IPW weights
-#' (this is for future developement)
+#' (this is for future development)
 #' 
 #' \strong{Supported Brain Surface Metrics:}
 #' The outcome specified in \code{formula} should be a brain surface metric
@@ -99,7 +99,7 @@
 #' Left and right cortical hemispheres are processed sequentially by default.
 #' Parallel processing of the two hemispheres (and/or different metrics, models)
 #' should be handled by the user (e.g., using SLURM job arrays or similar,
-#' see vignette on parallelisation).
+#' see vignette on parallelization).
 #' Within each hemisphere, vertices are divided into chunks of size
 #' \code{chunk_size} and processed in parallel across \code{n_cores} workers
 #' (when \code{n_cores > 1}). When multiple imputed datasets are present,
@@ -122,7 +122,7 @@
 #' cause worker initialization or other issues (e.g. R parallel processes
 #' limits)
 #'
-#' @return A list of site-speficic information summary matrices, of which
+#' @return A list of site-specific information summary matrices, of which
 #' some are (\code{bigstatsr::FBM} objects). These should be compressed
 #' before sending them to the aggregation center.
 #'
@@ -263,7 +263,7 @@ run_vw_fed_local <- function(
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss, n_cores = n_cores)
+  problem_verts <- fbm_col_has_0(ss, n_cores = 1L)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
@@ -328,11 +328,10 @@ run_vw_fed_local <- function(
              " * dimentions: ", site_info$n_obs, " observations x ", site_info$n_good_vx,
              " (of ", vw_n, " total) vertices.", verbose = verbose)
 
-  progress_file <- paste0(result_path, ".progress.log")
-  on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
+  # progress_file <- paste0(result_path, ".progress.log")
+  # on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   with_parallel(n_cores = n_cores, 
-    progress_file = progress_file,
     seed = seed,
     verbose = verbose, 
     expr = {
