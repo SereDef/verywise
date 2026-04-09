@@ -1,5 +1,5 @@
 # Changelog
 
-## verywise 1.3.0
+## verywise 1.3.1
 
-- Initial CRAN submission.
+- We’ve got a distributed / federated pipeline folks

@@ -16,7 +16,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/SereDef/verywise/blob/v1.3.1/inst/CITATION)
+[`inst/CITATION`](https://github.com/SereDef/verywise/blob/main/inst/CITATION)
 
 Defina S (2026). *verywise: vertex / voxel-wise linear mixed models*.
 [doi:10.5281/zenodo.18496337](https://doi.org/10.5281/zenodo.18496337),
