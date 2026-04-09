@@ -135,13 +135,6 @@ build_supersubject <- function(subj_dir,
   n_files <- length(files_found) # Number of observations / subjects
   n_verts <- count_vertices(fs_template)
 
-  if (fs_template != 'fsaverage') {
-    vw_message(" ! NOTE: downsampling vertices induces (small) registration errors.",
-               "\n   This is fine for model tuning but, in the final analysis, ",
-               "we reccommend\n   using the high resolution `fsaverage` template.",
-               verbose = TRUE)
-  }
-
   # Define backing file for matrix
   if (missing(backing)) {
     backing <- file.path(supsubj_dir,
@@ -176,7 +169,7 @@ build_supersubject <- function(subj_dir,
        failure_log <- character(0)
 
        tryCatch({
-         if (fs_template != 'fsaverage') {
+         if (fs_template != data_resolution$fs_template) {
            ss[i, ] <- load.mgh(file_path)$x[1:n_verts]
          } else {  # avoid sub-setting if not necessary
            ss[i, ] <- load.mgh(file_path)$x

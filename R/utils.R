@@ -240,20 +240,25 @@ probe_data_resolution <- function(subj_surf_dir,
       min_found_rank <- min(found_ranks[non_na])
       if (req_rank < min_found_rank) {
         stop(
-          "Requested fs_template '", fs_template,
-          "' (higher resolution) not found in surf/.\n",
+          "Requested fs_template `", fs_template,
+          "` not found in surf/.\n",
           "Only lower-resolution templates available: ",
           paste(unique(found_templates), collapse = ", "), ".\n",
-          "Please either rerun FreeSurfer with '", fs_template,
-          "' or adjust your fs_template argument."
+          "Please either rerun FreeSurfer with `", fs_template,
+          "` or adjust your fs_template argument."
         )
       }
+
     }
 
     # Otherwise, fall back to first available
     tmpl <- found_templates[1L]
-    warning("Requested fs_template '", fs_template,
-            "' not found. Will subset from '", tmpl, "' instead.")
+    vw_message("NOTE: data was not processed using '", fs_template,
+               "'. Will subsample from '", tmpl, "' instead.",
+               "Downsampling vertices induces (small) registration errors.",
+               " This is fine for model tuning but, in the final analysis, ",
+               "we reccommend using the high resolution `fsaverage` template.",
+               verbose = TRUE)
   }
 
   # Restrict hits to chosen template
