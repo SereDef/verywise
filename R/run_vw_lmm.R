@@ -440,7 +440,7 @@ run_vw_lmm <- function(
       foreach::foreach(chunk = chunk_seq, 
         .packages = c("bigstatsr"), 
         .export = c("single_lmm", "vw_pool",
-          "progress_file", "init_progress_tracker", "update_progress_tracker")
+                    "init_progress_tracker", "update_progress_tracker")
     ) %dopar% { # Only parallel if n_cores > 1
 
       # Progress updates
