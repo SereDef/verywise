@@ -31,11 +31,6 @@
 
   welcome()
 
-  # cli::cli_rule(
-  #   left  = cli::style_bold(cli::col_cyan("verywise")),
-  #   right = cli::col_silver(paste0("v", version))
-  # )
-
   # Use FORK for bigstatsr on Unix to avoid PSOCK connection stacking
   if (.Platform$OS.type == "unix") {
     op <- getOption("bigstatsr.cluster.type")

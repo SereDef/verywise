@@ -411,7 +411,7 @@ run_vw_lmm <- function(
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["resid"]) # Residuals
   # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
-  f_vw <- bigstatsr::FBM(5, vw_n, init = 0, type = fbm_precision,
+  f_vw <- bigstatsr::FBM(5, vw_n, init = NA_real_, type = fbm_precision,
                          backingfile = res_bk_paths["fitstats"])   
   
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues

@@ -102,6 +102,10 @@ vw_message <- function(..., verbose = TRUE) {
 #   )
 #   cli::cli_end()
 # }
+  # cli::cli_rule(
+  #   left  = cli::style_bold(cli::col_cyan("verywise")),
+  #   right = cli::col_silver(paste0("v", version))
+  # )
 # ── verywise ─────────────────────────────────────────── v0.1.0 ──
 
 
