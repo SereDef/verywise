@@ -69,7 +69,9 @@ Used inside
 ## References
 
 Rubin, D.B. (1987). *Multiple Imputation for Nonresponse in Surveys*.
-New York: John Wiley and Sons.
+New York: John Wiley and Sons. Luke, S.G. (2017). *Evaluating
+significance in linear mixed-effects models in R.* Behavior research
+methods, 49(4), 1494-1502.
 
 ## Author
 

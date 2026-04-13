@@ -13,7 +13,7 @@ Let’s see how to get there. First, load the package:
 
 ``` r
 library(verywise)
-#> Loaded verywise 1.3.1.9000
+#> Loaded verywise 1.3.2
 ```
 
 Now, decide what data you want to generate. In this (small) example, I
