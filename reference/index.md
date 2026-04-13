@@ -131,7 +131,7 @@
   : Update within-chunk progress for a (milestone) vertex
 
 - [`vw_message()`](https://seredef.github.io/verywise/reference/vw_message.md)
-  : Print message to console if verbose = TRUE
+  : Print a styled message to the console
 
 - [`vw_pool()`](https://seredef.github.io/verywise/reference/vw_pool.md)
   :
