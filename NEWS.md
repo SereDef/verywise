@@ -1,4 +1,4 @@
-# verywise (development version)
+# verywise 1.3.2
 
 # verywise 1.3.1
 
