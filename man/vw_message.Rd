@@ -2,15 +2,32 @@
 % Please edit documentation in R/vw_message.R
 \name{vw_message}
 \alias{vw_message}
-\title{Print message to console if verbose = TRUE}
+\title{Print a styled message to the console}
 \usage{
-vw_message(..., verbose = TRUE)
+vw_message(..., verbose = TRUE, type = NULL)
 }
 \arguments{
-\item{...}{: content to print}
+\item{...}{Concatenated via \code{paste0()} to form the message string.}
 
-\item{verbose}{(default = TRUE)}
+\item{verbose}{Logical (default \code{TRUE}).}
+
+\item{type}{Optional override: \code{"info"}, \code{"step"}, \code{"bullet"},
+\code{"warning"}, \code{"success"}, \code{"note"}, \code{"sub"}.}
 }
 \description{
-Print message to console if verbose = TRUE
+Routes each call to the appropriate \code{cli} alert type based on the
+conventional leading-character prefixes used in the existing codebase:
+}
+\details{
+\tabular{ll}{
+   Prefix in \code{msg} \tab Rendered as \cr
+   \code{" * "} / \code{"* "} \tab bullet (\code{cli_bullets}) \cr
+   \code{" ! "} / \code{"   !"} \tab warning alert \cr
+   \code{"NOTE:"} \tab info alert \cr
+   anything else \tab \code{cli_text} \cr
+}
+
+
+Use the explicit typed variants (\code{vw_step}, \code{vw_bullet}, …) for new call
+sites rather than relying on auto-detection.
 }

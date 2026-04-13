@@ -23,6 +23,41 @@ check_measure <- function(measure,
   
 }
 
+check_path <- function(dir_path, create_if_not = FALSE) { # file_exists = NULL
+
+  param_name <- deparse(substitute(dir_path))
+
+  if (param_name == "outp_dir" & is.null(dir_path)) {
+    outp_dir <- file.path(getwd(), "verywise_results")
+    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
+                 " You can find the results at ", outp_dir)
+    dir.create(outp_dir, showWarnings = FALSE)
+    return(outp_dir)
+  }
+
+  if (!dir.exists(dir_path)) {
+    if (create_if_not) {
+      vw_message(sprintf(
+        " * the `%s` specified ('%s') does not exist.\n   I'll try to create it.",
+        param_name, dir_path))
+      dir.create(dir_path, recursive=TRUE)
+    } else {
+      stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
+    }
+  }
+
+  # Check for files inside the folder [not used in the latest version]
+  # if (!is.null(file_exists)) {
+  #   file_exists <- as.vector(file_exists, mode = 'character')
+  #   for (f in file_exists) {
+  #     file_path <- file.path(dir_path, f)
+  #     if (file.exists(file_path)) return(file_path)
+  #   }
+  # }
+
+  return(dir_path)
+}
+
 check_data_list <- function(data_list, folder_id, formula) {
 
   if (!is.list(data_list) || length(data_list) == 0) {
@@ -73,40 +108,7 @@ check_data_frame <- function(data, folder_id, formula) {
   invisible(NULL)
 }
 
-check_path <- function(dir_path, create_if_not = FALSE) { # file_exists = NULL
 
-  param_name <- deparse(substitute(dir_path))
-
-  if (param_name == "outp_dir" & is.null(dir_path)) {
-    outp_dir <- file.path(getwd(), "verywise_results")
-    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
-                 " You can find the results at ", outp_dir)
-    dir.create(outp_dir, showWarnings = FALSE)
-    return(outp_dir)
-  }
-
-  if (!dir.exists(dir_path)) {
-    if (create_if_not) {
-      vw_message(sprintf(
-        " * the `%s` specified ('%s') does not exist.\n   I'll try to create it.",
-        param_name, dir_path))
-      dir.create(dir_path, recursive=TRUE)
-    } else {
-      stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
-    }
-  }
-
-  # Check for files inside the folder [not used in the latest version]
-  # if (!is.null(file_exists)) {
-  #   file_exists <- as.vector(file_exists, mode = 'character')
-  #   for (f in file_exists) {
-  #     file_path <- file.path(dir_path, f)
-  #     if (file.exists(file_path)) return(file_path)
-  #   }
-  # }
-
-  return(dir_path)
-}
 
 check_stack_file <- function(fixed_terms, outp_dir) {
 
@@ -202,6 +204,7 @@ check_cores <- function(n_cores){
 }
 
 check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
+
   # Set up the necessary FreeSurfer global variables
   if (is.null(FS_HOME) | FS_HOME == "") {
 
@@ -214,7 +217,7 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
 
   } else {
 
-    vw_message("Setting up FreeSurfer environment...", verbose=verbose)
+    # vw_message("Setting up FreeSurfer environment...", verbose=verbose)
     exit_code <- system(paste("source",
                               file.path(FS_HOME, "SetUpFreeSurfer.sh")))
     if (exit_code != 0) { # --> sourcing failed
@@ -223,8 +226,8 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
     Sys.setenv(FREESURFER_HOME = FS_HOME)
   }
 
-  vw_message(" * Note: using FreeSurfer version ", basename(FS_HOME),
-             verbose = verbose)
+  vw_message("Using FreeSurfer version {.field { basename(FS_HOME) }}", 
+             type = 'note', verbose = verbose)
 
   if (Sys.getenv("SUBJECTS_DIR") == "") {
     Sys.setenv(SUBJECTS_DIR = file.path(FS_HOME, "subjects"))
@@ -238,15 +241,23 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
   return(invisible(NULL))
 }
 
-check_numeric_param <- function(param, name, lower = -Inf, upper = Inf, integer = FALSE) {
+check_numeric_param <- function(param, lower = -Inf, upper = Inf, 
+  integer = FALSE, set = NULL) {
+  
+  param_name <- deparse(substitute(param))
+
   if (!is.numeric(param) || length(param) != 1 || is.na(param)) {
-    stop(sprintf("`%s` must be a single numeric value.", name))
+    cli::cli_abort("{.strong {param_name}} must be a single numeric value.")
   }
   if (integer && (param %% 1 != 0)) {
-    stop(sprintf("`%s` must be an integer.", name))
+    cli::cli_abort("{.strong {param_name}} must be an integer.")
   }
   if (param < lower || param > upper) {
-    stop(sprintf("`%s` must be between %s and %s.", name, lower, upper))
+    cli::cli_abort("{.strong {param_name}} must be between:
+       {.val {lower}} and {.val {upper}}.")
+  }
+  if (!is.null(set) && !param %in% set) {
+    cli::cli_abort("{.strong {param_name}} must be one of: {.or {.val {set}}}.")
   }
 }
 

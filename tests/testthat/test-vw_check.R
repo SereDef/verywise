@@ -174,22 +174,39 @@ test_that("check_cores adjusts the number of cores and warns", {
                regexp = "should be an integer that is 1 or higher")
 })
 
-test_that("check_numeric_param validates numeric parameters", {
-  # check_numeric_param accepts valid numeric
-  expect_silent(check_numeric_param(5, "param", lower = 1, upper = 10))
+test_that("check_numeric_param: non-numeric errors", {
+  x <- "a"
+  expect_snapshot(error = TRUE, check_numeric_param(x))
+})
 
-  # check_numeric_param errors on non-numeric
-  expect_error(check_numeric_param("a", "param"),
-               regexp = "`param` must be a single numeric value")
+test_that("check_numeric_param: non-scalar errors", {
+  x <- c(1, 2)
+  expect_snapshot(error = TRUE, check_numeric_param(x))
+})
 
-  # check_numeric_param errors on non-integer when integer required
-  expect_error(check_numeric_param(1.5, "param", integer = TRUE),
-               regexp = "`param` must be an integer")
+test_that("check_numeric_param: integer constraint errors", {
+  x <- 2.5
+  expect_snapshot(error = TRUE, check_numeric_param(x, integer = TRUE))
+})
 
-  # check_numeric_param errors on out-of-bounds
-  expect_error(check_numeric_param(0, "param", lower = 1, upper = 10),
-               regexp = "must be between 1 and 10")
+test_that("check_numeric_param: range constraint errors", {
+  x <- 0
+  expect_snapshot(error = TRUE, check_numeric_param(x, lower = 1, upper = 10))
 
+  y <- 11
+  expect_snapshot(error = TRUE, check_numeric_param(y, lower = 1, upper = 10))
+})
+
+test_that("check_numeric_param: set membership errors", {
+  x <- 4.5
+  expect_snapshot(error = TRUE, check_numeric_param(x, set = c(2, 3, 4)))
+})
+
+test_that("check_numeric_param: passes for valid inputs", {
+  # No error expected, so no snapshot needed
+  y <- 3
+  expect_invisible(check_numeric_param(y, lower = 1, upper = 10,
+                                       integer = TRUE, set = c(2, 3, 4)))
 })
 
 # Note: check_freesurfer_setup modifies environment variables and calls system

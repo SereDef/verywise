@@ -239,38 +239,45 @@ run_vw_lmm <- function(
   save_residuals = FALSE,
   verbose = TRUE) {
   
-  # Check user input ===========================================================
+  vw_init_message('Linear mixed model', verbose = verbose)
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
+  model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
-  vw_message('* Model: ', deparse(formula), verbose = verbose)
+  # vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
+  vw_message('* Outcome: {.field {outcome_name(hemi, measure)}}', verbose = verbose)
+  vw_message('* Model:   {.field {model_desc}}', verbose = verbose)
   # vw_pretty_message('', fill = '-', verbose = verbose)
 
-  vw_message("Checking user inputs...", verbose = verbose)
+  # Check user input ===========================================================
+  vw_message("User input validation and environment set-up", type='step', verbose = verbose)
 
-  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
+  # Path specifications
+  cli::cli_progress_step('Input and output paths', spinner=TRUE)
 
   subj_dir <- check_path(subj_dir)
-  ss_exists <- check_ss_exists(subj_dir, ss_file)
-
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
 
-  check_freesurfer_setup(FS_HOME, verbose = verbose)
+
+  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
+  ss_exists <- check_ss_exists(subj_dir, ss_file)
+
+  # Numeric input
+  cli::cli_progress_step('Numeric inputs and environment setup', spinner=TRUE)
+
+  check_numeric_param(seed, integer = TRUE, lower = 0)
+  check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
+  check_numeric_param(fwhm, lower = 1, upper = 30)
+  check_numeric_param(mcz_thr, set=c(13, 20, 23, 30, 33, 40))
+  check_numeric_param(cwp_thr, set=c(0.025, 0.05))
 
   n_cores <- check_cores(n_cores)
 
-  check_numeric_param(seed, integer = TRUE, lower = 0)
-  check_numeric_param(chunk_size, integer = TRUE, lower = 1,
-                      upper = 5000) # for memory safety
-  check_numeric_param(fwhm, lower = 1, upper = 30)
-  # check_numeric_param(mcz_thr, lower = 0)
-  # check_numeric_param(cwp_thr, lower = 0)
+  # FreeSurfer
+  check_freesurfer_setup(FS_HOME, verbose = verbose)
 
-  # Other set-up stuff =========================================================
-
-  # Avoid bigstatsr wanrining about lost precision (float vs. double)
+  # Avoid bigstatsr warning about lost precision (float vs. double)
   old_opts <- options(bigstatsr.downcast.warning = FALSE)
   on.exit(options(old_opts), add = TRUE)
 
@@ -278,8 +285,13 @@ run_vw_lmm <- function(
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
 
+  cli::cli_progress_done()
+
   # Read phenotype data (if not already loaded) ================================
-  vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
+  # vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
+  # step2 <- cli::cli_progress_step("Checking and preparing phenotype dataset", spinner = TRUE)
+
+  vw_message("Phenotype preparation", type='step', verbose = verbose)
 
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
@@ -294,8 +306,8 @@ run_vw_lmm <- function(
   # Extract first dataset
   data1 <- data_list[[1]]
 
-  vw_message(" * ", length(data_list), " datasets of dimension: ", nrow(data1),
-             " x ", ncol(data1), verbose = verbose)
+  vw_message(" * {.val {length(data_list)}} dataset{?s} of dimensions: ", 
+             "{.field { nrow(data1) } x { ncol(data1) }}", verbose = verbose)
 
   check_weights(weights, data1)
 
@@ -308,8 +320,12 @@ run_vw_lmm <- function(
   folder_ids <- data1[, folder_id, drop=TRUE] # ensure this is always a character vector 
 
   # Read and clean vertex data =================================================
+  
+  vw_message("Brain data processing", type='step', verbose = verbose)
 
-  vw_message("Checking and preparing brain surface data...", verbose = verbose)
+  # cli::cli_progress_done()
+  
+  # vw_message("Checking and preparing brain surface data...", verbose = verbose)
 
   if (is.character(save_ss)) {
     ss_dir <- check_path(save_ss, create_if_not = TRUE)
@@ -369,9 +385,15 @@ run_vw_lmm <- function(
 
   data1 <- data_list[[1]]
 
+  # Prepare chunk sequence =====================================================
+  vw_message(" * chunk dataset", verbose = verbose)
+  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
+
+
   # Unpack model ===============================================================
-  vw_message("Statistical model preparation...",
-             "\n * call: ", deparse(formula), verbose = verbose)
+  vw_message("Statistical model fitting", type='step', verbose = verbose)
+
+  # vw_message("Statistical model preparation...", verbose = verbose)
 
   # Number of vertices
   vw_n <- length(is_cortex); rm(is_cortex)
@@ -415,10 +437,6 @@ run_vw_lmm <- function(
                          backingfile = res_bk_paths["fitstats"])   
   
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
-
-  # Prepare chunk sequence =====================================================
-  vw_message(" * chunk dataset", verbose = verbose)
-  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
 
   # Parallel analyses ==========================================================
   vw_message("Running analyses...\n",
@@ -494,6 +512,7 @@ run_vw_lmm <- function(
   names(out) <- res_bk_names
 
   # Post-processing ============================================================
+  vw_message("Post-processing", type='step', verbose = verbose)
 
   # Save model statistics into separate .mgh files
   
@@ -507,6 +526,7 @@ run_vw_lmm <- function(
   if (!save_residuals) on.exit(file.remove(resid_mgh_path), add = TRUE)
 
   # Estimate full-width half maximum (using FreeSurfer) ========================
+
   vw_message("Estimating data smoothness for multiple testing correction...",
              verbose = verbose)
 
@@ -545,7 +565,8 @@ run_vw_lmm <- function(
                      verbose = fs_verbosity)
   }
 
-  vw_pretty_message("Done! :)")
+  # vw_pretty_message("Done! :)")
+  vw_message("Done! :)", type='step', verbose = verbose)
 
   return(out)
 }

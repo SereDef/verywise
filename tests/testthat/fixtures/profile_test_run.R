@@ -7,7 +7,7 @@ set.seed(3108)
 
 temp_test_dir <- system.file("tests/testthat/fixtures", package = "verywise")
 
-subj_dir <- file.path(temp_test_dir, "fs7")
+subj_dir <- file.path(temp_test_dir, "fs7") # fs7
 outp_dir <- file.path('~/Desktop/vw_tmp_results')
 
 test_formula <- vw_area ~ sex + age + wisdom + (1 | id)

@@ -65,7 +65,7 @@ significant_cluster_stats <- function(stat, ss_dir, res_dir, term, measure, hemi
     return(NULL)
   }
 
-  vw_message(table(clusters))
+  vw_message(table(clusters), type='table')
 
   ss_file <- file.path(ss_dir, paste(hemi, measure, 'fsaverage.supersubject.rds', sep='.'))
   ss <- bigstatsr::big_attach(ss_file)

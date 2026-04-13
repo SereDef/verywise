@@ -176,7 +176,7 @@ count_vertices <- function(fs_template) {
   return(n_verts)
 }
 
-outcome_name <- function(hemi, measure) {
+outcome_name <- function(hemi, measure, sep =' - ') {
 
   hemi_name <- if (hemi == "lh") "Left" else "Right"
 
@@ -195,7 +195,7 @@ outcome_name <- function(hemi, measure) {
     white.K = 'Gaussian curvature (white surface)'
   )
 
-  paste(hemi_name, 'hemisphere ~', meas_name)
+  paste0(hemi_name, ' hemisphere', sep, meas_name)
   
 }
 
@@ -257,7 +257,7 @@ probe_data_resolution <- function(subj_surf_dir,
                "'. Will subsample from '", tmpl, "' instead.",
                "Downsampling vertices induces (small) registration errors.",
                " This is fine for model tuning but, in the final analysis, ",
-               "we reccommend using the high resolution `fsaverage` template.",
+               "we recommend using the high resolution `fsaverage` template.",
                verbose = TRUE)
   }
 
