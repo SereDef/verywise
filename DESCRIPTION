@@ -46,7 +46,6 @@ Imports:
     doRNG (>= 1.5),
     dplyr,
     foreach,
-    insight,
     lme4 (>= 1.1.35.5),
     magrittr,
     rlang

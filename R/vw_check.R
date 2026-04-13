@@ -216,14 +216,17 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
     FS_HOME <- Sys.getenv("FREESURFER_HOME")
 
   } else {
-
-    # vw_message("Setting up FreeSurfer environment...", verbose=verbose)
-    exit_code <- system(paste("source",
-                              file.path(FS_HOME, "SetUpFreeSurfer.sh")))
+  
+    exit_code <- system(
+      paste("source", file.path(FS_HOME, "SetUpFreeSurfer.sh"), "2>/dev/null"),
+      ignore.stdout = TRUE)
+    
     if (exit_code != 0) { # --> sourcing failed
       stop(FS_HOME, " is not a FREESURFER_HOME directory.")
     }
+
     Sys.setenv(FREESURFER_HOME = FS_HOME)
+
   }
 
   vw_message("Using FreeSurfer version {.field { basename(FS_HOME) }}", 

@@ -52,10 +52,12 @@ build_supersubject <- function(subj_dir,
                                error_cutoff = 20,
                                save_rds = FALSE,
                                verbose = TRUE) {
+  
+  cli::cli_progress_step('Build ({hemi}, {measure}) super-subject matrix', spinner=TRUE)
 
   # Identify brain surface files to load ---------------------------------------
-  vw_message(" * retrieving ", length(folder_ids), " brain surface files...",
-             verbose = verbose)
+  # vw_message(" * retrieving ", length(folder_ids), " brain surface files...",
+  #            verbose = verbose)
 
   folder_list <- file.path(subj_dir, folder_ids)
   if(!dir.exists(supsubj_dir)) dir.create(supsubj_dir, showWarnings = FALSE)
@@ -70,7 +72,7 @@ build_supersubject <- function(subj_dir,
     folders_not_found <- setdiff(folder_list, folders_found)
 
     writeLines(c(paste("Attention:", length(folders_not_found),
-                       "observations speficied in phenotype were not found:"),
+                       "observations specified in phenotype were not found:"),
                  gsub(" ", "^", folders_not_found), "\n"), log_file)
 
     # If many observations are missing, the folder id may be mispecified
@@ -123,11 +125,10 @@ build_supersubject <- function(subj_dir,
               " brain surface files were corrupt or missing.",
               "\n   See issues.log file for datails.")
     }
-
   }
 
-  vw_message(" * ", length(files_found),"/",length(folder_ids),
-             " observations found.", verbose = verbose)
+  vw_message("{.val { length(files_found) }}/{.val { length(folder_ids) }} files found.", 
+        verbose = verbose, type='note')
 
   # Build empty large matrix to store all vertex and subjects ------------------
 
@@ -153,7 +154,8 @@ build_supersubject <- function(subj_dir,
     create_bk = !file.exists(backing)
   )
 
-  vw_message(" * populating super-subject matrix...", verbose = verbose)
+  # vw_message(" * populating super-subject matrix...", verbose = verbose)
+  cli::cli_progress_step('Populate super-subject matrix', spinner=TRUE)
   
   # with_parallel helper handles cluster setup and cleanup
   with_parallel(
@@ -285,6 +287,8 @@ subset_supersubject <- function(supsubj_dir,
                                 n_cores = 1,
                                 save_rds = FALSE,
                                 verbose = TRUE) {
+  
+  cli::cli_progress_step('Read super-subject file from: {.file {supsubj_dir}}', spinner=TRUE)
 
   rownames_file <- file.path(supsubj_dir,
                              gsub('.fsaverage\\d*\\.supersubject.rds',
@@ -303,7 +307,7 @@ subset_supersubject <- function(supsubj_dir,
                                '.issues.log', supsubj_file))
 
     writeLines(c(paste("Attention:", n_ids_not_found,
-                       "observations speficied in phenotype were not found:"),
+                       "observations specified in phenotype were not found:"),
                  ids_not_found, "\n"), log_file)
 
     # If many observations are missing, the folder id may be mispecified
@@ -311,13 +315,13 @@ subset_supersubject <- function(supsubj_dir,
       stop(n_ids_not_found,
            " observations specified in phenotype were not found in `subj_dir`.",
            "\nIs your `folder_id` correctly specified?",
-           "\nSee issues.log file for datails.")
+           "\nSee issues.log file for details.")
     }
 
     # If not many observations are missing, notify user but keep at it
     warning(" ! ", n_ids_not_found,
             " observations specified in phenotype were not found in `subj_dir`.",
-            "\n   See issues.log file for datails.")
+            "\n   See issues.log file for details.")
   }
 
   ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
@@ -343,10 +347,11 @@ subset_supersubject <- function(supsubj_dir,
                              type = "float",
                              backingfile = gsub(".bk$", "", backing),
                              create_bk = !file.exists(backing))
+    
+    cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
 
-    vw_message(" * subsetting super-subject matrix...",
-               "\n   ", n_row, "/", ss$nrow, " rows matching data[,`folder_id`])",
-               verbose = verbose)
+    vw_message("{.val { n_row }} / {.val {ss$nrow}} row{?s} matching data[,`folder_id`])",
+               verbose = verbose, type = 'note')
 
     # Fill new ss matrix in chunks
     bigstatsr::big_apply(
@@ -370,8 +375,8 @@ subset_supersubject <- function(supsubj_dir,
 
     # Save output
     if (save_rds) {
-      vw_message(" * saving (subsetted) supersubject matrix to .rds file.",
-                 verbose = verbose)
+      vw_message("New supersubject matrix saved to {.file {new_supsubj_dir}}",
+                 verbose = verbose, type = 'note')
       new_ss$save()
     }
 

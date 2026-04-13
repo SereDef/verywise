@@ -57,6 +57,8 @@ Used inside \code{\link{run_vw_lmm}}.
 \references{
 Rubin, D.B. (1987). \emph{Multiple Imputation for Nonresponse in Surveys}.
 New York: John Wiley and Sons.
+Luke, S.G. (2017). \emph{Evaluating significance in linear mixed-effects models in R.}
+Behavior research methods, 49(4), 1494-1502.
 }
 \author{
 Serena Defina, 2024.

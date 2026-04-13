@@ -264,7 +264,7 @@ run_vw_lmm <- function(
   ss_exists <- check_ss_exists(subj_dir, ss_file)
 
   # Numeric input
-  cli::cli_progress_step('Numeric inputs and environment setup', spinner=TRUE)
+  cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
@@ -273,6 +273,8 @@ run_vw_lmm <- function(
   check_numeric_param(cwp_thr, set=c(0.025, 0.05))
 
   n_cores <- check_cores(n_cores)
+
+  cli::cli_progress_done()
 
   # FreeSurfer
   check_freesurfer_setup(FS_HOME, verbose = verbose)
@@ -284,14 +286,12 @@ run_vw_lmm <- function(
   # Esure reproducible seeds in parallel settings
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
-
-  cli::cli_progress_done()
-
+  
   # Read phenotype data (if not already loaded) ================================
-  # vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
-  # step2 <- cli::cli_progress_step("Checking and preparing phenotype dataset", spinner = TRUE)
-
+  
   vw_message("Phenotype preparation", type='step', verbose = verbose)
+
+  cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
 
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
@@ -305,6 +305,8 @@ run_vw_lmm <- function(
 
   # Extract first dataset
   data1 <- data_list[[1]]
+
+  cli::cli_progress_done()
 
   vw_message(" * {.val {length(data_list)}} dataset{?s} of dimensions: ", 
              "{.field { nrow(data1) } x { ncol(data1) }}", verbose = verbose)
@@ -336,8 +338,6 @@ run_vw_lmm <- function(
   }
 
   if (ss_exists) {
-    vw_message(" * reading super-subject file from: ", subj_dir,
-               verbose = verbose)
 
     ss <- subset_supersubject(
       supsubj_dir = subj_dir,
@@ -350,9 +350,6 @@ run_vw_lmm <- function(
       verbose = verbose)
 
   } else {
-
-    vw_message("Building ", outcome_name(hemi, measure), " super-subject matrix...",
-               verbose = verbose)
 
     ss <- build_supersubject(
       subj_dir = subj_dir,

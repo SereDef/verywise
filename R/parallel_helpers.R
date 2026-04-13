@@ -116,6 +116,24 @@ with_parallel <- function(n_cores,
     )
 
     if (!is.null(cl)) {
+
+      # parallel::clusterCall(cl, function() {
+      #   # Block any interactive prompts dead in their tracks
+      #   options(warn = 1) # immediate warnings
+      #   options(menu.graphics = FALSE) # no Tk popups
+      #   # Kill readline/menu calls: they return "" or 0 in batch
+      #   if (!interactive()) {
+      #     utils::assignInNamespace("readline",
+      #       function(prompt = "") { message(prompt); "" },
+      #       ns = "base")
+      #   }
+      #   # Limit BLAS threads
+      #   if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+      #     RhpcBLASctl::blas_set_num_threads(1L)
+      #     RhpcBLASctl::omp_set_num_threads(1L)
+      #   }
+      # })
+
       on.exit(parallel::stopCluster(cl), add = TRUE)
       doParallel::registerDoParallel(cl)
       # Perform %dopar% as %dorng% loops, for reproducible random numbers
@@ -129,7 +147,7 @@ with_parallel <- function(n_cores,
     }
 
   } else {
-    vw_message(" * note: sequential processing...", verbose = verbose)
+    # vw_message(" * note: sequential processing...", verbose = verbose)
     # force sequential foreach
     foreach::registerDoSEQ()
   }

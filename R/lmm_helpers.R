@@ -37,9 +37,9 @@
 #'
 #' @seealso \code{\link{run_vw_lmm}} for the main interface.
 #'
-#' @importFrom lme4 lmer fixef isSingular
-#' @importFrom stats update vcov residuals AIC
-#' @importFrom insight get_variance
+#' @importFrom lme4 lmer fixef isSingular VarCorr
+#' @importFrom stats update vcov residuals AIC var predict
+# #' @importFrom insight get_variance
 #' 
 #' @export
 #'
@@ -111,15 +111,26 @@ single_lmm <- function(
   # icc <- icc(fit)[['ICC_adjusted']]
   # r2 <- t(r2_nakagawa(fit))
   
-  varpart <- get_variance(fit, tolerance = 1e-12) # more lenient than default
 
-  icc <- safe_calc(varpart$var.random / (varpart$var.random + varpart$var.residual))
+  # Use lme4 directly – no extra dependencies, no interactive prompts:
+  vc <- VarCorr(fit)
+  var_rand <- sum(sapply(vc, function(x) sum(diag(as.matrix(x)))))
+  var_resid <- attr(vc, "sc")^2
+  var_fix <- var(predict(fit, re.form = NA))
 
-  r2_margin <- safe_calc(varpart$var.fixed / 
-    (varpart$var.fixed + varpart$var.random + varpart$var.residual))
+  icc <- safe_calc(var_rand / (var_rand + var_resid))
+  r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))
+  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_rand + var_resid))
   
-  r2_condit <- safe_calc((varpart$var.fixed + varpart$var.random) /
-        (varpart$var.fixed + varpart$var.random + varpart$var.residual))
+  # varpart <- get_variance(fit, tolerance = 1e-12) # more lenient than default
+
+  # icc <- safe_calc(varpart$var.random / (varpart$var.random + varpart$var.residual))
+
+  # r2_margin <- safe_calc(varpart$var.fixed / 
+  #   (varpart$var.fixed + varpart$var.random + varpart$var.residual))
+  
+  # r2_condit <- safe_calc((varpart$var.fixed + varpart$var.random) /
+  #       (varpart$var.fixed + varpart$var.random + varpart$var.residual))
   
   # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
   perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
