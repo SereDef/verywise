@@ -57,6 +57,8 @@
 #' @references
 #' Rubin, D.B. (1987). \emph{Multiple Imputation for Nonresponse in Surveys}.
 #' New York: John Wiley and Sons.
+#' Luke, S.G. (2017). *Evaluating significance in linear mixed-effects models in R.*
+#' Behavior research methods, 49(4), 1494-1502.
 #'
 vw_pool <- function(out_stats, m,
                     pvalue_method = "t-as-z",
