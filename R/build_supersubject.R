@@ -372,7 +372,9 @@ subset_supersubject <- function(supsubj_dir,
     
   cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
 
-  vw_message("{.val { n_row }} / {.val {ss$nrow}} row{?s} matching data[,`folder_id`])",
+  vw_message("{.val { n_row }} / {.val {ss$nrow}} ss rows matching phenotype.",
+              verbose = verbose, type = 'note')
+  vw_message("{.val { n_col }} / {.val {ss$ncol}} ss rows matching fs_template.",
               verbose = verbose, type = 'note')
 
     # Fill new ss matrix in chunks

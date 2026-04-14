@@ -241,6 +241,10 @@ run_vw_lmm <- function(
   
   vw_init_message('Linear mixed model', verbose = verbose)
 
+  # Make output look nice in non-interactive sessions
+  old_cli_opts <- vw_setup_cli_output()
+  if (!is.null(old_cli_opts)) on.exit(options(old_cli_opts), add = TRUE)
+
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
   model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
@@ -254,15 +258,15 @@ run_vw_lmm <- function(
   vw_message("User input validation and set-up", type='step', verbose = verbose)
 
   # Path specifications
-  cli::cli_progress_step('Input and output paths', spinner=TRUE)
-
+  if (verbose) cli::cli_progress_step('Input and output paths', spinner=TRUE)
+  
   subj_dir <- check_path(subj_dir)
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
 
   ss_file <- check_ss_exists(subj_dir, hemi, measure, fs_template)
 
   # Numeric input
-  cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
+  if (verbose) cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
@@ -272,7 +276,7 @@ run_vw_lmm <- function(
 
   n_cores <- check_cores(n_cores)
 
-  cli::cli_progress_done()
+  if (verbose) cli::cli_process_done()
 
   # FreeSurfer
   check_freesurfer_setup(FS_HOME, verbose = verbose)
@@ -287,7 +291,7 @@ run_vw_lmm <- function(
   
   # Read phenotype data (if not already loaded) ================================
 
-  cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
+  if (verbose) cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
 
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
@@ -302,7 +306,7 @@ run_vw_lmm <- function(
   # Extract first dataset
   data1 <- data_list[[1]]
 
-  cli::cli_progress_done()
+  if (verbose) cli::cli_progress_done()
 
   vw_message(" * Phenotype: {.val {length(data_list)}} dataset{?s} of dimensions: ", 
              "{.field { nrow(data1) }} (rows) x {.field { ncol(data1) }} (columns).", 
@@ -361,7 +365,7 @@ run_vw_lmm <- function(
       verbose = verbose)
   }
 
-  cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
+  if (verbose) cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
 
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
@@ -389,7 +393,7 @@ run_vw_lmm <- function(
   # Number of (imputed) datasets
   m <- length(data_list)
 
-  cli::cli_progress_done()
+  if (verbose) cli::cli_progress_done()
 
   vw_message("Read to run {.val {length(good_verts)}} (of {vw_n} total) models, ", 
              "split in {.val {length(chunk_seq)}} chunks.",
@@ -435,7 +439,7 @@ run_vw_lmm <- function(
   on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
-  cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
+  if (verbose) cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
     spinner=TRUE)
 
   with_parallel(n_cores = n_cores, 
@@ -494,6 +498,8 @@ run_vw_lmm <- function(
     }
   })
 
+  if (verbose) cli::cli_progress_done()
+
   out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
   # "coefficients", "standard_errors", "p_values", "fit_statistics",", "residuals"
   names(out) <- res_bk_names
@@ -514,9 +520,6 @@ run_vw_lmm <- function(
 
   # Estimate full-width half maximum (using FreeSurfer) ========================
 
-  vw_message("Estimating data smoothness for multiple testing correction...",
-             verbose = verbose)
-
   fwhm <- estimate_fwhm(result_path = result_path,
                         hemi = hemi,
                         mask = good_verts,
@@ -527,16 +530,18 @@ run_vw_lmm <- function(
 
   if (fwhm != fwhm_clamped) {
     direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
-    vw_message(sprintf(" * estimated smoothness is %s, which is really %s",
-                       fwhm, direction), verbose = verbose)
+    vw_message("! estimated smoothness is {.val {fwhm}}, which is really {direction}",
+               verbose = verbose)
     fwhm <- fwhm_clamped
   } else {
-    vw_message(sprintf(" * estimated smoothness = %s", fwhm), verbose = verbose)
+    vw_message("Estimated smoothness = {.val {fwhm}}", type = 'note', verbose = verbose)
   }
 
   # Apply cluster-wise correction (using FreeSurfer) ===========================
-  vw_message("Clusterwise correction...", verbose = verbose)
+  # vw_message("Clusterwise correction...", verbose = verbose)
 
+  if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
+  
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
     fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
@@ -552,7 +557,8 @@ run_vw_lmm <- function(
                      verbose = fs_verbosity)
   }
 
-  # vw_pretty_message("Done! :)")
+  if (verbose) cli::cli_progress_done()
+
   vw_message("Done! :)", type='step', verbose = verbose)
 
   return(out)

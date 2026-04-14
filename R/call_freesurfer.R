@@ -21,6 +21,8 @@ estimate_fwhm <- function(result_path,
                           mask = NULL,
                           fs_template = "fsaverage",
                           verbose = FALSE) {
+  
+  if (verbose) cli::cli_progress_step("Estimate data smoothness for multiple testing correction")
 
   fwhm_estim_path <- paste0(result_path, ".fwhm.dat")
   final_mask_path <- paste0(result_path, ".finalMask.mgh")
@@ -39,7 +41,7 @@ estimate_fwhm <- function(result_path,
   if (!is.null(mask)) {
     mask_mgh_path <- paste0(result_path, ".inputMask.mgh")
     write_mask_mgh(mask, fs_template = fs_template, file_name = mask_mgh_path)
-    on.exit(if (file.exists(mask_mgh_path)) file.remove(mask_mgh_path), add = TRUE)
+    # on.exit(if (file.exists(mask_mgh_path)) file.remove(mask_mgh_path), add = TRUE)
     cmd_str <- paste(cmd_str, "--mask", mask_mgh_path)
   }
   
@@ -116,40 +118,71 @@ compute_clusters <- function(stack_path,
   outp_files <- list("ocn" = paste0(outp_prefix, "ocn.mgh"),
                      "sum" = paste0(outp_prefix, "cluster.summary"))
 
-  cmd_str <- paste("mri_surfcluster",
-                   "--in", pval_mgh_file,
-                   "--csd", csd_file,
-                   "--ocn", outp_files[['ocn']], # cluster number
-                   "--sum", outp_files[['sum']], # text summary file
-                   "--annot aparc", # report annotation for max vertex
-                   "--cwpvalthresh", cwp_thr, # clusterwise threshold
-                   "--no-fixmni", # <do not> fix MNI talairach coordinates
-                   "--surf white") # get coorindates from surface (white)
+  # ── Build command ───────────────────────────────────────────────────────────
+  args <- c(
+    "--in",  pval_mgh_file,
+    "--csd", csd_file,
+    "--ocn", outp_files[["ocn"]], # cluster number
+    "--sum", outp_files[["sum"]], # text summary file
+    "--annot", "aparc", # report annotation for max vertex
+    "--cwpvalthresh", cwp_thr, # clusterwise threshold
+    "--no-fixmni", # <do not> fix MNI talairach coordinates
+    "--surf", "white" # get coorindates from surface (white)
+  )
 
   if (full_surfcluster_output) {
-
-    other_files <- list("cwsig" = paste0(outp_prefix, "cluster.mgh"),
-                        "vwsig" = paste0(outp_prefix, "voxel.mgh"),
-                        "oannot" = paste0(outp_prefix, "ocn.annot"),
-                        "o" = paste0(outp_prefix, "masked.mgh"))
-
-    cmd_str <- paste(cmd_str,
-                     "--cwsig", other_files[["cwsig"]], # map of cluster-wise significances
-                     "--vwsig", other_files[["vwsig"]], # map of corrected voxel-wise significance
-                     "--oannot", other_files[["oannot"]], # output clusters as an annotation
-                     "--o", other_files[["o"]]) # input with non-clusters set to 0
-  
+    other_files <- list(
+      "cwsig"  = paste0(outp_prefix, "cluster.mgh"),
+      "vwsig"  = paste0(outp_prefix, "voxel.mgh"),
+      "oannot" = paste0(outp_prefix, "ocn.annot"),
+      "o"      = paste0(outp_prefix, "masked.mgh")
+    )
+    args <- c(args,
+      "--cwsig",  other_files[["cwsig"]],
+      "--vwsig",  other_files[["vwsig"]],
+      "--oannot", other_files[["oannot"]],
+      "--o",      other_files[["o"]]
+    )
   }
 
-  cmd_str <- if (!is.null(mask)) {
-    paste(cmd_str, "--mask", mask)
-  } else {
-    paste(cmd_str, "--cortex")
-  }
+  args <- c(args, if (!is.null(mask)) c("--mask", mask) else "--cortex")
 
-  cmd_str <- paste(cmd_str, "2>/dev/null") # avoid "supposed to be reproducible but seed not set" warning
+  # cmd_str <- paste(cmd_str, "2>/dev/null") # avoid "supposed to be reproducible but seed not set" warning
 
-  system(cmd_str, ignore.stdout = !verbose)
+  # system(cmd_str, ignore.stdout = !verbose)
+
+  # ── Run and capture output ──────────────────────────────────────────────────
+  # stderr is captured separately: suppress the known "seed not set" warning
+  # but surface any real errors to the user
+  stderr_file <- tempfile("mri_surfcluster_stderr_")
+  on.exit(unlink(stderr_file), add = TRUE)
+
+  exit_code <- system2(
+    command = "mri_surfcluster",
+    args = args,
+    stdout = if (verbose) "" else FALSE,  # "" → print, FALSE → discard
+    stderr = stderr_file                  # always capture, never blindly discard
+  )
+
+  # ── Handle stderr ───────────────────────────────────────────────────────────
+  stderr_lines <- readLines(stderr_file, warn = FALSE)
+
+  # Filter the known harmless warning
+  noise_pattern <- "supposed to be reproducible but seed"
+  real_errors   <- stderr_lines[!grepl(noise_pattern, stderr_lines, fixed = FALSE)]
+
+  if (length(real_errors) > 0)
+    vw_message(paste0("! mri_surfcluster stderr:\n    ",
+                      paste(real_errors, collapse = "\n    ")),
+               verbose = verbose)
+
+  # ── Check exit code ─────────────────────────────────────────────────────────
+  if (exit_code != 0)
+    cli::cli_abort(c(
+      "mri_surfcluster failed with exit code {exit_code}.",
+      "i" = "Stack: {.file {stack_path}}",
+      if (length(real_errors) > 0) "x" = paste(real_errors, collapse = "\n")
+    ))
 
   return(invisible(NULL))
 }

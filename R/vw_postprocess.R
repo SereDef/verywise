@@ -59,17 +59,18 @@ convert_to_mgh <- function(vw_results,
                            stat_names = c("coef", "se", "p", "-log10p", "resid"),
                            verbose = TRUE){
 
-  vw_message("Post-processing\n * converting coefficients, SEs, and p-values",
-             " to .mgh format", verbose = verbose)
+  if (verbose) cli::cli_progress_step(
+    "Convert coefficients, SEs, and p-values to .mgh format")
 
   lapply(stat_names, function(stat_name) {
 
     if (stat_name == "resid") {
       stat_mgh_paths <- paste(result_path, "residuals.mgh", sep = ".")
       mode <- "allrows.1file"
-      vw_message(" * converting residuals to .mgh format...", verbose = verbose)
+      if (verbose) cli::cli_progress_step("Convert residuals to .mgh format")
+      
     } else if (stat_name == 'fitstats') {
-      stat_mgh_paths <- paste(result_path, c('singular_fit','aic', 'icc', 'r2_marginal', 'r2_conditional'), 
+      stat_mgh_paths <- paste(result_path, c('singular_fit','aic', 'icc','r2_marginal', 'r2_conditional'), 
                               "mgh", sep = ".")
        mode <- "1row.1file"
     
@@ -81,7 +82,9 @@ convert_to_mgh <- function(vw_results,
 
     # Apply -log10 transformation
     if (stat_name == "-log10p") {
-      vw_message(" * (-log10) tranforming pvalues...", verbose = verbose)
+
+      if (verbose) cli::cli_progress_step("Transform p-values (-log10)")
+      
       vw_p <- vw_results[["p"]]
       fbm <- bigstatsr::FBM(nrow = vw_p$nrow,
                             ncol = vw_p$ncol,

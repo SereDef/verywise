@@ -89,18 +89,22 @@ with_parallel <- function(n_cores,
   # old_workers <- foreach::getDoParWorkers()
 
   if (n_cores > 1) {
+
     # Check if a backend is already registered and clean it up
     if (foreach::getDoParRegistered()) {
       current_backend <- foreach::getDoParName()
-      vw_message("   ! cleaning up existing parallel backend: ", current_backend,
-                 verbose = verbose)
-      # Unregister by switching to sequential
-      foreach::registerDoSEQ()
-      # Small delay to ensure cleanup completes
-      Sys.sleep(0.1)
+
+      if (current_backend != "doSEQ") {
+        vw_message("! cleaning up existing parallel backend: {current_backend}",
+                   verbose = verbose)
+        # Unregister by switching to sequential
+        foreach::registerDoSEQ()
+        # Small delay to ensure cleanup completes
+        Sys.sleep(0.1)
+      }
+      
     }
 
-    vw_message(" * preparing cluster of ", n_cores, " workers...", verbose = verbose)
 
     # Try to create FORK cluster; on failure, fall back to sequential
     cl <- tryCatch(
@@ -138,7 +142,8 @@ with_parallel <- function(n_cores,
       # Perform %dopar% as %dorng% loops, for reproducible random numbers
       doRNG::registerDoRNG(seed)
       
-      
+      vw_message("Using cluster of {.val {n_cores}} workers", verbose = verbose)
+
     } else {
       foreach::registerDoSEQ()
     }
@@ -196,7 +201,7 @@ init_progress_tracker <- function(chunk, chunk_seq,
     chunk_idx_str <- sprintf("%d/%d", chunk_idx, length(chunk_seq))
 
     # vw_message(...)
-    cat(sprintf("- Processing chunk %s (worker: %s)", chunk_idx_str, worker_id), 
+    cat(sprintf("- Processing chunk %s (worker: %s)\n", chunk_idx_str, worker_id), 
         file = progress_file, append = TRUE)
     # utils::flush.console()
   
@@ -239,7 +244,7 @@ update_progress_tracker <- function(v, progress_tracker,
   if (verbose) {
     milestone <- names(which(progress_tracker$milestone_markers == v))
     if (length(milestone) == 1) {
-      cat(sprintf("--- chunk %s is %s done.", progress_tracker$chunk_idx_str, milestone), 
+      cat(sprintf("--- chunk %s is %s done.\n", progress_tracker$chunk_idx_str, milestone), 
           file = progress_file, append = TRUE)
       # vw_message(sprintf("--- chunk %s is %s done.", progress_tracker$chunk_idx_str, milestone))
       # utils::flush.console()
