@@ -170,21 +170,28 @@ compute_clusters <- function(stack_path,
   # Filter the known harmless warning
   noise_pattern <- "supposed to be reproducible but seed"
   real_errors   <- stderr_lines[!grepl(noise_pattern, stderr_lines, fixed = FALSE)]
-
-  if (length(real_errors) > 0)
-    vw_message(paste0("! mri_surfcluster stderr:\n    ",
-                      paste(real_errors, collapse = "\n    ")),
-               verbose = verbose)
+  real_errors   <- real_errors[nzchar(trimws(real_errors))]  # drop blank lines
 
   # ── Check exit code ─────────────────────────────────────────────────────────
-  if (exit_code != 0)
-    cli::cli_abort(c(
+  if (exit_code != 0) {
+    abort_msg <- c(
       "mri_surfcluster failed with exit code {exit_code}.",
-      "i" = "Stack: {.file {stack_path}}",
-      if (length(real_errors) > 0) "x" = paste(real_errors, collapse = "\n")
-    ))
+      "i" = "Stack: {.file {basename(stack_path)}}")
+    
+    if (length(real_errors) > 0) {
+      abort_msg <- c(abort_msg,
+        "x" = paste(real_errors, collapse = "\n"))
+    } else {
+      abort_msg <- c(abort_msg,
+        "i" = "No stderr captured. Try re-running {.code compute_clusters}.")
+    }
+    cli::cli_abort(abort_msg)
+  }
+
+  if (length(real_errors) > 0)
+  vw_message(paste0("! mri_surfcluster stderr:\n    ",
+                    paste(real_errors, collapse = "\n    ")),
+              verbose = TRUE)
 
   return(invisible(NULL))
 }
-
-

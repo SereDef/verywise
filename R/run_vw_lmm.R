@@ -242,8 +242,8 @@ run_vw_lmm <- function(
   vw_init_message('Linear mixed model', verbose = verbose)
 
   # Make output look nice in non-interactive sessions
-  old_cli_opts <- vw_setup_cli_output()
-  if (!is.null(old_cli_opts)) on.exit(options(old_cli_opts), add = TRUE)
+  # old_cli_opts <- vw_setup_cli_output()
+  # if (!is.null(old_cli_opts)) on.exit(options(old_cli_opts), add = TRUE)
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)

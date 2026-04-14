@@ -372,10 +372,16 @@ subset_supersubject <- function(supsubj_dir,
     
   cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
 
-  vw_message("{.val { n_row }} / {.val {ss$nrow}} ss rows matching phenotype.",
+  if (need_row_subset) {
+    vw_message("{.val { n_row }} / {.val {ss$nrow}} ss rows matching phenotype.",
               verbose = verbose, type = 'note')
-  vw_message("{.val { n_col }} / {.val {ss$ncol}} ss rows matching fs_template.",
+  }
+  if (need_col_subset) {
+    vw_message("{.val { n_col }} / {.val {ss$ncol}} ss vertices matching fs_template.",
               verbose = verbose, type = 'note')
+    vw_message("! Downsampling if useful for model tuning but, in the final analyses, ", 
+        "we recommend using a higher resolution template", verbose = verbose)
+  }
 
     # Fill new ss matrix in chunks
   bigstatsr::big_apply(
@@ -406,4 +412,4 @@ subset_supersubject <- function(supsubj_dir,
 
   new_ss
   
-}
+  }
