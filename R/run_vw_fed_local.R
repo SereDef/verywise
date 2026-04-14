@@ -179,13 +179,11 @@ run_vw_fed_local <- function(
 
   vw_message("Checking user inputs...", verbose = verbose)
 
-  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
-
   subj_dir <- check_path(subj_dir)
-  ss_exists <- check_ss_exists(subj_dir, ss_file)
-
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
-  
+
+  ss_file <- check_ss_exists(subj_dir, hemi, measure, fs_template)
+
   n_cores <- check_cores(n_cores)
   
   # Other set-up stuff =========================================================
@@ -223,9 +221,7 @@ run_vw_fed_local <- function(
     if (!save_ss) on.exit(unlink(ss_dir, recursive = TRUE), add = TRUE)
   }
 
-  if (ss_exists) {
-    vw_message(" * reading super-subject file from: ", subj_dir,
-               verbose = verbose)
+  if (!is.null(ss_file)) {
 
     ss <- subset_supersubject(
       supsubj_dir = subj_dir,
@@ -238,9 +234,6 @@ run_vw_fed_local <- function(
       verbose = verbose)
 
   } else {
-
-    vw_message("Building ", outcome_name(hemi, measure), " super-subject matrix...",
-               verbose = verbose)
 
     ss <- build_supersubject(
       subj_dir = subj_dir,

@@ -251,7 +251,7 @@ run_vw_lmm <- function(
   # vw_pretty_message('', fill = '-', verbose = verbose)
 
   # Check user input ===========================================================
-  vw_message("User input validation and environment set-up", type='step', verbose = verbose)
+  vw_message("User input validation and set-up", type='step', verbose = verbose)
 
   # Path specifications
   cli::cli_progress_step('Input and output paths', spinner=TRUE)
@@ -259,9 +259,7 @@ run_vw_lmm <- function(
   subj_dir <- check_path(subj_dir)
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
 
-
-  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
-  ss_exists <- check_ss_exists(subj_dir, ss_file)
+  ss_file <- check_ss_exists(subj_dir, hemi, measure, fs_template)
 
   # Numeric input
   cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
@@ -288,8 +286,6 @@ run_vw_lmm <- function(
   set.seed(seed)
   
   # Read phenotype data (if not already loaded) ================================
-  
-  vw_message("Phenotype preparation", type='step', verbose = verbose)
 
   cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
 
@@ -308,9 +304,11 @@ run_vw_lmm <- function(
 
   cli::cli_progress_done()
 
-  vw_message(" * {.val {length(data_list)}} dataset{?s} of dimensions: ", 
-             "{.field { nrow(data1) } x { ncol(data1) }}", verbose = verbose)
-
+  vw_message(" * Phenotype: {.val {length(data_list)}} dataset{?s} of dimensions: ", 
+             "{.field { nrow(data1) }} (rows) x {.field { ncol(data1) }} (columns).", 
+             verbose = verbose)
+  
+  # Unpack model ===============================================================
   check_weights(weights, data1)
 
   fixed_terms <- unpack_formula(formula, data1)
@@ -324,11 +322,7 @@ run_vw_lmm <- function(
   # Read and clean vertex data =================================================
   
   vw_message("Brain data processing", type='step', verbose = verbose)
-
-  # cli::cli_progress_done()
   
-  # vw_message("Checking and preparing brain surface data...", verbose = verbose)
-
   if (is.character(save_ss)) {
     ss_dir <- check_path(save_ss, create_if_not = TRUE)
     save_ss <- TRUE
@@ -337,7 +331,7 @@ run_vw_lmm <- function(
     if (!save_ss) on.exit(unlink(ss_dir, recursive = TRUE), add = TRUE)
   }
 
-  if (ss_exists) {
+  if (!is.null(ss_file)) {
 
     ss <- subset_supersubject(
       supsubj_dir = subj_dir,
@@ -366,7 +360,7 @@ run_vw_lmm <- function(
     )
   }
 
-  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
+  cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
 
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
@@ -383,14 +377,7 @@ run_vw_lmm <- function(
   data1 <- data_list[[1]]
 
   # Prepare chunk sequence =====================================================
-  vw_message(" * chunk dataset", verbose = verbose)
   chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
-
-
-  # Unpack model ===============================================================
-  vw_message("Statistical model fitting", type='step', verbose = verbose)
-
-  # vw_message("Statistical model preparation...", verbose = verbose)
 
   # Number of vertices
   vw_n <- length(is_cortex); rm(is_cortex)
@@ -401,9 +388,15 @@ run_vw_lmm <- function(
   # Number of (imputed) datasets
   m <- length(data_list)
 
-  # "Pre-compile the model"
-  # cache the model frame to avoid re-generating it them each time
-  # single_lmm can leverage an "update"-based workflow to minimize
+  cli::cli_progress_done()
+
+  vw_message("Read to run {.val {length(good_verts)}} (of {vw_n} total) models, ", 
+             "split in {.val {length(chunk_seq)}} chunks.",
+             verbose = verbose, type = 'note')
+
+  vw_message("Statistical model fitting", type='step', verbose = verbose)
+
+  # Cache the model frame: `single_lmm` uses an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
   model_template <- precompile_model(formula = formula, tmp_data = data1, 
     tmp_y = ss[, good_verts[1]], measure = measure, 
@@ -436,17 +429,13 @@ run_vw_lmm <- function(
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
   # Parallel analyses ==========================================================
-  vw_message("Running analyses...\n",
-             " * dimentions: ", n_obs, " observations x ", length(good_verts),
-             " (of ", vw_n, " total) vertices.", verbose = verbose)
 
   progress_file <- paste0(result_path, ".progress.log")
   on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
-  vw_message(" * fitting linear mixed models...\n",
-             "   this may take some time, check the ", basename(progress_file),
-             " file for updates.", verbose = verbose)
+  cli::cli_progress_step("Fitting linear mixed models... this may take some time, 
+    check the {.file {basename(progress_file)}} file for updates.", spinner=TRUE)
 
   with_parallel(n_cores = n_cores, 
     seed = seed,

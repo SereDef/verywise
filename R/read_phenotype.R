@@ -16,8 +16,6 @@
 #'
 load_pheno_file <- function(pheno_str, verbose=TRUE) {
 
-  if (verbose) message('Loading phenotype file...')
-
   # Check that specified file exists
   if (!file.exists(pheno_str)) stop(paste0(pheno_str, " file not found."))
 

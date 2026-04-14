@@ -109,7 +109,6 @@ check_data_frame <- function(data, folder_id, formula) {
 }
 
 
-
 check_stack_file <- function(fixed_terms, outp_dir) {
 
   stack_ids <- data.frame("stack_number" = seq_along(fixed_terms),
@@ -139,26 +138,81 @@ check_stack_file <- function(fixed_terms, outp_dir) {
   }
 }
 
-check_ss_exists <- function(path, ss_file) {
+# check_ss_exists <- function(path, ss_file) {
 
+#   ss_path <- file.path(path, ss_file)
+
+#   if (!file.exists(ss_path)) {
+#     return(FALSE)
+#   }
+
+#   rn_file <- gsub('.fsaverage\\d*\\.supersubject.rds', '.ss.rownames.csv',
+#                   ss_file)
+#   rn_path <- file.path(path, rn_file)
+
+#   if (!file.exists(rn_path)) {
+#     param_name <- deparse(substitute(path))
+#     stop(sprintf("A `%s` file was found in `%s`, but its `ss.rownames.csv` is missing.",
+#                  ss_file, param_name))
+
+#   }
+#   return(TRUE)
+# }
+
+check_ss_exists <- function(path, hemi, measure, fs_template = "fsaverage") {
+
+  # First try the exact requested template
+  ss_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep = ".")
   ss_path <- file.path(path, ss_file)
 
-  if (!file.exists(ss_path)) {
-    return(FALSE)
+  if (file.exists(ss_path)) {
+    # Exact match — validate rownames file too
+    .check_rownames_present(path, ss_file)
+    return(ss_file)
   }
 
-  rn_file <- gsub('.fsaverage\\d*\\.supersubject.rds', '.ss.rownames.csv',
-                  ss_file)
-  rn_path <- file.path(path, rn_file)
+  # Fallback: glob for any available template
+  pattern <- paste0("^", hemi, "\\.", measure, "\\.fsaverage[^.]*\\.supersubject\\.rds$")
+  hits <- list.files(path, pattern = pattern)
 
-  if (!file.exists(rn_path)) {
-    param_name <- deparse(substitute(path))
-    stop(sprintf("A `%s` file was found in `%s`, but its `ss.rownames.csv` is missing.",
-                 ss_file, param_name))
+  if (length(hits) == 0L) return(NULL)  # no SS at all → build from scratch
 
+  if (length(hits) > 1L) {
+    # Pick highest resolution available
+    tmpl_order <- paste0("fsaverage", c("", 6:3))
+    ranks <- match(sub("^[^.]+\\.[^.]+\\.(fsaverage[^.]*)\\.supersubject\\.rds$",
+                       "\\1", hits), tmpl_order)
+    hits <- hits[order(ranks, na.last = TRUE)]
   }
-  return(TRUE)
+
+  found_file <- hits[1L]
+  found_tmpl <- sub("^[^.]+\\.[^.]+\\.(fsaverage[^.]*)\\.supersubject\\.rds$",
+                    "\\1", found_file)
+
+  vw_message("Found {.field {found_tmpl}} super-subject matrix in {.file {path}}",
+    "Will downsample to {.field {fs_template}}.",
+    "This is fine for model development but, in the final analyses, we recommend 
+    using a higher resolution template", type = warning, verbose = TRUE
+  )
+
+  .check_rownames_present(path, found_file)
+  return(found_file)  # caller gets the real filename, including real template
 }
+
+# Internal helper — avoids repeating the rownames check
+.check_rownames_present <- function(path, ss_file) {
+  rn_file <- sub("\\.fsaverage[^.]*\\.supersubject\\.rds$", ".ss.rownames.csv", ss_file)
+  rn_path <- file.path(path, rn_file)
+  if (!file.exists(rn_path)) {
+    stop(sprintf(
+      "Super-subject file '%s' found in '%s' but its '.ss.rownames.csv' is missing.\n",
+      ss_file, path,
+      "Re-run build_supersubject() with save_rds = TRUE to regenerate it."
+    ))
+  }
+  invisible(TRUE)
+}
+
 
 check_weights <- function(weights, data1) {
 

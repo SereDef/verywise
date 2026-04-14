@@ -109,30 +109,25 @@ with_parallel <- function(n_cores,
         # NOTE: would not work on Windows anyway till freesurfer dependency is needed
         # type = ifelse(.Platform$OS.type == "unix", "FORK", "PSOCK"))
       error = function(e) {
-        vw_message("   ! parallel backend failed (", conditionMessage(e),
-                   "); falling back to sequential processing...", verbose = verbose)
+        vw_message("! parallel backend failed ({.field {conditionMessage(e)}}); 
+          falling back to sequential processing.", verbose = verbose)
         NULL
       }
     )
 
     if (!is.null(cl)) {
 
-      # parallel::clusterCall(cl, function() {
-      #   # Block any interactive prompts dead in their tracks
-      #   options(warn = 1) # immediate warnings
-      #   options(menu.graphics = FALSE) # no Tk popups
-      #   # Kill readline/menu calls: they return "" or 0 in batch
-      #   if (!interactive()) {
-      #     utils::assignInNamespace("readline",
-      #       function(prompt = "") { message(prompt); "" },
-      #       ns = "base")
-      #   }
-      #   # Limit BLAS threads
-      #   if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
-      #     RhpcBLASctl::blas_set_num_threads(1L)
-      #     RhpcBLASctl::omp_set_num_threads(1L)
-      #   }
-      # })
+      parallel::clusterCall(cl, function() {
+        # Block any interactive prompts dead in their tracks
+        options(warn = 1) # immediate warnings
+        options(menu.graphics = FALSE) # no Tk popups
+      
+        # Limit BLAS threads
+        if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+          RhpcBLASctl::blas_set_num_threads(1L)
+          RhpcBLASctl::omp_set_num_threads(1L)
+        }
+      })
 
       on.exit(parallel::stopCluster(cl), add = TRUE)
       doParallel::registerDoParallel(cl)

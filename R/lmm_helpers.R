@@ -203,8 +203,9 @@ precompile_model <- function(formula,
                              REML = TRUE,
                              lmm_control = lme4::lmerControl(calc.derivs=FALSE),
                              verbose) {
+  
+  if (verbose) cli::cli_progress_step('Construct model template', spinner=TRUE)
 
-  vw_message(" * construct model template", verbose = verbose)
   tmp_data[paste0("vw_", measure)] <- tmp_y  # dummy outcome
 
   # Fit model once

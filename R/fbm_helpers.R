@@ -44,9 +44,9 @@ fbm_col_has_0 <- function(X, n_cores = 1,
                                         row.ind = row.ind)
 
   if (sum(problem_verts, na.rm = TRUE) > 0) {
-    vw_message(" * Ignoring ", sum(problem_verts),
-               " vertices that contained 0 values.\n   These may be located",
-               " at the edge of the cortical map and\n   are potentially",
+    vw_message(" ! Ignoring {.val {sum(problem_verts)}}",
+               " vertices that contained 0 values. These may be located",
+               " at the edge of the cortical map and are potentially",
                " problematic.", verbose = verbose)
   }
   return(problem_verts)
@@ -55,7 +55,7 @@ fbm_col_has_0 <- function(X, n_cores = 1,
 
 build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
 
-  vw_message(" * generate file-backed output containers", verbose = verbose)
+  if (verbose) cli::cli_progress_step('Generate file-backed output containers', spinner=TRUE)
 
   res_bk_paths <- paste(result_path, res_bk_names, sep = ".")
 
@@ -63,8 +63,7 @@ build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
   res_bk_files <- paste0(res_bk_paths, ".bk")
 
   if (any(file.exists(res_bk_files))) {
-    vw_message("   ! WARNING: overwriting existing results backing files.",
-               verbose = verbose)
+    vw_message("! overwriting existing results backing files.", verbose = verbose)
     file.remove(res_bk_files[file.exists(res_bk_files)])
   }
   names(res_bk_paths) <- res_bk_names

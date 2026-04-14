@@ -200,10 +200,10 @@ outcome_name <- function(hemi, measure, sep =' - ') {
 }
 
 probe_data_resolution <- function(subj_surf_dir,
-                                   hemi,
-                                   measure_file,
-                                   fwhmc,
-                                   fs_template) {
+                                  hemi,
+                                  measure_file,
+                                  fwhmc,
+                                  fs_template) {
 
   mgh_file_pattern <- paste0("^", hemi, "\\.", measure_file, 
                              ".*\\.fsaverage.*\\.mgh$")
