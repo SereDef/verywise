@@ -189,11 +189,10 @@ check_ss_exists <- function(path, hemi, measure, fs_template = "fsaverage") {
   found_tmpl <- sub("^[^.]+\\.[^.]+\\.(fsaverage[^.]*)\\.supersubject\\.rds$",
                     "\\1", found_file)
 
-  vw_message("Found {.field {found_tmpl}} super-subject matrix in {.file {path}}",
-    "Will downsample to {.field {fs_template}}.",
-    "This is fine for model development but, in the final analyses, we recommend 
-    using a higher resolution template", type = warning, verbose = TRUE
-  )
+  vw_message("! Found {.field {found_tmpl}} super-subject matrix in {.file {path}}.
+    \nWill downsample to {.field {fs_template}}.\n
+    This is fine for model development but, in the final analyses, we recommend 
+    using a higher resolution template", verbose = TRUE)
 
   .check_rownames_present(path, found_file)
   return(found_file)  # caller gets the real filename, including real template
