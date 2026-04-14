@@ -1,4 +1,8 @@
 
+# ==============================================================================
+# Shared fixtures
+# ==============================================================================
+
 subj_dir <- test_path("fixtures", "fs3")
 
 pheno <- read.csv(file.path(subj_dir, "phenotype.csv"))
@@ -20,6 +24,17 @@ supsubj_file <- paste(hemi, measure, fs_template, "supersubject.rds", sep='.')
 #   files <- list.files(supsubj_dir, pattern = pattern, full.names = TRUE)
 #   file.remove(files)
 # }
+
+
+subj_dir_fa <- file.path(subj_dir, "..", "fs7")
+supsubj_dir_fa  <- file.path(subj_dir_fa, "ss")
+supsubj_file_fa <- paste(hemi, measure, "fsaverage", "supersubject.rds", sep = ".")
+
+folder_ids_fa <- read.csv(file.path(subj_dir_fa, "phenotype.csv"))$folder_id
+
+# ==============================================================================
+# build_supersubject
+# ==============================================================================
 
 test_that("build_supersubject returns FBM with correct dimensions for valid input", {
 
@@ -156,6 +171,8 @@ test_that("build_supersubject creates output files when save_rds = TRUE", {
 })
 
 # ==============================================================================
+# subset_supersubject
+# ==============================================================================
 
 test_that("subset_supersubject works with matching IDs", {
 
@@ -167,8 +184,8 @@ test_that("subset_supersubject works with matching IDs", {
     supsubj_dir = supsubj_dir,
     supsubj_file = supsubj_file,
     folder_ids = id_subset,
-    new_supsubj_dir = new_supsubj_dir
-
+    new_supsubj_dir = new_supsubj_dir,
+    fs_template = fs_template
   )
 
   og_ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
@@ -193,8 +210,8 @@ test_that("subset_supersubject returns original matrix when no subsetting is req
     supsubj_dir = supsubj_dir,
     supsubj_file = supsubj_file,
     folder_ids = folder_ids,
-    new_supsubj_dir = new_supsubj_dir
-
+    new_supsubj_dir = new_supsubj_dir,
+    fs_template = fs_template
   )
 
   og_ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
@@ -216,7 +233,8 @@ test_that("subset_supersubject warns when some IDs missing", {
       supsubj_dir = supsubj_dir,
       supsubj_file = supsubj_file,
       folder_ids = c(folder_ids[1:6], 'not_a_person'), # One missing
-      new_supsubj_dir = new_supsubj_dir
+      new_supsubj_dir = new_supsubj_dir,
+      fs_template = fs_template
     ),
     regexp = "observations specified in phenotype were not found"
   )
@@ -231,10 +249,50 @@ test_that("subset_supersubject errors when too many IDs are missing", {
       supsubj_dir = supsubj_dir,
       supsubj_file = supsubj_file,
       folder_ids = c(folder_ids[1:6], 1:25), # too many missings
-      new_supsubj_dir = new_supsubj_dir
+      new_supsubj_dir = new_supsubj_dir,
+      fs_template = fs_template
     ),
     "observations specified in phenotype were not found"
   )
 
+})
+
+test_that("subset_supersubject subsets columns to lower-resolution templates", {
+
+  new_supsubj_dir <- file.path(tempdir(), "ss_col_only")
+
+  new_ss <- subset_supersubject(
+    supsubj_dir     = supsubj_dir_fa,
+    supsubj_file    = supsubj_file_fa,
+    folder_ids      = folder_ids_fa,    # all rows — column-only subsetting
+    new_supsubj_dir = new_supsubj_dir,
+    fs_template     = "fsaverage3",
+    verbose         = FALSE
+  )
+
+  expect_s4_class(new_ss, "FBM")
+  expect_equal(new_ss$nrow, length(folder_ids_fa))
+  expect_equal(new_ss$ncol, 642L)  # fsaverage3 vertex count
+})
+
+test_that("subset_supersubject subsets both rows and columns simultaneously", {
+
+  new_supsubj_dir <- file.path(tempdir(), "ss_row_and_col")
+  id_subset       <- folder_ids_fa[c(1L, 2L, 4L)]
+
+  new_ss <- subset_supersubject(
+    supsubj_dir     = supsubj_dir_fa,
+    supsubj_file    = supsubj_file_fa,
+    folder_ids      = id_subset,
+    new_supsubj_dir = new_supsubj_dir,
+    fs_template     = "fsaverage3",
+    verbose         = FALSE
+  )
+
+  og_ss <- bigstatsr::big_attach(file.path(supsubj_dir_fa, supsubj_file_fa))
+  row_idx <- which(folder_ids_fa %in% id_subset)
+
+  expect_equal(dim(new_ss), c(length(id_subset), 642L))
+  expect_equal(new_ss[], og_ss[row_idx, seq_len(642L)])
 })
 

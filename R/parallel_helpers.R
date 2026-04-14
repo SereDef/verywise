@@ -122,21 +122,23 @@ with_parallel <- function(n_cores,
         options(warn = 1) # immediate warnings
         options(menu.graphics = FALSE) # no Tk popups
       
-        # Limit BLAS threads
-        if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
-          RhpcBLASctl::blas_set_num_threads(1L)
-          RhpcBLASctl::omp_set_num_threads(1L)
-        }
+        # # Limit BLAS threads
+        # This does not work actually... use env variables before calling R
+        # if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+        #   RhpcBLASctl::blas_set_num_threads(1L)
+        #   RhpcBLASctl::omp_set_num_threads(1L)
+        # }
       })
+      # Sync library paths: ensures all workers look for packages in the same place
+      # as the main session
+      # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
 
       on.exit(parallel::stopCluster(cl), add = TRUE)
       doParallel::registerDoParallel(cl)
       # Perform %dopar% as %dorng% loops, for reproducible random numbers
       doRNG::registerDoRNG(seed)
       
-      # Sync library paths: ensures all workers look for packages in the same place
-      # as the main session
-      # parallel::clusterCall(cluster, function(x) .libPaths(x), .libPaths())
+      
     } else {
       foreach::registerDoSEQ()
     }

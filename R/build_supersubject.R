@@ -19,8 +19,7 @@
 #'  * fsaverage4 = 2562 vertices,
 #'  * fsaverage3 = 642 vertices
 #' Note that, at the moment, these are only used to downsample the brain map, for faster
-#' model tuning. `verywise` expects the input data to be always registered on the "fsaverage"
-#' template and the final analyses should also be run using `fs_template = "fsaverage"`
+#' model tuning. The final analyses should be run using `fs_template = "fsaverage"`
 #' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param backing : (default = `supsubj_dir`) location to save the matrix `backingfile`.
 #' @param error_cutoff : (default = 20) how many missing directories or brain surface files
@@ -243,6 +242,16 @@ build_supersubject <- function(subj_dir,
 #'   is allowed before the function throws an error. If the number of missing IDs
 #'   is \code{ <= error_cutoff }, a warning is issued instead.
 #'   Default: 20.
+#' @param fs_template : (default = "fsaverage") template on which to register vertex-wise data.
+#' The following values are accepted:
+#'  * fsaverage (default) = 163842 vertices (highest resolution),
+#'  * fsaverage6 = 40962 vertices,
+#'  * fsaverage5 = 10242 vertices,
+#'  * fsaverage4 = 2562 vertices,
+#'  * fsaverage3 = 642 vertices
+#' Note that, at the moment, these are only used to downsample the brain map, for faster
+#' model tuning. The final analyses should be run using `fs_template = "fsaverage"`
+#' to avoid (small) imprecisions in vertex registration and smoothing.
 #' @param new_supsubj_dir Character string indicating the path to the directory
 #'   where the new supersubject files should be stored (either temporarily or
 #'   permanently if \code{ save_rds == TRUE }. Created if it does not exist.
@@ -283,12 +292,15 @@ subset_supersubject <- function(supsubj_dir,
                                 supsubj_file,
                                 folder_ids,
                                 error_cutoff = 20,
+                                fs_template = 'fsaverage',
                                 new_supsubj_dir,
                                 n_cores = 1,
                                 save_rds = FALSE,
                                 verbose = TRUE) {
   
-  cli::cli_progress_step('Read super-subject file from: {.file {supsubj_dir}}', spinner=TRUE)
+  # ── 1. Read super-subject ─────────────────────────────────────────────────
+  if (verbose) cli::cli_progress_step(
+    'Read super-subject file from: {.file {supsubj_dir}}', spinner=TRUE)
 
   rownames_file <- file.path(supsubj_dir,
                              gsub('.fsaverage\\d*\\.supersubject.rds',
@@ -296,21 +308,22 @@ subset_supersubject <- function(supsubj_dir,
 
   ss_rownames <- scan(file = rownames_file, what = character(), sep = "\n",
                       quiet = TRUE)
-
+  
+  # ── 2. Validate row IDs ───────────────────────────────────────────────────
   ids_not_found <- setdiff(folder_ids, ss_rownames)
   n_ids_not_found <- length(ids_not_found)
 
   if (n_ids_not_found > 0) {
 
     log_file <- file.path(new_supsubj_dir,
-                          gsub('.fsaverage\\d*\\.supersubject.rds',
-                               '.issues.log', supsubj_file))
+                          gsub('.fsaverage\\d*\\.supersubject.rds', '.issues.log', 
+                               supsubj_file))
 
     writeLines(c(paste("Attention:", n_ids_not_found,
                        "observations specified in phenotype were not found:"),
                  ids_not_found, "\n"), log_file)
 
-    # If many observations are missing, the folder id may be mispecified
+    # If many observations are missing, the folder id may be misspecified
     if (n_ids_not_found > error_cutoff) {
       stop(n_ids_not_found,
            " observations specified in phenotype were not found in `subj_dir`.",
@@ -324,64 +337,71 @@ subset_supersubject <- function(supsubj_dir,
             "\n   See issues.log file for details.")
   }
 
+  # ── 3. Define output FBM ──────────────────────────────────────────────────
   ss <- bigstatsr::big_attach(file.path(supsubj_dir, supsubj_file))
 
   rows_to_keep <- which(ss_rownames %in% folder_ids)
+  ncol_to_keep <- count_vertices(fs_template)
 
-  if (length(rows_to_keep) < length(ss_rownames)) {
-    # We gots to subset
+  need_row_subset <- length(rows_to_keep) < ss$nrow
+  need_col_subset <- ncol_to_keep < ss$ncol
 
-    n_col <- ss$ncol # Number of vertices
-    n_row <- length(rows_to_keep) # New number of rows
+  if (!need_row_subset && !need_col_subset) {
+    return(ss)
+  }
 
-    # Define backing file for matrix
-    if(!dir.exists(new_supsubj_dir)) {
-      dir.create(new_supsubj_dir, showWarnings = FALSE)
-    }
+  if (ncol_to_keep > ss$ncol) {
+    cli::cli_abort('Cannot subset {.filed {fs_template}} from {.file {supsubj_file}}')
+  }
 
-    backing <- file.path(new_supsubj_dir, gsub(".rds$", ".bk", supsubj_file))
-    if (file.exists(backing)) file.remove(backing)
+  n_col <- ncol_to_keep # Number of vertices
+  n_row <- length(rows_to_keep) # New number of rows
 
-    new_ss <- bigstatsr::FBM(nrow = n_row,
-                             ncol = n_col,
-                             type = "float",
-                             backingfile = gsub(".bk$", "", backing),
-                             create_bk = !file.exists(backing))
+  # Define backing file for matrix
+  if (!dir.exists(new_supsubj_dir)) dir.create(new_supsubj_dir, showWarnings = FALSE)
+  
+  new_supsubj_bk <- gsub("fsaverage\\d*\\.supersubject.rds", 
+                         paste0(fs_template, ".supersubject.bk"),
+                         supsubj_file)
+  backing <- file.path(new_supsubj_dir, new_supsubj_bk)
+  if (file.exists(backing)) file.remove(backing)
+
+  new_ss <- bigstatsr::FBM(nrow = n_row, ncol = n_col, type = "float",
+                           backingfile = gsub(".bk$", "", backing),
+                           create_bk = !file.exists(backing))
     
-    cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
+  cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
 
-    vw_message("{.val { n_row }} / {.val {ss$nrow}} row{?s} matching data[,`folder_id`])",
-               verbose = verbose, type = 'note')
+  vw_message("{.val { n_row }} / {.val {ss$nrow}} row{?s} matching data[,`folder_id`])",
+              verbose = verbose, type = 'note')
 
     # Fill new ss matrix in chunks
-    bigstatsr::big_apply(
-        X = new_ss,
-        a.FUN = function(X, ind, ss, rows_to_keep) {
-          X[ind, ] <- ss[rows_to_keep[ind],]
-          invisible(NULL)
-        },
-        ind = seq_along(rows_to_keep),
-        rows_to_keep = rows_to_keep,
-        ss = ss,
-        block.size = 1000,
-        ncores = n_cores
-    )
+  bigstatsr::big_apply(
+      X = new_ss,
+      a.FUN = function(X, ind, ss, rows_to_keep, cols_to_keep) {
+        X[, ind] <- ss[rows_to_keep, cols_to_keep[ind], drop = FALSE]
+        invisible(NULL)
+      },
+      ind = seq_len(n_col),
+      rows_to_keep = rows_to_keep,
+      cols_to_keep = seq_len(ncol_to_keep),
+      ss = ss,
+      block.size = 1000L,
+      ncores = n_cores
+  )
 
-    utils::write.table(ss_rownames[rows_to_keep],
-                       file = file.path(new_supsubj_dir,
-                                        basename(rownames_file)),
-                       row.names = FALSE, col.names = FALSE, quote = FALSE,
-                       sep = ",")
+   # ── 4. Write output ──────────────────────────────────────────────────
+  utils::write.table(ss_rownames[rows_to_keep],
+                     file = file.path(new_supsubj_dir, basename(rownames_file)),
+                     row.names = FALSE, col.names = FALSE, quote = FALSE,
+                     sep = ",")
 
-    # Save output
-    if (save_rds) {
-      vw_message("New supersubject matrix saved to {.file {new_supsubj_dir}}",
-                 verbose = verbose, type = 'note')
-      new_ss$save()
-    }
-
-    return(new_ss)
-
+  if (save_rds) {
+    vw_message("New supersubject matrix saved to {.file {new_supsubj_dir}}",
+                verbose = verbose, type = 'note')
+    new_ss$save()
   }
-  return(ss)
+
+  new_ss
+  
 }

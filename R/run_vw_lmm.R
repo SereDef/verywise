@@ -331,19 +331,7 @@ run_vw_lmm <- function(
     if (!save_ss) on.exit(unlink(ss_dir, recursive = TRUE), add = TRUE)
   }
 
-  if (!is.null(ss_file)) {
-
-    ss <- subset_supersubject(
-      supsubj_dir = subj_dir,
-      supsubj_file = ss_file,
-      folder_ids = folder_ids,
-      new_supsubj_dir = ss_dir,
-      n_cores = n_cores,
-      save_rds = save_ss,
-      error_cutoff = tolerate_surf_not_found,
-      verbose = verbose)
-
-  } else {
+  if (is.null(ss_file)) {
 
     ss <- build_supersubject(
       subj_dir = subj_dir,
@@ -358,6 +346,19 @@ run_vw_lmm <- function(
       error_cutoff = tolerate_surf_not_found,
       verbose = verbose
     )
+
+  } else {
+
+    ss <- subset_supersubject(
+      supsubj_dir = subj_dir,
+      supsubj_file = ss_file,
+      folder_ids = folder_ids,
+      new_supsubj_dir = ss_dir,
+      fs_template = fs_template,
+      n_cores = n_cores,
+      save_rds = save_ss,
+      error_cutoff = tolerate_surf_not_found,
+      verbose = verbose)
   }
 
   cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
@@ -434,8 +435,8 @@ run_vw_lmm <- function(
   on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
-  cli::cli_progress_step("Fitting linear mixed models... this may take some time, 
-    check the {.file {basename(progress_file)}} file for updates.", spinner=TRUE)
+  cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
+    spinner=TRUE)
 
   with_parallel(n_cores = n_cores, 
     seed = seed,

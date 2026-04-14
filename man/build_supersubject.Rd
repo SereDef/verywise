@@ -46,8 +46,7 @@ The following values are accepted:
 \item fsaverage4 = 2562 vertices,
 \item fsaverage3 = 642 vertices
 Note that, at the moment, these are only used to downsample the brain map, for faster
-model tuning. \code{verywise} expects the input data to be always registered on the "fsaverage"
-template and the final analyses should also be run using \code{fs_template = "fsaverage"}
+model tuning. The final analyses should be run using \code{fs_template = "fsaverage"}
 to avoid (small) imprecisions in vertex registration and smoothing.
 }}
 

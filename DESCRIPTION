@@ -48,7 +48,6 @@ Imports:
     foreach,
     lme4 (>= 1.1.35.5),
     magrittr,
-    RhpcBLASctl,
     rlang
 SystemRequirements: Unix (not supported on Windows), FreeSurfer
 Config/Needs/website: rmarkdown

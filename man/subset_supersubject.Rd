@@ -9,6 +9,7 @@ subset_supersubject(
   supsubj_file,
   folder_ids,
   error_cutoff = 20,
+  fs_template = "fsaverage",
   new_supsubj_dir,
   n_cores = 1,
   save_rds = FALSE,
@@ -32,6 +33,19 @@ matrix. This should also be a column in the phenotype dataset.}
 is allowed before the function throws an error. If the number of missing IDs
 is \code{ <= error_cutoff }, a warning is issued instead.
 Default: 20.}
+
+\item{fs_template}{: (default = "fsaverage") template on which to register vertex-wise data.
+The following values are accepted:
+\itemize{
+\item fsaverage (default) = 163842 vertices (highest resolution),
+\item fsaverage6 = 40962 vertices,
+\item fsaverage5 = 10242 vertices,
+\item fsaverage4 = 2562 vertices,
+\item fsaverage3 = 642 vertices
+Note that, at the moment, these are only used to downsample the brain map, for faster
+model tuning. The final analyses should be run using \code{fs_template = "fsaverage"}
+to avoid (small) imprecisions in vertex registration and smoothing.
+}}
 
 \item{new_supsubj_dir}{Character string indicating the path to the directory
 where the new supersubject files should be stored (either temporarily or

@@ -228,6 +228,7 @@ run_vw_fed_local <- function(
       supsubj_file = ss_file,
       folder_ids = folder_ids,
       new_supsubj_dir = ss_dir,
+      fs_template = fs_template,
       n_cores = n_cores,
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
