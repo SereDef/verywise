@@ -17,6 +17,7 @@ subset_supersubject(
   supsubj_file,
   folder_ids,
   error_cutoff = 20,
+  fs_template = "fsaverage",
   new_supsubj_dir,
   n_cores = 1,
   save_rds = FALSE,
@@ -48,6 +49,24 @@ subset_supersubject(
   Integer indicating the maximum number of missing IDs that is allowed
   before the function throws an error. If the number of missing IDs is
   ` <= error_cutoff `, a warning is issued instead. Default: 20.
+
+- fs_template:
+
+  : (default = "fsaverage") template on which to register vertex-wise
+  data. The following values are accepted:
+
+  - fsaverage (default) = 163842 vertices (highest resolution),
+
+  - fsaverage6 = 40962 vertices,
+
+  - fsaverage5 = 10242 vertices,
+
+  - fsaverage4 = 2562 vertices,
+
+  - fsaverage3 = 642 vertices Note that, at the moment, these are only
+    used to downsample the brain map, for faster model tuning. The final
+    analyses should be run using `fs_template = "fsaverage"` to avoid
+    (small) imprecisions in vertex registration and smoothing.
 
 - new_supsubj_dir:
 

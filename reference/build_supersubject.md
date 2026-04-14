@@ -70,11 +70,9 @@ build_supersubject(
   - fsaverage4 = 2562 vertices,
 
   - fsaverage3 = 642 vertices Note that, at the moment, these are only
-    used to downsample the brain map, for faster model tuning.
-    `verywise` expects the input data to be always registered on the
-    "fsaverage" template and the final analyses should also be run using
-    `fs_template = "fsaverage"` to avoid (small) imprecisions in vertex
-    registration and smoothing.
+    used to downsample the brain map, for faster model tuning. The final
+    analyses should be run using `fs_template = "fsaverage"` to avoid
+    (small) imprecisions in vertex registration and smoothing.
 
 - backing:
 

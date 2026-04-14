@@ -68,6 +68,7 @@ for future use.</p>
 <span>  <span class="va">supsubj_file</span>,</span>
 <span>  <span class="va">folder_ids</span>,</span>
 <span>  error_cutoff <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
 <span>  <span class="va">new_supsubj_dir</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  save_rds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -102,6 +103,19 @@ matrix. This should also be a column in the phenotype dataset.</p></dd>
 is allowed before the function throws an error. If the number of missing IDs
 is <code> &lt;= error_cutoff </code>, a warning is issued instead.
 Default: 20.</p></dd>
+
+
+<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
+<dd><p>: (default = "fsaverage") template on which to register vertex-wise data.
+The following values are accepted:</p><ul><li><p>fsaverage (default) = 163842 vertices (highest resolution),</p></li>
+<li><p>fsaverage6 = 40962 vertices,</p></li>
+<li><p>fsaverage5 = 10242 vertices,</p></li>
+<li><p>fsaverage4 = 2562 vertices,</p></li>
+<li><p>fsaverage3 = 642 vertices
+Note that, at the moment, these are only used to downsample the brain map, for faster
+model tuning. The final analyses should be run using <code>fs_template = "fsaverage"</code>
+to avoid (small) imprecisions in vertex registration and smoothing.</p></li>
+</ul></dd>
 
 
 <dt id="arg-new-supsubj-dir">new_supsubj_dir<a class="anchor" aria-label="anchor" href="#arg-new-supsubj-dir"></a></dt>
