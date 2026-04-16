@@ -379,8 +379,12 @@ subset_supersubject <- function(supsubj_dir,
   if (need_col_subset) {
     vw_message("{.val { n_col }} / {.val {ss$ncol}} ss vertices matching fs_template.",
               verbose = verbose, type = 'note')
-    vw_message("! Downsampling if useful for model tuning but, in the final analyses, ", 
-        "we recommend using a higher resolution template", verbose = verbose)
+    vw_message(c(
+      "!" = "Downsampling is useful for model tuning, but bit introduces (small)
+      registration errors. We recommend using {.field fsaverage} in your final analysis.",
+      "!" = "If you want cluster-wise pvalues for this template you will need to 
+      run {.code {mri_glmfit --sim}} to obtain the correct CDS files."), 
+      verbose = verbose, type = 'warning')
   }
 
     # Fill new ss matrix in chunks

@@ -238,28 +238,30 @@ probe_data_resolution <- function(subj_surf_dir,
     # If requested is known and all found are lower-res (higher rank number)
     if (!is.na(req_rank) && any(non_na)) {
       min_found_rank <- min(found_ranks[non_na])
-      if (req_rank < min_found_rank) {
-        stop(
-          "Requested fs_template `", fs_template,
-          "` not found in surf/.\n",
-          "Only lower-resolution templates available: ",
-          paste(unique(found_templates), collapse = ", "), ".\n",
-          "Please either rerun FreeSurfer with `", fs_template,
-          "` or adjust your fs_template argument."
-        )
-      }
 
+      if (req_rank < min_found_rank) {
+        cli::cli_abort(c(
+          "Could not find requested {.field {fs_template}} template in (some of) the files in:",
+          " " = "{.path {dirname(dirname(subj_surf_dir))}}",
+          " " = "Only lower-resolution templates {.pkg {unique(found_templates)}} found.",
+          ">" = "Please either:",
+          " " = "- Resample with {.code mri_surf2surf}",
+          " " = "- Rerun FreeSurfer with {.field {fs_template}}",
+          " " = "- Adjust {.arg fs_template} to one of the available templates"))
+      }
     }
 
     # Otherwise, fall back to first available
     tmpl <- found_templates[1L]
-    vw_message("NOTE: data was not processed using '", fs_template,
-               "'. Will subsample from '", tmpl, "' instead.",
-               "Downsampling vertices induces (small) registration errors.",
-               " This is fine for model tuning but, in the final analysis, ",
-               "we recommend using the high resolution `fsaverage` template.",
-               verbose = TRUE)
-  }
+      
+    cli::cli_warn(c(
+      "Data was not processed using requested {.field {fs_template}} template.",
+      "i" = "Downsampling from {.field {tmpl}} instead. Note:",
+      "!" = "This is fine for model tuning, but it introduces (small) registration
+      errors. We therefore recommend using {.field fsaverage} in your final analysis.",
+      "!" = "If you want cluster-wise pvalues for this template you will need to 
+      run {.code {mri_glmfit --sim}} to obtain the correct CDS files."))
+    }
 
   # Restrict hits to chosen template
   idx_tmpl   <- found_templates == tmpl

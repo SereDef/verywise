@@ -57,6 +57,8 @@ estimate_fwhm <- function(result_path,
   return(fwhm)
 }
 
+
+
 #' @title Compute significant clusters of vertices
 #'
 #' @description
@@ -102,16 +104,31 @@ compute_clusters <- function(stack_path,
                              mask = NULL,
                              verbose = FALSE) {
 
-  pval_mgh_file <- paste0(stack_path, ".-log10p.mgh")
+  # Compute cluster-wise pvalues 
+  # (i.e. pvalue of the cluster corrected for multiple comparisons 
 
-  # Format montecarlo simulation threshold
+  # Format monte carlo simulation threshold
   mcz_thr_str <- paste0("th", mcz_thr)
 
   # Format FWHM (esure a leading 0 if < 10)
   fwhm_str <- paste0("fwhm", sprintf("%02d", as.integer(fwhm)))
 
+  # Cluster Simulation Data. This file is produced by running mri_glmfit with --sim. 
   csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", fs_template, hemi,
                         "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
+  
+  if (!file.exists(csd_file)) {
+    cli::cli_warn(c(
+      "CSD file not found for {.field {fs_template}} template.",
+      "i" = "FreeSurfer home: {.file {FS_HOME}}",
+      "x" = "Cluster simulation data (CSD) are required for cluster-wise p-value estimation.",
+      ">" = "Use the default `fsaverage` template, or run {.code {mri_glmfit --sim}} with 
+            {.field {fs_template}} to generate the CSD."
+    ))
+    return('missing CSD')
+  }
+  
+  pval_mgh_file <- paste0(stack_path, ".-log10p.mgh")
 
   outp_prefix <- paste0(stack_path, ".cache.th", mcz_thr, ".", csd_sign, ".sig.")
 
@@ -147,10 +164,6 @@ compute_clusters <- function(stack_path,
 
   args <- c(args, if (!is.null(mask)) c("--mask", mask) else "--cortex")
 
-  # cmd_str <- paste(cmd_str, "2>/dev/null") # avoid "supposed to be reproducible but seed not set" warning
-
-  # system(cmd_str, ignore.stdout = !verbose)
-
   # ── Run and capture output ──────────────────────────────────────────────────
   # stderr is captured separately: suppress the known "seed not set" warning
   # but surface any real errors to the user
@@ -168,7 +181,7 @@ compute_clusters <- function(stack_path,
   stderr_lines <- readLines(stderr_file, warn = FALSE)
 
   # Filter the known harmless warning
-  noise_pattern <- "supposed to be reproducible but seed"
+  noise_pattern <- "supposed to be reproducible but seed not set"
   real_errors   <- stderr_lines[!grepl(noise_pattern, stderr_lines, fixed = FALSE)]
   real_errors   <- real_errors[nzchar(trimws(real_errors))]  # drop blank lines
 

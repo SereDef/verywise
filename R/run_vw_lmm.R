@@ -545,7 +545,8 @@ run_vw_lmm <- function(
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
     fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
-    compute_clusters(stack_path = stack_path,
+
+    cds <- compute_clusters(stack_path = stack_path,
                      hemi = hemi,
                      fwhm = fwhm,
                      FS_HOME = FS_HOME,
@@ -555,6 +556,7 @@ run_vw_lmm <- function(
                      full_surfcluster_output = save_optional_cluster_info,
                      mask = paste0(result_path, ".finalMask.mgh"),
                      verbose = fs_verbosity)
+    if (!is.null(cds)) break
   }
 
   if (verbose) cli::cli_progress_done()
