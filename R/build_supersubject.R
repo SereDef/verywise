@@ -33,7 +33,7 @@
 #'
 #' @return A Filebacked Big Matrix with vertex data for all subjects (dimensions:
 #' n_subjects x n_vertices)
-#' 
+#'
 #' @importFrom foreach %dopar%
 #'
 #' @author Serena Defina, 2024.
@@ -51,7 +51,7 @@ build_supersubject <- function(subj_dir,
                                error_cutoff = 20,
                                save_rds = FALSE,
                                verbose = TRUE) {
-  
+
   cli::cli_progress_step('Build ({hemi}, {measure}) super-subject matrix', spinner=TRUE)
 
   # Identify brain surface files to load ---------------------------------------
@@ -95,9 +95,9 @@ build_supersubject <- function(subj_dir,
     subj_surf_dir = file.path(folders_found[1L], "surf"),
     hemi = hemi, measure_file = measure_file,
     fwhmc = fwhmc, fs_template = fs_template)
-  
+
   mgh_file_name <- paste0(
-    hemi, ".", measure_file, ".", 
+    hemi, ".", measure_file, ".",
     data_resolution$fwhmc, data_resolution$fs_template, ".mgh")
 
   mgh_files <- file.path(folders_found, "surf", mgh_file_name)
@@ -126,7 +126,7 @@ build_supersubject <- function(subj_dir,
     }
   }
 
-  vw_message("{.val { length(files_found) }}/{.val { length(folder_ids) }} files found.", 
+  vw_message("{.val { length(files_found) }}/{.val2 { length(folder_ids) }} surf files found.",
         verbose = verbose, type='note')
 
   # Build empty large matrix to store all vertex and subjects ------------------
@@ -297,7 +297,7 @@ subset_supersubject <- function(supsubj_dir,
                                 n_cores = 1,
                                 save_rds = FALSE,
                                 verbose = TRUE) {
-  
+
   # ── 1. Read super-subject ─────────────────────────────────────────────────
   if (verbose) cli::cli_progress_step(
     'Read super-subject file from: {.file {supsubj_dir}}', spinner=TRUE)
@@ -308,7 +308,7 @@ subset_supersubject <- function(supsubj_dir,
 
   ss_rownames <- scan(file = rownames_file, what = character(), sep = "\n",
                       quiet = TRUE)
-  
+
   # ── 2. Validate row IDs ───────────────────────────────────────────────────
   ids_not_found <- setdiff(folder_ids, ss_rownames)
   n_ids_not_found <- length(ids_not_found)
@@ -316,7 +316,7 @@ subset_supersubject <- function(supsubj_dir,
   if (n_ids_not_found > 0) {
 
     log_file <- file.path(new_supsubj_dir,
-                          gsub('.fsaverage\\d*\\.supersubject.rds', '.issues.log', 
+                          gsub('.fsaverage\\d*\\.supersubject.rds', '.issues.log',
                                supsubj_file))
 
     writeLines(c(paste("Attention:", n_ids_not_found,
@@ -359,8 +359,8 @@ subset_supersubject <- function(supsubj_dir,
 
   # Define backing file for matrix
   if (!dir.exists(new_supsubj_dir)) dir.create(new_supsubj_dir, showWarnings = FALSE)
-  
-  new_supsubj_bk <- gsub("fsaverage\\d*\\.supersubject.rds", 
+
+  new_supsubj_bk <- gsub("fsaverage\\d*\\.supersubject.rds",
                          paste0(fs_template, ".supersubject.bk"),
                          supsubj_file)
   backing <- file.path(new_supsubj_dir, new_supsubj_bk)
@@ -369,7 +369,7 @@ subset_supersubject <- function(supsubj_dir,
   new_ss <- bigstatsr::FBM(nrow = n_row, ncol = n_col, type = "float",
                            backingfile = gsub(".bk$", "", backing),
                            create_bk = !file.exists(backing))
-    
+
   cli::cli_progress_step('Subset super-subject matrix', spinner=TRUE)
 
   if (need_row_subset) {
@@ -382,8 +382,8 @@ subset_supersubject <- function(supsubj_dir,
     vw_message(c(
       "!" = "Downsampling is useful for model tuning, but bit introduces (small)
       registration errors. We recommend using {.field fsaverage} in your final analysis.",
-      "!" = "If you want cluster-wise pvalues for this template you will need to 
-      run {.code {mri_glmfit --sim}} to obtain the correct CDS files."), 
+      "!" = "If you want cluster-wise pvalues for this template you will need to
+      run {.code mri_glmfit --sim} to obtain the correct CDS files."),
       verbose = verbose, type = 'warning')
   }
 
@@ -415,5 +415,5 @@ subset_supersubject <- function(supsubj_dir,
   }
 
   new_ss
-  
+
   }

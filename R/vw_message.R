@@ -59,17 +59,17 @@ vw_pretty_message <- function(msg, ..., verbose = TRUE) {
   invisible()
 }
 
-vw_setup_cli_output <- function() {
-  if (!interactive()) {
-    old <- options(
-      cli.ansi = FALSE,
-      cli.unicode = FALSE,
-      cli.progress_clear = FALSE
-    )
-    return(old)
-  }
-  invisible(NULL)
-}
+# vw_setup_cli_output <- function() {
+#   if (!interactive()) {
+#     old <- options(
+#       cli.ansi = FALSE,
+#       cli.unicode = FALSE,
+#       cli.progress_clear = FALSE
+#     )
+#     return(old)
+#   }
+#   invisible(NULL)
+# }
 
 vw_init_message <- function(model_type, verbose = TRUE) {
   cli::cli_rule(left=model_type, 
@@ -89,13 +89,14 @@ vw_init_message <- function(model_type, verbose = TRUE) {
 
 
 VW_THEME <- list(
-  ".pkg"  = list(color = "cyan", "font-weight" = "bold"),
   ".val"  = list(color = "blue", "font-weight" = "bold"),
-  ".ok"   = list(color = "green"),
+  ".val2" = list(color = "blue"),
+  ".val3" = list(color = "cyan"),
+  
   ".warn" = list(color = "orange"),
   ".err"  = list(color = "red"),
-  ".time" = list(color = "silver", "font-style" = "italic"),
-  ".note" = list(color = "blue")
+  ".time" = list(color = "silver", "font-style" = "italic")
+  # '.file' = list() use default
 )
 
 #' Print a styled message to the console
@@ -129,25 +130,44 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
   div_id <- cli::cli_div(theme = VW_THEME)
   on.exit(cli::cli_end(div_id), add = TRUE)
 
-  msg <- paste0(...)
+  # Capture input — preserve named vectors, collapse plain strings
+  msg <- c(...)
+
+  # ── msg is a named vector: forward directly to cli_bullets / cli_warn ─────
+  if (length(msg) > 1 || !is.null(names(msg))) {
+    if (!is.null(type)) {
+      switch(type,
+        warning = cli::cli_warn(msg, .envir = env),
+        danger  = cli::cli_abort(msg, .envir = env),
+        note    = cli::cli_inform(msg, .envir = env),
+        cli::cli_inform(msg, .envir = env)
+      )
+    } else {
+      cli::cli_bullets(msg, .envir = env)
+    }
+    return(invisible(NULL))
+  }
+
+  # ── msg is a single string: ───────────────────────────────────────────────
   msg <- gsub("^\n+", "", msg)
   msg <- gsub("\n+$", "", msg)
 
   if (!is.null(type)) {
-    .vw_emit(type, msg, .envir = env)
+    .cli_format(type, msg, .envir = env)
     return(invisible(NULL))
   }
 
+  # Quick patters for common message types
   if (grepl("^\\s{0,3}[*]\\s", msg)) {
     clean <- trimws(sub("^\\s*[*]\\s*", "", msg))
-    .vw_emit("bullet", clean, .envir = env)
+    .cli_format("bullet", clean, .envir = env)
   } else if (grepl("^\\s{0,4}[!]\\s", msg)) {
     clean <- trimws(sub("^\\s*[!]\\s*", "", msg))
-    .vw_emit("warning", clean, .envir = env)
+    .cli_format("warning", clean, .envir = env)
   } else if (grepl("^NOTE:", msg)) {
-    .vw_emit("note", msg, .envir = env)
+    .cli_format("note", msg, .envir = env)
   } else {
-    .vw_emit("info", msg, .envir = env)
+    .cli_format("info", msg, .envir = env)
   }
 
   invisible(NULL)
@@ -158,7 +178,7 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
 # ---------------------------------------------------------------------------
 
 #' @keywords internal
-.vw_emit <- function(type, msg, .envir) {
+.cli_format <- function(type, msg, .envir) {
   switch(
     type,
     step    = {cli::cli_text("") # one blank line before the rule
@@ -167,7 +187,7 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
     warning = cli::cli_alert_warning(msg, .envir = .envir),
     danger  = cli::cli_alert_danger(msg, .envir = .envir),
     note    = cli::cli_alert_info(msg, .envir = .envir),
-    table   = cli_table(msg),
+    table   = .cli_table(msg),
     bullet  = cli::cli_bullets(c("*" = msg), .envir = .envir),
     sub     = cli::cli_bullets(c(" " = msg), .envir = .envir),
     info    = cli::cli_text(msg, .envir = .envir)
@@ -175,7 +195,8 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
   invisible(NULL)
 }
 
-cli_table <- function(tab, title = NULL) {
+#' @keywords internal
+.cli_table <- function(tab, title = NULL) {
   lev <- names(tab)
   cnt <- as.integer(tab)
 

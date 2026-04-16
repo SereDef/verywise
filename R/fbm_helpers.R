@@ -42,12 +42,15 @@ fbm_col_has_0 <- function(X, n_cores = 1,
                                         ncores = n_cores,
                                         ind = col.ind,
                                         row.ind = row.ind)
-
-  if (sum(problem_verts, na.rm = TRUE) > 0) {
-    vw_message(" ! Ignoring {.val {sum(problem_verts)}}",
-               " vertices that contained 0 values. These may be located",
-               " at the edge of the cortical map and are potentially",
-               " problematic.", verbose = verbose)
+  
+  problem_count <- sum(problem_verts, na.rm = TRUE)
+  if (problem_count > 0) {
+    pretty_problem_count <- format(sum(problem_verts), big.mark = ",", scientific = FALSE)
+    problem_percent <- round(problem_count / X$ncol * 100)
+    vw_message(
+      c("!" = "Ignoring {.warn {pretty_problem_count}} vertices ({problem_percent}%) that contained 0 values.",
+        " " = "These may be located at the edge of the cortical map and are potentially  problematic."), 
+        verbose = verbose)
   }
   return(problem_verts)
 }

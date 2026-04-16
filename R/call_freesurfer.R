@@ -44,7 +44,7 @@ estimate_fwhm <- function(result_path,
     # on.exit(if (file.exists(mask_mgh_path)) file.remove(mask_mgh_path), add = TRUE)
     cmd_str <- paste(cmd_str, "--mask", mask_mgh_path)
   }
-  
+
   # message2(verbose = verbose, cmdStr)
   system(cmd_str, ignore.stdout = !verbose)
 
@@ -104,8 +104,8 @@ compute_clusters <- function(stack_path,
                              mask = NULL,
                              verbose = FALSE) {
 
-  # Compute cluster-wise pvalues 
-  # (i.e. pvalue of the cluster corrected for multiple comparisons 
+  # Compute cluster-wise pvalues
+  # (i.e. pvalue of the cluster corrected for multiple comparisons
 
   # Format monte carlo simulation threshold
   mcz_thr_str <- paste0("th", mcz_thr)
@@ -113,7 +113,7 @@ compute_clusters <- function(stack_path,
   # Format FWHM (esure a leading 0 if < 10)
   fwhm_str <- paste0("fwhm", sprintf("%02d", as.integer(fwhm)))
 
-  # Cluster Simulation Data. This file is produced by running mri_glmfit with --sim. 
+  # Cluster Simulation Data. This file is produced by running mri_glmfit with --sim.
   csd_file <- file.path(FS_HOME, "average", "mult-comp-cor", fs_template, hemi,
                         "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
   
@@ -122,7 +122,7 @@ compute_clusters <- function(stack_path,
       "CSD file not found for {.field {fs_template}} template.",
       "i" = "FreeSurfer home: {.file {FS_HOME}}",
       "x" = "Cluster simulation data (CSD) are required for cluster-wise p-value estimation.",
-      ">" = "Use the default `fsaverage` template, or run {.code {mri_glmfit --sim}} with 
+      ">" = "Use the default `fsaverage` template, or run {.code mri_glmfit --sim} with
             {.field {fs_template}} to generate the CSD."
     ))
     return('missing CSD')

@@ -250,8 +250,8 @@ run_vw_lmm <- function(
   model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
   # vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
-  vw_message('* Outcome: {.field {outcome_name(hemi, measure)}}', verbose = verbose)
-  vw_message('* Model:   {.field {model_desc}}', verbose = verbose)
+  vw_message('* Outcome: {.val2 {outcome_name(hemi, measure)}}', verbose = verbose)
+  vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
   # vw_pretty_message('', fill = '-', verbose = verbose)
 
   # Check user input ===========================================================
@@ -308,9 +308,8 @@ run_vw_lmm <- function(
 
   if (verbose) cli::cli_progress_done()
 
-  vw_message(" * Phenotype: {.val {length(data_list)}} dataset{?s} of dimensions: ", 
-             "{.field { nrow(data1) }} (rows) x {.field { ncol(data1) }} (columns).", 
-             verbose = verbose)
+  vw_message(" * Phenotype: {.val {length(data_list)}} dataset{?s} of dimensions
+             {.val2 { nrow(data1) }} x {.val2 { ncol(data1) }}.", verbose = verbose)
   
   # Unpack model ===============================================================
   check_weights(weights, data1)
@@ -395,9 +394,9 @@ run_vw_lmm <- function(
 
   if (verbose) cli::cli_progress_done()
 
-  vw_message("Read to run {.val {length(good_verts)}} (of {vw_n} total) models, ", 
-             "split in {.val {length(chunk_seq)}} chunks.",
-             verbose = verbose, type = 'note')
+  vw_message(c(">" = "Ready to run {.val {length(good_verts)}} models 
+                     (split in {.val2 {length(chunk_seq)}} chunks)."),
+             verbose = verbose)
 
   vw_message("Statistical model fitting", type='step', verbose = verbose)
 
@@ -439,9 +438,10 @@ run_vw_lmm <- function(
   on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
-  if (verbose) cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
+  if (verbose) {
+    cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
     spinner=TRUE)
-
+  }
   with_parallel(n_cores = n_cores, 
     seed = seed,
     verbose = verbose, 

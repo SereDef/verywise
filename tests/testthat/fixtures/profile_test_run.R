@@ -47,7 +47,7 @@ ss1 <- build_supersubject(
 #       verbose = TRUE
 #     )
 
-# dim(ss1) 
+# dim(ss1)
 # dim(ss2)
 
 # expect_equal(ss1[,2], ss2[, 2], tolerance = 1e-10)
@@ -59,7 +59,7 @@ res = run_vw_lmm(
     subj_dir = subj_dir,
     outp_dir = outp_dir,
     hemi = "lh",
-    fs_template = "fsaverage",
+    fs_template = "fsaverage3",
     apply_cortical_mask = TRUE,
     folder_id = "folder_id",
     tolerate_surf_not_found = 20,
@@ -75,6 +75,11 @@ res = run_vw_lmm(
     save_ss = FALSE,
     save_residuals = FALSE,
     verbose = TRUE)
+
+
+plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage3')
+plot_vw_surf(lh = res$coef[2, ], rh = res$coef[2, ], fs_template = 'fsaverage3', 
+views =c("lateral", "medial", "dorsal", "ventral", "anterior"), output_file = '/Users/Serena/Desktop/Packages/verywise/try.png')
 
 # Profile it (sequential required) ===========================================
 p <- profvis::profvis(
@@ -110,7 +115,7 @@ for (term in c("wisdom")) { #, "age", "sexMale", "(Intercept)")) {
                   term = term,
                   hemi = "lh",
                   measure = "area",
-                  outline_rois = c('temporalpole', 'frontalpole','entorhinal'), 
+                  outline_rois = c('temporalpole', 'frontalpole','entorhinal'),
                   fs_home = fs_home)
 }
 
@@ -118,10 +123,10 @@ for (term in c("wisdom")) { #, "age", "sexMale", "(Intercept)")) {
 library(lme4)
 library(microbenchmark)
 
-model_template <- precompile_model(formula = test_formula, 
-  tmp_data = pheno, 
+model_template <- precompile_model(formula = test_formula,
+  tmp_data = pheno,
   tmp_y = ss1[, 1], measure = 'area',
-  lmm_control = lme4::lmerControl(), 
+  lmm_control = lme4::lmerControl(),
   REML = TRUE, verbose = TRUE)
 
 vertex <- ss1[, which(locate_roi('temporalpole'))[1] ]

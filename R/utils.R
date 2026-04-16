@@ -35,7 +35,7 @@ list.dirs.till <- function(path, n) {
 #' @description
 #' This function identifies which vertices in a cortical surface mesh correspond
 #' to one or more specified regions of interest (ROIs), based on the 36 regions of
-#' the Desikan-Killiany atlas distributed with FreeSurfer (\code{aparc.annot}). 
+#' the Desikan-Killiany atlas distributed with FreeSurfer (\code{aparc.annot}).
 #' If no ROIs are specified, it returns a full lookup table of all ROIs with vertex
 #' counts, proportions, and lobe assignments.
 #'
@@ -180,7 +180,7 @@ outcome_name <- function(hemi, measure, sep =' - ') {
 
   hemi_name <- if (hemi == "lh") "Left" else "Right"
 
-  meas_name <- switch(measure, 
+  meas_name <- switch(measure,
     thickness = 'Cortical thickness',
     area = 'Cortical surface area (white surface)',
     area.pial = 'Cortical surface area (pial surface)',
@@ -196,7 +196,7 @@ outcome_name <- function(hemi, measure, sep =' - ') {
   )
 
   paste0(hemi_name, ' hemisphere', sep, meas_name)
-  
+
 }
 
 probe_data_resolution <- function(subj_surf_dir,
@@ -205,7 +205,7 @@ probe_data_resolution <- function(subj_surf_dir,
                                   fwhmc,
                                   fs_template) {
 
-  mgh_file_pattern <- paste0("^", hemi, "\\.", measure_file, 
+  mgh_file_pattern <- paste0("^", hemi, "\\.", measure_file,
                              ".*\\.fsaverage.*\\.mgh$")
   hits <- list.files(subj_surf_dir, pattern = mgh_file_pattern)
 
@@ -253,14 +253,14 @@ probe_data_resolution <- function(subj_surf_dir,
 
     # Otherwise, fall back to first available
     tmpl <- found_templates[1L]
-      
+
     cli::cli_warn(c(
       "Data was not processed using requested {.field {fs_template}} template.",
       "i" = "Downsampling from {.field {tmpl}} instead. Note:",
       "!" = "This is fine for model tuning, but it introduces (small) registration
       errors. We therefore recommend using {.field fsaverage} in your final analysis.",
-      "!" = "If you want cluster-wise pvalues for this template you will need to 
-      run {.code {mri_glmfit --sim}} to obtain the correct CDS files."))
+      "!" = "If you want cluster-wise pvalues for this template you will need to
+      run {.code mri_glmfit --sim} to obtain the correct CDS files."))
     }
 
   # Restrict hits to chosen template
@@ -292,11 +292,11 @@ probe_data_resolution <- function(subj_surf_dir,
   list(fs_template = tmpl, fwhmc = paste0(fh,'.'))
 }
 # ==============================================================================
-# Read and save annotation files for internal use 
+# Read and save annotation files for internal use
 # fs_home = "/Applications/freesurfer/7.4.1"
 # hemis <- c("lh", "rh")
 # aparc.annot <- lapply(hemis, function(hemi){
-#   annot_file <- file.path(fs_home, "subjects/fsaverage/label", 
+#   annot_file <- file.path(fs_home, "subjects/fsaverage/label",
 #                           paste0(hemi, ".aparc.annot"))
 #   freesurferformats::read.fs.annot(annot_file)})
 # names(aparc.annot) <- hemis

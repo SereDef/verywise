@@ -277,7 +277,7 @@ check_freesurfer_setup <- function(FS_HOME, verbose=TRUE) {
 
   }
 
-  vw_message("Using FreeSurfer version {.field { basename(FS_HOME) }}", 
+  vw_message("Using FreeSurfer version {.val3 { basename(FS_HOME) }}", 
              type = 'note', verbose = verbose)
 
   if (Sys.getenv("SUBJECTS_DIR") == "") {
