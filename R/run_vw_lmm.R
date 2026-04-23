@@ -405,6 +405,9 @@ run_vw_lmm <- function(
   model_template <- precompile_model(formula = formula, tmp_data = data1, 
     tmp_y = ss[, good_verts[1]], measure = measure, 
     lmm_control = lmm_control, REML = REML, verbose = verbose)
+  
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {summary(model_template)$ngrps}} groups"), 
+    verbose = verbose)
 
   # Prepare FBM output =========================================================
 
@@ -560,6 +563,11 @@ run_vw_lmm <- function(
   }
 
   if (verbose) cli::cli_progress_done()
+  
+  # Print summary 
+  vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
+  # TODO: mask 0 verts
+  vw_summarize_model_est(coef = out$coef, term_name = fixed_terms, verbose = verbose)
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

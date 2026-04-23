@@ -173,6 +173,30 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
   invisible(NULL)
 }
 
+#' @title Themed error
+#'
+#' @description
+#' Wrapper around \code{cli::cli_abort()} that applies \code{VW_THEME} and
+#' reports the call from the correct frame. Accepts the same \code{msg}
+#' conventions as \code{vw_message()}: a plain string, a named character
+#' vector (for bullet-style bodies), or inline cli markup.
+#'
+#' @param msg  A character string or named character vector passed to
+#'   \code{cli::cli_abort()}. Use names \code{"i"}, \code{"x"}, \code{"v"},
+#'   \code{">"} for bullet formatting, e.g.
+#'   \code{c("Something failed.", "i" = "Check {.arg x}.")}.
+#' @param ...  Additional arguments forwarded to \code{cli::cli_abort()}
+#'   (e.g. \code{class}, \code{call}, \code{.internal}).
+#'
+#' @author Serena Defina, 2026.
+#'
+vw_error <- function(msg, ..., call = rlang::caller_env()) {
+  div_id <- cli::cli_div(theme = VW_THEME)
+  on.exit(cli::cli_end(div_id), add = TRUE)
+
+  cli::cli_abort(msg, ..., call = call, .envir = rlang::caller_env())
+}
+
 # ---------------------------------------------------------------------------
 # Internal dispatcher
 # ---------------------------------------------------------------------------
