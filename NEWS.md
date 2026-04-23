@@ -1,3 +1,5 @@
+# verywise 1.3.3
+
 # verywise 1.3.2
 
 * Better messaging interface with cli
