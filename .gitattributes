@@ -1,0 +1,2 @@
+inst/python/*.py linguist-language=Python
+inst/python/*.py linguist-detectable=true

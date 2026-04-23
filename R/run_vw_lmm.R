@@ -567,7 +567,7 @@ run_vw_lmm <- function(
   # Print summary 
   vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
   # TODO: mask 0 verts
-  vw_summarize_model_est(coef = out$coef, term_name = fixed_terms, verbose = verbose)
+  vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
 
   vw_message("Done! :)", type='step', verbose = verbose)
 
