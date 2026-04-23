@@ -74,6 +74,12 @@
 - [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
   : Plot vertex-wise coefficient maps on a 3D cortical surface
 
+- [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
+  : Plot vertex-wise maps on brain surfaces
+
+- [`plot_vw_surf_r()`](https://seredef.github.io/verywise/reference/plot_vw_surf_r.md)
+  : Plot vertex-wise maps on brain surfaces
+
 - [`prettify_message()`](https://seredef.github.io/verywise/reference/prettify_message.md)
   : Print pretty messages to console
 
@@ -129,6 +135,9 @@
 
 - [`update_progress_tracker()`](https://seredef.github.io/verywise/reference/update_progress_tracker.md)
   : Update within-chunk progress for a (milestone) vertex
+
+- [`vw_error()`](https://seredef.github.io/verywise/reference/vw_error.md)
+  : Themed error
 
 - [`vw_message()`](https://seredef.github.io/verywise/reference/vw_message.md)
   : Print a styled message to the console

@@ -233,18 +233,34 @@ truth <- simulate_distrib_dataset(
   sigma2 = 0.1,
   fs_template = "fsaverage3"  # 642 vertices
 )
-#> • the `path` specified ('/tmp/RtmphG6COO/fed_simulation1c7030f85243') does not
+#> • the `path` specified ('/tmp/RtmpvgzDxL/fed_simulation1bf0474da236') does not
 #>   exist. I'll try to create it.
-#> • selected 11 vertices (1.7%)
-#> • the `site_dir` specified ('/tmp/RtmphG6COO/fed_simulation1c7030f85243/site1')
+#> * selected
+#> 11
+#> vertices (
+#> 1.7
+#> %)
+#> • the `site_dir` specified ('/tmp/RtmpvgzDxL/fed_simulation1bf0474da236/site1')
 #>   does not exist. I'll try to create it.
-#> • [site1] writing 80 surface files...
-#> • the `site_dir` specified ('/tmp/RtmphG6COO/fed_simulation1c7030f85243/site2')
+#> * [
+#> site1
+#> ] writing
+#> 80
+#> surface files...
+#> • the `site_dir` specified ('/tmp/RtmpvgzDxL/fed_simulation1bf0474da236/site2')
 #>   does not exist. I'll try to create it.
-#> • [site2] writing 120 surface files...
-#> • the `site_dir` specified ('/tmp/RtmphG6COO/fed_simulation1c7030f85243/site3')
+#> * [
+#> site2
+#> ] writing
+#> 120
+#> surface files...
+#> • the `site_dir` specified ('/tmp/RtmpvgzDxL/fed_simulation1bf0474da236/site3')
 #>   does not exist. I'll try to create it.
-#> • [site3] writing 60 surface files...
+#> * [
+#> site3
+#> ] writing
+#> 60
+#> surface files...
 #> Done.
 
 # Ground-truth ICC summary across active vertices

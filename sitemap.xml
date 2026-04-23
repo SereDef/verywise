@@ -38,6 +38,8 @@
 <url><loc>https://seredef.github.io/verywise/reference/move_result_files.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pipe.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/plot_vw_map.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/plot_vw_surf.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/plot_vw_surf_r.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/prettify_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_voxw_lmm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_vw_fed_aggr.html</loc></url>
@@ -56,6 +58,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/update_progress_tracker.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_chol.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_chol_solve.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/vw_error.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_logLL.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_pool.html</loc></url>
