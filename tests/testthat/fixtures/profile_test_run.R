@@ -79,7 +79,10 @@ res = run_vw_lmm(
 
 plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage3')
 plot_vw_surf(lh = res$coef[2, ], rh = res$coef[2, ], fs_template = 'fsaverage3', 
-views =c("lateral", "medial", "dorsal", "ventral", "anterior"), output_file = '/Users/Serena/Desktop/Packages/verywise/try.png')
+views = 'all', 
+to_file = '/Users/Serena/Desktop/Packages/verywise/try.png')
+
+plot_vw_surf(lh = res$fitstats[1, ], vmin = 0, vmax = 1, fs_template = 'fsaverage3')
 
 # Profile it (sequential required) ===========================================
 p <- profvis::profvis(
