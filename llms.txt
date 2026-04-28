@@ -254,9 +254,6 @@ grant number 16080606).
 - [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
   : Plot vertex-wise maps on brain surfaces
 
-- [`plot_vw_surf_r()`](https://seredef.github.io/verywise/reference/plot_vw_surf_r.md)
-  : Plot vertex-wise maps on brain surfaces
-
 - [`prettify_message()`](https://seredef.github.io/verywise/reference/prettify_message.md)
   : Print pretty messages to console
 

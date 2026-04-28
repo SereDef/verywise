@@ -19,7 +19,7 @@ Source:
 [`inst/CITATION`](https://github.com/SereDef/verywise/blob/main/inst/CITATION)
 
 Defina S (2026). *verywise: vertex / voxel-wise linear mixed models*.
-[doi:10.5281/zenodo.18496337](https://doi.org/10.5281/zenodo.18496337),
+[doi:10.5281/zenodo.18496337](https://doi.org/10.5281/zenodo.18496337).
 R package version 1.2.6, <https://doi.org/10.5281/zenodo.18496337>.
 
     @Manual{,

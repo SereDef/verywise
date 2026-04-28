@@ -1,12 +1,12 @@
 # Plot vertex-wise maps on brain surfaces
 
 Renders left and/or right hemisphere vertex-wise scalar maps on a
-standard fsaverage surface using Python/nilearn. Fully headless — no
-XQuartz, rgl, or display server required.
+standard fsaverage surface using Python/nilearn. Fully headless (no
+XQuartz, rgl, or display server required).
 
 Surface meshes are resolved in order:
 
-1.  `FREESURFER_HOME`/subjects/`fs_template`/surf/ — used directly if
+1.  `FREESURFER_HOME`/subjects/`fs_template`/surf/ - used directly if
     the directory exists (no download needed).
 
 2.  nilearn automatic download, cached permanently in `~/nilearn_data/`
@@ -81,7 +81,7 @@ plot_vw_surf(
 
 - views:
 
-  Character vector of camera angles — any subset of `"lateral"`,
+  Character vector of camera angles - any subset of `"lateral"`,
   `"medial"`, `"dorsal"`, `"ventral"`, `"anterior"`, `"posterior"`.
   Default: `"all"`.
 

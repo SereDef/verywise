@@ -29,6 +29,11 @@ vw_error(msg, ..., call = rlang::caller_env())
   [`cli::cli_abort()`](https://cli.r-lib.org/reference/cli_abort.html)
   (e.g. `class`, `call`, `.internal`).
 
+- call:
+
+  Caller enviroment
+  ([`rlang::caller_env()`](https://rlang.r-lib.org/reference/stack.html))
+
 ## Author
 
 Serena Defina, 2026.
