@@ -77,13 +77,14 @@ def _unwrap_plotly(fp):
     return fp.figure if hasattr(fp, "figure") else fp
 
 
-# ── static PNG renderer ───────────────────────────────────────────────────────
+# --- Static PNG renderer ----------------------------------------------------
 
 def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
                    threshold, views, colorbar, colorbar_label,
                    title, output_file, dpi, fs_template, fs_home):
 
     lh, rh = _to_array(lh), _to_array(rh)
+    
     if vmin is None or vmax is None:
         vmin, vmax = _auto_limits([lh, rh])
 
@@ -91,6 +92,7 @@ def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
     hemis  = []
     if lh is not None: hemis.append(("left",  lh, mlh, blh))
     if rh is not None: hemis.append(("right", rh, mrh, brh))
+
     thresh = float(threshold) if threshold is not None else None
 
     panels = []
@@ -98,21 +100,16 @@ def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
         row = []
         for view in views:
             fp = plot_surf(
-                surf_mesh = mesh,
-                surf_map  = data,
-                hemi      = hname,
-                view      = view,
-                cmap      = cmap,
-                vmin      = vmin,
-                vmax      = vmax,
+                surf_mesh = mesh, 
+                surf_map = data,
+                hemi = hname,
+                view = view, cmap = cmap, vmin = vmin, vmax = vmax,
                 threshold = thresh,
                 symmetric_cmap = False,
                 avg_method = 'median',
-                bg_map    = bg,
-                bg_on_data = False,
-                alpha     = 1.0,
-                colorbar  = False,
-                engine    = "matplotlib",
+                bg_map = bg, bg_on_data = False, alpha = 1.0,
+                colorbar = False,
+                engine = "matplotlib",
             )
             row.append(_fig_to_arr(fp))
         panels.append(row)
@@ -133,6 +130,7 @@ def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
         top    = 0.92 if title else 0.98,
         bottom = 0.02,
     )
+
     for r, (hname, *_) in enumerate(hemis):
         for c, view in enumerate(views):
             ax = fig.add_subplot(gs[r, c])
@@ -164,7 +162,7 @@ def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
     return output_file
 
 
-# ── interactive HTML renderer ─────────────────────────────────────────────────
+# --- Interactive HTML renderer ----------------------------------------------
 
 def vw_surf_interactive(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
                         threshold, views, colorbar, colorbar_label,

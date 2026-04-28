@@ -187,6 +187,7 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
 #'   \code{c("Something failed.", "i" = "Check {.arg x}.")}.
 #' @param ...  Additional arguments forwarded to \code{cli::cli_abort()}
 #'   (e.g. \code{class}, \code{call}, \code{.internal}).
+#' @param call Caller enviroment (`rlang::caller_env()`)
 #'
 #' @author Serena Defina, 2026.
 #'

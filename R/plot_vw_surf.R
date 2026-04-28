@@ -1,124 +1,13 @@
-# R/plot_vw_surf.R
-# ──────────────────────────────────────────────────────────────────────────────
-# Brain surface plotting via Python/nilearn.
-# Fully headless — no XQuartz, rgl, or display server required.
-# ──────────────────────────────────────────────────────────────────────────────
-
-
-check_hemi <- function(hemi, n_vert) {
-  if (is.null(hemi)) return(hemi)  # empty or file path: skip check
-  
-  hemi_name <- deparse(substitute(hemi))
-  
-  if (is.character(hemi)) {
-    if (!file.exists(hemi)) vw_error("{hemi_name} file not found: {.file {hemi}}")
-  
-    # nilearn.surface.load_surf_data()
-    nilearn_surf_ext <- c("\\.mgh$", "\\.mgz$", "\\.gii$", "\\.nii$",
-                          "\\.nii\\.gz$", "\\.npy$", "\\.txt$", "\\.csv$")
-    
-    if (!any(grepl(paste(nilearn_surf_ext, collapse = "|"), hemi, ignore.case = TRUE)))
-        vw_message(c("!" = "{hemi_name}: unrecognised file extension in {.file {basename(hemi)}}.",
-                     " " = "nilearn will attempt to load it anyway but things may get weird.",
-                     ">" = "try reading it in yourself and providing a vector instead, or using 
-                     one of the supported extensions (e.g. .mgh, .mgz, .csv... see `nilearn.surface.load_surf_data()`)"
-    ))
-
-    return(hemi)
-  }
-
-  hemi <- as.numeric(hemi)
-  if (length(hemi) != n_vert) {
-      vw_error("{hemi_name} vector length ({.warn {length(hemi)}}) does not match {fs_template} template ({n_vert})")
-  }
-
-  hemi
-}
-
-# ── session-level init flag ────────────────────────────────────────────────────
-# Avoids querying reticulate::py (which is NULL before first Python call).
-.vw_surf_env <- new.env(parent = emptyenv())
-.vw_surf_env$ready <- FALSE
-
-.vw_surf_init_py <- function() {
-  if (isTRUE(.vw_surf_env$ready)) return(invisible(NULL))
-
-  py_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
-  if (!nzchar(py_file))
-    stop("verywise: could not find inst/python/plot_vw_surf.py — ",
-         "try reinstalling the package.", call. = FALSE)
-  
-  py_code <- paste(readLines(py_file), collapse = "\n")
-
-  tryCatch(
-    reticulate::py_run_string(py_code),
-    # reticulate::source_python(py_file),
-    error = function(e) stop(
-      "verywise: failed to load Python brain-plot renderer.\n",
-      "Ensure nilearn, matplotlib, and numpy are installed.\n",
-      "Original error: ", conditionMessage(e),
-      call. = FALSE
-    )
-  )
-
-#   tryCatch(
-#     reticulate::py_run_string(.VW_SURF_PY),
-#     error = function(e) stop(
-#       "verywise: failed to initialise the Python brain-plot renderer.\n",
-#       "Ensure nilearn, matplotlib, and numpy are installed in the active ",
-#       "reticulate Python environment.\n",
-#       "Original error: ", conditionMessage(e),
-#       call. = FALSE
-#     )
-#   )
-  .vw_surf_env$ready <- TRUE
-  invisible(NULL)
-}
-
-
-# ── mesh-resolution helper (R side) ──────────────────────────────────────────
-# Returns the FreeSurfer home path when the template is found locally,
-# or NULL to signal Python to use the nilearn download+cache path (via fetch_surf_fsaverage)
-resolve_mesh <- function(fs_template, fs_home, verbose = TRUE) {
-  
-  if (is.null(fs_home)) {
-    fs_home <- Sys.getenv("FREESURFER_HOME")
-  }
-  
-  if (nzchar(fs_home)) {
-    surf_dir <- file.path(fs_home, "subjects", fs_template, "surf")
-    if (dir.exists(surf_dir)) {
-      vw_message("Using local FreeSurfer mesh from {fs_home}", verbose = verbose, type = 'note')
-      return(fs_home)
-    }
-    vw_message("{fs_template} surface mesh not found in {.path $FREESURFER_HOME/subjects/}
-         {cli::symbol$arrow_right} falling back to nilearn.")
-  }
-
-  # Warn only when the template is not yet cached
-  cache <- file.path(path.expand("~"), "nilearn_data", fs_template)
-  if (!dir.exists(cache) || length(list.files(cache, recursive = TRUE)) == 0L) {
-     vw_message(c("i" = "Will download {fs_template} surface mesh. This may take up to a minute on the first run.",
-                  " " = "Meshes will be then cached in {.path ~/nilearn_data/{fs_template}}",
-                  " " = "Alternatively, provide a path to FreeSurfer (via `fs_home` argument or environment variables)"))
-  }
-
-  NULL 
-}
-
-
-# ── main exported function ────────────────────────────────────────────────────
-
 #' @title Plot vertex-wise maps on brain surfaces
 #'
 #' @description
 #' Renders left and/or right hemisphere vertex-wise scalar maps on a standard
-#' fsaverage surface using Python/nilearn. Fully headless — no XQuartz, rgl,
-#' or display server required.
+#' fsaverage surface using Python/nilearn. Fully headless (no XQuartz, rgl,
+#' or display server required).
 #'
 #' Surface meshes are resolved in order:
 #' \enumerate{
-#'   \item \env{FREESURFER_HOME}/subjects/\code{fs_template}/surf/ — used
+#'   \item \env{FREESURFER_HOME}/subjects/\code{fs_template}/surf/ - used
 #'         directly if the directory exists (no download needed).
 #'   \item nilearn automatic download, cached permanently in
 #'         \file{~/nilearn_data/} (download only happens once per template).
@@ -146,7 +35,7 @@ resolve_mesh <- function(fs_template, fs_home, verbose = TRUE) {
 #'   symmetric scaling.
 #' @param threshold Absolute-value masking threshold, or \code{NULL}
 #'   (no masking).
-#' @param views Character vector of camera angles — any subset of
+#' @param views Character vector of camera angles - any subset of
 #'   \code{"lateral"}, \code{"medial"}, \code{"dorsal"}, \code{"ventral"},
 #'   \code{"anterior"}, \code{"posterior"}. Default: \code{"all"}.
 #' @param colorbar Logical. Draw a shared colour bar? Default \code{TRUE}.
@@ -197,7 +86,7 @@ plot_vw_surf <- function(
     to_file = NULL,
     dpi = 150L) {
 
-  ## ── input validation ───────────────────────────────────────────────────────
+  # --- input validation ----------------------------------------------------
   if (is.null(lh) && is.null(rh))
     stop("At least one of `lh` or `rh` must be supplied.", call. = FALSE)
 
@@ -218,17 +107,14 @@ plot_vw_surf <- function(
         "i" = "Please choose from {.or {.strong {valid_views}}}"))
   }
 
-  
-  ## ── vertex-count validation ────────────────────────────────────────────────
   n_vert <- count_vertices(fs_template)
 
   lh <- check_hemi(lh, n_vert)
   rh <- check_hemi(rh, n_vert)
 
-  ## ── mesh resolution + progress messaging ──────────────────────────────────
   where_is_my_mesh <- resolve_mesh(fs_template, fs_home)
 
-  ## ── initialise Python renderer (once per session) ─────────────────────────
+  # --- initialise Python renderer (once per session) -----------------------
   reticulate::py_require(c("nilearn", "matplotlib", "numpy", "plotly"))
   .vw_surf_init_py()
 
@@ -246,10 +132,9 @@ plot_vw_surf <- function(
   colorbar_label = colorbar_label,
            title = title,
      fs_template = fs_template,
-         fs_home = where_is_my_mesh  # NULL → Python None → nilearn download
+         fs_home = where_is_my_mesh  # NULL: Python None (nilearn download)
   )
 
-  ## ── dispatch ───────────────────────────────────────────────────────────────
   if (!is.null(to_file)) {
 
     out_dir <- dirname(normalizePath(to_file, mustWork = FALSE))
@@ -278,4 +163,105 @@ plot_vw_surf <- function(
 
     return(invisible(tmp_html))
   }
+}
+
+check_hemi <- function(hemi, n_vert) {
+  if (is.null(hemi)) return(hemi)  # empty or file path: skip check
+  
+  hemi_name <- deparse(substitute(hemi))
+  
+  if (is.character(hemi)) {
+    if (!file.exists(hemi)) vw_error("{hemi_name} file not found: {.file {hemi}}")
+  
+    # nilearn.surface.load_surf_data()
+    nilearn_surf_ext <- c("\\.mgh$", "\\.mgz$", "\\.gii$", "\\.nii$",
+                          "\\.nii\\.gz$", "\\.npy$", "\\.txt$", "\\.csv$")
+    
+    if (!any(grepl(paste(nilearn_surf_ext, collapse = "|"), hemi, ignore.case = TRUE)))
+        vw_message(c("!" = "{hemi_name}: unrecognised file extension in {.file {basename(hemi)}}.",
+                     " " = "nilearn will attempt to load it anyway but things may get weird.",
+                     ">" = "try reading it in yourself and providing a vector instead, or using 
+                     one of the supported extensions (e.g. .mgh, .mgz, .csv... see `nilearn.surface.load_surf_data()`)"
+    ))
+
+    return(hemi)
+  }
+
+  hemi <- as.numeric(hemi)
+  if (length(hemi) != n_vert) {
+      vw_error("{hemi_name} vector length ({.warn {length(hemi)}}) does not match {fs_template} template ({n_vert})")
+  }
+
+  hemi
+}
+
+# Session-level init flag
+# Avoids querying reticulate::py (which is NULL before first Python call).
+.vw_surf_env <- new.env(parent = emptyenv())
+.vw_surf_env$ready <- FALSE
+
+.vw_surf_init_py <- function() {
+  if (isTRUE(.vw_surf_env$ready)) return(invisible(NULL))
+
+  py_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
+  if (!nzchar(py_file))
+    stop("verywise: could not find inst/python/plot_vw_surf.py - ",
+         "try reinstalling the package.", call. = FALSE)
+  
+  py_code <- paste(readLines(py_file), collapse = "\n")
+
+  tryCatch(
+    reticulate::py_run_string(py_code),
+    # reticulate::source_python(py_file),
+    error = function(e) stop(
+      "verywise: failed to load Python brain-plot renderer.\n",
+      "Ensure nilearn, matplotlib, and numpy are installed.\n",
+      "Original error: ", conditionMessage(e),
+      call. = FALSE
+    )
+  )
+
+#   tryCatch(
+#     reticulate::py_run_string(.VW_SURF_PY),
+#     error = function(e) stop(
+#       "verywise: failed to initialise the Python brain-plot renderer.\n",
+#       "Ensure nilearn, matplotlib, and numpy are installed in the active ",
+#       "reticulate Python environment.\n",
+#       "Original error: ", conditionMessage(e),
+#       call. = FALSE
+#     )
+#   )
+  .vw_surf_env$ready <- TRUE
+  invisible(NULL)
+}
+
+
+# Mesh-resolution helper (R side)
+# Returns the FreeSurfer home path when the template is found locally,
+# or NULL to signal Python to use the nilearn download+cache path (via fetch_surf_fsaverage)
+resolve_mesh <- function(fs_template, fs_home, verbose = TRUE) {
+  
+  if (is.null(fs_home)) {
+    fs_home <- Sys.getenv("FREESURFER_HOME")
+  }
+  
+  if (nzchar(fs_home)) {
+    surf_dir <- file.path(fs_home, "subjects", fs_template, "surf")
+    if (dir.exists(surf_dir)) {
+      vw_message("Using local FreeSurfer mesh from {fs_home}", verbose = verbose, type = 'note')
+      return(fs_home)
+    }
+    vw_message("{fs_template} surface mesh not found in {.path $FREESURFER_HOME/subjects/}
+         {cli::symbol$arrow_right} falling back to nilearn.")
+  }
+
+  # Warn only when the template is not yet cached
+  cache <- file.path(path.expand("~"), "nilearn_data", fs_template)
+  if (!dir.exists(cache) || length(list.files(cache, recursive = TRUE)) == 0L) {
+     vw_message(c("i" = "Will download {fs_template} surface mesh. This may take up to a minute on the first run.",
+                  " " = "Meshes will be then cached in {.path ~/nilearn_data/{fs_template}}",
+                  " " = "Alternatively, provide a path to FreeSurfer (via `fs_home` argument or environment variables)"))
+  }
+
+  NULL 
 }

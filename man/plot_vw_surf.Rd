@@ -49,7 +49,7 @@ symmetric scaling.}
 \item{threshold}{Absolute-value masking threshold, or \code{NULL}
 (no masking).}
 
-\item{views}{Character vector of camera angles — any subset of
+\item{views}{Character vector of camera angles - any subset of
 \code{"lateral"}, \code{"medial"}, \code{"dorsal"}, \code{"ventral"},
 \code{"anterior"}, \code{"posterior"}. Default: \code{"all"}.}
 
@@ -71,12 +71,12 @@ file path (interactive). Called primarily for the side-effect.
 }
 \description{
 Renders left and/or right hemisphere vertex-wise scalar maps on a standard
-fsaverage surface using Python/nilearn. Fully headless — no XQuartz, rgl,
-or display server required.
+fsaverage surface using Python/nilearn. Fully headless (no XQuartz, rgl,
+or display server required).
 
 Surface meshes are resolved in order:
 \enumerate{
-\item \env{FREESURFER_HOME}/subjects/\code{fs_template}/surf/ — used
+\item \env{FREESURFER_HOME}/subjects/\code{fs_template}/surf/ - used
 directly if the directory exists (no download needed).
 \item nilearn automatic download, cached permanently in
 \file{~/nilearn_data/} (download only happens once per template).

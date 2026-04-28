@@ -14,6 +14,8 @@ vw_error(msg, ..., call = rlang::caller_env())
 
 \item{...}{Additional arguments forwarded to \code{cli::cli_abort()}
 (e.g. \code{class}, \code{call}, \code{.internal}).}
+
+\item{call}{Caller enviroment (\code{rlang::caller_env()})}
 }
 \description{
 Wrapper around \code{cli::cli_abort()} that applies \code{VW_THEME} and
