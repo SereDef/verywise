@@ -414,14 +414,14 @@ run_vw_lmm <- function(
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
   # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "fitstats", "resid") # "t",
+  res_bk_names <- c("coef", "se", "p", "fitstats", "resid")
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
   # These files will be removed "on.exit" by convert_to_mgh
 
   fbm_precision <- "float" # single precision – 32 bits
 
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
+  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, type = fbm_precision,
                          backingfile = res_bk_paths["coef"])  # Coefficients
   s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["se"])    # Standard errors
@@ -504,7 +504,7 @@ run_vw_lmm <- function(
   if (verbose) cli::cli_progress_done()
 
   out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
-  # "coefficients", "standard_errors", "p_values", "fit_statistics",", "residuals"
+  # "coefficients", "standard_errors", "p_values", "fit_statistics", "residuals"
   names(out) <- res_bk_names
 
   # Post-processing ============================================================
@@ -545,11 +545,14 @@ run_vw_lmm <- function(
 
   if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
   
+  # clusters
+  ct_vw <- NULL 
+
   for (stack_n in seq_along(fixed_terms)){
     stack_path <- paste0(result_path, ".stack", stack_n)
     fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
 
-    cds <- compute_clusters(stack_path = stack_path,
+    ocn <- compute_clusters(stack_path = stack_path,
                      hemi = hemi,
                      fwhm = fwhm,
                      FS_HOME = FS_HOME,
@@ -559,15 +562,34 @@ run_vw_lmm <- function(
                      full_surfcluster_output = save_optional_cluster_info,
                      mask = paste0(result_path, ".finalMask.mgh"),
                      verbose = fs_verbosity)
-    if (!is.null(cds)) break
+    
+    if (is.null(ocn)) break # did not compute clusters
+
+    # else 
+    if (is.null(ct_vw)) {
+      # create storage once
+      ct_bk_path <- build_output_bks(result_path, 
+        res_bk_names = c('clust'), verbose = FALSE)
+      ct_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, 
+        type = fbm_precision, backingfile = res_bk_paths["clust"])
+    }
+
+    ct_vw[stack_n, ] <- ocn
+
   }
 
   if (verbose) cli::cli_progress_done()
   
   # Print summary 
   vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
-  # TODO: mask 0 verts
-  vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+  if (!is.null(ct_vw)) {
+    out['clust'] <- ct_vw
+    vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
+      term_names = fixed_terms, verbose = verbose)
+  } else {
+    # TODO: mask 0 verts (done... NA now )
+    vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+  }
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

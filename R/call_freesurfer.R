@@ -118,14 +118,13 @@ compute_clusters <- function(stack_path,
                         "cortex", fwhm_str, csd_sign, mcz_thr_str, "mc-z.csd")
   
   if (!file.exists(csd_file)) {
-    cli::cli_warn(c(
-      "CSD file not found for {.field {fs_template}} template.",
+    vw_message(c(
+      "!" = "Cluster simulation data (CSD) are required for cluster-wise p-value estimation, but no CSD file was found for {.field {fs_template}} template.",
       "i" = "FreeSurfer home: {.file {FS_HOME}}",
-      "x" = "Cluster simulation data (CSD) are required for cluster-wise p-value estimation.",
       ">" = "Use the default `fsaverage` template, or run {.code mri_glmfit --sim} with
             {.field {fs_template}} to generate the CSD."
-    ))
-    return('missing CSD')
+    ), verbose = TRUE)
+    return(NULL)
   }
   
   pval_mgh_file <- paste0(stack_path, ".-log10p.mgh")
@@ -187,24 +186,24 @@ compute_clusters <- function(stack_path,
 
   # ── Check exit code ─────────────────────────────────────────────────────────
   if (exit_code != 0) {
-    abort_msg <- c(
-      "mri_surfcluster failed with exit code {exit_code}.",
-      "i" = "Stack: {.file {basename(stack_path)}}")
+    abort_msg <- c("mri_surfcluster failed with exit code {exit_code}.",
+                   "i" = "Stack: {.file {basename(stack_path)}}")
     
     if (length(real_errors) > 0) {
-      abort_msg <- c(abort_msg,
-        "x" = paste(real_errors, collapse = "\n"))
+      abort_msg <- c(abort_msg, "x" = paste(real_errors, collapse = "\n"))
     } else {
-      abort_msg <- c(abort_msg,
-        "i" = "No stderr captured. Try re-running {.code compute_clusters}.")
+      abort_msg <- c(abort_msg, "i" = "No stderr captured. Try re-running {.code compute_clusters}.")
     }
+
     cli::cli_abort(abort_msg)
   }
 
-  if (length(real_errors) > 0)
-  vw_message(paste0("! mri_surfcluster stderr:\n    ",
-                    paste(real_errors, collapse = "\n    ")),
-              verbose = TRUE)
+  if (length(real_errors) > 0) {
+    vw_message(c("!" = "mri_surfcluster stderr:",
+      setNames(real_errors, rep("x", length(real_errors)))), verbose = TRUE)
+  }
+  
+  ocn_map <- load.mgh(outp_files[["ocn"]])$x
 
-  return(invisible(NULL))
+  return(ocn_map)
 }

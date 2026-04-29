@@ -382,9 +382,9 @@ subset_supersubject <- function(supsubj_dir,
     vw_message(c(
       "!" = "Downsampling is useful for model tuning, but bit introduces (small)
       registration errors. We recommend using {.field fsaverage} in your final analysis.",
-      "!" = "If you want cluster-wise pvalues for this template you will need to
+      " " = "If you want cluster-wise pvalues for this template you will need to
       run {.code mri_glmfit --sim} to obtain the correct CDS files."),
-      verbose = verbose, type = 'warning')
+      verbose = verbose)
   }
 
     # Fill new ss matrix in chunks

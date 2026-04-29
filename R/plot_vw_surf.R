@@ -88,12 +88,14 @@ plot_vw_surf <- function(
 
   # --- input validation ----------------------------------------------------
   if (is.null(lh) && is.null(rh))
-    stop("At least one of `lh` or `rh` must be supplied.", call. = FALSE)
-
-  if (!is.null(to_file) &&
-      !grepl("\\.png$", to_file, ignore.case = TRUE))
-    stop("Output file name must end in '.png'.", call. = FALSE)
-
+    vw_error("At least one of `lh` or `rh` must be supplied.")
+  
+  if (!is.null(to_file)) {
+    if (!grepl("\\.png$", to_file, ignore.case = TRUE)) {
+      vw_error("Output file name must end in '.png'.")
+    }
+  }
+      
   surface <- match.arg(surface)
   bg_map  <- match.arg(bg_map)
 
@@ -166,6 +168,7 @@ plot_vw_surf <- function(
 }
 
 check_hemi <- function(hemi, n_vert) {
+  
   if (is.null(hemi)) return(hemi)  # empty or file path: skip check
   
   hemi_name <- deparse(substitute(hemi))
@@ -209,6 +212,13 @@ check_hemi <- function(hemi, n_vert) {
          "try reinstalling the package.", call. = FALSE)
   
   py_code <- paste(readLines(py_file), collapse = "\n")
+
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    vw_error(c(
+      "Surface plotting requires {.pkg reticulate}.",
+      "i" = "Install it with {.code install.packages('reticulate')}."
+    ))
+  }
 
   tryCatch(
     reticulate::py_run_string(py_code),

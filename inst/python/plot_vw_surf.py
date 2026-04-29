@@ -35,31 +35,82 @@ def _auto_limits(arrays):
     mx = float(np.max(np.abs(vals))) if vals.size else 1.0
     return -mx, mx
 
+def _match_mesh_size(data, target_len):
+    """Helper to crop or pad an array to match the mesh vertex count."""
 
-def _get_mesh_paths(fs_template, surface, bg_map_type, fs_home):
-    if fs_home:
-        surf_dir = os.path.join(fs_home, "subjects", fs_template, "surf")
-        if os.path.isdir(surf_dir):
-            mlh = os.path.join(surf_dir, f"lh.{surface}")
-            mrh = os.path.join(surf_dir, f"rh.{surface}")
-            blh = os.path.join(surf_dir, f"lh.{bg_map_type}") if bg_map_type != "none" else None
-            brh = os.path.join(surf_dir, f"rh.{bg_map_type}") if bg_map_type != "none" else None
-            missing = [p for p in filter(None, [mlh, mrh, blh, brh])
-                       if not os.path.exists(p)]
-            if missing:
-                raise FileNotFoundError(
-                    "Expected FreeSurfer surface file(s) not found: " +
-                    ", ".join(missing))
-            return mlh, mrh, blh, brh
+    if len(data) > target_len:
+        return data[:target_len]
 
-    # Fall back to nilearn download + permanent cache
-    fsavg = fetch_surf_fsaverage(mesh=fs_template)
+    elif len(data) < target_len:
+        padded = np.full(target_len, np.nan)
+        padded[:len(data)] = data
+        return padded
+        
+    return data
+
+def _fetch_surf_from_dir(hemi, surf_dir, surface, bg_map_type):
+    
+    mesh = os.path.join(surf_dir, f"{hemi}.{surface}")
+    back = os.path.join(surf_dir, f"{hemi}.{bg_map_type}") if bg_map_type != "none" else None
+
+    return mesh, back
+
+def _fetch_surf_from_cache(hemi, fsavg, surface, bg_map_type):
+
     surf_key = "infl" if surface == "inflated" else surface
-    mlh = getattr(fsavg, f"{surf_key}_left")
-    mrh = getattr(fsavg, f"{surf_key}_right")
-    blh = getattr(fsavg, f"{bg_map_type}_left")  if bg_map_type != "none" else None
-    brh = getattr(fsavg, f"{bg_map_type}_right") if bg_map_type != "none" else None
-    return mlh, mrh, blh, brh
+
+    mesh = getattr(fsavg, f"{surf_key}_{hemi}")
+    back = getattr(fsavg, f"{bg_map_type}_{hemi}") if bg_map_type != "none" else None
+
+    return mesh, back
+
+def _get_mesh_paths(lh, rh, fs_template, surface, bg_map_type, fs_home):
+
+    # Hardcoded vertex counts to avoid loading meshes when using standard templates
+    FS_TEMPLATE_VERTICES = {
+        "fsaverage": 163842,
+        "fsaverage6": 40962,
+        "fsaverage5": 10242,
+        "fsaverage4": 2562,
+        "fsaverage3": 642,
+    }
+
+    n_vertices = FS_TEMPLATE_VERTICES.get(fs_template)
+
+    hemis  = []
+
+    if fs_home:
+
+        surf_dir = os.path.join(fs_home, "subjects", fs_template, "surf")
+        
+        if os.path.isdir(surf_dir):
+            
+            if lh is not None:
+                lh = _match_mesh_size(lh, n_vertices)
+                mlh, blh = _fetch_surf_from_dir('lh', surf_dir, surface, bg_map_type)
+                hemis.append(("left", lh, mlh, blh))
+        
+            if rh is not None:
+                rh = _match_mesh_size(rh, n_vertices)
+                mrh, brh = _fetch_surf_from_dir('rh', surf_dir, surface, bg_map_type)
+                hemis.append(("right", rh, mrh, brh))
+            
+            return hemis
+    
+    # Fall back to nilearn download + permanent cache
+    fsavg = fetch_surf_fsaverage(mesh = fs_template)
+
+    if lh is not None: 
+        lh = _match_mesh_size(lh, n_vertices)
+        mlh, blh = _fetch_surf_from_cache('left', fsavg, surface, bg_map_type)
+        hemis.append(("left", lh, mlh, blh))
+
+    if rh is not None:
+        rh = _match_mesh_size(rh, n_vertices)
+        mrh, brh = _fetch_surf_from_cache('right', fsavg, surface, bg_map_type)
+        hemis.append(("right", rh, mrh, brh))
+
+    return hemis
 
 
 def _fig_to_arr(fig):
@@ -88,10 +139,7 @@ def vw_surf_static(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
     if vmin is None or vmax is None:
         vmin, vmax = _auto_limits([lh, rh])
 
-    mlh, mrh, blh, brh = _get_mesh_paths(fs_template, surface, bg_map_type, fs_home)
-    hemis  = []
-    if lh is not None: hemis.append(("left",  lh, mlh, blh))
-    if rh is not None: hemis.append(("right", rh, mrh, brh))
+    hemis = _get_mesh_paths(lh, rh, fs_template, surface, bg_map_type, fs_home)
 
     thresh = float(threshold) if threshold is not None else None
 
@@ -172,6 +220,7 @@ def vw_surf_interactive(lh, rh, surface, bg_map_type, cmap, vmin, vmax,
     from plotly.subplots import make_subplots
  
     lh, rh = _to_array(lh), _to_array(rh)
+
     if vmin is None or vmax is None:
         vmin, vmax = _auto_limits([lh, rh])
 

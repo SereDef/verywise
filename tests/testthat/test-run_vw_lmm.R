@@ -64,12 +64,13 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
 
   # Structure tests
   expect_type(result, "list")
-  expect_named(result, c("coef", "se", "p", "fitstats", "resid"))
+  expect_named(result, c("coef", "se", "p", "fitstats", "resid", "clust"))
   expect_s4_class(result$coef, "FBM")
   expect_s4_class(result$se, "FBM")
   expect_s4_class(result$p, "FBM")
   expect_s4_class(result$fitstats, "FBM")
   expect_s4_class(result$resid, "FBM")
+  expect_s4_class(result$clust, "FBM")
 
   expect_true(file.exists(
     file.path(outp_dir, 'lh.area.stack1.coef.mgh')))
