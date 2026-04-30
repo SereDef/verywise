@@ -28,7 +28,7 @@
 #' @param fs_home (optional) location of FreeSurfer home for templates.
 #' @param surface Surface mesh: \code{"inflated"} (default), \code{"pial"},
 #'   or \code{"white"}.
-#' @param cmap Matplotlib colormap name. Default \code{"RdBu_r"}.
+#' @param cmap Matplotlib colormap name.
 #' @param bg_map Background shading: \code{"sulc"} (default),
 #'   \code{"curv"}, or \code{"none"}.
 #' @param vmin,vmax Numeric colour limits, or \code{NULL} for automatic

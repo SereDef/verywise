@@ -200,7 +200,7 @@ compute_clusters <- function(stack_path,
 
   if (length(real_errors) > 0) {
     vw_message(c("!" = "mri_surfcluster stderr:",
-      setNames(real_errors, rep("x", length(real_errors)))), verbose = TRUE)
+      stats::setNames(real_errors, rep("x", length(real_errors)))), verbose = TRUE)
   }
   
   ocn_map <- load.mgh(outp_files[["ocn"]])$x
