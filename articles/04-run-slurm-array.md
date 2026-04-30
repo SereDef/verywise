@@ -34,6 +34,7 @@ variables, but I think it makes the code cleaner and easier to maintain,
 and I am in charge here so we do this how I like it).
 
 ``` r
+
 # Load verywise
 library(verywise)
 
@@ -92,6 +93,7 @@ formula for the current analysis (e.g. with or without interaction
 term).
 
 ``` r
+
 # Define parameter space ==========================================================
 
 hemis <- c('lh','rh')
@@ -114,6 +116,7 @@ model_spec <- as.formula(paste(outc, '~ age', params$mode, 'sex +', covariates, 
 Finally, let’s run the analysis with all our “current” parameters:
 
 ``` r
+
 # Run analysis --------------------------------------------------------------------
 
 output <- run_vw_lmm(formula = model_spec,
@@ -189,6 +192,7 @@ computation time by pre-computing the “super-subject matrix” only once,
 and re-using it across all your analyses.
 
 ``` r
+
 library(verywise)
 
 supsubj_dir = "/path/to/save/ss"

@@ -17,6 +17,7 @@ random intercept, and \\\varepsilon\_{ikv} \sim \mathcal{N}(0,
 
 The output folder layout is:
 
+
     <path>/
       <site1>/
         phenotype.csv
@@ -233,28 +234,28 @@ truth <- simulate_distrib_dataset(
   sigma2 = 0.1,
   fs_template = "fsaverage3"  # 642 vertices
 )
-#> • the `path` specified ('/tmp/Rtmp4uEczH/fed_simulation1c4535bf34d') does not
+#> • the `path` specified ('/tmp/RtmpWBMYrT/fed_simulation1c3033c832ec') does not
 #>   exist. I'll try to create it.
 #> * selected
 #> 11
 #> vertices (
 #> 1.7
 #> %)
-#> • the `site_dir` specified ('/tmp/Rtmp4uEczH/fed_simulation1c4535bf34d/site1')
+#> • the `site_dir` specified ('/tmp/RtmpWBMYrT/fed_simulation1c3033c832ec/site1')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site1
 #> ] writing
 #> 80
 #> surface files...
-#> • the `site_dir` specified ('/tmp/Rtmp4uEczH/fed_simulation1c4535bf34d/site2')
+#> • the `site_dir` specified ('/tmp/RtmpWBMYrT/fed_simulation1c3033c832ec/site2')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site2
 #> ] writing
 #> 120
 #> surface files...
-#> • the `site_dir` specified ('/tmp/Rtmp4uEczH/fed_simulation1c4535bf34d/site3')
+#> • the `site_dir` specified ('/tmp/RtmpWBMYrT/fed_simulation1c3033c832ec/site3')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site3

@@ -15,6 +15,7 @@ First, load the package in our R session, so we call its functions
 directly.
 
 ``` r
+
 library(verywise)
 ```
 
@@ -43,6 +44,7 @@ model, in which we have a single grouping/cluster (participants)
 modelled as a random intercept.
 
 ``` r
+
 # Run a linear mixed model
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
@@ -268,17 +270,17 @@ flexible. Almost \*too flexible\*\*, so it can be tricky to get your
 head around all the available options. Here is a quick cheatsheet
 adapted ( / stolen) from StackOverflow (RIP):
 
-| **formula**                                    | **meaning**                                                                           |
-|------------------------------------------------|---------------------------------------------------------------------------------------|
-| `(1 | group)`                                  | random group intercept                                                                |
-| `(x | group)` = `(1 + x | group)`              | random slope of x within group - with correlated intercept                            |
-| `(0 + x | group)`                              | random slope of x within group - no variation in intercept                            |
-| `(1 | group) + (0 + x | group)`                | *uncorrelated* random intercept and random slope within group                         |
+| **formula** | **meaning** |
+|----|----|
+| `(1 | group)` | random group intercept |
+| `(x | group)` = `(1 + x | group)` | random slope of x within group - with correlated intercept |
+| `(0 + x | group)` | random slope of x within group - no variation in intercept |
+| `(1 | group) + (0 + x | group)` | *uncorrelated* random intercept and random slope within group |
 | `(1 | site/id)` = `(1 | site) + (1 | site:id)` | intercept varying among sites and among people within sites (*nested random effects*) |
-| `site + (1 | site:id)`                         | fixed effect of sites plus random variation in intercept among people within sites    |
-| `(x | site/id)` = `(x | site) + (x | site:id)` | slope and intercept varying among sites and among people within sites                 |
-| `(x1 | site) + (x2 | id)`                      | two different effects, varying at different levels                                    |
-| `(1 | group1) + (1 | group2)`                  | intercept varying among *crossed random effects* (e.g. site, year)                    |
+| `site + (1 | site:id)` | fixed effect of sites plus random variation in intercept among people within sites |
+| `(x | site/id)` = `(x | site) + (x | site:id)` | slope and intercept varying among sites and among people within sites |
+| `(x1 | site) + (x2 | id)` | two different effects, varying at different levels |
+| `(1 | group1) + (1 | group2)` | intercept varying among *crossed random effects* (e.g. site, year) |
 
 #### Nested vs. crossed random effects
 

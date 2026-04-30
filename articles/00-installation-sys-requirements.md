@@ -17,6 +17,7 @@ already installed on your system).
 - using `devtools`
 
 ``` r
+
 # Install pak (if not there yet)
 if (!requireNamespace("pak"))
   install.packages('pak')
@@ -26,6 +27,7 @@ pak::pak("SereDef/verywise")
 ```
 
 ``` r
+
 # Install devtools (if not there yet)
 if (!requireNamespace("devtools"))
   install.packages('devtools')
@@ -43,6 +45,7 @@ Finally, you can attach the package in your session, to make it easier
 to use:
 
 ``` r
+
 library(verywise)
 ```
 
@@ -53,8 +56,8 @@ In order for `verywise` to run smoothly, you will need:
 - **`R`** (version \>= **4.0**) installed.
 - [**FreeSurfer**](https://surfer.nmr.mgh.harvard.edu/) installed.
 - A **Unix system**: currently, `verywise` works on macOS and on most
-  Linux distributions, but **not on Windows**. This is because we rely
-  on functions from the FreeSurfer suite which require Unix.
+  Linux distributions, but not on Windows. This is because we rely on
+  functions from the FreeSurfer suite which require Unix.
 
 We also highly recommend to:
 

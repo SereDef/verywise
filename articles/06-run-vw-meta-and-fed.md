@@ -27,6 +27,7 @@ consider.
 package.
 
 ``` r
+
 # Run a meta-analysis
 run_vw_meta(
   term = "age", # Which "term" / predictor / effect to pool
@@ -51,6 +52,7 @@ privacy preserving).
 #### STEP 1: at each local site
 
 ``` r
+
 s1_res = run_vw_fed_local( 
   site_name = "site1",
   formula = vw_area ~ sex + age,

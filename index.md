@@ -26,6 +26,7 @@ You can install the development version of `verywise` from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("SereDef/verywise")
 
@@ -37,6 +38,7 @@ devtools::install_github("SereDef/verywise")
 ## Basic use
 
 ``` r
+
 library(verywise)
 ```
 
@@ -46,6 +48,7 @@ implemented in `verywise`
 ### Run a linear mixed model (e.g. longitudinal analysis)
 
 ``` r
+
 run_vw_lmm(
   formula = vw_thickness ~ sex * age + site + (1 | id), # model formula
   pheno = long_format_data, # An R object already in memory, or "path/to/phentype/data"
@@ -61,6 +64,7 @@ run_vw_lmm(
 ### Run a (traditional) meta-analysis
 
 ``` r
+
 run_vw_meta(
   term = "age", # Which "term" / predictor / effect to pool
   hemi = "lh", # (default) or "rh": which hemisphere to run
@@ -76,6 +80,7 @@ run_vw_meta(
 #### STEP 1: at each local site
 
 ``` r
+
 s1_res = run_vw_fed_local( 
   site_name = "site1",
   formula = vw_area ~ sex + age,
@@ -120,6 +125,7 @@ run this locally or try it out
 Plots can also be generated using `verywise` like so:
 
 ``` r
+
 # Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)
 plot_vw_map(
   term = "age",

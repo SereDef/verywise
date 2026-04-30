@@ -12,6 +12,7 @@ directory structure and will be ready for you to analyze.
 Let’s see how to get there. First, load the package:
 
 ``` r
+
 library(verywise)
 #> Loaded verywise 1.3.3
 ```
@@ -30,6 +31,7 @@ association will only be present in the `"frontalpole"` region from the
 Desikan-Killiany atlas.
 
 ``` r
+
 
 data_structure <- list("cohort1" = list("n_subjects" = 100, 
                                         "sessions" = c("01","02")),
@@ -95,6 +97,7 @@ regions.
 
 ``` r
 
+
 phenotype_data <- readRDS("path/to/my_phenotype_data.rds")
 
 data_structure <- list("my_site" = list("sessions" = c("baseline", "F1", "F2"),
@@ -124,6 +127,7 @@ format” dataframe (with variables: `folder_id`, `id`, `site`, `age`,
 `sex`, `wisdom`).
 
 ``` r
+
 # Simulate phenotype dataset, using the same data_structure as above
 phenotype_data <- simulate_long_pheno_data(data_structure = data_structure,
                                            seed = my_random_seed_I_did_not_forget_to_set)
@@ -136,6 +140,7 @@ analyst (distributed framework). To simulate a similar dataset for
 testing:
 
 ``` r
+
 site_sizes = c(
    site1 = 50, 
    site2 = 100, 

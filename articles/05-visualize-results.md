@@ -19,6 +19,7 @@ function.
 in your pipeline, for this to sun smoothly.
 
 ``` r
+
 # Extract mean from significant clusters
 df <- significant_cluster_stats(stat = "mean", # or "median"
                                 ss_dir = "path/to/ss_directory", 
@@ -45,6 +46,7 @@ does not expose individual level data) and quick.
 Plots can also be generated using `verywise` like so:
 
 ``` r
+
 # Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)
 plot_vw_map(
   term = "age",
