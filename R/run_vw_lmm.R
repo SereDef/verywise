@@ -568,10 +568,9 @@ run_vw_lmm <- function(
     # else 
     if (is.null(ct_vw)) {
       # create storage once
-      ct_bk_path <- build_output_bks(result_path, 
-        res_bk_names = c('clust'), verbose = FALSE)
+      ct_bk_path <- build_output_bks(result_path, res_bk_names = c('clust'), verbose = FALSE)
       ct_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, 
-        type = fbm_precision, backingfile = res_bk_paths["clust"])
+        type = fbm_precision, backingfile = ct_bk_path["clust"])
     }
 
     ct_vw[stack_n, ] <- ocn
@@ -583,7 +582,7 @@ run_vw_lmm <- function(
   # Print summary 
   vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
   if (!is.null(ct_vw)) {
-    out['clust'] <- ct_vw
+    out[['clust']] <- ct_vw
     vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
       term_names = fixed_terms, verbose = verbose)
   } else {

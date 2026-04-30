@@ -74,7 +74,7 @@ plot_vw_surf <- function(
     fs_template = "fsaverage",
     fs_home = NULL,
     surface = c("inflated", "pial", "white"),
-    cmap = "RdBu_r",
+    cmap = NULL,
     bg_map = c("sulc", "curv", "none"),
     vmin = NULL,
     vmax = NULL,
@@ -99,7 +99,8 @@ plot_vw_surf <- function(
   surface <- match.arg(surface)
   bg_map  <- match.arg(bg_map)
 
-  valid_views <- c("lateral", "medial", "dorsal", "ventral", "anterior", "posterior")
+  valid_views <- c("lateral", "dorsal", "anterior", 
+                   "medial", "ventral", "posterior")
   if (views == 'all') {
     views <- if (!is.null(to_file)) valid_views else 'lateral'
   } else {
@@ -109,15 +110,13 @@ plot_vw_surf <- function(
         "i" = "Please choose from {.or {.strong {valid_views}}}"))
   }
 
-  n_vert <- count_vertices(fs_template)
-
-  lh <- check_hemi(lh, n_vert)
-  rh <- check_hemi(rh, n_vert)
+  lh <- check_hemi(lh, fs_template)
+  rh <- check_hemi(rh, fs_template)
 
   where_is_my_mesh <- resolve_mesh(fs_template, fs_home)
 
   # --- initialise Python renderer (once per session) -----------------------
-  reticulate::py_require(c("nilearn", "matplotlib", "numpy", "plotly"))
+  reticulate::py_require(c("nilearn", "matplotlib", "numpy", "plotly", "kaleido"))
   .vw_surf_init_py()
 
   common <- list(
@@ -144,7 +143,7 @@ plot_vw_surf <- function(
     if (!dir.exists(out_dir))
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-    do.call(reticulate::py$vw_surf_static,
+    do.call(reticulate::py$vw_surf_static_plotly,
             c(common, list(output_file = to_file, dpi = as.integer(dpi))))
     
     vw_message("\u2714 Brain map saved to: {.file {to_file}}")
@@ -167,7 +166,7 @@ plot_vw_surf <- function(
   }
 }
 
-check_hemi <- function(hemi, n_vert) {
+check_hemi <- function(hemi, fs_template) {
   
   if (is.null(hemi)) return(hemi)  # empty or file path: skip check
   
@@ -191,8 +190,12 @@ check_hemi <- function(hemi, n_vert) {
   }
 
   hemi <- as.numeric(hemi)
+
+  n_vert <- count_vertices(fs_template)
+
   if (length(hemi) != n_vert) {
-      vw_error("{hemi_name} vector length ({.warn {length(hemi)}}) does not match {fs_template} template ({n_vert})")
+      vw_message("!" = "{hemi_name} vector length ({.warn {length(hemi)}}) does not match 
+      {fs_template} template ({n_vert}), I will try to subset it.")
   }
 
   hemi
