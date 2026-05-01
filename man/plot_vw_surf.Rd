@@ -10,7 +10,7 @@ plot_vw_surf(
   fs_template = "fsaverage",
   fs_home = NULL,
   surface = c("inflated", "pial", "white"),
-  cmap = "RdBu_r",
+  cmap = NULL,
   bg_map = c("sulc", "curv", "none"),
   vmin = NULL,
   vmax = NULL,
@@ -38,7 +38,7 @@ plot_vw_surf(
 \item{surface}{Surface mesh: \code{"inflated"} (default), \code{"pial"},
 or \code{"white"}.}
 
-\item{cmap}{Matplotlib colormap name. Default \code{"RdBu_r"}.}
+\item{cmap}{Matplotlib colormap name.}
 
 \item{bg_map}{Background shading: \code{"sulc"} (default),
 \code{"curv"}, or \code{"none"}.}

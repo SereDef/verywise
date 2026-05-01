@@ -59,7 +59,7 @@ res = run_vw_lmm(
     subj_dir = subj_dir,
     outp_dir = outp_dir,
     hemi = "lh",
-    fs_template = "fsaverage3",
+    fs_template = "fsaverage",
     apply_cortical_mask = TRUE,
     folder_id = "folder_id",
     tolerate_surf_not_found = 20,
@@ -77,10 +77,19 @@ res = run_vw_lmm(
     verbose = TRUE)
 
 
-plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage3')
-plot_vw_surf(lh = res$coef[2, ], rh = res$coef[2, ], fs_template = 'fsaverage3', 
-views = 'all', 
-to_file = '/Users/Serena/Desktop/Packages/verywise/try.png')
+plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage5')
+
+plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage')
+plot_vw_surf(lh = res$coef[2, ], fs_template = 'fsaverage')
+
+
+plot_vw_surf(lh = res$coef[2, ], rh = res$coef[2, ], 
+  fs_template = 'fsaverage5', surface = 'inflated',
+  to_file = '/Users/Serena/Desktop/Packages/verywise/inst/python/plot_test_infl.png')
+
+plot_vw_surf(lh = res$coef[2, ], rh = res$coef[2, ], 
+  fs_template = 'fsaverage5', surface = 'pial',
+  to_file = '/Users/Serena/Desktop/Packages/verywise/inst/python/plot_test_pial.png')
 
 plot_vw_surf(lh = res$fitstats[1, ], vmin = 0, vmax = 1, fs_template = 'fsaverage3')
 

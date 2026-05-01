@@ -2,14 +2,14 @@ import os
 import numpy as np
 import matplotlib
 matplotlib.use("Agg", force=True) # Force headless backend to prevent crashes
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib.colors as mcolors
 from nilearn.datasets import fetch_surf_fsaverage
 from nilearn.plotting import plot_surf 
 from nilearn.surface import load_surf_data
 from plotly.subplots import make_subplots
 import warnings
+import math
+
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -23,31 +23,6 @@ _FS_TEMPLATE_COUNTS = {
 }
 
 _CMAP_REG_NAME = "_verywise_cmap"
-
-_DEFAULT_VIEWS  = ["lateral", "dorsal", "anterior", 
-                   "medial", "ventral", "posterior"]
-# ^ order matters: each entry becomes one column (bilateral hemi-views expand to 2).
-# Default produces the 2×4 layout:
-#   Left laternal | Right lateral | Dorsal  | Anterior
-#   Left  medial  | Right  medial | Ventral | Posterior
-
-# _NILEARN_CAMERAS = {
-#     "left":      {"eye": {"x": -1.5,"y": 0,   "z": 0  }, "up": {"x": 0,  "y": 0, "z": 1}, "center": {"x": 0, "y": 0, "z": 0}},
-#     "right":     {"eye": {"x": 1.5, "y": 0,   "z": 0  }, "up": {"x": 0,  "y": 0, "z": 1}, "center": {"x": 0, "y": 0, "z": 0}},
-#     "dorsal":    {"eye": {"x": 0,   "y": 0,   "z": 1.5 },"up": {"x": -1, "y": 0, "z": 0}, "center": {"x": 0, "y": 0, "z": 0}},
-#     "ventral":   {"eye": {"x": 0,   "y": 0,   "z": -1.5},"up": {"x": 1,  "y": 0, "z": 0}, "center": {"x": 0, "y": 0, "z": 0}},
-#     "anterior":  {"eye": {"x": 0,   "y": 1.5, "z": 0  }, "up": {"x": 0,  "y": 0, "z": 1}, "center": {"x": 0, "y": 0, "z": 0}},
-#     "posterior": {"eye": {"x": 0,   "y": -1.5,"z": 0  }, "up": {"x": 0,  "y": 0, "z": 1}, "center": {"x": 0, "y": 0, "z": 0}},
-# }
-
-_VIEW_DISTANCES = { # Smaller numbers ->  closer
-    "lateral":   1.18,
-    "medial":    1.00,  # concave surface, needs to be slightly closer
-    "dorsal":    1.15,
-    "ventral":   1.30,
-    "anterior":  1.15,  # narrow axis, zoom in more
-    "posterior": 1.15,
-}
 
 # ── Array helpers ─────────────────────────────────────────────────────────────
 
@@ -148,14 +123,13 @@ def _get_meshes(lh, rh, fs_template, surface, bg_map_type, fs_home, load_dk=Fals
     
     return hemis
 
-def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home, load_dk=False):
+def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home):
     """
     Parse mesh files ONCE, return (surf_img, bg_img, hemis, roi_dict).
     surf_img and bg_img are SurfaceImage objects carrying their own mesh.
     """
     from nilearn.surface.surface import PolyMesh
     from nilearn.surface import SurfaceImage
-    import nibabel as nib
 
     n_vertices = _FS_TEMPLATE_COUNTS.get(fs_template)
     if n_vertices is None:
@@ -169,11 +143,8 @@ def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home, lo
     if not use_local:
         fsavg = fetch_surf_fsaverage(mesh=fs_template)
         surf_key = "infl" if surface == "inflated" else surface
-        if load_dk:
-            from nilearn.datasets import fetch_atlas_surf_destrieux
-            destrieux = fetch_atlas_surf_destrieux()
 
-    mesh_parts, data_parts, bg_parts, roi_dict = {}, {}, {}, {}
+    mesh_parts, data_parts, bg_parts = {}, {}, {}
     hemi_present = []
 
     for hemi_name, data in [("left", lh), ("right", rh)]:
@@ -189,18 +160,11 @@ def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home, lo
             for p in filter(None, [mesh_path, bg_path]):
                 if not os.path.exists(p):
                     raise FileNotFoundError(f"Surface file not found: {p}")
-            if load_dk:
-                annot = os.path.join(surf_dir, "..", "label", f"{short}.aparc.annot")
-                labels, _, names = nib.freesurfer.read_annot(annot)
-                names = [n.decode() if isinstance(n, bytes) else n for n in names]
-                roi_dict[hemi_name] = (labels, names)
+            
         else:
             mesh_path = getattr(fsavg, f"{surf_key}_{hemi_name}")
             bg_path   = getattr(fsavg, f"{bg_map_type}_{hemi_name}") if bg_map_type != "none" else None
-            if load_dk:
-                labels = np.asarray(destrieux[f"map_{hemi_name}"], dtype=int)
-                names  = [n.decode() if isinstance(n, bytes) else str(n) for n in destrieux["labels"]]
-                roi_dict[hemi_name] = (labels, names)
+            
 
         mesh_parts[hemi_name] = mesh_path
         data_parts[hemi_name] = data
@@ -218,7 +182,7 @@ def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home, lo
 
     hemis = 'both' if len(hemi_present) > 1 else hemi_present[0]
 
-    return surf_img, bg_img, hemis, roi_dict
+    return surf_img, bg_img, hemis
 
 # ── Colormap helpers ──────────────────────────────────────────────────────────
 
@@ -273,35 +237,105 @@ def _make_discrete_cmap(unique_vals):
     return _wrap_cmap(mcolors.ListedColormap(colors, name='discrete'))
 
 
+def _make_colorbar_ticks(vmin, vmax, n_ticks=10):
+    """
+    Smart colorbar ticks that handle:
+    - continuous and integer/discrete ranges
+    - ranges that do or don't contain 0 (0 always shown if in range)
+    - very large or very small numbers (adaptive format)
+    """
+    from matplotlib.ticker import MaxNLocator
+
+    data_range = vmax - vmin
+    if data_range == 0:
+        return [vmin], [_adaptive_fmt(vmin)]
+
+    # detect integer/discrete colormap: both bounds are integers and range is small
+    is_integer = (
+        float(vmin).is_integer() and float(vmax).is_integer()
+        and data_range <= 2 * n_ticks
+    )
+
+    locator = MaxNLocator(
+        nbins=n_ticks - 1,
+        integer=is_integer,
+        steps=[1, 2, 2.5, 5, 10],
+    )
+    vals = locator.tick_values(vmin, vmax)
+
+    # clip strictly to [vmin, vmax] — locator may go slightly outside
+    vals = vals[(vals >= vmin - data_range * 1e-9) &
+                (vals <= vmax + data_range * 1e-9)]
+
+    # snap near-zero values to exactly 0
+    tol = data_range * 1e-9
+    vals = np.where(np.abs(vals) < tol, 0.0, vals)
+
+    # guarantee vmin, vmax, and 0 (if in range) are always present
+    must_include = [vmin, vmax]
+    if vmin < 0 < vmax:
+        must_include.append(0.0)
+    for v in must_include:
+        if not np.any(np.abs(vals - v) < tol):
+            vals = np.sort(np.append(vals, v))
+
+    labels = [_adaptive_fmt(v, vmin, vmax) for v in vals]
+    return vals.tolist(), labels
+
+
+def _adaptive_fmt(v, vmin=None, vmax=None):
+    """
+    Format a single tick value adaptively:
+    - exactly 0 → "0"
+    - integers → no decimal point
+    - large/small numbers → scientific notation
+    - otherwise → up to 3 significant figures
+    """
+    if v == 0.0:
+        return "0"
+
+    data_range = abs(vmax - vmin) if (vmin is not None and vmax is not None) else abs(v)
+    magnitude = abs(v)
+
+    # use scientific notation for very large or very small values
+    if magnitude != 0 and (magnitude >= 1e4 or magnitude < 1e-3):
+        return f"{v:.2e}"
+
+    # integer values
+    if float(v).is_integer():
+        return str(int(v))
+
+    # scale-aware decimal places: show more precision for small ranges
+    if data_range != 0:
+        decimals = max(0, -int(np.floor(np.log10(data_range))) + 2)
+        decimals = min(decimals, 4)  # cap to avoid ridiculous precision
+        return f"{v:.{decimals}f}".rstrip("0").rstrip(".")
+
+    return f"{v:.3g}"
+
 def _resolve_cmap_and_limits(data_arrays, cmap=None, vmin=None, vmax=None,
                              discrete=None):
     """
     Auto-detect continuous vs. discrete data and return
-    (cmap_obj, plot_vmin, plot_vmax, norm).
+    (cmap_obj, plot_vmin, plot_vmax, norm, colorbar_ticks).
 
-    Parameters
-    ----------
-    cmap     : str | list of colors | None  (None = auto)
-    discrete : True | False | None          (None = auto-detect)
+    colorbar_ticks : (tick_vals, tick_labels) tuple ready for Plotly
     """
-
     vals = np.concatenate(
         [a[np.isfinite(a)] for a in data_arrays if a is not None])
 
     if vals.size == 0:
         empty_norm = mcolors.Normalize(0.0, 1.0)
-        return _wrap_cmap('viridis'), 0.0, 1.0, empty_norm
+        return _wrap_cmap('viridis'), 0.0, 1.0, empty_norm, ([0.0, 1.0], ["0", "1"])
 
     data_min = float(np.min(vals))
     data_max = float(np.max(vals))
 
-    # Auto-detect discrete
     if discrete is None:
         discrete = _detect_discrete(vals)
 
     # ─── Build colormap ───
     if cmap is not None:
-        # User override: list of hex/name colors → ListedColormap; string → named
         cmap_obj = _wrap_cmap(
             mcolors.ListedColormap(cmap) if isinstance(cmap, list)
             else matplotlib.colormaps[cmap]
@@ -310,37 +344,47 @@ def _resolve_cmap_and_limits(data_arrays, cmap=None, vmin=None, vmax=None,
         unique_vals = np.unique(np.round(vals).astype(int))
         cmap_obj = _make_discrete_cmap(unique_vals)
     else:
-        # Continuous: choose based on sign of auto limits (before user overrides)
         auto_vmin = vmin if vmin is not None else data_min
         auto_vmax = vmax if vmax is not None else data_max
         cmap_obj = _make_continuous_cmap(auto_vmin, auto_vmax)
 
-    # ─── Compute limits & norm ───
+    # ─── Compute limits, norm & ticks ───
     if discrete:
         unique_vals = np.unique(np.round(vals).astype(int))
-        # Half-integer boundaries → each integer maps cleanly to one color bin
         plot_vmin = float(unique_vals[0])  - 0.5 if vmin is None else vmin
         plot_vmax = float(unique_vals[-1]) + 0.5 if vmax is None else vmax
         boundaries = np.arange(unique_vals[0] - 0.5, unique_vals[-1] + 1.5)
         norm = mcolors.BoundaryNorm(boundaries=boundaries,
                                     ncolors=len(unique_vals))
+        # For discrete: one tick per integer value, centred in its color bin
+        tick_vals  = [float(v) for v in unique_vals]
+        tick_text  = [str(v) for v in unique_vals]
 
     else:
         plot_vmin = vmin if vmin is not None else data_min
         plot_vmax = vmax if vmax is not None else data_max
 
-        # Enforce symmetry for diverging only when user specified neither bound
         if data_min < 0 < data_max and vmin is None and vmax is None:
             mx = max(abs(plot_vmin), abs(plot_vmax))
             plot_vmin, plot_vmax = -mx, mx
 
         norm = mcolors.Normalize(vmin=plot_vmin, vmax=plot_vmax)
+        tick_vals, tick_text = _make_colorbar_ticks(plot_vmin, plot_vmax)
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Overwriting the cmap")
         matplotlib.colormaps.register(cmap_obj, name=_CMAP_REG_NAME, force=True)
 
-    return cmap_obj, plot_vmin, plot_vmax, norm
+    return cmap_obj, plot_vmin, plot_vmax, norm, (tick_vals, tick_text)
+
+
+def _mpl_to_plotly_colorscale(cmap, n=256):
+    """Convert a matplotlib colormap to a Plotly colorscale list."""
+    return [
+        [i / (n - 1), f"rgba({int(r*255)},{int(g*255)},{int(b*255)},{a:.3f})"]
+        for i, (r, g, b, a) in enumerate(cmap(np.linspace(0, 1, n)))
+    ]
+
 
 def _lighten_bg(bg_path, darkness=0.3):
     """Compress bg_map dynamic range toward mid-grey (0.5)."""
@@ -360,9 +404,8 @@ def _lighten_bg(bg_path, darkness=0.3):
 # ── Figure helpers ────────────────────────────────────────────────────────────
 
 def _unwrap_plotly(fp):
-    """nilearn returns PlotlySurfaceFigure; unwrap to raw plotly Figure."""
-    return fp.figure if hasattr(fp, "figure") else fp
-
+    fig = fp.figure if hasattr(fp, "figure") else fp
+    return fig
 
 def _hover_text(i, v, roi, x, y, z):
     if not np.isfinite(v):
@@ -374,7 +417,6 @@ def _hover_text(i, v, roi, x, y, z):
         line   += f"Region: <b>{region}</b><br>"
     line += f"x: {x:.2f}  y: {y:.2f}  z: {z:.2f}"
     return line
-
 
 def _panel_layout(hemis, views='all', n_cols=None):
     """
@@ -442,41 +484,350 @@ def _scene_key(row, col, n_cols):
     return "scene" if idx == 0 else f"scene{idx + 1}"
 
 
-def _copy_camera(raw_layout):
-    """Extract only the camera dict from a nilearn plotly layout."""
-    if hasattr(raw_layout, "scene") and raw_layout.scene.camera:
-        return raw_layout.scene.camera.to_plotly_json()
-    return {}
+def _bilateral_views(d):
+    """Expand ("both", view) entries to also cover ("left", view) / ("right", view)."""
+    extra = {}
+    for (hemi, view), v in d.items():
+        if hemi == "both":
+            extra.setdefault(("left",  view), v)
+            extra.setdefault(("right", view), v)
+    return {**extra, **d}   # explicit entries win over auto-expanded ones
 
-def _normalize_eye(camera_dict, view="lateral", distances=None):
+
+def _build_camera(hemi, view, surface, custom_presets=None):
     """
-    Keep nilearn's view direction, apply per-view zoom distance,
-    and reset center to origin (fixes off-center on inflated surface).
+    Resolve camera dict for a (hemi, view, surface) triple.
+    Lookup order:
+      1. custom_presets[surface][(hemi, view)]  — per-call override
+      2. _CAMERA_PRESETS[surface][(hemi, view)] — surface-specific constant
+      3. _CAMERA_PRESETS["inflated"][(hemi, view)] — last-resort fallback
+    center is always locked to origin regardless of source.
     """
-    if distances is None:
-        distances = _VIEW_DISTANCES
+    surface_key = surface if surface in _CAMERA_PRESETS else "inflated"
 
-    distance = distances.get(view, 1.5)
+    p = None
+    for source in [custom_presets, _CAMERA_PRESETS]:
+        if source and surface_key in source:
+            p = source[surface_key].get((hemi, view))
+            if p is not None:
+                break
 
-    if not camera_dict:
-        return {}
+    if p is None:
+        raise ValueError(
+            f"No camera preset for surface={surface!r}, hemi={hemi!r}, view={view!r}. "
+            f"Add it to _CAMERA_PRESETS[{surface_key!r}]."
+        )
 
-    eye = camera_dict.get("eye", {})
-    x, y, z = eye.get("x", 0), eye.get("y", 0), eye.get("z", distance)
-    mag = math.sqrt(x**2 + y**2 + z**2)
-    if mag == 0:
-        return camera_dict
+    ex, ey, ez = p["eye"]
+    ux, uy, uz = p["up"]
+    d   = p["distance"]
+    mag = math.sqrt(ex**2 + ey**2 + ez**2) or 1.0
+    s   = d / mag
 
-    s = distance / mag
-    return {
-        **camera_dict,
-        "eye":    {"x": x*s, "y": y*s, "z": z*s},
-        "center": {"x": 0.0, "y": 0.0, "z": 0.0},  # ← critical for inflated
-    }
+    # center: use preset value if provided, else origin
+    cx, cy, cz = p.get("center", (0.0, 0.0, 0.0))
+
+    return dict(
+        eye    = dict(x=ex*s, y=ey*s, z=ez*s),
+        up     = dict(x=ux,   y=uy,   z=uz),
+        center = dict(x=cx,   y=cy,   z=cz),
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Default views for static PNGs
+
+# ^ order matters: each entry becomes one column (bilateral hemi-views expand to 2).
+# Default produces the 2×4 layout:
+#   Left laternal | Right lateral | Dorsal  | Anterior
+#   Left  medial  | Right  medial | Ventral | Posterior
+# ─────────────────────────────────────────────────────────────────────────────
+
+_DEFAULT_VIEWS  = ["lateral", "dorsal", "anterior", 
+                   "medial", "ventral", "posterior"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Camera presets: manual settings for view angles and zoom
+#
+# Tuning guide:
+#   'eye'      — direction vector toward the camera. Rotates the brain.
+#   'distance' — Smaller = more zoomed in (eye vector is scaled to this length). 
+#   'up'       — For lateral/medial/anterior/posterior: (0,0,1) = superior up.
+#                For dorsal/ventral: (-1,0,0) / (1,0,0).
+#   'center'   — Shifts the brain - always (0,0,0) except for inflated surfaces.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_CAMERA_PRESETS = {
+
+    "pial": _bilateral_views({
+        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
+        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
+        ("both",  "dorsal"):    dict(eye=( 0.0, 0.0,  1.0), up=(-1, 0, 0),distance=1.15),
+        ("both",  "ventral"):   dict(eye=( 0.0, 0.0, -1.0), up=(1, 0, 0), distance=1.30),
+        ("both",  "anterior"):  dict(eye=( 0.0, 1.0,  0.0), up=(0, 0, 1), distance=1.15),
+        ("both",  "posterior"): dict(eye=( 0.0,-1.0,  0.0), up=(0, 0, 1), distance=1.15),
+    }),
+
+    "inflated": _bilateral_views({
+        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.10),
+        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.10),
+        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("both",  "dorsal"):    dict(eye=(0.11, 0.0, 1.25), up=(-1, 0, 0),center=(0.15, 0, 0), distance=1.15),
+        ("both",  "ventral"):   dict(eye=(0.25, 0.0, -1.3), up=(1, 0, 0), center=(0.18, 0, 0), distance=1.30),
+        ("both",  "anterior"):  dict(eye=(0.16, 1.1, -0.1), up=(0, 0.2,1),center=(0.20, 0, 0), distance=1.15),
+        ("both",  "posterior"): dict(eye=(0.20,-1.1, -0.0), up=(0, 0, 1), center=(0.18, 0, 0), distance=1.15),
+    }),
+  
+    "white": _bilateral_views({      # white sits between pial and inflated
+        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
+        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
+        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
+        ("both",  "dorsal"):    dict(eye=( 0.0, 0.0,  1.0), up=(-1, 0, 0),distance=1.18),
+        ("both",  "ventral"):   dict(eye=( 0.0, 0.0, -1.0), up=(1, 0, 0), distance=1.32),
+        ("both",  "anterior"):  dict(eye=( 0.0, 1.0,  0.0), up=(0, 0, 1), distance=1.15),
+        ("both",  "posterior"): dict(eye=( 0.0,-1.0,  0.0), up=(0, 0, 1), distance=1.15),
+    }),
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+os.environ.setdefault("KALEIDO_CHROME_ARGS", "--headless --disable-gpu --no-sandbox")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # ── Static PNG renderer ───────────────────────────────────────────────────────
 
+
+def vw_surf_static_plotly(
+        lh, rh, surface, views, bg_map_type,
+        vmin, vmax, threshold, colorbar, colorbar_label, title,
+        output_file, dpi, fs_template, fs_home,
+        cmap=_CMAP_REG_NAME,
+        camera_presets=None,
+        cell_px=400):
+
+    from plotly.subplots import make_subplots
+    import plotly.graph_objects as go
+    from nilearn.surface import load_surf_mesh
+
+    lh, rh = _to_array(lh), _to_array(rh)
+    cmap_obj, vmin, vmax, norm, (tick_vals, tick_text) = _resolve_cmap_and_limits(
+        [lh, rh], cmap=cmap, vmin=vmin, vmax=vmax)
+
+    surf_img, bg_img, hemis = _build_surface_images(
+        lh, rh, fs_template, surface, bg_map_type, fs_home)
+
+    thresh = float(threshold) if threshold is not None else None
+    n_rows, n_cols, panels = _panel_layout(hemis, views)
+
+    # ── 1. Uniform cubic scene bbox from mesh ─────────────────────────────────
+    all_coords = np.vstack([
+        load_surf_mesh(p)[0] for p in surf_img.mesh.parts.values()
+    ])
+    mid  = (all_coords.max(axis=0) + all_coords.min(axis=0)) / 2.0
+    half = (all_coords.max(axis=0) - all_coords.min(axis=0)).max() / 2.0 * 1.05
+    def _ax(i):
+        return dict(visible=False, showgrid=False, zeroline=False,
+                              range=[float(mid[i]-half), float(mid[i]+half)])
+
+    # ── 2. Trace cache — ≤3 plot_surf() calls ────────────────────────────────
+    CANONICAL   = {"left": "lateral", "right": "lateral", "both": "dorsal"}
+    trace_cache = {}
+    for hemi in {h for _, _, h, _, _ in panels}:
+        fp  = plot_surf(
+            surf_mesh=None, surf_map=surf_img,
+            hemi=hemi, view=CANONICAL[hemi],
+            cmap=_CMAP_REG_NAME, vmin=vmin, vmax=vmax,
+            threshold=thresh, symmetric_cmap=None, avg_method=None,
+            bg_map=bg_img, bg_on_data=False,
+            colorbar=False, engine="plotly",
+        )
+        raw = _unwrap_plotly(fp)
+        for tr in raw.data:
+            tr.update(showscale=False, hoverinfo="skip")
+        trace_cache[hemi] = list(raw.data)
+
+    # ── 3. Single multi-scene figure — one Kaleido call ───────────────────────
+    subplot_titles = [""] * (n_rows * n_cols)
+    for row, col, _, _, lbl in panels:
+        if lbl:
+            subplot_titles[row * n_cols + col] = lbl
+
+    fig = make_subplots(
+        rows=n_rows, cols=n_cols,
+        specs=[[{"type": "scene"}] * n_cols for _ in range(n_rows)],
+        subplot_titles=subplot_titles,
+        horizontal_spacing=0.01, vertical_spacing=0.04,
+    )
+
+    for row, col, hemi, view, _ in panels:
+        for tr in trace_cache[hemi]:
+            fig.add_trace(tr, row=row+1, col=col+1)
+
+        sk = _scene_key(row, col, n_cols)
+        fig.update_layout(**{sk: dict(
+            aspectmode = "cube",
+            xaxis  = _ax(0), yaxis = _ax(1), zaxis = _ax(2),
+            bgcolor = "white",
+            camera  = _build_camera(hemi, view,
+                                    surface=surface,
+                                    custom_presets=camera_presets),
+        )})
+
+    # ── 4. Colorbar via dummy trace ───────────────────────────────────────────
+    if colorbar:
+        fig.add_trace(go.Scatter3d(
+            x=[None], y=[None], z=[None], mode="markers",
+            marker=dict(
+                size=0.001, color=[vmin, vmax],
+                colorscale=_mpl_to_plotly_colorscale(cmap_obj),
+                cmin=vmin, cmax=vmax, showscale=True,
+                colorbar=dict(
+                    title=dict(text=colorbar_label or "", side="right"),
+                    thickness=20, len=0.9, x=1.02, tickfont=dict(size=20),
+                    tickmode="array", tickvals=tick_vals, ticktext=tick_text,
+                ),
+            ),
+            showlegend=False,
+        ), row=1, col=1)
+
+    margin_r = 100 if colorbar else 10
+    fig.update_layout(
+        title_text=title or "", title_font_size=25, title_font_weight='bold',
+        paper_bgcolor="white", plot_bgcolor="white",
+        height=cell_px * n_rows,
+        width =cell_px * n_cols + margin_r,
+        margin=dict(l=10, r=margin_r, t=60 if title else 30, b=10),
+    )
+
+    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+    fig.write_image(output_file, scale=dpi / 72.0)
+    return output_file
+
+# ──────────────────────────────────────────────────────────────────────────────
+# --- Other (quick viz helper to get positions) -----------------------------
+
+def vw_dump_camera_preset(hemi, view, surface, fs_template, fs_home=None,
+                          lh=None, rh=None, bg_map_type="sulc"):
+
+    import tempfile
+    import plotly.graph_objects as go
+    from nilearn.surface import load_surf_mesh
+
+    lh_arr = _to_array(lh)
+    rh_arr = _to_array(rh)
+
+    if lh_arr is None and rh_arr is None:
+        from nilearn.datasets import fetch_surf_fsaverage
+        fsavg    = fetch_surf_fsaverage(mesh=fs_template)
+        surf_key = "infl" if surface == "inflated" else surface
+        coords, _ = load_surf_mesh(getattr(fsavg, f"{surf_key}_left"))
+        n      = coords.shape[0]
+        lh_arr = np.zeros(n, dtype=np.float32)
+        rh_arr = np.zeros(n, dtype=np.float32)
+
+    surf_img, bg_img, hemis, _ = _build_surface_images(
+        lh_arr, rh_arr, fs_template, surface, bg_map_type, fs_home)
+
+    CANONICAL = {"left": "lateral", "right": "lateral", "both": "dorsal"}
+    fp  = plot_surf(
+        surf_mesh=None, surf_map=surf_img,
+        hemi=hemi, view=CANONICAL[hemi],
+        cmap=_CMAP_REG_NAME, colorbar=False, engine="plotly",
+        bg_map=bg_img, bg_on_data=True,   # ← sulc shading visible
+        alpha=0.9,
+    )
+    raw = _unwrap_plotly(fp)
+
+    all_coords = np.vstack([
+        load_surf_mesh(p)[0] for p in surf_img.mesh.parts.values()
+    ])
+    mid  = (all_coords.max(axis=0) + all_coords.min(axis=0)) / 2.0
+    half = (all_coords.max(axis=0) - all_coords.min(axis=0)).max() / 2.0 * 1.05
+    def _ax(i):
+        return dict(visible=False, showgrid=False, zeroline=False,
+                              range=[float(mid[i]-half), float(mid[i]+half)])
+
+    try:
+        cam = _build_camera(hemi, view, surface=surface)
+    except (ValueError, KeyError):
+        cam = {}
+
+    fig = go.Figure(data=list(raw.data))
+    fig.update_layout(
+        scene=dict(
+            aspectmode="cube",
+            xaxis=_ax(0), yaxis=_ax(1), zaxis=_ax(2),
+            bgcolor="white", camera=cam,
+        ),
+        width=700, height=700, paper_bgcolor="white",
+        margin=dict(l=10, r=10, t=80, b=10),
+        title=dict(
+            text=f"surface=<b>{surface}</b>  hemi=<b>{hemi}</b>  view=<b>{view}</b>",
+            font=dict(size=13),
+        ),
+    )
+
+    # Inject JS that shows live camera coords as a copyable overlay
+    live_js = """
+        <div id="cam-box" style="
+            position:fixed; top:12px; right:12px; z-index:9999;
+            background:rgba(20,20,20,0.82); color:#e8e8e8;
+            font:13px/1.6 monospace; padding:12px 16px; border-radius:8px;
+            min-width:340px; white-space:pre; user-select:all;
+            box-shadow:0 2px 12px rgba(0,0,0,0.4);">
+        Rotate or pan the brain to update…
+        </div>
+        <div style="position:fixed;bottom:12px;right:12px;z-index:9999;
+            font:11px monospace;color:#888;">
+            Click box → Ctrl/Cmd+C to copy
+        </div>
+        <script>
+        (function() {
+            function fmt(v) { return (v||0).toFixed(4); }
+            function update() {
+                var el = document.getElementsByClassName('js-plotly-plot')[0];
+                if (!el) { setTimeout(update, 300); return; }
+                el.on('plotly_relayout', function(e) {
+                    var cam = el._fullLayout.scene.camera;
+                    if (!cam) return;
+                    var eye = cam.eye, up = cam.up, ctr = cam.center || {x:0,y:0,z:0};
+                    var txt =
+                        ' eye: (' + fmt(eye.x) + ', ' + fmt(eye.y) + ', ' + fmt(eye.z) + ')\n' +
+                        '  up: (' + fmt(up.x)  + ', ' + fmt(up.y)  + ', ' + fmt(up.z)  + ')\n' +
+                        ' ctr: (' + fmt(ctr.x) + ', ' + fmt(ctr.y) + ', ' + fmt(ctr.z) + ')\n\n' +
+                        '# Paste into _CAMERA_PRESETS:\n' +
+                        '("' + '""" + hemi + """' + '", "' + '""" + view + """' + '"): dict(\n' +
+                        '    eye=(' + fmt(eye.x) + ', ' + fmt(eye.y) + ', ' + fmt(eye.z) + '),\n' +
+                        '    up=('  + fmt(up.x)  + ', ' + fmt(up.y)  + ', ' + fmt(up.z)  + '),\n' +
+                        '    center=(' + fmt(ctr.x) + ', ' + fmt(ctr.y) + ', ' + fmt(ctr.z) + '),\n' +
+                        '    distance=' + fmt(Math.sqrt(eye.x**2+eye.y**2+eye.z**2)) + ',\n' +
+                        '),';
+                    document.getElementById('cam-box').innerText = txt;
+                });
+            }
+            window.addEventListener('load', function() { setTimeout(update, 800); });
+        })();
+        </script>
+        """
+
+    # Write HTML manually so we can inject the overlay
+    base_html = fig.to_html(include_plotlyjs="cdn", full_html=True)
+    # Inject before </body>
+    html_out  = base_html.replace("</body>", live_js + "\n</body>")
+
+    f = tempfile.NamedTemporaryFile(suffix=".html", delete=False,
+                                    mode="w", encoding="utf-8")
+    f.write(html_out)
+    f.close()
+
+    print(f"\nPath: {f.name}")
+    print("Open with:  utils::browseURL(reticulate::py$vw_dump_camera_preset(...))")
+    return f.name
+
+# ──────────────────────────────────────────────────────────────────────────────
 # This static plotting, based on matplotlib. It works but it is much slower than 
 # the kaleido based screenshots below 
 # def vw_surf_static(lh, rh, surface, bg_map_type, vmin, vmax,
@@ -578,438 +929,102 @@ def _normalize_eye(camera_dict, view="lateral", distances=None):
 # ──────────────────────────────────────────────────────────────────────────────
 # ── Interactive HTML renderer ─────────────────────────────────────────────────
 
-def vw_surf_interactive(lh, rh, surface, bg_map_type, vmin, vmax,
-                        threshold, views, colorbar, colorbar_label,
-                        title, output_html, fs_template, fs_home, cmap = _CMAP_REG_NAME):
- 
-    lh, rh = _to_array(lh), _to_array(rh)
-
-    cmap_obj, vmin, vmax, norm = _resolve_cmap_and_limits(
-        [lh, rh], cmap=cmap, vmin=vmin, vmax=vmax)
-
-    surf_img, bg_img, hemis, rois = _build_surface_images(
-        lh, rh, fs_template, surface, bg_map_type, fs_home, load_dk = True)
-
-    thresh = float(threshold) if threshold is not None else None
-
-    start_view = "lateral"
-    # TODO update rois so they work for SurfaceImage
-    data_map = {"left": lh, "right": rh, "both": lh}  # hover uses lh for bilateral
-
-    fp  = plot_surf(
-        surf_mesh=None, surf_map=surf_img,
-        hemi=hemis, view=start_view,
-        cmap=cmap, vmin=vmin, vmax=vmax,
-        threshold=thresh, symmetric_cmap=None, avg_method=None,
-        bg_map=bg_img, bg_on_data=True,
-        colorbar=False, engine="plotly",
-    )
-    raw = _unwrap_plotly(fp)
-
-    # hover text — use lh roi/data for left traces, rh for right
-    roi  = rois.get("left" if hemi != "right" else "right", ({}, []))
-    data = data_map[hemi]
-    xs   = np.asarray(raw.data[0].x)
-    ys   = np.asarray(raw.data[0].y)
-    zs   = np.asarray(raw.data[0].z)
-
-    text_vals = [
-        _hover_text(i, v, roi, x, y, z)
-        for i, (v, x, y, z) in enumerate(zip(data, xs, ys, zs))
-    ]
-
-    fig = go.Figure()
-    for trace in raw.data:
-        trace.update(
-            text=text_vals,
-            hovertemplate="%{text}<extra></extra>",
-            showscale=False,
-        )
-        fig.add_trace(trace)
-
-    # colorbar on stat trace
-    if colorbar:
-        fig.data[-1].update(
-            showscale=True,
-            colorscale=_plotly_colorscale(cmap_obj),
-            cmin=vmin, cmax=vmax,
-            colorbar=dict(
-                title=dict(text=colorbar_label or "", side="right"),
-                tickformat=".2g",
-            ),
-        )
+def vw_surf_interactive(lh, rh, surface, views, bg_map_type, vmin, vmax,
+                        threshold, colorbar, colorbar_label,
+                        title, output_html, fs_template, fs_home,
+                        cmap=_CMAP_REG_NAME):
     
-    cam = _build_camera(hemi, start_view, surface=surface,
-                        custom_presets=camera_presets)
-    fig.update_layout(
-        title_text=title or "", title_font_size=14,
-        paper_bgcolor="white",
-        hovermode="closest",
-        width=600, height=550,
-        scene=dict(
-            camera=cam,
-            aspectmode="cube",
-            xaxis=dict(visible=False, showgrid=False, zeroline=False),
-            yaxis=dict(visible=False, showgrid=False, zeroline=False),
-            zaxis=dict(visible=False, showgrid=False, zeroline=False),
-            bgcolor="white",
-        ),
-    )
-
-    os.makedirs(os.path.dirname(os.path.abspath(output_html)), exist_ok=True)
-    fig.write_html(output_html, include_plotlyjs="cdn",
-                   full_html=True, auto_open=False)
-
-    return output_html
-
-def _mpl_to_plotly_colorscale(cmap, n=256):
-    """Convert a matplotlib colormap to a Plotly colorscale list."""
-    return [
-        [i / (n - 1), f"rgba({int(r*255)},{int(g*255)},{int(b*255)},{a:.3f})"]
-        for i, (r, g, b, a) in enumerate(cmap(np.linspace(0, 1, n)))
-    ]
-
-import math
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Camera presets — the single source of truth for view angles and zoom.
-#
-# Tuning guide:
-#   'eye'      — unit direction vector toward the camera. Changing sign flips
-#                the view to the opposite side. Magnitude is normalised so only
-#                direction matters here; zoom is set by 'distance'.
-#   'distance' — eye vector is scaled to this length. Smaller = more zoomed in.
-#                Start with 1.5 (lateral) and work inward for narrow-axis views.
-#   'up'       — which world direction points "up" in the panel.
-#                For lateral/medial/anterior/posterior: (0,0,1) = superior up.
-#                For dorsal/ventral you must rotate: (-1,0,0) / (1,0,0).
-#   'center'   — always (0,0,0). Changing this breaks rotation and centering.
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-# Surface-keyed camera presets.
-#
-# Structure: _CAMERA_PRESETS[surface][(hemi, view)]
-#   surface  : "pial" | "inflated" | "white"
-#   eye      : unit direction; only direction matters, magnitude is normalised
-#   up       : which world axis points "up" in the panel
-#   distance : eye-to-origin distance. smaller = more zoomed in.
-#   center   : always omitted here — _build_camera hardcodes it to (0,0,0)
-#
-# For views that are hemi-agnostic (dorsal/ventral/anterior/posterior),
-# "left"/"right" entries simply copy "both" — add them only if single-hemi
-# use requires a different angle.
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _bilateral_views(d):
-    """Expand ("both", view) entries to also cover ("left", view) / ("right", view)."""
-    extra = {}
-    for (hemi, view), v in d.items():
-        if hemi == "both":
-            extra.setdefault(("left",  view), v)
-            extra.setdefault(("right", view), v)
-    return {**extra, **d}   # explicit entries win over auto-expanded ones
-
-
-_CAMERA_PRESETS = {
-
-    "pial": _bilateral_views({
-        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
-        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
-        ("both",  "dorsal"):    dict(eye=( 0.0, 0.0,  1.0), up=(-1, 0, 0),distance=1.15),
-        ("both",  "ventral"):   dict(eye=( 0.0, 0.0, -1.0), up=(1, 0, 0), distance=1.30),
-        ("both",  "anterior"):  dict(eye=( 0.0, 1.0,  0.0), up=(0, 0, 1), distance=1.15),
-        ("both",  "posterior"): dict(eye=( 0.0,-1.0,  0.0), up=(0, 0, 1), distance=1.15),
-    }),
-
-    "inflated": _bilateral_views({
-        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.10),
-        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.10),
-        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("both",  "dorsal"):    dict(eye=(0.11, 0.0, 1.25), up=(-1, 0, 0),center=(0.15, 0, 0), distance=1.15),
-        ("both",  "ventral"):   dict(eye=(0.25, 0.0, -1.3), up=(1, 0, 0), center=(0.18, 0, 0), distance=1.30),
-        ("both",  "anterior"):  dict(eye=(0.16, 1.1, -0.1), up=(0, 0.2,1),center=(0.20, 0, 0), distance=1.15),
-        ("both",  "posterior"): dict(eye=(0.20,-1.1, -0.0), up=(0, 0, 1), center=(0.18, 0, 0), distance=1.15),
-    }),
-  
-    "white": _bilateral_views({      # white sits between pial and inflated
-        ("left",  "lateral"):   dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("right", "lateral"):   dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.20),
-        ("left",  "medial"):    dict(eye=( 1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
-        ("right", "medial"):    dict(eye=(-1.0, 0.0,  0.0), up=(0, 0, 1), distance=1.05),
-        ("both",  "dorsal"):    dict(eye=( 0.0, 0.0,  1.0), up=(-1, 0, 0),distance=1.18),
-        ("both",  "ventral"):   dict(eye=( 0.0, 0.0, -1.0), up=(1, 0, 0), distance=1.32),
-        ("both",  "anterior"):  dict(eye=( 0.0, 1.0,  0.0), up=(0, 0, 1), distance=1.15),
-        ("both",  "posterior"): dict(eye=( 0.0,-1.0,  0.0), up=(0, 0, 1), distance=1.15),
-    }),
-}
-
-
-def _build_camera(hemi, view, surface, custom_presets=None):
-    """
-    Resolve camera dict for a (hemi, view, surface) triple.
-    Lookup order:
-      1. custom_presets[surface][(hemi, view)]  — per-call override
-      2. _CAMERA_PRESETS[surface][(hemi, view)] — surface-specific constant
-      3. _CAMERA_PRESETS["inflated"][(hemi, view)] — last-resort fallback
-    center is always locked to origin regardless of source.
-    """
-    surface_key = surface if surface in _CAMERA_PRESETS else "inflated"
-
-    p = None
-    for source in [custom_presets, _CAMERA_PRESETS]:
-        if source and surface_key in source:
-            p = source[surface_key].get((hemi, view))
-            if p is not None:
-                break
-
-    if p is None:
-        raise ValueError(
-            f"No camera preset for surface={surface!r}, hemi={hemi!r}, view={view!r}. "
-            f"Add it to _CAMERA_PRESETS[{surface_key!r}]."
-        )
-
-    ex, ey, ez = p["eye"]
-    ux, uy, uz = p["up"]
-    d   = p["distance"]
-    mag = math.sqrt(ex**2 + ey**2 + ez**2) or 1.0
-    s   = d / mag
-
-    # center: use preset value if provided, else origin
-    cx, cy, cz = p.get("center", (0.0, 0.0, 0.0))
-
-    return dict(
-        eye    = dict(x=ex*s, y=ey*s, z=ez*s),
-        up     = dict(x=ux,   y=uy,   z=uz),
-        center = dict(x=cx,   y=cy,   z=cz),
-    )
-
-# ─────────────────────────────────────────────────────────────────────────────
-
-os.environ.setdefault("KALEIDO_CHROME_ARGS", "--headless --disable-gpu --no-sandbox")
-
-def vw_surf_static_plotly(
-        lh, rh, surface, views, bg_map_type,
-        vmin, vmax, threshold, colorbar, colorbar_label, title,
-        output_file, dpi, fs_template, fs_home,
-        cmap=_CMAP_REG_NAME,
-        camera_presets=None,
-        cell_px=400):
-
-    from plotly.subplots import make_subplots
-    import plotly.graph_objects as go
-    from nilearn.surface import load_surf_mesh
+    # disable orjson that complains about big-endians in the mesh when writing html
+    import plotly.io as pio
+    pio.json.config.default_engine = 'json' 
 
     lh, rh = _to_array(lh), _to_array(rh)
-    cmap_obj, vmin, vmax, norm = _resolve_cmap_and_limits(
+
+    cmap_obj, vmin, vmax, norm , (tick_vals, tick_text) = _resolve_cmap_and_limits(
         [lh, rh], cmap=cmap, vmin=vmin, vmax=vmax)
 
-    surf_img, bg_img, hemis, _ = _build_surface_images(
-        lh, rh, fs_template, surface, bg_map_type, fs_home)
+    hemis = _get_meshes(lh, rh, fs_template, surface, bg_map_type, fs_home, 
+        load_dk=True)
 
-    thresh = float(threshold) if threshold is not None else None
-    n_rows, n_cols, panels = _panel_layout(hemis, views)
+    thresh  = float(threshold) if threshold is not None else None
 
-    # ── 1. Uniform cubic scene bbox from mesh ─────────────────────────────────
-    all_coords = np.vstack([
-        load_surf_mesh(p)[0] for p in surf_img.mesh.parts.values()
-    ])
-    mid  = (all_coords.max(axis=0) + all_coords.min(axis=0)) / 2.0
-    half = (all_coords.max(axis=0) - all_coords.min(axis=0)).max() / 2.0 * 1.05
-    _ax  = lambda i: dict(visible=False, showgrid=False, zeroline=False,
-                          range=[float(mid[i]-half), float(mid[i]+half)])
-
-    # ── 2. Trace cache — ≤3 plot_surf() calls ────────────────────────────────
-    CANONICAL   = {"left": "lateral", "right": "lateral", "both": "dorsal"}
-    trace_cache = {}
-    for hemi in {h for _, _, h, _, _ in panels}:
-        fp  = plot_surf(
-            surf_mesh=None, surf_map=surf_img,
-            hemi=hemi, view=CANONICAL[hemi],
-            cmap=_CMAP_REG_NAME, vmin=vmin, vmax=vmax,
-            threshold=thresh, symmetric_cmap=None, avg_method=None,
-            bg_map=bg_img, bg_on_data=False,
-            colorbar=False, engine="plotly",
-        )
-        raw = _unwrap_plotly(fp)
-        for tr in raw.data:
-            tr.update(showscale=False, hoverinfo="skip")
-        trace_cache[hemi] = list(raw.data)
-
-    # ── 3. Single multi-scene figure — one Kaleido call ───────────────────────
-    subplot_titles = [""] * (n_rows * n_cols)
-    for row, col, _, _, lbl in panels:
-        if lbl:
-            subplot_titles[row * n_cols + col] = lbl
-
+    n_rows, n_cols = len(hemis), len(views)
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
         specs=[[{"type": "scene"}] * n_cols for _ in range(n_rows)],
-        subplot_titles=subplot_titles,
-        horizontal_spacing=0.01, vertical_spacing=0.04,
+        subplot_titles=[f"{h.capitalize()} - {v.capitalize()}"
+                        for h, *_ in hemis for v in views],
+        horizontal_spacing=0.02, vertical_spacing=0.06,
     )
 
-    for row, col, hemi, view, _ in panels:
-        for tr in trace_cache[hemi]:
-            fig.add_trace(tr, row=row+1, col=col+1)
+    n_traces_per_panel = None
 
-        sk = _scene_key(row, col, n_cols)
-        fig.update_layout(**{sk: dict(
-            aspectmode = "cube",
-            xaxis  = _ax(0), yaxis = _ax(1), zaxis = _ax(2),
-            bgcolor = "white",
-            camera  = _build_camera(hemi, view,
-                                    surface=surface,
-                                    custom_presets=camera_presets),
-        )})
+    for r, (hname, data, mesh, bg, roi) in enumerate(hemis):
+        for c, view in enumerate(views):
 
-    # ── 4. Colorbar via dummy trace ───────────────────────────────────────────
-    if colorbar:
-        fig.add_trace(go.Scatter3d(
-            x=[None], y=[None], z=[None], mode="markers",
-            marker=dict(
-                size=0.001, color=[vmin, vmax],
-                colorscale=_mpl_to_plotly_colorscale(cmap_obj),
-                cmin=vmin, cmax=vmax, showscale=True,
-                colorbar=dict(
-                    title=dict(text=colorbar_label or "", side="right"),
-                    thickness=15, len=0.8, x=1.02, tickformat=".2g",
-                ),
+            fp  = plot_surf(
+                surf_mesh=mesh, surf_map=data, hemi=hname, view=view,
+                cmap=_CMAP_REG_NAME, vmin=vmin, vmax=vmax, threshold=thresh,
+                symmetric_cmap=None, avg_method=None,
+                bg_map=bg, bg_on_data=False, colorbar=True, engine="plotly",
+            )
+            raw = _unwrap_plotly(fp)
+
+            # hover text — computed once, shared across all traces in this panel
+            xs, ys, zs = (np.asarray(raw.data[0].x),
+                          np.asarray(raw.data[0].y),
+                          np.asarray(raw.data[0].z))
+            
+            text_vals = [_hover_text(i, v, roi, x, y, z)
+                         for i, (v, x, y, z) in enumerate(zip(data, xs, ys, zs))]
+            
+            for trace in raw.data:
+                trace.update(text=text_vals,
+                             hovertemplate="%{text}<extra></extra>",
+                             showscale=False)
+                fig.add_trace(trace, row=r + 1, col=c + 1)
+            
+            # capture trace count from first panel only
+            if n_traces_per_panel is None:
+                n_traces_per_panel = len(raw.data)
+            
+            # copy nilearn's camera for this view into the correct subplot scene
+            sk = "scene" if (r * n_cols + c) == 0 else f"scene{r * n_cols + c + 1}"
+            if hasattr(raw.layout, "scene") and raw.layout.scene.camera:
+                fig.update_layout(
+                    **{sk: {"camera": raw.layout.scene.camera.to_plotly_json()}})
+
+    # attach colorbar once to the stat trace (last trace) of the first panel
+    if colorbar and n_traces_per_panel:
+        fig.data[n_traces_per_panel - 1].update(
+            showscale=True,
+            colorbar=dict(
+                title=dict(text=colorbar_label or "", side="right"),
+                thickness=15, len=0.8, x=1.02, 
+                tickmode="array", tickvals=tick_vals,  ticktext=tick_text,
             ),
-            showlegend=False,
-        ), row=1, col=1)
-
-    margin_r = 100 if colorbar else 10
+        )
+    
+    # remove all axes 
+    fig.update_scenes(
+        xaxis=dict(visible=False, showgrid=False, zeroline=False, showticklabels=False, showspikes=False),
+        yaxis=dict(visible=False, showgrid=False, zeroline=False, showticklabels=False, showspikes=False),
+        zaxis=dict(visible=False, showgrid=False, zeroline=False, showticklabels=False, showspikes=False),
+        bgcolor="rgba(0,0,0,0)",
+        aspectmode="data",
+    )
     fig.update_layout(
         title_text=title or "", title_font_size=14,
         paper_bgcolor="white", plot_bgcolor="white",
-        height=cell_px * n_rows,
-        width =cell_px * n_cols + margin_r,
-        margin=dict(l=10, r=margin_r, t=50 if title else 30, b=10),
+        hovermode="closest",
+        height=380 * n_rows,
+        width=600 * n_cols + (80 if colorbar else 0),
+        # autosize=True, TODO resize with window?
     )
 
-    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
-    fig.write_image(output_file, scale=dpi / 72.0)
-    return output_file
+    os.makedirs(os.path.dirname(os.path.abspath(output_html)), exist_ok=True)
 
-
-def vw_dump_camera_preset(hemi, view, surface, fs_template, fs_home=None,
-                          lh=None, rh=None, bg_map_type="sulc"):
-
-    import tempfile, json
-    import plotly.graph_objects as go
-    from nilearn.surface import load_surf_mesh
-
-    lh_arr = _to_array(lh)
-    rh_arr = _to_array(rh)
-
-    if lh_arr is None and rh_arr is None:
-        from nilearn.datasets import fetch_surf_fsaverage
-        fsavg    = fetch_surf_fsaverage(mesh=fs_template)
-        surf_key = "infl" if surface == "inflated" else surface
-        coords, _ = load_surf_mesh(getattr(fsavg, f"{surf_key}_left"))
-        n      = coords.shape[0]
-        lh_arr = np.zeros(n, dtype=np.float32)
-        rh_arr = np.zeros(n, dtype=np.float32)
-
-    surf_img, bg_img, hemis, _ = _build_surface_images(
-        lh_arr, rh_arr, fs_template, surface, bg_map_type, fs_home)
-
-    CANONICAL = {"left": "lateral", "right": "lateral", "both": "dorsal"}
-    fp  = plot_surf(
-        surf_mesh=None, surf_map=surf_img,
-        hemi=hemi, view=CANONICAL[hemi],
-        cmap=_CMAP_REG_NAME, colorbar=False, engine="plotly",
-        bg_map=bg_img, bg_on_data=True,   # ← sulc shading visible
-        alpha=0.9,
-    )
-    raw = _unwrap_plotly(fp)
-
-    all_coords = np.vstack([
-        load_surf_mesh(p)[0] for p in surf_img.mesh.parts.values()
-    ])
-    mid  = (all_coords.max(axis=0) + all_coords.min(axis=0)) / 2.0
-    half = (all_coords.max(axis=0) - all_coords.min(axis=0)).max() / 2.0 * 1.05
-    _ax  = lambda i: dict(visible=False, showgrid=False, zeroline=False,
-                          range=[float(mid[i]-half), float(mid[i]+half)])
-
-    try:
-        cam = _build_camera(hemi, view, surface=surface)
-    except (ValueError, KeyError):
-        cam = {}
-
-    fig = go.Figure(data=list(raw.data))
-    fig.update_layout(
-        scene=dict(
-            aspectmode="cube",
-            xaxis=_ax(0), yaxis=_ax(1), zaxis=_ax(2),
-            bgcolor="white", camera=cam,
-        ),
-        width=700, height=700, paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=80, b=10),
-        title=dict(
-            text=f"surface=<b>{surface}</b>  hemi=<b>{hemi}</b>  view=<b>{view}</b>",
-            font=dict(size=13),
-        ),
-    )
-
-    # Inject JS that shows live camera coords as a copyable overlay
-    live_js = """
-        <div id="cam-box" style="
-            position:fixed; top:12px; right:12px; z-index:9999;
-            background:rgba(20,20,20,0.82); color:#e8e8e8;
-            font:13px/1.6 monospace; padding:12px 16px; border-radius:8px;
-            min-width:340px; white-space:pre; user-select:all;
-            box-shadow:0 2px 12px rgba(0,0,0,0.4);">
-        Rotate or pan the brain to update…
-        </div>
-        <div style="position:fixed;bottom:12px;right:12px;z-index:9999;
-            font:11px monospace;color:#888;">
-            Click box → Ctrl/Cmd+C to copy
-        </div>
-        <script>
-        (function() {
-            function fmt(v) { return (v||0).toFixed(4); }
-            function update() {
-                var el = document.getElementsByClassName('js-plotly-plot')[0];
-                if (!el) { setTimeout(update, 300); return; }
-                el.on('plotly_relayout', function(e) {
-                    var cam = el._fullLayout.scene.camera;
-                    if (!cam) return;
-                    var eye = cam.eye, up = cam.up, ctr = cam.center || {x:0,y:0,z:0};
-                    var txt =
-                        ' eye: (' + fmt(eye.x) + ', ' + fmt(eye.y) + ', ' + fmt(eye.z) + ')\n' +
-                        '  up: (' + fmt(up.x)  + ', ' + fmt(up.y)  + ', ' + fmt(up.z)  + ')\n' +
-                        ' ctr: (' + fmt(ctr.x) + ', ' + fmt(ctr.y) + ', ' + fmt(ctr.z) + ')\n\n' +
-                        '# Paste into _CAMERA_PRESETS:\n' +
-                        '("' + '""" + hemi + """' + '", "' + '""" + view + """' + '"): dict(\n' +
-                        '    eye=(' + fmt(eye.x) + ', ' + fmt(eye.y) + ', ' + fmt(eye.z) + '),\n' +
-                        '    up=('  + fmt(up.x)  + ', ' + fmt(up.y)  + ', ' + fmt(up.z)  + '),\n' +
-                        '    center=(' + fmt(ctr.x) + ', ' + fmt(ctr.y) + ', ' + fmt(ctr.z) + '),\n' +
-                        '    distance=' + fmt(Math.sqrt(eye.x**2+eye.y**2+eye.z**2)) + ',\n' +
-                        '),';
-                    document.getElementById('cam-box').innerText = txt;
-                });
-            }
-            window.addEventListener('load', function() { setTimeout(update, 800); });
-        })();
-        </script>
-        """
-
-    # Write HTML manually so we can inject the overlay
-    base_html = fig.to_html(include_plotlyjs="cdn", full_html=True)
-    # Inject before </body>
-    html_out  = base_html.replace("</body>", live_js + "\n</body>")
-
-    f = tempfile.NamedTemporaryFile(suffix=".html", delete=False,
-                                    mode="w", encoding="utf-8")
-    f.write(html_out)
-    f.close()
-
-    print(f"\nPath: {f.name}")
-    print("Open with:  utils::browseURL(reticulate::py$vw_dump_camera_preset(...))")
-    return f.name
+    fig.write_html(output_html, include_plotlyjs="cdn", full_html=True, auto_open=False)
+    return output_html
 
 
