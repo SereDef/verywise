@@ -25,7 +25,7 @@ plot_vw_surf(
   fs_template = "fsaverage",
   fs_home = NULL,
   surface = c("inflated", "pial", "white"),
-  cmap = "RdBu_r",
+  cmap = NULL,
   bg_map = c("sulc", "curv", "none"),
   vmin = NULL,
   vmax = NULL,
@@ -65,7 +65,7 @@ plot_vw_surf(
 
 - cmap:
 
-  Matplotlib colormap name. Default `"RdBu_r"`.
+  Matplotlib colormap name.
 
 - bg_map:
 
