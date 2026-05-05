@@ -10,6 +10,9 @@ from plotly.subplots import make_subplots
 import warnings
 import math
 
+# disable orjson that complains about big-endians in the mesh when writing html
+import plotly.io as pio
+pio.json.config.default_engine = 'json' 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -705,7 +708,7 @@ def vw_surf_static_plotly(
     os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
     fig.write_image(output_file, scale=dpi / 72.0)
     return output_file
-
+    
 # ──────────────────────────────────────────────────────────────────────────────
 # --- Other (quick viz helper to get positions) -----------------------------
 
@@ -933,10 +936,6 @@ def vw_surf_interactive(lh, rh, surface, views, bg_map_type, vmin, vmax,
                         threshold, colorbar, colorbar_label,
                         title, output_html, fs_template, fs_home,
                         cmap=_CMAP_REG_NAME):
-    
-    # disable orjson that complains about big-endians in the mesh when writing html
-    import plotly.io as pio
-    pio.json.config.default_engine = 'json' 
 
     lh, rh = _to_array(lh), _to_array(rh)
 
