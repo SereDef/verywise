@@ -32,9 +32,9 @@ test_that("errors if res_dir does not exist", {
 
 test_that("errors if stack_names.txt is missing", {
   dir <- withr::local_tempdir()
-  expect_snapshot(
+  expect_error(
     plot_vw_map(dir, term = "age"),
-    error = TRUE
+    regexp = "Cannot find 'stack_names.txt'" 
   )
 })
 
@@ -56,9 +56,9 @@ test_that("errors when coef file is missing for requested hemisphere", {
     plot_vw_surf = function(...) invisible("fake.html")
   )
 
-  expect_snapshot(
+  expect_error(
     plot_vw_map(dir, term = "age", hemi = "lh", threshold = NULL),
-    error = TRUE
+    regexp = "No coefficient MGH files found"
   )
 })
 
