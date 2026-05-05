@@ -207,20 +207,27 @@ check_hemi <- function(hemi, fs_template) {
 
 .vw_surf_init_py <- function() {
   if (isTRUE(.vw_surf_env$ready)) return(invisible(NULL))
-
-  py_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
-  if (!nzchar(py_file))
-    stop("verywise: could not find inst/python/plot_vw_surf.py - ",
-         "try reinstalling the package.", call. = FALSE)
   
-  py_code <- paste(readLines(py_file), collapse = "\n")
-
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     vw_error(c(
       "Surface plotting requires {.pkg reticulate}.",
       "i" = "Install it with {.code install.packages('reticulate')}."
     ))
   }
+  
+  patch_file <- system.file("python", "patch_orjson.py", package = "verywise")
+  main_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
+
+  if (!nzchar(main_file))
+    stop("verywise: could not find inst/python/plot_vw_surf.py - ",
+         "try reinstalling the package.", call. = FALSE)
+  
+  # Apply the kaleido/orjson patch before loading the renderer
+  reticulate::py_run_string(
+    paste(readLines(patch_file), collapse = "\n")
+  )
+  
+  py_code <- paste(readLines(main_file), collapse = "\n")
 
   tryCatch(
     reticulate::py_run_string(py_code),
@@ -232,17 +239,7 @@ check_hemi <- function(hemi, fs_template) {
       call. = FALSE
     )
   )
-
-#   tryCatch(
-#     reticulate::py_run_string(.VW_SURF_PY),
-#     error = function(e) stop(
-#       "verywise: failed to initialise the Python brain-plot renderer.\n",
-#       "Ensure nilearn, matplotlib, and numpy are installed in the active ",
-#       "reticulate Python environment.\n",
-#       "Original error: ", conditionMessage(e),
-#       call. = FALSE
-#     )
-#   )
+  
   .vw_surf_env$ready <- TRUE
   invisible(NULL)
 }
