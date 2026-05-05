@@ -215,7 +215,7 @@ check_hemi <- function(hemi, fs_template) {
     ))
   }
   
-  patch_file <- system.file("python", "patch_orjson.py", package = "verywise")
+  patch_file <- system.file("python", "patch_kaleido.py", package = "verywise")
   main_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
 
   if (!nzchar(main_file))
