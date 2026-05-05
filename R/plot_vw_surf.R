@@ -26,8 +26,7 @@
 #' @param fs_template fsaverage template: \code{"fsaverage3"} through
 #'   \code{"fsaverage"}. Must match the length of lh/rh. Default \code{"fsaverage"}.
 #' @param fs_home (optional) location of FreeSurfer home for templates.
-#' @param surface Surface mesh: \code{"inflated"} (default), \code{"pial"},
-#'   or \code{"white"}.
+#' @param surface Surface mesh: \code{"pial"} (default) or \code{"inflated"}.
 #' @param cmap Matplotlib colormap name.
 #' @param bg_map Background shading: \code{"sulc"} (default),
 #'   \code{"curv"}, or \code{"none"}.
@@ -73,7 +72,7 @@ plot_vw_surf <- function(
     rh = NULL,
     fs_template = "fsaverage",
     fs_home = NULL,
-    surface = c("inflated", "pial", "white"),
+    surface = c("pial", "inflated"),
     cmap = NULL,
     bg_map = c("sulc", "curv", "none"),
     vmin = NULL,

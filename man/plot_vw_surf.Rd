@@ -9,7 +9,7 @@ plot_vw_surf(
   rh = NULL,
   fs_template = "fsaverage",
   fs_home = NULL,
-  surface = c("inflated", "pial", "white"),
+  surface = c("pial", "inflated"),
   cmap = NULL,
   bg_map = c("sulc", "curv", "none"),
   vmin = NULL,
@@ -35,8 +35,7 @@ plot_vw_surf(
 
 \item{fs_home}{(optional) location of FreeSurfer home for templates.}
 
-\item{surface}{Surface mesh: \code{"inflated"} (default), \code{"pial"},
-or \code{"white"}.}
+\item{surface}{Surface mesh: \code{"pial"} (default) or \code{"inflated"}.}
 
 \item{cmap}{Matplotlib colormap name.}
 

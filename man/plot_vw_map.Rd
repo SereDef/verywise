@@ -7,73 +7,91 @@
 plot_vw_map(
   res_dir,
   term,
-  hemi = c("lh", "rh"),
   measure = "area",
-  surface = c("inflated", "pial"),
-  outline_rois = NULL,
-  fs_home = Sys.getenv("FREESURFER_HOME"),
-  show_in_browser = TRUE
+  hemi = c("both", "lh", "rh"),
+  surface = c("pial", "inflated"),
+  threshold = "cws",
+  ...
 )
 }
 \arguments{
 \item{res_dir}{Character. Path to the directory containing FreeSurfer-style
-vertex-wise result files (\verb{*.mgh}).}
+vertex-wise result files (\code{*.mgh}) and \code{stack_names.txt}.}
 
-\item{term}{Character. Name of the model term to visualize (matches entries
-in \code{stack_names.txt}).}
+\item{term}{Character. Name of the model term to visualize (matched against
+entries in \code{stack_names.txt}).}
 
-\item{hemi}{Character. Hemisphere to plot (\code{"lh"} or \code{"rh"}).}
+\item{measure}{Character. Surface measure to load, e.g. \code{"area"},
+\code{"thickness"}, \code{"volume"}. Default \code{"area"}.}
 
-\item{measure}{Character. Surface measure, e.g. \code{'area'}, \code{'thickness'},
-\code{'volume'}. Defaults to \code{'area'}.}
+\item{hemi}{Character. Which hemisphere(s) to plot: \code{"both"} (default),
+\code{"lh"}, or \code{"rh"}.}
 
-\item{surface}{Character. Surface mesh to plot on (\code{"inflated"} or \code{"pial"}). Defaults
-to \code{"inflated"}.}
+\item{surface}{Character. Surface mesh: \code{"pial"} (default) or
+\code{"inflated"}.}
 
-\item{outline_rois}{Optional character vector. ROI names to outline on the
-surface plot. You can use call \code{verywise::locate_roi()} to see the names of all
-available ROIs.}
+\item{threshold}{Controls vertex-level masking before plotting:
+\describe{
+\item{\code{"cws"} (default)}{Cluster-wise significance masking. Loads
+the matching \code{*.cache.*.sig.ocn.mgh} file and sets all vertices
+not belonging to a significant cluster (OCN label \code{== 0}) to
+\code{NA}. If no OCN file is found, the unmasked coefficients are
+plotted with a warning.}
+\item{Numeric}{Passed directly to \code{\link{plot_vw_surf}} as an
+absolute-value threshold (vertices with \code{|value| < threshold}
+are hidden).}
+\item{\code{NULL}}{No masking; all vertices are rendered.}
+}}
 
-\item{fs_home}{Character. Path to the FreeSurfer installation (\verb{$FREESURFER_HOME}).}
-
-\item{show_in_browser}{Logical (default = TRUE). Open the Figure in browser.
-This can be invoked manually as well using \verb{$show()}.}
+\item{...}{Additional arguments forwarded to \code{\link{plot_vw_surf}},
+e.g. \code{views}, \code{cmap}, \code{vmin}, \code{vmax},
+\code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
+\code{dpi}, \code{fs_home}, \code{fs_template}.}
 }
 \value{
-A \code{plotly.graph_objects.Figure} (Python object) that can be displayed
-or further modified via \code{reticulate}.
+Invisibly: the output of \code{\link{plot_vw_surf}} — the temp HTML
+file path (interactive mode) or \code{to_file} path (static PNG mode).
+Called primarily for its side-effect of opening or saving the figure.
 }
 \description{
-Visualize vertex-wise statistical coefficient maps (e.g., LMM fixed effects)
-on the FreeSurfer fsaverage cortical surface using Python's
-\strong{\code{nilearn}} and \strong{\code{plotly}} backends via \code{{reticulate}}.
+Locates the vertex-wise coefficient MGH files for a given model term and
+surface measure, optionally applies cluster-wise significance (CWS) masking,
+and renders the result on a standard fsaverage surface via
+\code{\link{plot_vw_surf}}.
 
-Optionally, outlines specific cortical regions of interest (ROIs)
-using FreeSurfer annotation information (i.e. 36 regions Desikan-Killiany atlas).
-}
-\details{
-The function:
-\enumerate{
-\item Locates the appropriate MGH files for a given model term and hemisphere.
-\item Loads them with \strong{nibabel} via \code{{reticulate}}.
-\item Displays the coefficient map interactively on the fsaverage inflated surface
-using \strong{\code{nilearn}}'s \code{plot_surf_stat_map()} (Plotly engine).
-\item Optionally outlines regions from the FreeSurfer annotation (via \code{verywise}).
-}
-
-Python dependencies (\code{nibabel}, \code{nilearn}, \code{matplotlib}, \code{plotly}, \code{numpy})
-must be installed in the active \code{{reticulate}} environment.
+Surface maps are loaded directly in R using \code{load.mgh()} without any
+Python dependency at the file-loading stage. The Python/nilearn rendering
+backend is invoked only through \code{\link{plot_vw_surf}}.
 }
 \examples{
 \dontshow{if (rlang::is_installed("reticulate") && dir.exists("~/results/fs_results")) withAutoprint(\{ # examplesIf}
-# Example usage (requires FreeSurfer fsaverage and precomputed MGH maps)
-fs_home <- Sys.getenv("FREESURFER_HOME")
-surf_fig <- plot_vw_map(
+# Both hemispheres, interctive plot, cluster-wise masking (default)
+plot_vw_map(
   res_dir = "~/results/fs_results",
-  term = "age",
-  hemi = "lh",
-  measure = "area",
-  outline_rois = c("entorhinal", "precuneus"),
-  fs_home = fs_home)
+  term    = "age",
+  measure = "thickness"
+)
+
+# Left hemisphere only, numeric threshold, save to PNG
+plot_vw_map(
+  res_dir   = "~/results/fs_results",
+  term      = "age",
+  hemi      = "lh",
+  threshold = 0.05,
+  to_file   = "figures/age_lh.png",
+  dpi       = 300L
+)
+
+# No masking, custom colour map and title
+plot_vw_map(
+  res_dir   = "~/results/fs_results",
+  term      = "sex",
+  threshold = NULL,
+  cmap      = "RdBu_r",
+  title     = "Sex difference in cortical area"
+)
 \dontshow{\}) # examplesIf}
+}
+\seealso{
+\code{\link{plot_vw_surf}}, \code{\link{plot_vw_diff}}
 }

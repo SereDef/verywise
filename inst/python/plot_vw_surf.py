@@ -110,7 +110,7 @@ def _get_meshes(lh, rh, fs_template, surface, bg_map_type, fs_home, load_dk=Fals
 
         else:
             mesh = getattr(fsavg, f"{surf_key}_{hemi_name}")
-            back = getattr(fsavg, f"{bg_map_type}_{hemi_name}") if bg_map_type != "none" else None
+            back = str(getattr(fsavg, f"{bg_map_type}_{hemi_name}")) if bg_map_type != "none" else None
 
             if load_dk:
                 labels = np.asarray(destrieux[f"map_{hemi_name}"], dtype=int)
@@ -163,7 +163,7 @@ def _build_surface_images(lh, rh, fs_template, surface, bg_map_type, fs_home):
             
         else:
             mesh_path = getattr(fsavg, f"{surf_key}_{hemi_name}")
-            bg_path   = getattr(fsavg, f"{bg_map_type}_{hemi_name}") if bg_map_type != "none" else None
+            bg_path = str(getattr(fsavg, f"{bg_map_type}_{hemi_name}")) if bg_map_type != "none" else None
             
 
         mesh_parts[hemi_name] = mesh_path
