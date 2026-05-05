@@ -24,7 +24,7 @@ plot_vw_surf(
   rh = NULL,
   fs_template = "fsaverage",
   fs_home = NULL,
-  surface = c("inflated", "pial", "white"),
+  surface = c("pial", "inflated"),
   cmap = NULL,
   bg_map = c("sulc", "curv", "none"),
   vmin = NULL,
@@ -61,7 +61,7 @@ plot_vw_surf(
 
 - surface:
 
-  Surface mesh: `"inflated"` (default), `"pial"`, or `"white"`.
+  Surface mesh: `"pial"` (default) or `"inflated"`.
 
 - cmap:
 

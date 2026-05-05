@@ -71,6 +71,9 @@
   : Move key result files from one directory to another (for sharing and
   visualization)
 
+- [`plot_vw_diff()`](https://seredef.github.io/verywise/reference/plot_vw_diff.md)
+  : Plot the vertex-wise difference between two scalar maps
+
 - [`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
   : Plot vertex-wise coefficient maps on a 3D cortical surface
 
