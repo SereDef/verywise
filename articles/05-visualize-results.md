@@ -58,7 +58,29 @@ plot_vw_map(
 )
 ```
 
-\[TODO: expand with more details\]
+\[TODO: expand with more details\] \## On a HCP cluster Before running
+your plots make sure you either have a chrom
+
+For example, on Snellius, I do:
+
+    module load 2025
+    module load Xvfb/21.1.18-GCCcore-14.2.0
+
+    # rm /tmp/.X99-lock # optional, if this was in use already 
+
+    Xvfb :99 -screen 0 1280x1024x24 &
+    export DISPLAY=:99
+    sleep 1  # give Xvfb time to start
+
+    dbus-run-session -- bash -c 'export DISPLAY=:99 && R'
+
+    # check for existing Xvfb processed running on this node 
+    ps aux | grep -i "Xvfb.*:99"
+
+reticulate::py_run_string(” import os os.environ\[‘DISPLAY’\] = ‘:99’
+os.environ.pop(‘KALEIDO_CHROME_ARGS’, None) \# clear any previous flags
+os.environ\[‘KALEIDO_CHROME_ARGS’\] = ‘–no-sandbox
+–disable-dev-shm-usage’ print(‘DISPLAY:’, os.environ\[‘DISPLAY’\]) “)
 
 ## 
 

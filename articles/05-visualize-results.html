@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-05-05</h4>
+            <h4 data-toc-skip class="date">2026-05-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/05-visualize-results.Rmd" class="external-link"><code>vignettes/articles/05-visualize-results.Rmd</code></a></small>
       <div class="d-none name"><code>05-visualize-results.Rmd</code></div>
@@ -127,7 +127,25 @@ data) and quick.</p>
 <span>  outline_rois <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entorhinal"</span>, <span class="st">"precuneus"</span><span class="op">)</span>,</span>
 <span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>[TODO: expand with more details]</p>
+<p>[TODO: expand with more details] ## On a HCP cluster Before running
+your plots make sure you either have a chrom</p>
+<p>For example, on Snellius, I do:</p>
+<pre><code>module load 2025
+module load Xvfb/21.1.18-GCCcore-14.2.0
+
+# rm /tmp/.X99-lock # optional, if this was in use already 
+
+Xvfb :99 -screen 0 1280x1024x24 &amp;
+export DISPLAY=:99
+sleep 1  # give Xvfb time to start
+
+dbus-run-session -- bash -c 'export DISPLAY=:99 &amp;&amp; R'</code></pre>
+<pre><code># check for existing Xvfb processed running on this node 
+ps aux | grep -i "Xvfb.*:99"</code></pre>
+<p>reticulate::py_run_string(” import os os.environ[‘DISPLAY’] = ‘:99’
+os.environ.pop(‘KALEIDO_CHROME_ARGS’, None) # clear any previous flags
+os.environ[‘KALEIDO_CHROME_ARGS’] = ‘–no-sandbox –disable-dev-shm-usage’
+print(‘DISPLAY:’, os.environ[‘DISPLAY’]) “)</p>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="section"></h2>
