@@ -164,6 +164,9 @@ locate_roi <- function(rois = NULL, n_verts = 163842, hemi = c('lh','rh'), verbo
 
 # ==============================================================================
 
+#'
+#' @export
+#' 
 count_vertices <- function(fs_template) {
 
   n_verts <- switch(fs_template,
@@ -302,3 +305,6 @@ probe_data_resolution <- function(subj_surf_dir,
 # names(aparc.annot) <- hemis
 # usethis::use_data(aparc.annot, internal = TRUE, overwrite = TRUE)
 # ==============================================================================
+
+
+`%||%` <- function(x, y) if (is.null(x)) y else x

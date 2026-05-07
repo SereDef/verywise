@@ -115,7 +115,8 @@ plot_vw_surf <- function(
   where_is_my_mesh <- resolve_mesh(fs_template, fs_home)
 
   # --- initialise Python renderer (once per session) -----------------------
-  reticulate::py_require(c("nilearn", "matplotlib", "numpy", "plotly", "kaleido"))
+  reticulate::py_require(c("nilearn", "numpy", "matplotlib", 
+                           "plotly", "kaleido", "choreographer", "logistro"))
   .vw_surf_init_py()
 
   common <- list(
@@ -173,19 +174,23 @@ check_hemi <- function(hemi, fs_template) {
   
   if (is.character(hemi)) {
     if (!file.exists(hemi)) vw_error("{hemi_name} file not found: {.file {hemi}}")
-  
-    # nilearn.surface.load_surf_data()
-    nilearn_surf_ext <- c("\\.mgh$", "\\.mgz$", "\\.gii$", "\\.nii$",
-                          "\\.nii\\.gz$", "\\.npy$", "\\.txt$", "\\.csv$")
     
-    if (!any(grepl(paste(nilearn_surf_ext, collapse = "|"), hemi, ignore.case = TRUE)))
-        vw_message(c("!" = "{hemi_name}: unrecognised file extension in {.file {basename(hemi)}}.",
-                     " " = "nilearn will attempt to load it anyway but things may get weird.",
-                     ">" = "try reading it in yourself and providing a vector instead, or using 
-                     one of the supported extensions (e.g. .mgh, .mgz, .csv... see `nilearn.surface.load_surf_data()`)"
-    ))
+    if (grepl('\\.mgh$', hemi, ignore.case = TRUE)) {
+      hemi <- load.mgh(hemi)$x
+    } else {
+      # nilearn.surface.load_surf_data()
+      nilearn_surf_ext <- c("\\.mgz$", "\\.gii$", "\\.nii$",
+                            "\\.nii\\.gz$", "\\.npy$", "\\.txt$", "\\.csv$")
+    
+      if (!any(grepl(paste(nilearn_surf_ext, collapse = "|"), hemi, ignore.case = TRUE)))
+          vw_message(c("!" = "{hemi_name}: unrecognised file extension in {.file {basename(hemi)}}.",
+                      " " = "nilearn will attempt to load it anyway but things may get weird.",
+                      ">" = "try reading it in yourself and providing a vector instead, or using 
+                      one of the supported extensions (e.g. .mgh, .mgz, .csv... see `nilearn.surface.load_surf_data()`)"
+      ))
 
-    return(hemi)
+      return(hemi)
+    }
   }
 
   hemi <- as.numeric(hemi)

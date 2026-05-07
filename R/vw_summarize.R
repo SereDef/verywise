@@ -102,3 +102,63 @@ vw_summarize_model_clusters <- function(coef, clust, term_names, verbose = TRUE)
 
    invisible(NULL)
 }
+
+#' Summarise output directory: measures × hemispheres per subdirectory
+#'
+#' @param outp_dir Path to the top-level output directory
+#' @return Invisibly returns a named list: one element per subdir, each
+#'   containing a named list of measures → character vector of hemispheres
+#' 
+#' @export
+#' 
+vw_summarize_outp_dir <- function(outp_dir) {
+
+  files <- list.files(outp_dir, recursive = TRUE)
+
+  # Parse only files matching {subdir}/{hemi}.{measure}.* 
+  parsed <- regmatches(files, regexec("^([^/]+)/([lr]h)\\.([^.]+)\\.", files))
+  parsed <- Filter(function(x) length(x) == 4L, parsed)
+
+  if (!length(parsed)) {
+    message("No matching files found in: ", outp_dir)
+    return(invisible(NULL))
+  }
+
+  df <- data.frame(
+    subdir  = vapply(parsed, `[[`, character(1), 2L),
+    hemi    = vapply(parsed, `[[`, character(1), 3L),
+    measure = vapply(parsed, `[[`, character(1), 4L),
+    stringsAsFactors = FALSE
+  )
+
+  # Build result: named list[subdir] -> named list[measure] -> hemi vector
+  result <- lapply(
+    split(df, df$subdir),
+    function(d) lapply(
+      split(d, d$measure),
+      function(m) sort(unique(m$hemi))
+    )
+  )
+
+  # ── CLI output ────────────────────────────────────────────────────────────
+  hemi_tag <- function(h) {
+    col <- if (h == "lh") "\u001b[34m" else "\u001b[31m"
+    paste0(col, "[", h, "]\u001b[0m")
+  }
+
+  cat("\n\u001b[1mOutput directory summary:\u001b[0m", outp_dir, "\n")
+  cat(strrep("\u2500", 50), "\n\n")
+
+  for (subdir in names(result)) {
+    cat("\u001b[1m\u001b[33m\u25b6", subdir, "\u001b[0m\n")
+    measures <- result[[subdir]]
+    for (measure in names(measures)) {
+      hemi_str <- paste(vapply(measures[[measure]], hemi_tag, character(1)),
+                        collapse = "  ")
+      cat(sprintf("  \u2022 %-18s %s\n", measure, hemi_str))
+    }
+    cat("\n")
+  }
+
+  invisible(result)
+}
