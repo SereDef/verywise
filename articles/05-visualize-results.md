@@ -58,24 +58,32 @@ plot_vw_map(
 )
 ```
 
-\[TODO: expand with more details\] \## On a HCP cluster Before running
-your plots make sure you either have a chrom
+\[TODO: expand with more details\]
+
+## On an HCP cluster
+
+If you want to make plots directly on an HPC cluster (e.g. Snellius) you
+will need to have some version of chrome installed (kaleido one works)
+and set up an Xvfb process **before** starting R (e.g. in your job
+script or in the shell before launching R):
 
 For example, on Snellius, I do:
 
-    module load 2025
-    module load Xvfb/21.1.18-GCCcore-14.2.0
+``` sh
+module load 2025
+module load Xvfb/21.1.18-GCCcore-14.2.0
 
-    # rm /tmp/.X99-lock # optional, if this was in use already 
+Xvfb :99 -screen 0 1280x1024x24 &
+export DISPLAY=:99
+sleep 1  # give Xvfb time to start
+```
 
-    Xvfb :99 -screen 0 1280x1024x24 &
-    export DISPLAY=:99
-    sleep 1  # give Xvfb time to start
+Troubleshooting:
 
-    dbus-run-session -- bash -c 'export DISPLAY=:99 && R'
-
-    # check for existing Xvfb processed running on this node 
-    ps aux | grep -i "Xvfb.*:99"
+``` sh
+# check for existing Xvfb processed running on this node 
+ps aux | grep -i "Xvfb.*:99"
+```
 
 reticulate::py_run_string(” import os os.environ\[‘DISPLAY’\] = ‘:99’
 os.environ.pop(‘KALEIDO_CHROME_ARGS’, None) \# clear any previous flags

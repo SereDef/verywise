@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-05-06</h4>
+            <h4 data-toc-skip class="date">2026-05-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/05-visualize-results.Rmd" class="external-link"><code>vignettes/articles/05-visualize-results.Rmd</code></a></small>
       <div class="d-none name"><code>05-visualize-results.Rmd</code></div>
@@ -127,21 +127,25 @@ data) and quick.</p>
 <span>  outline_rois <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entorhinal"</span>, <span class="st">"precuneus"</span><span class="op">)</span>,</span>
 <span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>[TODO: expand with more details] ## On a HCP cluster Before running
-your plots make sure you either have a chrom</p>
+<p>[TODO: expand with more details]</p>
+</div>
+<div class="section level2">
+<h2 id="on-an-hcp-cluster">On an HCP cluster<a class="anchor" aria-label="anchor" href="#on-an-hcp-cluster"></a>
+</h2>
+<p>If you want to make plots directly on an HPC cluster (e.g. Snellius)
+you will need to have some version of chrome installed (kaleido one
+works) and set up an Xvfb process <strong>before</strong> starting R
+(e.g. in your job script or in the shell before launching R):</p>
 <p>For example, on Snellius, I do:</p>
-<pre><code>module load 2025
-module load Xvfb/21.1.18-GCCcore-14.2.0
-
-# rm /tmp/.X99-lock # optional, if this was in use already 
-
-Xvfb :99 -screen 0 1280x1024x24 &amp;
-export DISPLAY=:99
-sleep 1  # give Xvfb time to start
-
-dbus-run-session -- bash -c 'export DISPLAY=:99 &amp;&amp; R'</code></pre>
-<pre><code># check for existing Xvfb processed running on this node 
-ps aux | grep -i "Xvfb.*:99"</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">module</span> load 2025</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">module</span> load Xvfb/21.1.18-GCCcore-14.2.0</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">Xvfb</span> :99 <span class="at">-screen</span> 0 1280x1024x24 <span class="kw">&amp;</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="bu">export</span> <span class="va">DISPLAY</span><span class="op">=</span>:99</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">sleep</span> 1  <span class="co"># give Xvfb time to start</span></span></code></pre></div>
+<p>Troubleshooting:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># check for existing Xvfb processed running on this node </span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"Xvfb.*:99"</span></span></code></pre></div>
 <p>reticulate::py_run_string(” import os os.environ[‘DISPLAY’] = ‘:99’
 os.environ.pop(‘KALEIDO_CHROME_ARGS’, None) # clear any previous flags
 os.environ[‘KALEIDO_CHROME_ARGS’] = ‘–no-sandbox –disable-dev-shm-usage’

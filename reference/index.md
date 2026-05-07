@@ -151,5 +151,8 @@
 - [`vw_pretty_message()`](https://seredef.github.io/verywise/reference/vw_pretty_message.md)
   : Print decorated message to console if verbose = TRUE
 
+- [`vw_summarize_outp_dir()`](https://seredef.github.io/verywise/reference/vw_summarize_outp_dir.md)
+  : Summarise output directory: measures × hemispheres per subdirectory
+
 - [`with_parallel()`](https://seredef.github.io/verywise/reference/with_parallel.md)
   : Run a chunked foreach loop sequentially or in parallel
