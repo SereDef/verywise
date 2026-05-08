@@ -21,6 +21,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/compress_local.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/compute_clusters.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/convert_to_mgh.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/count_vertices.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/create_cortex_mask.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/decompress_site_payloads.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/estimate_fwhm.html</loc></url>
@@ -36,6 +37,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/make_chunk_sequence.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/mask_cortex.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/move_result_files.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/outcome_name.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/pipe.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/plot_vw_diff.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/plot_vw_map.html</loc></url>

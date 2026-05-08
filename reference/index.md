@@ -29,6 +29,9 @@
 
   Convert statistical result FBMs to FreeSurfer `.mgh` format
 
+- [`count_vertices()`](https://seredef.github.io/verywise/reference/count_vertices.md)
+  : Count Vertices for a FreeSurfer Template Surface
+
 - [`create_cortex_mask()`](https://seredef.github.io/verywise/reference/create_cortex_mask.md)
   : @title Save logical cortex mask from FreeSurfer cortex.label files
 
@@ -70,6 +73,9 @@
 - [`move_result_files()`](https://seredef.github.io/verywise/reference/move_result_files.md)
   : Move key result files from one directory to another (for sharing and
   visualization)
+
+- [`outcome_name()`](https://seredef.github.io/verywise/reference/outcome_name.md)
+  : Format a Human-Readable Outcome Label
 
 - [`plot_vw_diff()`](https://seredef.github.io/verywise/reference/plot_vw_diff.md)
   : Plot the vertex-wise difference between two scalar maps

@@ -234,28 +234,28 @@ truth <- simulate_distrib_dataset(
   sigma2 = 0.1,
   fs_template = "fsaverage3"  # 642 vertices
 )
-#> • the `path` specified ('/tmp/Rtmp7BmSTj/fed_simulation1c07382d53f6') does not
+#> • the `path` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8') does not
 #>   exist. I'll try to create it.
 #> * selected
 #> 11
 #> vertices (
 #> 1.7
 #> %)
-#> • the `site_dir` specified ('/tmp/Rtmp7BmSTj/fed_simulation1c07382d53f6/site1')
+#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site1')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site1
 #> ] writing
 #> 80
 #> surface files...
-#> • the `site_dir` specified ('/tmp/Rtmp7BmSTj/fed_simulation1c07382d53f6/site2')
+#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site2')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site2
 #> ] writing
 #> 120
 #> surface files...
-#> • the `site_dir` specified ('/tmp/Rtmp7BmSTj/fed_simulation1c07382d53f6/site3')
+#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site3')
 #>   does not exist. I'll try to create it.
 #> * [
 #> site3
