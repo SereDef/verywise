@@ -74,11 +74,11 @@ def _ensure_xvfb():
     # Suppress Chromium's verbose D-Bus probing on headless nodes
     os.environ.setdefault("DBUS_SESSION_BUS_ADDRESS", "disabled:")
 
-     # Pass sandbox-disable flags to kaleido's Chromium launcher
-    os.environ.setdefault(
-        "KALEIDO_CHROME_ARGS",
-        "--no-sandbox --disable-dev-shm-usage",
-    )
+    # Pass sandbox-disable flags to kaleido's Chromium launcher
+    # os.environ.setdefault(
+    #     "KALEIDO_CHROME_ARGS",
+    #     "--no-sandbox --disable-dev-shm-usage",
+    # )
 
     # tmpdir = os.environ.get("TMPDIR", "")
     # if not tmpdir or not os.access(tmpdir, os.W_OK) or "jenkins" in tmpdir:
@@ -186,16 +186,14 @@ def _patch_kaleido():
         return  # Windows: leave defaults
 
     # On Linux (including HPC): propagate DISPLAY + sandbox flags.
-    # _ensure_xvfb() never spawns a process — it only sets env vars.
+    # Step 1: ensure DISPLAY and DBUS are set in Python's env
     _ensure_xvfb()
 
-    # If the user already set KALEIDO_CHROME_ARGS (e.g. for a GPU node),
-    # respect their override and stop here.
+    # Step 2: respect explicit user override
     if "KALEIDO_CHROME_ARGS" in os.environ:
         return
 
-    # DISPLAY is now set. Check whether a real X server is actually reachable
-    # by probing with xdpyinfo (fast, no Chromium needed).
+    # Step 3: probe whether the display is actually reachable
     display_reachable = False
     xdpyinfo = shutil.which("xdpyinfo")
     if xdpyinfo:
@@ -208,14 +206,13 @@ def _patch_kaleido():
             pass
 
     if display_reachable:
-        # Xvfb is up and reachable — no headless flags needed
+        # Real X display (Xvfb or desktop) is up — this is the working path.
+        # No GL override flags needed; Chromium uses the X display directly.
         os.environ["KALEIDO_CHROME_ARGS"] = (
             "--no-sandbox --disable-dev-shm-usage")
         return
-
-    # DISPLAY is set but not (yet) reachable — warn the user and fall back
-    # to headless rendering so the import doesn't hard-fail.
-
+    
+    # Step 4: no reachable display — try headless fallbacks
     warnings.warn(
         "\n[verywise] DISPLAY is set to '{}' but no X server responded.\n"
         "  If you are on an HPC cluster, make sure you ran:\n"
