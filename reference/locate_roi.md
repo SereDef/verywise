@@ -63,9 +63,5 @@ roi_table <- locate_roi()
 
 # Get a logical vector of vertices in the insula
 insula_mask <- locate_roi(rois = "insula")
-#> * selected
-#> 5229
-#> vertices (
-#> 3.2
-#> %)
+#> ℹ Selected 5229 vertices (3.2%) from 1 region: insula
 ```

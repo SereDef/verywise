@@ -234,35 +234,32 @@ truth <- simulate_distrib_dataset(
   sigma2 = 0.1,
   fs_template = "fsaverage3"  # 642 vertices
 )
-#> • the `path` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8') does not
+#> ── Simulating distributed dataset ─────────────────────────── verywise v1.3.5 ──
+#> • the `path` specified ('/tmp/RtmpJfJtCt/fed_simulation1de184f3163') does not
 #>   exist. I'll try to create it.
-#> * selected
-#> 11
-#> vertices (
-#> 1.7
-#> %)
-#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site1')
+#> • Measure: Left hemisphere - Cortical thickness
+#> ℹ Selected 11 vertices (1.7%) from 3 regions: entorhinal, temporalpole, and
+#>   frontalpole
+#> ⠙ [site1] writing 80 surface files
+#> • the `site_dir` specified ('/tmp/RtmpJfJtCt/fed_simulation1de184f3163/site1')
 #>   does not exist. I'll try to create it.
-#> * [
-#> site1
-#> ] writing
-#> 80
-#> surface files...
-#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site2')
+#> ⠙ [site1] writing 80 surface files
+#> ✔ [site1] writing 80 surface files [3ms]
+#> 
+#> ⠙ [site2] writing 120 surface files
+#> • the `site_dir` specified ('/tmp/RtmpJfJtCt/fed_simulation1de184f3163/site2')
 #>   does not exist. I'll try to create it.
-#> * [
-#> site2
-#> ] writing
-#> 120
-#> surface files...
-#> • the `site_dir` specified ('/tmp/RtmpOIzqOO/fed_simulation1c526f19cfc8/site3')
+#> ⠙ [site2] writing 120 surface files
+#> ✔ [site2] writing 120 surface files [4ms]
+#> 
+#> ⠙ [site3] writing 60 surface files
+#> • the `site_dir` specified ('/tmp/RtmpJfJtCt/fed_simulation1de184f3163/site3')
 #>   does not exist. I'll try to create it.
-#> * [
-#> site3
-#> ] writing
-#> 60
-#> surface files...
-#> Done.
+#> ⠙ [site3] writing 60 surface files
+#> ✔ [site3] writing 60 surface files [4ms]
+#> 
+#> 
+#> ── Done! :) ────────────────────────────────────────────────────────────────────
 
 # Ground-truth ICC summary across active vertices
 summary(truth$icc)
