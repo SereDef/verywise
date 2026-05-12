@@ -19,7 +19,6 @@ run_vw_fed_aggr(
   outp_dir = NULL,
   hemi = c("lh", "rh"),
   fs_template = "fsaverage",
-  fwhm = 10,
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
@@ -61,12 +60,6 @@ run_vw_fed_aggr(
 
   Character. FreeSurfer template surface used for the cortical mask
   (e.g. `"fsaverage"`, `"fsaverage5"`). Default: `"fsaverage"`.
-
-- fwhm:
-
-  Numeric. Full-width at half-maximum (mm) of the smoothing kernel
-  applied at the site level. Used for informational messages only;
-  smoothing must be applied before payload generation. Default: `10`.
 
 - seed:
 

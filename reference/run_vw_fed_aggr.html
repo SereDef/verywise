@@ -73,7 +73,6 @@ site communication).</p>
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  hemi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lh"</span>, <span class="st">"rh"</span><span class="op">)</span>,</span>
 <span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
-<span>  fwhm <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
@@ -115,12 +114,6 @@ files. Defaults to <code>inpt_dir</code> if <code>NULL</code>.</p></dd>
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
 <dd><p>Character. FreeSurfer template surface used for the cortical
 mask (e.g. <code>"fsaverage"</code>, <code>"fsaverage5"</code>). Default: <code>"fsaverage"</code>.</p></dd>
-
-
-<dt id="arg-fwhm">fwhm<a class="anchor" aria-label="anchor" href="#arg-fwhm"></a></dt>
-<dd><p>Numeric. Full-width at half-maximum (mm) of the smoothing kernel
-applied at the site level. Used for informational messages only; smoothing
-must be applied before payload generation. Default: <code>10</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
