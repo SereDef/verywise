@@ -166,27 +166,39 @@ run_vw_fed_local <- function(
   save_ss = FALSE,
   verbose = TRUE) {
   
+  vw_init_message('Distributed linear mixed model (step 1: local)', verbose = verbose)
+  
   # Check user input ===========================================================
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
+  model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  # TODO enforce site_name; define term names to ensure harmonisarion
+  # TODO enforce site_name; define term names to ensure harmonisation
+  if (is.null(site_name)) { vw_error('Please specify the name of the local site') }
 
-  vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
-  vw_message('* Model: ', deparse(formula), verbose = verbose)
-  # vw_pretty_message('', fill = '-', verbose = verbose)
+  vw_message('* Outcome: {.val2 {outcome_name(hemi, measure)}}', verbose = verbose)
+  vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
+  vw_message('* Site:    {.val2 {site_name}}', verbose = verbose)
+  
+  vw_message("User input validation and set-up", type='step', verbose = verbose)
 
-  vw_message("Checking user inputs...", verbose = verbose)
+  # Path specifications
+  if (verbose) cli::cli_progress_step('Input and output paths', spinner=TRUE)
 
   subj_dir <- check_path(subj_dir)
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
 
   ss_file <- check_ss_exists(subj_dir, hemi, measure, fs_template)
 
-  n_cores <- check_cores(n_cores)
+  # Numeric input
+  if (verbose) cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
   
-  # Other set-up stuff =========================================================
+  check_numeric_param(seed, integer = TRUE, lower = 0)
+  check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
+  check_numeric_param(fwhm, lower = 1, upper = 30)
+
+  n_cores <- check_cores(n_cores)
 
   # Avoid bigstatsr wanrining about lost precision (float vs. double)
   old_opts <- options(bigstatsr.downcast.warning = FALSE)
@@ -196,8 +208,11 @@ run_vw_fed_local <- function(
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
 
+  if (verbose) cli::cli_process_done()
+
   # Read phenotype data (if not already loaded) ================================
-  vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
+  
+  if (verbose) cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
 
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
@@ -205,14 +220,17 @@ run_vw_fed_local <- function(
   # present in the data
   check_data_frame(pheno, folder_id, formula)
 
-  vw_message(" * Dataset of dimention: ", nrow(pheno), " x ", ncol(pheno), verbose = verbose)
+  if (verbose) cli::cli_progress_done()
+  
+  vw_message(" * Phenotype dimensions:
+             {.val2 { nrow(pheno) }} x {.val2 { ncol(pheno) }}.", verbose = verbose)
   
   folder_ids <- pheno[, folder_id, drop=TRUE] # ensure this is always a character vector 
 
   # Read and clean vertex data =================================================
-
-  vw_message("Checking and preparing brain surface data...", verbose = verbose)
-
+  
+  vw_message("Brain data processing", type='step', verbose = verbose)
+  
   if (is.character(save_ss)) {
     ss_dir <- check_path(save_ss, create_if_not = TRUE)
     save_ss <- TRUE
@@ -221,20 +239,7 @@ run_vw_fed_local <- function(
     if (!save_ss) on.exit(unlink(ss_dir, recursive = TRUE), add = TRUE)
   }
 
-  if (!is.null(ss_file)) {
-
-    ss <- subset_supersubject(
-      supsubj_dir = subj_dir,
-      supsubj_file = ss_file,
-      folder_ids = folder_ids,
-      new_supsubj_dir = ss_dir,
-      fs_template = fs_template,
-      n_cores = n_cores,
-      save_rds = save_ss,
-      error_cutoff = tolerate_surf_not_found,
-      verbose = verbose)
-
-  } else {
+  if (is.null(ss_file)) {
 
     ss <- build_supersubject(
       subj_dir = subj_dir,
@@ -247,27 +252,46 @@ run_vw_fed_local <- function(
       fwhmc = paste0("fwhm", fwhm),
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
-      verbose = verbose
-    )
+      verbose = verbose)
+
+  } else {
+
+    ss <- subset_supersubject(
+      supsubj_dir = subj_dir,
+      supsubj_file = ss_file,
+      folder_ids = folder_ids,
+      new_supsubj_dir = ss_dir,
+      fs_template = fs_template,
+      n_cores = n_cores,
+      save_rds = save_ss,
+      error_cutoff = tolerate_surf_not_found,
+      verbose = verbose)
   }
 
-  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
+  if (verbose) cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
 
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
 
   # Additionally check that there are no vertices that contain any 0s
-  problem_verts <- fbm_col_has_0(ss, n_cores = 1L)
+  problem_verts <- fbm_col_has_0(ss, n_cores = 1L, , verbose = verbose)
 
   good_verts <- which(!problem_verts & is_cortex); rm(problem_verts)
 
   # Ensure phenotype and ss row order matches ==================================
   pheno <- check_row_match(ss_file = ss$bk, pheno = pheno, folder_ids = folder_ids)
 
-  # Unpack model ===============================================================
-  vw_message("Statistical model preparation...",
-             "\n * call: ", deparse(formula), verbose = verbose)
+  # Prepare chunk sequence =====================================================
+  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
+
+  if (verbose) cli::cli_progress_done()
   
+  # Unpack model ===============================================================
+  vw_message("Local summary stats extraction", type='step', verbose = verbose)
+
+  if (verbose) cli::cli_progress_step(
+    'Collect "static" (i.e. not vertex-dependent) site stats', spinner=TRUE)
+
   # Get design matrix (p x p)
   X <- unpack_formula(formula, pheno, return_X = TRUE)
 
@@ -292,6 +316,8 @@ run_vw_fed_local <- function(
     verywise_version = as.character(utils::packageVersion("verywise"))
   )
 
+  if (verbose) cli::cli_progress_done()
+
   # Prepare FBM output =========================================================
   
   # Number of vertices
@@ -313,17 +339,14 @@ run_vw_fed_local <- function(
   
   # log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
-  # Prepare chunk sequence =====================================================
-  vw_message(" * chunk dataset", verbose = verbose)
-  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
-
   # Parallel analyses ==========================================================
-  vw_message("Running analyses...\n",
-             " * dimentions: ", site_info$n_obs, " observations x ", site_info$n_good_vx,
-             " (of ", vw_n, " total) vertices.", verbose = verbose)
-
+ 
   # progress_file <- paste0(result_path, ".progress.log")
   # on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
+  if (verbose) {
+    cli::cli_progress_step('Collect vertex-dependent site stats... this may take some time', 
+    spinner=TRUE)
+  }
 
   with_parallel(n_cores = n_cores, 
     seed = seed,
@@ -347,11 +370,15 @@ run_vw_fed_local <- function(
       psumsY[, chunk] <- chunk_out$psumsY
     } 
   })
+
+  if (verbose) cli::cli_progress_done()
   
   # Write output to outp_dir
   saveRDS(site_info, paste0(result_path,'.static.rds'))
   XtY$save()
   psumsY$save()
+
+  vw_message("Done! :)", type='step', verbose = verbose)
 
   return(c(site_info, XtY = XtY, psumsY = psumsY))
 }

@@ -249,10 +249,8 @@ run_vw_lmm <- function(
   measure <- check_formula(formula)
   model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  # vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
   vw_message('* Outcome: {.val2 {outcome_name(hemi, measure)}}', verbose = verbose)
   vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
-  # vw_pretty_message('', fill = '-', verbose = verbose)
 
   # Check user input ===========================================================
   vw_message("User input validation and set-up", type='step', verbose = verbose)
@@ -347,8 +345,7 @@ run_vw_lmm <- function(
       fwhmc = paste0("fwhm", fwhm),
       save_rds = save_ss,
       error_cutoff = tolerate_surf_not_found,
-      verbose = verbose
-    )
+      verbose = verbose)
 
   } else {
 

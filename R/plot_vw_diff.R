@@ -81,12 +81,17 @@ plot_vw_diff <- function(lh_a = NULL, lh_b = NULL,
   lh_diff <- .diff_hemi(.resolve(lh_a, "lh_a"), .resolve(lh_b, "lh_b"), "lh")
   rh_diff <- .diff_hemi(.resolve(rh_a, "rh_a"), .resolve(rh_b, "rh_b"), "rh")
 
-  dots        <- list(...)
-  title       <- dots$title %||% paste0("Difference: ", label_a, " \u2212 ", label_b)
-  dots$title  <- NULL
+  tot_range <- range(lh_diff, rh_diff, na.rm = TRUE)
+
+  dots <- list(...)
+
+  dots$title  <- dots$title %||% paste0("Difference: ", label_a, " \u2212 ", label_b)
+
+  dots$vmin <- dots$vmin %||% tot_range[1]
+  dots$vmax <- dots$vmax %||% tot_range[2]
 
   do.call(plot_vw_surf, c(
-    list(lh = lh_diff, rh = rh_diff, title = title),
+    list(lh = lh_diff, rh = rh_diff),
     dots
   ))
 }

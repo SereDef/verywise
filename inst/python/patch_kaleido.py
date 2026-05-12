@@ -192,25 +192,36 @@ def _patch_kaleido():
     # Step 2: respect explicit user override
     if "KALEIDO_CHROME_ARGS" in os.environ:
         return
-
+    
     # Step 3: probe whether the display is actually reachable
-    display_reachable = False
-    xdpyinfo = shutil.which("xdpyinfo")
-    if xdpyinfo:
-        try:
-            r = subprocess.run(
-                [xdpyinfo, "-display", os.environ["DISPLAY"]],
-                capture_output=True, timeout=5)
-            display_reachable = r.returncode == 0
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+
+    # Check display reachability via X lock file
+    # (xdpyinfo is not available on all HPC clusters, but the lock file is reliable)
+    display = os.environ.get("DISPLAY", "")
+    display_num = display.lstrip(":")
+    display_reachable = bool(display_num) and os.path.exists(f"/tmp/.X{display_num}-lock")
 
     if display_reachable:
-        # Real X display (Xvfb or desktop) is up — this is the working path.
-        # No GL override flags needed; Chromium uses the X display directly.
-        os.environ["KALEIDO_CHROME_ARGS"] = (
-            "--no-sandbox --disable-dev-shm-usage")
+        os.environ["KALEIDO_CHROME_ARGS"] = "--no-sandbox --disable-dev-shm-usage"
         return
+    
+    # display_reachable = False
+    # xdpyinfo = shutil.which("xdpyinfo")
+    # if xdpyinfo:
+    #     try:
+    #         r = subprocess.run(
+    #             [xdpyinfo, "-display", os.environ["DISPLAY"]],
+    #             capture_output=True, timeout=5)
+    #         display_reachable = r.returncode == 0
+    #     except (subprocess.TimeoutExpired, FileNotFoundError):
+    #         pass
+
+    # if display_reachable:
+    #     # Real X display (Xvfb or desktop) is up — this is the working path.
+    #     # No GL override flags needed; Chromium uses the X display directly.
+    #     os.environ["KALEIDO_CHROME_ARGS"] = (
+    #         "--no-sandbox --disable-dev-shm-usage")
+    #     return
     
     # Step 4: no reachable display — try headless fallbacks
     warnings.warn(

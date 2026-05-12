@@ -147,6 +147,7 @@ decompress_site_payloads <- function(site_names, input_dir, hemi, measure) {
     sinfo[['psumsY']] <- bigstatsr::big_attach(paste0(site_results, ".psumsY.rds"))
 
     sinfo
+
   }, USE.NAMES = TRUE, simplify = FALSE)
 
   # Step 2: Transpose 
@@ -169,10 +170,6 @@ decompress_site_payloads <- function(site_names, input_dir, hemi, measure) {
   
   # TODO: warn if verywise version is not the same?
   # if not warn, the matrices have all the same dimensions 
-
-  # Display some info:
-  print(as.data.frame(site_payloads[
-    c('n_obs', 'fs_template', 'n_good_vx', 'verywise_version', 'date_created')]))
   
   site_payloads
 

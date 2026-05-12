@@ -38,9 +38,6 @@
 #' @param hemi Character. Hemisphere: \code{"lh"} (default) or \code{"rh"}.
 #' @param fs_template Character. FreeSurfer template surface used for the cortical
 #'   mask (e.g. \code{"fsaverage"}, \code{"fsaverage5"}). Default: \code{"fsaverage"}.
-#' @param fwhm Numeric. Full-width at half-maximum (mm) of the smoothing kernel
-#'   applied at the site level. Used for informational messages only; smoothing
-#'   must be applied before payload generation. Default: \code{10}.
 #' @param seed Integer. Random seed passed to the parallel backend for
 #'   reproducibility. Default: \code{3108}.
 #' @param n_cores Integer. Number of parallel workers. \code{1} (default) runs
@@ -85,7 +82,6 @@ run_vw_fed_aggr <- function(
   # Brain data processing
   hemi = c("lh", "rh"), 
   fs_template = "fsaverage",
-  fwhm = 10,
   # Reproducibility and parallel processing
   seed = 3108,
   n_cores = 1,
@@ -98,15 +94,19 @@ run_vw_fed_aggr <- function(
   ridge = 0,
   verbose = TRUE) {
   
+  vw_init_message('Distributed linear mixed model (step 2: aggregate)', verbose = verbose)
+  
   # Check user input ===========================================================
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
+  model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  # TODO enforce site_name; define term names to ensure harmonisarion
+  vw_message('* Outcome: {.val2 {outcome_name(hemi, measure)}}', verbose = verbose)
+  vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
 
-  vw_pretty_message(outcome_name(hemi, measure), verbose = verbose)
-  vw_message('* Model: ', deparse(formula), verbose = verbose)
+  vw_message(' ', verbose = verbose)
+  if (verbose) cli::cli_progress_step('Load site payloads', spinner=TRUE)
 
   site_payloads <- decompress_site_payloads(site_names, inpt_dir, hemi, measure)
 
@@ -116,12 +116,41 @@ run_vw_fed_aggr <- function(
 
   df <- if (REML) (N - p) else N
 
-  # if (df <= 0) .vw_stop("Not enough df: N - p <= 0.")
+  if (verbose) cli::cli_process_done()
+  
+  # Display some info:
+  payloads_summary <- as.data.frame(site_payloads[
+    c('n_obs', 'fs_template', 'n_good_vx', 'verywise_version', 'date_created')])
+  
+  cli::cli_verbatim(paste(capture.output(print(payloads_summary)), collapse = "\n"))
 
-  vw_message('* Combined N = ', N, ' (across ', K, ' sites).', verbose = verbose)
+  vw_message(c("i" = "Combined N = {.val {N}} (across {.val2 {K}} sites)."), 
+    verbose = verbose)
+  
+   # Numeric input
+  if (verbose) cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
+  
+  check_numeric_param(seed, integer = TRUE, lower = 0)
+  check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
+  
+  n_cores <- check_cores(n_cores)
+
+  # Avoid bigstatsr wanrining about lost precision (float vs. double)
+  old_opts <- options(bigstatsr.downcast.warning = FALSE)
+  on.exit(options(old_opts), add = TRUE)
+
+  # Esure reproducible seeds in parallel settings
+  RNGkind("L'Ecuyer-CMRG")
+  set.seed(seed)
+
+  if (verbose) cli::cli_process_done()
 
   # ==== Let's get started ======================================================
-  
+  vw_message("Local summary stats aggregation", type='step', verbose = verbose)
+
+  if (verbose) cli::cli_progress_step(
+    'Aggregate "static" (i.e. not vertex-dependent) site stats', spinner=TRUE)
+
   # Auto grid: wide but not absurd; assumes lambda mostly in [1e-6, 1e2]
   lambda_grid <- check_lambda_grid(lambda_grid)
 
@@ -170,7 +199,9 @@ run_vw_fed_aggr <- function(
 
   # TODO: if all grid points fail (e.g., due to highly collinear predictors or insufficient data), 
   # return an edge-case result?
-  if (length(lambda_prof) == 0) stop('Aggregate deisgn matrix is not positive-definite under any lambda assumption.')
+  if (length(lambda_prof) == 0) vw_error('Aggregate design matrix is not positive-definite under any lambda assumption.')
+  
+  if (verbose) cli::cli_progress_done()
   
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
@@ -182,6 +213,10 @@ run_vw_fed_aggr <- function(
 
   # Number of vertices
   vw_n <- length(is_cortex); rm(is_cortex)
+
+  # Prepare chunk sequence =====================================================
+
+  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
   
   # Prepare FBM output =========================================================
 
@@ -206,15 +241,11 @@ run_vw_fed_aggr <- function(
   
   # log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
-  # Prepare chunk sequence =====================================================
-  vw_message(" * chunk dataset", verbose = verbose)
-  chunk_seq <- make_chunk_sequence(good_verts, chunk_size = chunk_size)
-
   # Parallel analyses ==========================================================
-  vw_message("Running analyses...\n",
-             " * dimentions: ", N, " observations x ", length(good_verts),
-             " (of ", vw_n, " total) vertices.", verbose = verbose)
-
+  if (verbose) {
+    cli::cli_progress_step('Aggregate vertex-dependent site stats... this may take some time', 
+    spinner=TRUE)
+  }
   # progress_file <- paste0(result_path, ".progress.log")
   # on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
@@ -254,6 +285,9 @@ run_vw_fed_aggr <- function(
 
     } 
   })
+  
+  if (verbose) cli::cli_progress_done()
+  vw_message("Done! :)", type='step', verbose = verbose)
   
   list(coef = c_vw, se = s_vw, pval = p_vw, variances = v_vw)
 }

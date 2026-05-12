@@ -163,8 +163,10 @@ locate_roi <- function(rois = NULL, n_verts = 163842, hemi = c('lh','rh'), verbo
   rois <- as.vector(rois, mode = "character")
 
   selected_rois <- roi_lookup[roi_lookup[,'roi_label'] %in% rois, ]
-  vw_message(' * selected ', sum(selected_rois$vw_count), ' vertices (',
-             sum(selected_rois$vw_prop)*100, '%)', verbose = verbose)
+  vw_message(
+    c("i" = "Selected {.val {sum(selected_rois$vw_count)}} vertices ({sum(selected_rois$vw_prop)*100}%) 
+      from {length(rois)} region{?s}: {.val2 {selected_rois$roi_label}}"), 
+    verbose = verbose)
 
   roi_ids <- selected_rois[, 'roi_id']
 

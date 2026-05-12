@@ -162,6 +162,8 @@ simulate_distrib_dataset <- function(path,
     overwrite = TRUE,
     seed = 3108,
     verbose = TRUE) {
+  
+  vw_init_message('Simulating distributed dataset', verbose = verbose)
 
   # ── Input validation ─────────────────────────────────────────────────────────
   stopifnot(
@@ -180,6 +182,8 @@ simulate_distrib_dataset <- function(path,
   check_path(path, create_if_not = TRUE)
   set.seed(seed)
 
+  vw_message('* Measure: {.val2 {outcome_name(hemi, measure)}}', verbose = verbose)
+
   # ── Locate active vertices from annotation files ──────────────────────────
  
   roi_locs <- locate_roi(
@@ -196,7 +200,7 @@ simulate_distrib_dataset <- function(path,
       rois    = location_association,
       n_verts = n_verts,
       hemi    = hemi,
-      verbose = verbose
+      verbose = FALSE
     )
     # Signal vertices must lie within roi_subset
     signal_locs <- signal_locs & roi_locs
@@ -220,9 +224,12 @@ simulate_distrib_dataset <- function(path,
 
   # ── Per-site data generation ──────────────────────────────────────────────
   for (k in seq_len(K)) {
-
+    
     site   <- site_names[k]
     n_k    <- site_sizes[k]
+
+    if (verbose) cli::cli_progress_step('[{site}] writing {.val3 { n_k }} surface files', spinner=TRUE)
+    
     site_dir <- file.path(path, site)
     check_path(site_dir, create_if_not = TRUE)
 
@@ -231,10 +238,8 @@ simulate_distrib_dataset <- function(path,
     # ── Phenotype ────────────────────────────────────────────────────────────
     if (!overwrite && file.exists(pheno_path)) {
       vw_message(
-        " * [", site, "] re-using phenotype file from: ",
-        format(file.info(pheno_path)[, "mtime"]),
-        verbose = verbose
-      )
+        c("i" = "[{site}] re-using phenotype file from: { format(file.info(pheno_path)[, 'mtime'] }"),
+        verbose = verbose)
       pheno <- utils::read.csv(pheno_path)
 
     } else {
@@ -245,12 +250,10 @@ simulate_distrib_dataset <- function(path,
         has_sex   = "sex" %in% names(betas)
       )
       utils::write.csv(pheno, pheno_path, row.names = FALSE)
+
     }
 
-    vw_message(
-      " * [", site, "] writing ", n_k, " surface files...",
-      verbose = verbose
-    )
+    if (verbose) cli::cli_process_done()
 
     # Pre-compute fixed-effect contribution for each subject: n_k x V_roi
     # Only non-zero over signal_locs (columns indexed within roi_locs)
@@ -284,7 +287,7 @@ simulate_distrib_dataset <- function(path,
     }
   }
 
-  vw_message("Done.", verbose = verbose)
+  vw_message("Done! :)", type='step', verbose = verbose)
 
   invisible(list(beta0 = beta0, betas = betas,
                  tau2 = tau2, sigma2 = sigma2, u = u, icc = icc,
