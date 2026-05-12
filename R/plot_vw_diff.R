@@ -81,17 +81,33 @@ plot_vw_diff <- function(lh_a = NULL, lh_b = NULL,
   lh_diff <- .diff_hemi(.resolve(lh_a, "lh_a"), .resolve(lh_b, "lh_b"), "lh")
   rh_diff <- .diff_hemi(.resolve(rh_a, "rh_a"), .resolve(rh_b, "rh_b"), "rh")
 
-  tot_range <- range(lh_diff, rh_diff, na.rm = TRUE)
+  all_diff <- c(lh_diff, rh_diff)
+  qs <- stats::quantile(all_diff, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+
+  min_diff <- qs[[1]]
+  max_diff <- qs[[5]]
+  
+  vw_message(c(
+    "i" = "Difference map summary ({sum(is.finite(all_diff))} vertices)",
+    " " = "Min:    {.val2 {round(min_diff, 3)}}",
+    " " = "Q1:     {.val2 {round(qs[[2]], 3)}}",
+    " " = "Median: {.val2 {round(qs[[3]], 3)}}",
+    " " = "Mean:   {.val2 {round(mean(all_diff, na.rm = TRUE), 3)}}",
+    " " = "Q3:     {.val2 {round(qs[[4]], 3)}}",
+    " " = "Max:    {.val2 {round(max_diff, 3)}}"
+  ))
 
   dots <- list(...)
 
   dots$title  <- dots$title %||% paste0("Difference: ", label_a, " \u2212 ", label_b)
 
-  dots$vmin <- dots$vmin %||% tot_range[1]
-  dots$vmax <- dots$vmax %||% tot_range[2]
+  dots$vmin <- dots$vmin %||% min_diff
+  dots$vmax <- dots$vmax %||% max_diff
 
   do.call(plot_vw_surf, c(
     list(lh = lh_diff, rh = rh_diff),
     dots
   ))
+
+  return(all_diff)
 }

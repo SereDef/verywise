@@ -122,7 +122,7 @@ run_vw_fed_aggr <- function(
   payloads_summary <- as.data.frame(site_payloads[
     c('n_obs', 'fs_template', 'n_good_vx', 'verywise_version', 'date_created')])
   
-  cli::cli_verbatim(paste(capture.output(print(payloads_summary)), collapse = "\n"))
+  cli::cli_verbatim(paste(utils::capture.output(print(payloads_summary)), collapse = "\n"))
 
   vw_message(c("i" = "Combined N = {.val {N}} (across {.val2 {K}} sites)."), 
     verbose = verbose)

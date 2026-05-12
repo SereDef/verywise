@@ -11,7 +11,6 @@ run_vw_fed_aggr(
   outp_dir = NULL,
   hemi = c("lh", "rh"),
   fs_template = "fsaverage",
-  fwhm = 10,
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
@@ -38,10 +37,6 @@ files. Defaults to \code{inpt_dir} if \code{NULL}.}
 
 \item{fs_template}{Character. FreeSurfer template surface used for the cortical
 mask (e.g. \code{"fsaverage"}, \code{"fsaverage5"}). Default: \code{"fsaverage"}.}
-
-\item{fwhm}{Numeric. Full-width at half-maximum (mm) of the smoothing kernel
-applied at the site level. Used for informational messages only; smoothing
-must be applied before payload generation. Default: \code{10}.}
 
 \item{seed}{Integer. Random seed passed to the parallel backend for
 reproducibility. Default: \code{3108}.}
