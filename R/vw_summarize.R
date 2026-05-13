@@ -116,20 +116,20 @@ vw_summarize_outp_dir <- function(outp_dir) {
   files <- list.files(outp_dir, recursive = TRUE)
 
   # Parse only files matching {subdir}/{hemi}.{measure}.* 
-  parsed <- regmatches(files, regexec("^([^/]+)/([lr]h)\\.([^.]+)\\.", files))
+  parsed <- regmatches(files, 
+    regexec("^(?:([^/]+)/)?([lr]h)\\.([^.]+)\\.", files, perl = TRUE))
   parsed <- Filter(function(x) length(x) == 4L, parsed)
 
   if (!length(parsed)) {
-    message("No matching files found in: ", outp_dir)
+    vw_message("! No matching files found in: {.file {outp_dir}}")
     return(invisible(NULL))
   }
 
   df <- data.frame(
-    subdir  = vapply(parsed, `[[`, character(1), 2L),
-    hemi    = vapply(parsed, `[[`, character(1), 3L),
+    subdir = vapply(parsed, function(x) if (nzchar(x[2])) x[2] else basename(outp_dir), character(1)),
+    hemi = vapply(parsed, `[[`, character(1), 3L),
     measure = vapply(parsed, `[[`, character(1), 4L),
-    stringsAsFactors = FALSE
-  )
+    stringsAsFactors = FALSE)
 
   # Build result: named list[subdir] -> named list[measure] -> hemi vector
   result <- lapply(
@@ -140,22 +140,26 @@ vw_summarize_outp_dir <- function(outp_dir) {
     )
   )
 
-  # ── CLI output ────────────────────────────────────────────────────────────
-  hemi_tag <- function(h) {
-    col <- if (h == "lh") "\u001b[34m" else "\u001b[31m"
-    paste0(col, "[", h, "]\u001b[0m")
-  }
-
-  cat("\n\u001b[1mOutput directory summary:\u001b[0m", outp_dir, "\n")
-  cat(strrep("\u2500", 50), "\n\n")
+  cli::cli_rule()
+  vw_message("Results directory: {.file {outp_dir}}")
+  cli::cli_rule()
 
   for (subdir in names(result)) {
-    cat("\u001b[1m\u001b[33m\u25b6", subdir, "\u001b[0m\n")
+    vw_message("{.strong {subdir}}")
     measures <- result[[subdir]]
+
+    # compute max measure name width for alignment
+    max_w <- max(nchar(measures))
+
     for (measure in names(measures)) {
-      hemi_str <- paste(vapply(measures[[measure]], hemi_tag, character(1)),
-                        collapse = "  ")
-      cat(sprintf("  \u2022 %-18s %s\n", measure, hemi_str))
+      hemis <- measures[[measure]]
+      hemi_str <- paste(
+        ifelse(hemis == "lh", cli::col_blue("[lh]"), cli::col_red("[rh]")),
+        collapse = "  "
+      )
+      n_space <- 12 - cli::ansi_nchar(measure, type = "width")
+      filler  <- strrep("\u00a0", max(n_space, 1))
+      vw_message(c("*" = "{measure}{filler}{hemi_str}"))
     }
     cat("\n")
   }
