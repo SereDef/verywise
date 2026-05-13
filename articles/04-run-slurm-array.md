@@ -211,6 +211,41 @@ Then simply use `supsubj_dir` as your `subj_dir` argument in
 [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md),
 and we will do the rest :)
 
+## Check if your job is stuck
+
+`verywise` is designed to be fast (but reasonable). Simpler models
+(e.g. with ~10 fixed effects + a random intercept fit in a single
+dataset) will run in a few minutes even under modest resources (e.g. \<
+10 cores).
+
+To get a good sense of how much time and resources your model will need,
+it is a good idea to first test it on a lower-dimensional brain atlas
+(e.g. `fsaverage3` or `fsaverage3`). Don’t forget to pick `chunk_size`
+accordingly, so you can then do some easy math and estimate how long
+does a single model take on average to fit.
+
+Say you got greedy. You are running several high-resolution LMM models
+with many parameters (e.g. \> 15), a complex random effect structure
+(e.g. multiple correlated random effects and \> 10.000 groups), in a
+multiple imputation setting (e.g. with 30 datasets). Even with a good
+parallel set up (e.g. I tried this with 96 workers on my hands), you can
+expect such analyses to take a couple of days to finish running.
+
+If you are not sure whether you should be waiting that long for your
+results, here is a quick way to check that your job did not get stuck:
+
+``` sh
+sstat -j <your_job_ID>.batch --format=JobID,AveCPU,AveRSS,MaxRSS
+```
+
+Or, for more info, log in to the node that is running your job (you can
+see them in `squeue` and peak at what is going on:
+
+``` sh
+ssh <node_name>
+top -u <user_name> # q to exit 
+```
+
 ## 
 
 Next article: [Inspect and *visualize* verywise

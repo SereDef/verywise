@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-05-12</h4>
+            <h4 data-toc-skip class="date">2026-05-13</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/04-run-slurm-array.Rmd" class="external-link"><code>vignettes/articles/04-run-slurm-array.Rmd</code></a></small>
       <div class="d-none name"><code>04-run-slurm-array.Rmd</code></div>
@@ -261,6 +261,35 @@ only once, and re-using it across all your analyses.</p>
 <p>Then simply use <code>supsubj_dir</code> as your
 <code>subj_dir</code> argument in <code><a href="../reference/run_vw_lmm.html">run_vw_lmm()</a></code>, and we will
 do the rest :)</p>
+</div>
+<div class="section level2">
+<h2 id="check-if-your-job-is-stuck">Check if your job is stuck<a class="anchor" aria-label="anchor" href="#check-if-your-job-is-stuck"></a>
+</h2>
+<p><code>verywise</code> is designed to be fast (but reasonable).
+Simpler models (e.g. with ~10 fixed effects + a random intercept fit in
+a single dataset) will run in a few minutes even under modest resources
+(e.g. &lt; 10 cores).</p>
+<p>To get a good sense of how much time and resources your model will
+need, it is a good idea to first test it on a lower-dimensional brain
+atlas (e.g. <code>fsaverage3</code> or <code>fsaverage3</code>). Don’t
+forget to pick <code>chunk_size</code> accordingly, so you can then do
+some easy math and estimate how long does a single model take on average
+to fit.</p>
+<p>Say you got greedy. You are running several high-resolution LMM
+models with many parameters (e.g. &gt; 15), a complex random effect
+structure (e.g. multiple correlated random effects and &gt; 10.000
+groups), in a multiple imputation setting (e.g. with 30 datasets). Even
+with a good parallel set up (e.g. I tried this with 96 workers on my
+hands), you can expect such analyses to take a couple of days to finish
+running.</p>
+<p>If you are not sure whether you should be waiting that long for your
+results, here is a quick way to check that your job did not get
+stuck:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">sstat</span> <span class="at">-j</span> <span class="op">&lt;</span>your_job_ID<span class="op">&gt;</span>.batch <span class="at">--format</span><span class="op">=</span>JobID,AveCPU,AveRSS,MaxRSS</span></code></pre></div>
+<p>Or, for more info, log in to the node that is running your job (you
+can see them in <code>squeue</code> and peak at what is going on:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>node_name<span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">top</span> <span class="at">-u</span> <span class="op">&lt;</span>user_name<span class="op">&gt;</span> <span class="co"># q to exit </span></span></code></pre></div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="section"></h2>

@@ -77,6 +77,9 @@
 - [`outcome_name()`](https://seredef.github.io/verywise/reference/outcome_name.md)
   : Format a Human-Readable Outcome Label
 
+- [`plot_sitrep()`](https://seredef.github.io/verywise/reference/plot_sitrep.md)
+  : Print a plotting environment sit-rep
+
 - [`plot_vw_diff()`](https://seredef.github.io/verywise/reference/plot_vw_diff.md)
   : Plot the vertex-wise difference between two scalar maps
 
