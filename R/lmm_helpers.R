@@ -50,7 +50,7 @@ single_lmm <- function(
 {
 
   if (!is.null(weights) && !is.numeric(weights)) {
-    weights <- imp[, weights]
+    weights <- imp[[weights]]
   }
 
   # Add (vertex) outcome to (single) dataset
