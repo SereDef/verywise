@@ -140,7 +140,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
         ocn <- load.mgh(ocn_file)$x
         # keep only vertices belonging to a significant cluster (ocn is a
         # positive integer label; non-significant vertices are 0)
-        coef[is.na(ocn)] <- NA
+        coef[ocn==0] <- NA
       }
 
     }
