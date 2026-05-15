@@ -66,8 +66,15 @@ except (ImportError, ModuleNotFoundError):
 
 def _ensure_display():
     """Propagate DISPLAY=:99 and silence D-Bus noise into Python's env."""
-    os.environ.setdefault("DISPLAY", ":99")
-    os.environ.setdefault("DBUS_SESSION_BUS_ADDRESS", "disabled:")
+    # os.environ.setdefault("DISPLAY", ":99")
+    # os.environ.setdefault("DBUS_SESSION_BUS_ADDRESS", "disabled:")
+
+    # Use os.environ[] assignment (not setdefault) so that an inherited
+    # DISPLAY=:0 from the login shell cannot shadow Xvfb on :99.
+
+    os.environ["DISPLAY"] = ":99"
+    os.environ["DBUS_SESSION_BUS_ADDRESS"] = "disabled:"
+
 
 def _xvfb_running():
     """Return True if Xvfb is running on display :99 (lock file check)."""
@@ -101,18 +108,18 @@ def _patch_kaleido():
 
     if system != "Linux":
         return  # on Windows: leave kaleido defaults
-
-    ## Ensure DISPLAY and DBUS are visible to Python
-    _ensure_display()
-
-    # Respect an explicit user override — nothing more to do
-    if "KALEIDO_CHROME_ARGS" in os.environ:
-        return
     
     # Xvfb is running on :99 — use the proven-working bare flags
     if _xvfb_running():
+        ## Ensure DISPLAY and DBUS are visible to Python
+        _ensure_display()
+
         os.environ["KALEIDO_CHROME_ARGS"] = "--no-sandbox --disable-dev-shm-usage"
         return
+    
+     # Respect an explicit user override — nothing more to do
+    # if "KALEIDO_CHROME_ARGS" in os.environ:
+    #     return
     
     # No Xvfb on :99 — warn and probe headless fallbacks
     warnings.warn(
