@@ -179,8 +179,13 @@ compute_clusters <- function(stack_path,
   # ── Handle stderr ───────────────────────────────────────────────────────────
   stderr_lines <- readLines(stderr_file, warn = FALSE)
 
-  # Filter the known harmless warning
-  noise_pattern <- "supposed to be reproducible but seed not set"
+  # Filter the known harmless warnings
+  harmless_warnings  <- c(
+    "supposed to be reproducible but seed not set",
+    "reading colortable from annotation file",
+    "colortable with 36 entries read")
+
+  noise_pattern <- paste(harmless_warnings, collapse = "|")
   real_errors   <- stderr_lines[!grepl(noise_pattern, stderr_lines, fixed = FALSE)]
   real_errors   <- real_errors[nzchar(trimws(real_errors))]  # drop blank lines
 
