@@ -27,14 +27,15 @@ consider.
 package.
 
 ``` r
-
 # Run a meta-analysis
 run_vw_meta(
   term = "age", # Which "term" / predictor / effect to pool
   hemi = "lh", # (default) or "rh": which hemisphere to run
   measure = "area", # (default) or any available FreeSurfer metric.
-  res_dirs = c("/path/to/study1/results", "/path/to/study2/results"),
   study_names = c("Study1", "Study2"),
+  study_weights = c(sample_size1, sample_size2), # Or leave NULL for no weighting
+  res_dirs = c("/path/to/study1/results", "/path/to/study2/results"),
+  outp_dir = "/path/to/metaanalysis/results"
   n_cores = 4  # parallel processing
 )
 ```

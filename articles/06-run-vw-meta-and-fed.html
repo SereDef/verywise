@@ -100,16 +100,17 @@ to consider.</p>
 </h2>
 <p><code>verywise</code> implements vertex-wise meta-analysis via the
 <code>metafor</code> package.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run a meta-analysis</span></span>
-<span><span class="fu"><a href="../reference/run_vw_meta.html">run_vw_meta</a></span><span class="op">(</span></span>
-<span>  term <span class="op">=</span> <span class="st">"age"</span>, <span class="co"># Which "term" / predictor / effect to pool</span></span>
-<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
-<span>  measure <span class="op">=</span> <span class="st">"area"</span>, <span class="co"># (default) or any available FreeSurfer metric.</span></span>
-<span>  res_dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"/path/to/study1/results"</span>, <span class="st">"/path/to/study2/results"</span><span class="op">)</span>,</span>
-<span>  study_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Study1"</span>, <span class="st">"Study2"</span><span class="op">)</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># parallel processing</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Run a meta-analysis</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">run_vw_meta</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">term =</span> <span class="st">"age"</span>, <span class="co"># Which "term" / predictor / effect to pool</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">hemi =</span> <span class="st">"lh"</span>, <span class="co"># (default) or "rh": which hemisphere to run</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">measure =</span> <span class="st">"area"</span>, <span class="co"># (default) or any available FreeSurfer metric.</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">study_names =</span> <span class="fu">c</span>(<span class="st">"Study1"</span>, <span class="st">"Study2"</span>),</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">study_weights =</span> <span class="fu">c</span>(sample_size1, sample_size2), <span class="co"># Or leave NULL for no weighting</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">res_dirs =</span> <span class="fu">c</span>(<span class="st">"/path/to/study1/results"</span>, <span class="st">"/path/to/study2/results"</span>),</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">outp_dir =</span> <span class="st">"/path/to/metaanalysis/results"</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">4</span>  <span class="co"># parallel processing</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>)</span></code></pre></div>
 <p>[TODO: expand with more details]</p>
 </div>
 <div class="section level2">
