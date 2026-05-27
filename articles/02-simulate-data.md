@@ -14,7 +14,7 @@ Let’s see how to get there. First, load the package:
 ``` r
 
 library(verywise)
-#> Loaded verywise 1.3.5
+#> Loaded verywise 1.3.5.9000
 ```
 
 Now, decide what data you want to generate. In this (small) example, I

@@ -225,7 +225,10 @@ grant number 16080606).
   : Save file backed matrix (FBM) to MGH file
 
 - [`fbm_col_has_0()`](https://seredef.github.io/verywise/reference/fbm_col_has_0.md)
-  : Check if all row elements are 0 in FBM
+  : Check if any elements are 0 in FBM
+
+- [`fbm_col_has_na()`](https://seredef.github.io/verywise/reference/fbm_col_has_na.md)
+  : Check if any elements are NA in FBM
 
 - [`imp2list()`](https://seredef.github.io/verywise/reference/imp2list.md)
   : Convert imputation object to a list of dataframes

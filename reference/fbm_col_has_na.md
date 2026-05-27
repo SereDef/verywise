@@ -1,13 +1,12 @@
-# Check if any elements are 0 in FBM
+# Check if any elements are NA in FBM
 
-Check if any row elements in a FBM are 0. This is used to clean up the
-super-subject matrix in
-[`mask_cortex`](https://seredef.github.io/verywise/reference/mask_cortex.md).
+Check if any row elements in a FBM are NA. This is used to clean up the
+effect sizes vectors before running a meta-analysis.
 
 ## Usage
 
 ``` r
-fbm_col_has_0(
+fbm_col_has_na(
   X,
   n_cores = 1,
   row.ind = bigstatsr::rows_along(X),
@@ -50,8 +49,9 @@ fbm_col_has_0(
 
 ## Value
 
-A (large) logical vector for where cols contained any 0s.
+A (large) logical vector for where a column contained at least 2
+observed values.
 
 ## Author
 
-Serena Defina, 2024.
+Serena Defina, 2026.

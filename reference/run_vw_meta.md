@@ -13,10 +13,14 @@ run_vw_meta(
   term,
   hemi = c("lh", "rh"),
   measure = "area",
-  res_dirs,
   study_names,
+  study_weights = NULL,
+  res_dirs,
+  outp_dir = NULL,
   fs_template = "fsaverage",
+  seed = 3108,
   n_cores = 1,
+  chunk_size = 1000,
   verbose = TRUE
 )
 ```
@@ -30,41 +34,67 @@ run_vw_meta(
 
 - hemi:
 
-  Character. Hemisphere to analyse (`"lh"` or `"rh"`).
+  Character string specifying which hemisphere to analyze. Options:
+  `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
 
 - measure:
 
   Character. Surface measure, e.g. `'area'`, `'thickness'`, `'volume'`.
   Defaults to `'area'`.
 
+- study_names:
+
+  Character vector of study names (must match the length of `res_dirs`).
+
+- study_weights:
+
+  Numeric vector of study weights (e.g. sample size)
+
 - res_dirs:
 
   Character vector. Path to the directories containing vertex-wise
   result files (`*.mgh`) of each study.
 
-- study_names:
+- outp_dir:
 
-  Character vector of study names (must match the length of `res_dirs`).
+  Character string specifying the output directory for results. If
+  `NULL` (default), creates a "verywise_results" sub-directory in the
+  current working directory (not recommended).
 
 - fs_template:
 
-  Character string specifying the FreeSurfer template surface. The
-  following values are accepted:
+  Character string specifying the FreeSurfer template for vertex
+  registration. Options:
 
-  - fsaverage (default) = 163842 vertices (highest resolution),
+  - `"fsaverage"` (default) = 163842 vertices (highest resolution),
 
-  - fsaverage6 = 40962 vertices,
+  - `"fsaverage6"` = 40962 vertices,
 
-  - fsaverage5 = 10242 vertices,
+  - `"fsaverage5"` = 10242 vertices,
 
-  - fsaverage4 = 2562 vertices,
+  - `"fsaverage4"` = 2562 vertices,
 
-  - fsaverage3 = 642 vertices
+  - `"fsaverage3"` = 642 vertices
+
+  Note that lower resolutions should be only used to downsample the
+  brain map, for faster model tuning. The final analyses should also run
+  using `fs_template = "fsaverage"` to avoid (small) imprecisions in
+  vertex registration and smoothing.
+
+- seed:
+
+  Integer specifying the random seed for reproducibility Default: 3108.
 
 - n_cores:
 
-  Integer. Number of CPU cores to use for parallel processing (default:
-  1).
+  Integer specifying the number of CPU cores for parallel processing.
+  Default: 1.
+
+- chunk_size:
+
+  Integer specifying the number of vertices processed per chunk in
+  parallel operations. Larger values use more memory but may be faster.
+  Default: 1000.
 
 - verbose:
 
@@ -105,15 +135,13 @@ downstream neuroimaging analysis.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (FALSE) { # dir.exists("study1/results")
 run_vw_meta(
   term = "age",
   hemi = "lh",
   measure = "area",
-  res_dirs = c("study1/results", "study2/results"),
   study_names = c("Study1", "Study2"),
-  fs_template = "fsaverage",
-  n_cores = 4
+  res_dirs = c("study1/results", "study2/results")
 )
-} # }
+}
 ```
