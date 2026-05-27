@@ -8,35 +8,60 @@ run_vw_meta(
   term,
   hemi = c("lh", "rh"),
   measure = "area",
-  res_dirs,
   study_names,
+  study_weights = NULL,
+  res_dirs,
+  outp_dir = NULL,
   fs_template = "fsaverage",
+  seed = 3108,
   n_cores = 1,
+  chunk_size = 1000,
   verbose = TRUE
 )
 }
 \arguments{
 \item{term}{Character. Name of the model term to visualize (matches entries in \code{stack_names.txt}).}
 
-\item{hemi}{Character. Hemisphere to analyse (\code{"lh"} or \code{"rh"}).}
+\item{hemi}{Character string specifying which hemisphere to analyze.
+Options: \code{"lh"} (left hemisphere: default), \code{"rh"} (right hemisphere).}
 
 \item{measure}{Character. Surface measure, e.g. \code{'area'}, \code{'thickness'}, \code{'volume'}. Defaults to \code{'area'}.}
 
-\item{res_dirs}{Character vector. Path to the directories containing vertex-wise result files (\verb{*.mgh}) of each study.}
-
 \item{study_names}{Character vector of study names (must match the length of \code{res_dirs}).}
 
-\item{fs_template}{Character string specifying the FreeSurfer template surface.
-The following values are accepted:
-\itemize{
-\item fsaverage (default) = 163842 vertices (highest resolution),
-\item fsaverage6 = 40962 vertices,
-\item fsaverage5 = 10242 vertices,
-\item fsaverage4 = 2562 vertices,
-\item fsaverage3 = 642 vertices
-}}
+\item{study_weights}{Numeric vector of study weights (e.g. sample size)}
 
-\item{n_cores}{Integer. Number of CPU cores to use for parallel processing (default: 1).}
+\item{res_dirs}{Character vector. Path to the directories containing vertex-wise result files (\verb{*.mgh}) of each study.}
+
+\item{outp_dir}{Character string specifying the output directory for results.
+If \code{NULL} (default), creates a "verywise_results" sub-directory in the
+current working directory (not recommended).}
+
+\item{fs_template}{Character string specifying the FreeSurfer template for
+vertex registration. Options:
+\itemize{
+\item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+\item \code{"fsaverage6"} = 40962 vertices,
+\item \code{"fsaverage5"} = 10242 vertices,
+\item \code{"fsaverage4"} = 2562 vertices,
+\item \code{"fsaverage3"} = 642 vertices
+}
+Note that lower resolutions should be only used to downsample the brain
+map, for faster model tuning. The final analyses should also run using
+\code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
+registration and smoothing.}
+
+\item{seed}{Integer specifying the random seed for reproducibility
+Default: 3108.}
+
+\item{n_cores}{Integer specifying the number of CPU cores for parallel
+processing.
+Default: 1.}
+
+\item{chunk_size}{Integer specifying the number of vertices processed per
+chunk in parallel operations. Larger values use more memory but may be
+faster.
+Default: 1000.}
 
 \item{verbose}{Logical. verbose execution (default: TRUE)}
 }
@@ -60,18 +85,15 @@ and runs a random-effects meta-analysis using \code{\link[metafor]{rma}}. Result
 Filebacked Big Matrices (FBM) and as MGH files for downstream neuroimaging analysis.
 }
 \examples{
-\dontrun{
+\dontshow{if (dir.exists("study1/results")) withAutoprint(\{ # examplesIf}
 run_vw_meta(
   term = "age",
   hemi = "lh",
   measure = "area",
-  res_dirs = c("study1/results", "study2/results"),
   study_names = c("Study1", "Study2"),
-  fs_template = "fsaverage",
-  n_cores = 4
+  res_dirs = c("study1/results", "study2/results")
 )
-}
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[metafor]{rma}}, \code{\link[bigstatsr]{FBM}}

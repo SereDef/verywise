@@ -60,9 +60,11 @@ convert_to_mgh <- function(vw_results,
                            verbose = TRUE){
   
   if (verbose) cli::cli_progress_step(
-    "Convert coefficients, SEs, and p-values and redisuals to .mgh format")
+    "Convert coefficients, SEs, and p-values to .mgh format")
 
   lapply(stat_names, function(stat_name) {
+
+    mode <- "1row.1file"
 
     if (stat_name == "resid") {
       stat_mgh_paths <- paste(result_path, "residuals.mgh", sep = ".")
@@ -71,12 +73,10 @@ convert_to_mgh <- function(vw_results,
     } else if (stat_name == 'fitstats') {
       stat_mgh_paths <- paste(result_path, c('singular_fit','aic', 'icc','r2_marginal', 'r2_conditional'), 
                               "mgh", sep = ".")
-       mode <- "1row.1file"
-    
+    } else if (is.null(stacks)) {
+      stat_mgh_paths <- paste(result_path, stat_name, "mgh", sep = ".")
     } else {
-      stat_mgh_paths <- paste(result_path, paste0("stack", stacks),
-                              stat_name, "mgh", sep = ".")
-      mode <- "1row.1file"
+      stat_mgh_paths <- paste(result_path, paste0("stack", stacks), stat_name, "mgh", sep = ".")
     }
 
     # Apply -log10 transformation
@@ -89,8 +89,6 @@ convert_to_mgh <- function(vw_results,
                             backingfile = gsub(".p.bk$", ".-log10p",
                                                vw_p$backingfile, fixed = TRUE))
 
-      # fbm[] <- -1 * log10(vw_p[])
-
       # Memory safe transformation
       bigstatsr::big_apply(
         X = vw_p,
@@ -101,6 +99,22 @@ convert_to_mgh <- function(vw_results,
         ind = seq_len(vw_p$ncol),
         block.size = 1000
       )
+
+    } else if (stat_name == "fdr") {
+
+     if (verbose) cli::cli_progress_step("FDR correction", spinner=TRUE)
+
+      vw_p <- vw_results[["p"]]
+      fbm <- bigstatsr::FBM(nrow = vw_p$nrow,
+                            ncol = vw_p$ncol,
+                            type = vw_p$type_chr,
+                            backingfile = gsub(".p.bk$", ".fdr",
+                                               vw_p$backingfile, fixed = TRUE))
+
+      # TMP: not memory safe transformation
+      fbm[] <- stats::p.adjust(vw_p[], method = 'BH')
+
+      if (verbose) cli::cli_progress_done()
 
     } else {
       fbm <- vw_results[[stat_name]]

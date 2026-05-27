@@ -25,7 +25,7 @@ vw_results <- list(
 test_that("convert_to_mgh writes correct output for basic stats", {
 
   tmpdir <- withr::local_tempdir()
-  dir.create(tmpdir, recursive = TRUE)
+  dir.create(tmpdir, recursive = TRUE, showWarnings = FALSE)
 
   result_path <- file.path(tmpdir, "stats/hemi.measure")
 

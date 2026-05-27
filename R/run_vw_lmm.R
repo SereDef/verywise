@@ -274,7 +274,7 @@ run_vw_lmm <- function(
 
   n_cores <- check_cores(n_cores)
 
-  if (verbose) cli::cli_process_done()
+  if (verbose) cli::cli_progress_done()
 
   # FreeSurfer
   check_freesurfer_setup(FS_HOME, verbose = verbose)

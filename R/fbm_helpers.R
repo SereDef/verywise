@@ -1,9 +1,9 @@
 # ============================== FBM operations ===============================
 #' @title
-#' Check if all row elements are 0 in FBM
+#' Check if any elements are 0 in FBM
 #'
 #' @description
-#' Check if all row elements in a FBM are 0. This is used to clean up the
+#' Check if any row elements in a FBM are 0. This is used to clean up the
 #' super-subject matrix in \code{\link{mask_cortex}}.
 #'
 #' @param X : the file-backed matrix (FBM) object
@@ -20,7 +20,7 @@
 #'
 #' @author Serena Defina, 2024.
 #'
-#' @return A (large) logical vector for where rows are all 0.
+#' @return A (large) logical vector for where cols contained any 0s.
 #'
 fbm_col_has_0 <- function(X, n_cores = 1,
                           row.ind = bigstatsr::rows_along(X),
@@ -50,6 +50,62 @@ fbm_col_has_0 <- function(X, n_cores = 1,
     vw_message(
       c("!" = "Ignoring {.warn {pretty_problem_count}} vertices ({problem_percent}%) that contained 0 values.",
         " " = "These may be located at the edge of the cortical map and are potentially  problematic."), 
+        verbose = verbose)
+  }
+  return(problem_verts)
+}
+
+
+#' @title
+#' Check if any elements are NA in FBM
+#'
+#' @description
+#' Check if any row elements in a FBM are NA. This is used to clean up the
+#' effect sizes vectors before running a meta-analysis. 
+#'
+#' @param X : the file-backed matrix (FBM) object
+#' @param n_cores : (default = 1) number of cores for parellalization
+#' @param row.ind : indicator for rows
+#' @param col.ind : indicator for columns
+#' @param row.mask : (default = NULL) specify a subset of rows
+#' @param col.mask : (default = NULL) specify a subset of columns
+#' @param verbose : (default = TRUE)
+#'
+#' @importFrom bigstatsr rows_along
+#' @importFrom bigstatsr cols_along
+#' @importFrom bigstatsr big_apply
+#'
+#' @author Serena Defina, 2026.
+#'
+#' @return A (large) logical vector for where a column contained at least 2 observed values.
+#'
+fbm_col_has_na <- function(X, n_cores = 1,
+                          row.ind = bigstatsr::rows_along(X),
+                          col.ind = bigstatsr::cols_along(X),
+                          row.mask = NULL, col.mask = NULL,
+                          verbose = FALSE) {
+  # Any sub-selection?
+  if (is.numeric(row.mask)) row.mask <- as.logical(row.mask)
+  if (is.numeric(col.mask)) col.mask <- as.logical(col.mask)
+  if (!is.null(row.mask)) row.ind <- row.ind[row.mask]
+  if (!is.null(col.mask)) col.ind <- col.ind[col.mask]
+
+  problem_verts <- bigstatsr::big_apply(X,
+                                        a.FUN = function(X, ind, row.ind) {
+                                          apply(X[row.ind, ind, drop = FALSE], 2,
+                                            function(q) sum(!is.na(q)) < 2)},
+                                        a.combine = "c",
+                                        ncores = n_cores,
+                                        ind = col.ind,
+                                        row.ind = row.ind)
+  
+  problem_count <- sum(problem_verts, na.rm = TRUE)
+  if (problem_count > 0) {
+    pretty_problem_count <- format(sum(problem_verts), big.mark = ",", scientific = FALSE)
+    problem_percent <- round(problem_count / X$ncol * 100)
+    vw_message(
+      c("!" = "Ignoring {.warn {pretty_problem_count}} vertices ({problem_percent}%) with <2 study estimates.",
+        " " = "For these, no meaningful meta-analytical estimate can be computed."), 
         verbose = verbose)
   }
   return(problem_verts)

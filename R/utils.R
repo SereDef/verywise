@@ -41,3 +41,7 @@ list.dirs.till <- function(path, n) {
 
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
+
+
+#' @importFrom cli cli_progress_step cli_progress_done
+NULL

@@ -29,20 +29,19 @@ check_path <- function(dir_path, create_if_not = FALSE) { # file_exists = NULL
 
   if (param_name == "outp_dir" & is.null(dir_path)) {
     outp_dir <- file.path(getwd(), "verywise_results")
-    vw_message(" ! WARNING: outpur directory unspecified, which is not recommended.",
-                 " You can find the results at ", outp_dir)
+    vw_message(c("!"="output directory unspecified, which is not recommended.",
+                 "i"="You can find the results at {.file {outp_dir}}"))
     dir.create(outp_dir, showWarnings = FALSE)
     return(outp_dir)
   }
 
   if (!dir.exists(dir_path)) {
     if (create_if_not) {
-      vw_message(sprintf(
-        " * the `%s` specified ('%s') does not exist.\n   I'll try to create it.",
-        param_name, dir_path))
+      vw_message(c("!"="`{param_name}` specified ({.file {dir_path}}) does not exist.",
+                   " "= "I'll try to create it."))
       dir.create(dir_path, recursive=TRUE)
     } else {
-      stop(sprintf("The `%s` specified ('%s') does not exist.", param_name, dir_path))
+      vw_error("`{param_name}` specified ({.file {dir_path}}) does not exist.")
     }
   }
 
@@ -138,27 +137,6 @@ check_stack_file <- function(fixed_terms, outp_dir) {
   }
 }
 
-# check_ss_exists <- function(path, ss_file) {
-
-#   ss_path <- file.path(path, ss_file)
-
-#   if (!file.exists(ss_path)) {
-#     return(FALSE)
-#   }
-
-#   rn_file <- gsub('.fsaverage\\d*\\.supersubject.rds', '.ss.rownames.csv',
-#                   ss_file)
-#   rn_path <- file.path(path, rn_file)
-
-#   if (!file.exists(rn_path)) {
-#     param_name <- deparse(substitute(path))
-#     stop(sprintf("A `%s` file was found in `%s`, but its `ss.rownames.csv` is missing.",
-#                  ss_file, param_name))
-
-#   }
-#   return(TRUE)
-# }
-
 check_ss_exists <- function(path, hemi, measure, fs_template = "fsaverage") {
 
   # First try the exact requested template
@@ -198,11 +176,8 @@ check_ss_exists <- function(path, hemi, measure, fs_template = "fsaverage") {
   rn_file <- sub("\\.fsaverage[^.]*\\.supersubject\\.rds$", ".ss.rownames.csv", ss_file)
   rn_path <- file.path(path, rn_file)
   if (!file.exists(rn_path)) {
-    stop(sprintf(
-      "Super-subject file '%s' found in '%s' but its '.ss.rownames.csv' is missing.\n",
-      ss_file, path,
-      "Re-run build_supersubject() with save_rds = TRUE to regenerate it."
-    ))
+    vw_error(c("x" = "Super-subject file {.err {ss_file}} found in {.file {path}} but its `.ss.rownames.csv` is missing.",
+               ">" = "Re-run build_supersubject() with save_rds = TRUE to regenerate it."))
   }
   invisible(TRUE)
 }
@@ -231,20 +206,17 @@ check_cores <- function(n_cores){
   avail_cores <- parallelly::availableCores()
   avail_connections <- parallelly::freeConnections()
 
-  if (n_cores < 1) stop("`n_cores` should be an integer that is 1 or higher.")
+  if (n_cores < 1) vw_error("`n_cores` should be an integer that is 1 or higher.")
 
   if (n_cores > avail_cores) {
-    vw_message(" * WARNING: You requested ", n_cores, " cores but only ",
-               avail_cores," are available.\n   Resetting `n_cores` to ",
-               avail_cores-1, ".", verbose = TRUE)
+    vw_message(c("!" = "You requested {n_cores} cores but only {avail_cores} are available.", 
+                 " " = "Resetting `n_cores` to {.val {avail_cores-1}}."), verbose = TRUE)
     n_cores <- as.integer(avail_cores-1)
   }
 
   if (n_cores > avail_connections) {
-    vw_message(" * WARNING: ", n_cores, " cores excedes R limit of ",
-               avail_connections, " free connections for user operations. ",
-               "\n   Reducing the number of parallel processes to ",
-               avail_connections-1, ".", verbose = TRUE)
+    vw_message(c("!" = "{n_cores} cores exceeds R limit of {avail_connections} free connections for user operations.", 
+                 " " = "Reducing the number of parallel processes to {.val {avail_connections-1}}."), verbose = TRUE)
     n_cores <- as.integer(min(n_cores, parallelly::freeConnections() - 1))
   }
 

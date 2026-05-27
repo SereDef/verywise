@@ -86,31 +86,29 @@ test_that("check_data_list validates structure and contents", {
 })
 
 test_that("check_path creates or checks path correctly", {
-  tmp <- tempfile()
+
+  tmp <- file.path(withr::local_tempdir(), "nonexistent_subdir")
 
   # check_path errors if directory does not exist
-  expect_error(check_path(tmp),
-               regexp = "does not exist")
-  # check_path warns and creates the directory when create_if_not = TRUE
-  expect_message(check_path(tmp, create_if_not = TRUE),
-                 regexp = "does not exist.*create it")
-  expect_true(dir.exists(tmp))
+  expect_error(check_path(tmp), regexp = "does not exist")
 
-  # check_path returns NULL if file does not exist
-  # expect_null(check_path(tmp, file_exists = "not_a_file.txt"))
-  # check_path returns the file path if file exists
-  # file.create(file.path(tmp, "a_file.txt"))
-  # expect_equal(check_path(tmp, file_exists = "a_file.txt"),
-  #              file.path(tmp, "a_file.txt"))
-  # check_path handles vectors of file_exists as expected (first file found)\
-  # dir.create(file.path(tmp, "nest"), recursive = TRUE, showWarnings = FALSE)
-  # file.create(file.path(tmp, "nest", "a_nested_file.txt"))
-  # expect_equal(check_path(tmp, file_exists = c("a_file.txt",
-  #                                              "nest/a_nested_file.txt")),
-  #              file.path(tmp, "a_file.txt"))
-  # expect_equal(check_path(tmp, file_exists = c("a_nested_file.txt",
-  #                                              "nest/a_nested_file.txt")),
-  #              file.path(tmp, "nest/a_nested_file.txt"))
+  tmp2 <- file.path(withr::local_tempdir(), "should_be_created")
+  expect_false(dir.exists(tmp2))
+  
+  # check_path warns and creates the directory when create_if_not = TRUE
+  expect_no_error(check_path(tmp2, create_if_not = TRUE))
+  expect_true(dir.exists(tmp2))
+
+  tmp3 <- withr::local_tempdir()
+  result <- check_path(tmp3)
+  expect_equal(result, tmp3)
+
+  outp_dir <- NULL
+  result_default <- check_path(outp_dir)
+  expect_true(dir.exists(result_default))
+  expect_match(result_default, "verywise_results$")
+  unlink(result_default, recursive = TRUE)  # cleanup
+
 })
 
 test_that("check_stack_file writes or validates stack_names.txt", {
