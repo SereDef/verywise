@@ -152,7 +152,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
     } else if (is.character(threshold) && startsWith(threshold, "fdr")) {
       
       fdr_file <- list.files(res_dir,
-        pattern = paste0("^", h, "\\.", measure, "\\.", stack, "\\fdr.mgh$"),
+        pattern = paste0("^", h, "\\.", measure, "\\.", stack, "\\.fdr.mgh$"),
         full.names = TRUE)
       
       if (length(fdr_file) == 0) {
