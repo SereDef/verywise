@@ -16,6 +16,8 @@
 #' @param outp_dir Character string specifying the output directory for results.
 #'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 #'   current working directory (not recommended).
+#' @param mtc Character string: multiple testing correction strategy. 
+#'   Options: `"fdr"` (False Discovery Rate: default), `"fs"` (FreeSurfer cluster correction).
 #' @param fs_template Character string specifying the FreeSurfer template for
 #'   vertex registration. Options:
 #'   \itemize{
@@ -38,6 +40,25 @@
 #'   chunk in parallel operations. Larger values use more memory but may be
 #'   faster.
 #'   Default: 1000.
+#' @param FS_HOME Character string specifying the FreeSurfer home directory.
+#'   Defaults to \code{FREESURFER_HOME} environment variable.
+#' @param mcz_thr Numeric value for the Monte Carlo simulation threshold. 
+#' Any of the following are accepted (equivalent values are separated by `/`):
+#'   \itemize{
+#'   \item 13 / 1.3 / 0.05,
+#'   \item 20 / 2.0 / 0.01,
+#'   \item 23 / 2.3 / 0.005,
+#'   \item 30 / 3.0 / 0.001, \* default
+#'   \item 33 / 3.3 / 0.0005,
+#'   \item 40 / 4.0 / 0.0001.
+#' }
+#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of all
+#'  corrections). Set this should be set to `0.025` when both hemispheres are analyzed,
+#'  and `0.05` for single hemisphere analyses.
+#'  Default: `0.025`.
+#' @param save_optional_cluster_info Logical indicating whether to save additional
+#'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+#'  for details. Default: \code{FALSE}.
 #' @param verbose Logical. verbose execution (default: TRUE)
 #'
 #' @return A named list with three \code{FBM} objects:
@@ -72,12 +93,17 @@ run_vw_meta <- function(term,
                         study_weights = NULL,
                         res_dirs,
                         outp_dir = NULL,
+                        mtc = 'fdr',
                         fs_template = 'fsaverage',
-                        # weights = NULL,
                         # Reproducibility and parallel processing
                         seed = 3108,
                         n_cores = 1,
                         chunk_size = 1000,
+                        # Cluster estimation
+                        FS_HOME = Sys.getenv("FREESURFER_HOME"),
+                        mcz_thr = 30,
+                        cwp_thr = 0.025,
+                        save_optional_cluster_info = FALSE,
                         verbose = TRUE) {
   
   vw_init_message('Meta-analysis', verbose = verbose)
@@ -133,10 +159,25 @@ run_vw_meta <- function(term,
     
   }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
+  n_cores <- check_cores(n_cores)
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
 
-  n_cores <- check_cores(n_cores)
+  if (mtc == 'fs') {
+    check_numeric_param(mcz_thr, set=c(13, 20, 23, 30, 33, 40))
+    check_numeric_param(cwp_thr, set=c(0.025, 0.05))
+
+    check_freesurfer_setup(FS_HOME, verbose = verbose)
+
+    fwhms <- vapply(res_dirs, function(s) {
+      as.numeric(readLines(file.path(s, paste(hemi, measure, 'fwhm.dat', sep='.'))))
+    }, FUN.VALUE = numeric(1), USE.NAMES = FALSE)
+
+    fwhm <- mean(fwhms)
+
+    vw_message(c("i"="Average smoothness = {.val {fwhm}}", 
+                 " "="input values {fwhms}"))
+  }
 
   # Cortical mask
   is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
@@ -266,15 +307,52 @@ run_vw_meta <- function(term,
   vw_message("Post-processing", type='step', verbose = verbose)
 
   # Save model statistics into separate .mgh files
+  pval_trans <- switch(mtc, 
+    fdr = 'fdr',
+    fs = '-log10p')
+  
   convert_to_mgh(out,
                  result_path,
                  stacks = NULL,
-                 stat_names = c("coef", "se", "p", "fdr"),
+                 stat_names = c("coef", "se", "p", pval_trans),
                  verbose = verbose)
-  
-  vw_summarize_model_est(coef = out$coef, term_names = term[1], verbose = verbose)
+
+  if (mtc == 'fs') {
+    if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
+    
+    ocn <- compute_clusters(stack_path = result_path,
+                      hemi = hemi,
+                      fwhm = fwhm,
+                      FS_HOME = FS_HOME,
+                      mcz_thr = mcz_thr,
+                      cwp_thr = cwp_thr,
+                      fs_template = fs_template,
+                      full_surfcluster_output = save_optional_cluster_info,
+                      mask = NULL,
+                      verbose = TRUE)
+      
+    if (!is.null(ocn)) {
+      ct_bk_path <- build_output_bks(result_path, res_bk_names = c('meta.clust'), verbose = FALSE)
+      ct_vw <- bigstatsr::FBM(1, n_verts, init = NA_real_, 
+        type = fbm_precision, backingfile = ct_bk_path["meta.clust"])
+      
+      ct_vw[1,] <- ocn
+    }
+
+    if (verbose) cli::cli_progress_done()
+    
+    out[['clust']] <- ct_vw
+
+    vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
+      term_names = term[1], verbose = verbose)
+  } else {
+
+    # TODO better summary for FDR corrected 
+    vw_summarize_model_est(coef = out$coef, term_names = term[1], verbose = verbose)
+    
+  }
 
   vw_message("Done! :)", type='step', verbose = verbose)
 
   return(out)
-}
+  }

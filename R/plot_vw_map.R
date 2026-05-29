@@ -89,24 +89,30 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
     vw_error("Results directory does not exist: {.file {res_dir}}")
 
   stack_file <- file.path(res_dir, "stack_names.txt")
-  if (!file.exists(stack_file))
-    vw_error(c(
-      "Cannot find {.file stack_names.txt} in {.file {res_dir}}.",
-      " " = "Results folder may be incorrect or corrupted."
+  if (!file.exists(stack_file)) {
+    stack = term # assume this is a meta-analysis? 
+    # vw_error(c(
+    #   "Cannot find {.file stack_names.txt} in {.file {res_dir}}.",
+    #   " " = "Results folder may be incorrect or corrupted."
+    # ))
+    vw_message(c(
+      "i" = "Cannot find {.file stack_names.txt} in {.file {res_dir}}.",
+      " " = "Assuming this is a meta-analysis."
     ))
 
-  # Read existing file
-  stack_ids <- utils::read.table(stack_file, header = TRUE, sep = "\t",
-                                 stringsAsFactors = FALSE)
-    if (!term %in% stack_ids$stack_name)
-      vw_error(c(
-        "Term {.val {term}} not found in {.file stack_names.txt}.",
-        "i" = "Available terms: {.or {.val {stack_ids$stack_name}}}"
-      ))
-  
-  # Extract stack
-  stack <- paste0('stack', stack_ids[ stack_ids$stack_name == term, 'stack_number'])
-
+  } else {
+    # Read existing file
+    stack_ids <- utils::read.table(stack_file, header = TRUE, sep = "\t",
+                                  stringsAsFactors = FALSE)
+      if (!term %in% stack_ids$stack_name)
+        vw_error(c(
+          "Term {.val {term}} not found in {.file stack_names.txt}.",
+          "i" = "Available terms: {.or {.val {stack_ids$stack_name}}}"
+        ))
+    
+    # Extract stack
+    stack <- paste0('stack', stack_ids[ stack_ids$stack_name == term, 'stack_number'])
+  }
   
   hemis_to_load <- if (hemi == "both") c("lh", "rh") else hemi
 
@@ -143,9 +149,29 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
         coef[ocn==0] <- NA
       }
 
+    } else if (is.character(threshold) && startsWith(threshold, "fdr")) {
+      
+      fdr_file <- list.files(res_dir,
+        pattern = paste0("^", h, "\\.", measure, "\\.", stack, "\\fdr.mgh$"),
+        full.names = TRUE)
+      
+      if (length(fdr_file) == 0) {
+        vw_message(c("!" = "No FDR file found for {h}.", "i" = "Plotting unmasked coefficients."))
+      } else {
+        if (length(fdr_file) > 1) {
+          vw_message("!" = "Multiple FDR files found for {h}, using: {.file {basename(fdr_file[1])}}")
+          fdr_file <- fdr_file[1]
+        }
+
+        fdr <- load.mgh(fdr_file)$x
+        # keep only vertices belonging to a significant cluster (ocn is a
+        # positive integer label; non-significant vertices are 0)
+        coef[eval(str2lang(threshold))] <- NA
+      } 
     }
+
     coef
-  }
+    }
 
   lh_data <- if ("lh" %in% hemis_to_load) .load_hemi_data("lh") else NULL
   rh_data <- if ("rh" %in% hemis_to_load) .load_hemi_data("rh") else NULL

@@ -12,10 +12,15 @@ run_vw_meta(
   study_weights = NULL,
   res_dirs,
   outp_dir = NULL,
+  mtc = "fdr",
   fs_template = "fsaverage",
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  FS_HOME = Sys.getenv("FREESURFER_HOME"),
+  mcz_thr = 30,
+  cwp_thr = 0.025,
+  save_optional_cluster_info = FALSE,
   verbose = TRUE
 )
 }
@@ -36,6 +41,9 @@ Options: \code{"lh"} (left hemisphere: default), \code{"rh"} (right hemisphere).
 \item{outp_dir}{Character string specifying the output directory for results.
 If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 current working directory (not recommended).}
+
+\item{mtc}{Character string: multiple testing correction strategy.
+Options: \code{"fdr"} (False Discovery Rate: default), \code{"fs"} (FreeSurfer cluster correction).}
 
 \item{fs_template}{Character string specifying the FreeSurfer template for
 vertex registration. Options:
@@ -62,6 +70,29 @@ Default: 1.}
 chunk in parallel operations. Larger values use more memory but may be
 faster.
 Default: 1000.}
+
+\item{FS_HOME}{Character string specifying the FreeSurfer home directory.
+Defaults to \code{FREESURFER_HOME} environment variable.}
+
+\item{mcz_thr}{Numeric value for the Monte Carlo simulation threshold.
+Any of the following are accepted (equivalent values are separated by \code{/}):
+\itemize{
+\item 13 / 1.3 / 0.05,
+\item 20 / 2.0 / 0.01,
+\item 23 / 2.3 / 0.005,
+\item 30 / 3.0 / 0.001, \* default
+\item 33 / 3.3 / 0.0005,
+\item 40 / 4.0 / 0.0001.
+}}
+
+\item{cwp_thr}{Numeric value for cluster-wise p-value threshold (on top of all
+corrections). Set this should be set to \code{0.025} when both hemispheres are analyzed,
+and \code{0.05} for single hemisphere analyses.
+Default: \code{0.025}.}
+
+\item{save_optional_cluster_info}{Logical indicating whether to save additional
+output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+for details. Default: \code{FALSE}.}
 
 \item{verbose}{Logical. verbose execution (default: TRUE)}
 }

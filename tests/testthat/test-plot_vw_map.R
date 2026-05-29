@@ -30,13 +30,13 @@ test_that("errors if res_dir does not exist", {
   )
 })
 
-test_that("errors if stack_names.txt is missing", {
-  dir <- withr::local_tempdir()
-  expect_error(
-    plot_vw_map(dir, term = "age"),
-    regexp = "Cannot find 'stack_names.txt'" 
-  )
-})
+# test_that("errors if stack_names.txt is missing", {
+#   dir <- withr::local_tempdir()
+#   expect_error(
+#     plot_vw_map(dir, term = "age"),
+#     regexp = "Cannot find 'stack_names.txt'" 
+#   )
+# })
 
 test_that("errors if term is absent from stack_names.txt", {
   expect_snapshot(
