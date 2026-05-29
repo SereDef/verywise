@@ -78,6 +78,8 @@ run_vw_meta(
   measure = "area", # (default) or any available FreeSurfer metric.
   res_dirs = c("/path/to/study1/results", "/path/to/study2/results"),
   study_names = c("Study1", "Study2"),
+  outp_dir = "path/to/meta/results",
+  mtc = 'fdr', # multiple test correction (fdr or FreeSurfer MC cluster "fs")
   n_cores = 4  # parallel processing
 )
 ```
@@ -131,16 +133,23 @@ run this locally or try it out
 Plots can also be generated using `verywise` like so:
 
 ``` r
-# Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)
+# Plot result brain map (reticulate for interface with Python-based plotting libraries)
 plot_vw_map(
-  term = "age",
-  hemi = "lh",
-  measure = "area",
   res_dir = "/path/to/output",
-  outline_rois = c("entorhinal", "precuneus"),
-  fs_home = "/path/to/FREESURFER_HOME"
+  term = "age",
+  measure = 'area', 
+  hemi = "both", # or single "lh", "rh"
+  surface = "pial", # or "inflated"
+  threshold = 'cws', # cluster-wise significant, or e.g. "fdr<0.05"
+  to_file = NULL, # interactive visualization, or set to "path/to/figure.png" for static output
+  # optional argument 
+  fs_template = "fsaverage",
+  fs_home = "/path/to/FREESURFER_HOME", # quicker: use local maps 
 )
 ```
+
+See also `plot_vw_surf()` for additional arguments and `plot_vw_diff()`
+for quickly plotting vertex-wise differences between two brain maps.
 
 ## Tutorials and documentation
 

@@ -73,13 +73,6 @@ Troubleshooting:
 ps aux | grep -i "Xvfb.*:99"
 ```
 
-reticulate::py_run_string("
-import os
-os.environ['DISPLAY'] = ':99'
-os.environ.pop('KALEIDO_CHROME_ARGS', None)  # clear any previous flags
-os.environ['KALEIDO_CHROME_ARGS'] = '--no-sandbox --disable-dev-shm-usage'
-print('DISPLAY:', os.environ['DISPLAY'])
-")
 
 ## {-}
 Next article: [Run vertex-wise federated / meta- analyses](06-run-vw-meta-and-fed.html)
