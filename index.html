@@ -124,6 +124,8 @@
 <span>  measure <span class="op">=</span> <span class="st">"area"</span>, <span class="co"># (default) or any available FreeSurfer metric.</span></span>
 <span>  res_dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"/path/to/study1/results"</span>, <span class="st">"/path/to/study2/results"</span><span class="op">)</span>,</span>
 <span>  study_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Study1"</span>, <span class="st">"Study2"</span><span class="op">)</span>,</span>
+<span>  outp_dir <span class="op">=</span> <span class="st">"path/to/meta/results"</span>,</span>
+<span>  mtc <span class="op">=</span> <span class="st">'fdr'</span>, <span class="co"># multiple test correction (fdr or FreeSurfer MC cluster "fs")</span></span>
 <span>  n_cores <span class="op">=</span> <span class="fl">4</span>  <span class="co"># parallel processing</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -170,15 +172,20 @@
 <p>To inspect and plot your results, you can use our interactive web application, <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>. You can run this locally or try it out <a href="https://seredef-verywise-wizard.share.connect.posit.cloud/" class="external-link">here</a>.</p>
 <p>Plots can also be generated using <code>verywise</code> like so:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)</span></span>
+<code class="sourceCode R"><span><span class="co"># Plot result brain map (reticulate for interface with Python-based plotting libraries)</span></span>
 <span><span class="fu"><a href="reference/plot_vw_map.html">plot_vw_map</a></span><span class="op">(</span></span>
-<span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
-<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">"area"</span>,</span>
 <span>  res_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>,</span>
-<span>  outline_rois <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entorhinal"</span>, <span class="st">"precuneus"</span><span class="op">)</span>,</span>
-<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
+<span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
+<span>  measure <span class="op">=</span> <span class="st">'area'</span>, </span>
+<span>  hemi <span class="op">=</span> <span class="st">"both"</span>, <span class="co"># or single "lh", "rh"</span></span>
+<span>  surface <span class="op">=</span> <span class="st">"pial"</span>, <span class="co"># or "inflated"</span></span>
+<span>  threshold <span class="op">=</span> <span class="st">'cws'</span>, <span class="co"># cluster-wise significant, or e.g. "fdr&lt;0.05"</span></span>
+<span>  to_file <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># interactive visualization, or set to "path/to/figure.png" for static output</span></span>
+<span>  <span class="co"># optional argument </span></span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span>, <span class="co"># quicker: use local maps </span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>See also <code><a href="reference/plot_vw_surf.html">plot_vw_surf()</a></code> for additional arguments and <code><a href="reference/plot_vw_diff.html">plot_vw_diff()</a></code> for quickly plotting vertex-wise differences between two brain maps.</p>
 </div>
 <div class="section level2">
 <h2 id="tutorials-and-documentation">Tutorials and documentation<a class="anchor" aria-label="anchor" href="#tutorials-and-documentation"></a>
