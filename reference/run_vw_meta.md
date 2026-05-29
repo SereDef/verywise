@@ -17,10 +17,15 @@ run_vw_meta(
   study_weights = NULL,
   res_dirs,
   outp_dir = NULL,
+  mtc = "fdr",
   fs_template = "fsaverage",
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  FS_HOME = Sys.getenv("FREESURFER_HOME"),
+  mcz_thr = 30,
+  cwp_thr = 0.025,
+  save_optional_cluster_info = FALSE,
   verbose = TRUE
 )
 ```
@@ -61,6 +66,12 @@ run_vw_meta(
   `NULL` (default), creates a "verywise_results" sub-directory in the
   current working directory (not recommended).
 
+- mtc:
+
+  Character string: multiple testing correction strategy. Options:
+  `"fdr"` (False Discovery Rate: default), `"fs"` (FreeSurfer cluster
+  correction).
+
 - fs_template:
 
   Character string specifying the FreeSurfer template for vertex
@@ -95,6 +106,42 @@ run_vw_meta(
   Integer specifying the number of vertices processed per chunk in
   parallel operations. Larger values use more memory but may be faster.
   Default: 1000.
+
+- FS_HOME:
+
+  Character string specifying the FreeSurfer home directory. Defaults to
+  `FREESURFER_HOME` environment variable.
+
+- mcz_thr:
+
+  Numeric value for the Monte Carlo simulation threshold. Any of the
+  following are accepted (equivalent values are separated by `/`):
+
+  - 13 / 1.3 / 0.05,
+
+  - 20 / 2.0 / 0.01,
+
+  - 23 / 2.3 / 0.005,
+
+  - 30 / 3.0 / 0.001, \\ default
+
+  - 33 / 3.3 / 0.0005,
+
+  - 40 / 4.0 / 0.0001.
+
+- cwp_thr:
+
+  Numeric value for cluster-wise p-value threshold (on top of all
+  corrections). Set this should be set to `0.025` when both hemispheres
+  are analyzed, and `0.05` for single hemisphere analyses. Default:
+  `0.025`.
+
+- save_optional_cluster_info:
+
+  Logical indicating whether to save additional output form
+  `mri_surfcluster` call. See
+  [`compute_clusters`](https://seredef.github.io/verywise/reference/compute_clusters.md)
+  for details. Default: `FALSE`.
 
 - verbose:
 
