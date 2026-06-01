@@ -152,7 +152,6 @@ plot_vw_surf <- function(
 
   } else {
 
-    reticulate::py_require("plotly")
     tmp_html <- tempfile(fileext = ".html")
 
     do.call(reticulate::py$vw_surf_interactive,
@@ -219,7 +218,20 @@ check_hemi <- function(hemi, fs_template) {
       "i" = "Install it with {.code install.packages('reticulate')}."
     ))
   }
+
+  missing_pkgs <- Filter(
+    function(x) !reticulate::py_module_available(x),
+    c("matplotlib", "nilearn", "numpy", "plotly", "kaleido"))
   
+  if (length(missing_pkgs) > 0) {
+    vw_error(c(
+      "Surface plotting requires Python packages that are not installed:",
+      "i" = "Missing: {.pkg {missing_pkgs}}",
+      ">" = "Install with: {.code reticulate::py_install(c({paste0('\"', missing_pkgs, '\"', collapse=', ')}), pip = TRUE)}",
+      ">" = "Then restart your R session and try again."
+    ))
+  }
+
   patch_file <- system.file("python", "patch_kaleido.py", package = "verywise")
   main_file <- system.file("python", "plot_vw_surf.py", package = "verywise")
 
