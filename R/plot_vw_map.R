@@ -166,7 +166,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
         fdr <- load.mgh(fdr_file)$x
         # keep only vertices belonging to a significant cluster (ocn is a
         # positive integer label; non-significant vertices are 0)
-        coef[eval(str2lang(threshold))] <- NA
+        coef[!eval(str2lang(threshold))] <- NA
       } 
     }
 
@@ -182,7 +182,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
       "i" = "Expected e.g. {.file lh.{measure}.{stack}.coef.mgh} in {.file {res_dir}}"))
   }
       
-  surf_threshold <- if (identical(threshold, "cws")) NULL else threshold
+  surf_threshold <- if (is.character(threshold)) NULL else threshold
 
   dots  <- list(...)
   title <- dots$title %||% paste("Effect of", term, "on", measure)
