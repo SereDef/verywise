@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-06-02</h4>
+            <h4 data-toc-skip class="date">2026-06-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/05-visualize-results.Rmd" class="external-link"><code>vignettes/articles/05-visualize-results.Rmd</code></a></small>
       <div class="d-none name"><code>05-visualize-results.Rmd</code></div>
@@ -82,8 +82,9 @@ Defina</h4>
 <h2 id="verywise-output">
 <code>verywise</code> output<a class="anchor" aria-label="anchor" href="#verywise-output"></a>
 </h2>
-<p>Check out the output directory. You should see something like this
-[TODO: add image]</p>
+<p>Check out the output directory. You should see something like
+this</p>
+<p>[TODO: add image]</p>
 </div>
 <div class="section level2">
 <h2 id="extracting-meanmedian-cluster-values">Extracting mean/median cluster values<a class="anchor" aria-label="anchor" href="#extracting-meanmedian-cluster-values"></a>
@@ -108,26 +109,64 @@ this to sun smoothly.</p>
 <div class="section level2">
 <h2 id="visualizing-results">Visualizing results<a class="anchor" aria-label="anchor" href="#visualizing-results"></a>
 </h2>
+<div class="section level3">
+<h3 id="verywisewizard-interactive-visualization-app">
+<code>verywiseWIZard</code>: interactive visualization app<a class="anchor" aria-label="anchor" href="#verywisewizard-interactive-visualization-app"></a>
+</h3>
 <p>To inspect and plot your results, you can use our interactive web
 application, <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>.
 You can run this locally or try it out <a href="https://seredef-verywise-wizard.share.connect.posit.cloud/" class="external-link">here</a>.</p>
 <p>Note: if you are using the online version of the WIZard, with results
-hosten on GitHub, you may want to look into the
-<code><a href="../reference/move_result_files.html">move_result_files()</a></code> helper function, to organise your
+hosted on GitHub, you may want to look into the
+<code><a href="../reference/move_result_files.html">move_result_files()</a></code> helper function, to organize your
 results in a way that is safe (i.e., does not expose individual level
 data) and quick.</p>
-<p>Plots can also be generated using <code>verywise</code> like so:</p>
+</div>
+<div class="section level3">
+<h3 id="verywise-plotting-functions">
+<code>verywise</code> plotting functions<a class="anchor" aria-label="anchor" href="#verywise-plotting-functions"></a>
+</h3>
+<p>Plots can also be generated using <code>verywise</code> directly. You
+can use these functions in R, but they are Python wrappers, so they will
+require the <code>reticulate</code> package installed.</p>
+<p>You can plot (thresholded) estimate maps like so:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)</span></span>
-<span><span class="fu"><a href="../reference/plot_vw_map.html">plot_vw_map</a></span><span class="op">(</span></span>
-<span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
-<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">"area"</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_vw_map.html">plot_vw_map</a></span><span class="op">(</span></span>
 <span>  res_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>,</span>
-<span>  outline_rois <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entorhinal"</span>, <span class="st">"precuneus"</span><span class="op">)</span>,</span>
-<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
+<span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
+<span>  measure <span class="op">=</span> <span class="st">'area'</span>, </span>
+<span>  hemi <span class="op">=</span> <span class="st">"both"</span>, <span class="co"># (default) or "lh", "rh" for single hemisphere</span></span>
+<span>  surface <span class="op">=</span> <span class="st">"pial"</span>, <span class="co"># or "inflated"</span></span>
+<span>  threshold <span class="op">=</span> <span class="st">'fdr&lt;0.05'</span>,</span>
+<span>  to_file <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># interactive visualization or static output</span></span>
+<span>  <span class="co"># optional argument </span></span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span>, <span class="co"># quicker: use local maps </span></span>
+<span>  <span class="co"># outline_rois = c("entorhinal", "precuneus") # TODO: not yet available</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>[TODO: expand with more details]</p>
+<p>The <code>threshold</code> argument can be one of:</p>
+<ul>
+<li>
+<code>"cws"</code> for cluster-wise significant (the default) -
+provided that such clusters were estimated at the analysis stage</li>
+<li>
+<code>"fdr&lt;0.05"</code> for other multiple testing corrected
+thresholds (such as FDR) - provided that these were estimated at the
+analysis stage</li>
+<li>a numeric value e.g. <code>0.001</code> which is interpreted as a
+beta value threshold,</li>
+</ul>
+<p>When <code>to_file= NULL</code> verywise will try to open an 3D
+interactive visualization of the brain map in the Viewer window (e.g. in
+RStudio) or the default browser. This can be saved as an HTML file, but
+often you may prefer a “static” PNG image were the all the brain is
+visible. This can be obtained by setting
+<code>to_file = path/to/figure.png</code> or similar output file path.
+The figures will then look similar to this:</p>
+<p><img src="05-example-png.png" class="r-plt" alt="Example of a verywise input directory structure." width="1700"></p>
+<p>Another useful function is <code><a href="../reference/plot_vw_diff.html">plot_vw_diff()</a></code> and
+<code><a href="../reference/plot_vw_surf.html">plot_vw_surf()</a></code></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="on-an-hcp-cluster">On an HCP cluster<a class="anchor" aria-label="anchor" href="#on-an-hcp-cluster"></a>

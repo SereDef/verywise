@@ -3,6 +3,7 @@
 ## `verywise` output
 
 Check out the output directory. You should see something like this
+
 \[TODO: add image\]
 
 ## Extracting mean/median cluster values
@@ -31,6 +32,8 @@ df <- significant_cluster_stats(stat = "mean", # or "median"
 
 ## Visualizing results
 
+### `verywiseWIZard`: interactive visualization app
+
 To inspect and plot your results, you can use our interactive web
 application,
 [verywiseWIZard](https://github.com/SereDef/verywise-wizard). You can
@@ -38,27 +41,58 @@ run this locally or try it out
 [here](https://seredef-verywise-wizard.share.connect.posit.cloud/).
 
 Note: if you are using the online version of the WIZard, with results
-hosten on GitHub, you may want to look into the
+hosted on GitHub, you may want to look into the
 [`move_result_files()`](https://seredef.github.io/verywise/reference/move_result_files.md)
-helper function, to organise your results in a way that is safe (i.e.,
+helper function, to organize your results in a way that is safe (i.e.,
 does not expose individual level data) and quick.
 
-Plots can also be generated using `verywise` like so:
+### `verywise` plotting functions
+
+Plots can also be generated using `verywise` directly. You can use these
+functions in R, but they are Python wrappers, so they will require the
+`reticulate` package installed.
+
+You can plot (thresholded) estimate maps like so:
 
 ``` r
 
-# Plot result brain map (requires FreeSurfer for templates and reticulate for interface with Python-based plotting libraries)
 plot_vw_map(
-  term = "age",
-  hemi = "lh",
-  measure = "area",
   res_dir = "/path/to/output",
-  outline_rois = c("entorhinal", "precuneus"),
-  fs_home = "/path/to/FREESURFER_HOME"
+  term = "age",
+  measure = 'area', 
+  hemi = "both", # (default) or "lh", "rh" for single hemisphere
+  surface = "pial", # or "inflated"
+  threshold = 'fdr<0.05',
+  to_file = NULL, # interactive visualization or static output
+  # optional argument 
+  fs_template = "fsaverage",
+  fs_home = "/path/to/FREESURFER_HOME", # quicker: use local maps 
+  # outline_rois = c("entorhinal", "precuneus") # TODO: not yet available
 )
 ```
 
-\[TODO: expand with more details\]
+The `threshold` argument can be one of:
+
+- `"cws"` for cluster-wise significant (the default) - provided that
+  such clusters were estimated at the analysis stage
+- `"fdr<0.05"` for other multiple testing corrected thresholds (such as
+  FDR) - provided that these were estimated at the analysis stage
+- a numeric value e.g. `0.001` which is interpreted as a beta value
+  threshold,
+
+When `to_file= NULL` verywise will try to open an 3D interactive
+visualization of the brain map in the Viewer window (e.g. in RStudio) or
+the default browser. This can be saved as an HTML file, but often you
+may prefer a “static” PNG image were the all the brain is visible. This
+can be obtained by setting `to_file = path/to/figure.png` or similar
+output file path. The figures will then look similar to this:
+
+![Example of a verywise input directory structure.](05-example-png.png)
+
+Another useful function is
+[`plot_vw_diff()`](https://seredef.github.io/verywise/reference/plot_vw_diff.md)
+and
+[`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
 
 ## On an HCP cluster
 
