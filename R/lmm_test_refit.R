@@ -14,19 +14,16 @@ precompile_model2 <- function(formula,
 
     imp[paste0("vw_", measure)] <- tmp_y  # dummy outcome
 
-    if (!is.null(weights) && !is.numeric(weights)) {
+    if (!is.character(weights)) {
       weight_vec <- imp[[weights]]
-    } else {
+    } else { # Null or numeric...?
       weight_vec <- weights
     }
 
-    tmp_fit <- suppressMessages(
-      lme4::lmer(formula = formula,
-                 data = imp,
-                 REML = REML,
-                 control = lmm_control, 
-                 weights = weight_vec)
-    )
+    tmp_fit <- suppressMessages(do.call(lme4::lmer, 
+      list(formula = formula, data = imp, REML = REML, 
+           control = lmm_control, weights = weight_vec)))
+
     # Embed the control settings into the call so update() can access them ?  
     # tmp_fit@call$control <- lmm_control
     # mp_fit@call$REML <- REML

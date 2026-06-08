@@ -7,7 +7,6 @@
     "Depends",
     "LinkingTo"
   ],
-  "ppm.enabled": null,
   "ppm.ignored.urls": [],
   "r.version": null,
   "snapshot.type": "explicit",
@@ -15,5 +14,7 @@
   "vcs.ignore.cellar": true,
   "vcs.ignore.library": true,
   "vcs.ignore.local": true,
-  "vcs.manage.ignores": true
+  "vcs.manage.ignores": true,
+  "ppm.enabled": true,
+  "pak.enabled": true
 }

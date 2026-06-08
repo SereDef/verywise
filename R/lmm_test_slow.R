@@ -367,7 +367,7 @@ run_vw_lmm3 <- function(
           # # repeated parsing and model construction overhead
 
         # Loop through imputed datasets and run analyses
-        out_stats <- lapply(data_list, single_lmm2,
+        out_stats <- lapply(data_list, single_lmm3,
                             y = vertex,
                             y_name = paste0("vw_", measure),
                             model_formula = formula,
