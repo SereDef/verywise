@@ -14,7 +14,16 @@ precompile_model2 <- function(formula,
 
     imp[paste0("vw_", measure)] <- tmp_y  # dummy outcome
 
-    if (!is.character(weights)) {
+      #   if (!is.null(weights) && !is.numeric(weights)) {
+      #   imp[[".w"]] <- imp[[weights]]
+      #   lme4::lmer(update(formula, . ~ . ), data = imp, REML = REML,
+      #              control = lmm_control, weights = .w)
+      # } else {
+      #   lme4::lmer(formula, data = imp, REML = REML,
+      #              control = lmm_control, weights = weights)
+      # } |> suppressMessages()
+    
+    if (is.character(weights)) {
       weight_vec <- imp[[weights]]
     } else { # Null or numeric...?
       weight_vec <- weights
