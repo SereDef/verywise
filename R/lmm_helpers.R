@@ -56,7 +56,6 @@ single_lmm <- function(
   # Add (vertex) outcome to (single) dataset
   imp[y_name] <- y
 
-
   error_msg <- NULL
   warning_msg <- character(0)
 
@@ -116,7 +115,7 @@ single_lmm <- function(
   vc <- VarCorr(fit)
   var_rand <- sum(sapply(vc, function(x) sum(diag(as.matrix(x)))))
   var_resid <- attr(vc, "sc")^2
-  var_fix <- var(predict(fit, re.form = NA))
+  var_fix <- var(predict(fit, re.form = NA)) # var(as.vector(X %*% beta))
 
   icc <- safe_calc(var_rand / (var_rand + var_resid))
   r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))

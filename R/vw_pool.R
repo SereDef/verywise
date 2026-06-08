@@ -179,8 +179,6 @@ vw_pool <- function(out_stats, m,
 
   model_fit <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'model_fit')), na.rm=TRUE)
 
-  model_output <- do.call(rbind, lapply(out_stats, `[[`, "stats"))
-
   list(
     "coef" = coef,
     "se" = se,
