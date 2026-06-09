@@ -20,7 +20,7 @@ simulate_freesurfer_data(
   hemi = "lh",
   fwhmc = "fwhm10",
   vw_mean = 6.5,
-  vw_sd = 1.5,
+  vw_sd = 0.5,
   subj_sd = 0.2,
   site_sd = 0.1,
   roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
