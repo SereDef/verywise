@@ -1,23 +1,24 @@
 # Run vertex-wise linear mixed model using [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
 
-This is the main function for conducting vertex-wise linear mixed model
-analyses on brain surface metrics. It will first check use inputs,
-prepare the phenotype data(list) and the brain (outcome) data, then it
-will fit a linear mixed model at each vertex of the specified hemisphere
-using the
-[`refit_lmm()`](https://seredef.github.io/verywise/reference/refit_lmm.md)
-function, extract key statistics and perform multiple testing
-correction.
+This is an alternative to the main function for conducting vertex-wise
+linear mixed model analyses on brain surface metrics. This is almost
+identical to
+[`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
+but it estimates a linear mixed model from scratch at each vertex
+(instead of refitting from a template) This is done using the
+[`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
+function.
 
-The function supports analysis of both single and multiple imputed
-datasets. It also automatically handles cortical masking, and provides
-two multiple testing strategies: FDR or cluster-wise correction using
-FreeSurfer's Monte Carlo simulation approach.
+Use this pipeline when you have reason to believe that the random effect
+structure is very different across vertices. In all test I have run so
+far,
+[`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
+and `run_vw_lmm2()` give identical fixed term results.
 
 ## Usage
 
 ``` r
-run_vw_lmm(
+run_vw_lmm2(
   formula,
   pheno,
   subj_dir,
@@ -214,104 +215,12 @@ run_vw_lmm(
   Logical indicating whether to display progress messages. Default:
   `TRUE`.
 
-## Value
-
-A list of file-backed matrices
-([`bigstatsr::FBM`](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
-objects) containing pooled coefficients, SEs, t- and p- values and
-residuals. Results are also automatically saved to disk in .mgh format.
-
 ## Details
 
-**Supported Brain Surface Metrics:** The outcome specified in `formula`
-should be a brain surface metric among:
-
-- `vw_thickness` - Cortical thickness
-
-- `vw_area` - Cortical surface area (white surface)
-
-- `vw_area.pial` - Cortical surface area (pial surface)
-
-- `vw_curv` - Mean curvature
-
-- `vw_jacobian_white` - Jacobian determinant (white surface)
-
-- `vw_pial` - Pial surface coordinates
-
-- `vw_pial_lgi` - Local gyrification index (pial surface)
-
-- `vw_sulc` - Sulcal depth
-
-- `vw_volume` - Gray matter volume
-
-- `vw_w_g.pct` - White/gray matter intensity ratio
-
-- `vw_white.H` - Mean curvature (white surface)
-
-- `vw_white.K` - Gaussian curvature (white surface)
-
-**Statistical Approach:** The function uses
-[`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) for
-mixed-effects modeling, enabling analysis of longitudinal and
-hierarchical data. P-values are computed using the t-as-z approximation,
-with cluster-wise correction applied using FreeSurfer's Monte Carlo
-simulation approach.
-
-**Multiple Imputation:** The function automatically detects and handles
-multiple imputed datasets (created with `mice` or similar packages),
-pooling results according to Rubin's rules.
-
-**Parallel processing:** The `verywise` package employs a carefully
-designed parallelization strategy to maximize computational efficiency
-while avoiding the performance penalties associated with nested
-parallelization. Left and right cortical hemispheres are processed
-sequentially by default. Parallel processing of the two hemispheres
-(and/or different metrics, models) should be handled by the user (e.g.,
-using SLURM job arrays or similar, see vignette on parallelization).
-Within each hemisphere, vertices are divided into chunks of size
-`chunk_size` and processed in parallel across `n_cores` workers (when
-`n_cores > 1`). When multiple imputed datasets are present, these are
-processed sequentially within each vertex.
-
-Note that, on some systems, implicit parallelism in low-level matrix
-algebra libraries (BLAS/LAPACK) can interfere with explicit
-parallelization. If you feel like processing is taking too long, I
-recommend disabling these implicit threading libraries before starting
-R. For example:
-
-
-    export OPENBLAS_NUM_THREADS=1
-    export OMP_NUM_THREADS=1
-    export MKL_NUM_THREADS=1
-    export VECLIB_MAXIMUM_THREADS=1
-    export NUMEXPR_NUM_THREADS=1
-
-Also note that using a very large number of cores (e.g. \>120) may
-sometimes cause worker initialization or other issues (e.g. R parallel
-processes limits)
-
-**Output Files:** Results are saved in FreeSurfer-compatible .mgh format
-for visualization with
-[verywiseWIZard](https://github.com/SereDef/verywise-wizard), FreeView
-or other neuroimaging software.
-
-## Note
-
-- Ensure FreeSurfer is properly installed and the `FREESURFER_HOME`
-  environment variable is set.
-
-- Large datasets may require substantial memory. Consider adjusting
-  `chunk_size` and `n_cores` based on your system specifications.
-
-- For reproducibility, always specify a `seed`.
-
-## See also
-
-[`single_lmm`](https://seredef.github.io/verywise/reference/single_lmm.md)
-for single-vertex modeling,
-`vignette("03-run-vw-lmm", package = "verywise")` for detailed usage
-examples.
+See
+[`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
+for details.
 
 ## Author
 
-Serena Defina, 2024.
+Serena Defina, 2026.

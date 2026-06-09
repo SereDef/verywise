@@ -92,8 +92,15 @@
 - [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
   : Plot vertex-wise maps on brain surfaces
 
+- [`precompile_model()`](https://seredef.github.io/verywise/reference/precompile_model.md)
+  : Pre-compile a linear mixed model template
+
 - [`prettify_message()`](https://seredef.github.io/verywise/reference/prettify_message.md)
   : Print pretty messages to console
+
+- [`refit_lmm()`](https://seredef.github.io/verywise/reference/refit_lmm.md)
+  : Refit a pre-compiled linear mixed model with a new outcome and
+  extract statistics
 
 - [`run_voxw_lmm()`](https://seredef.github.io/verywise/reference/run_voxw_lmm.md)
   :
@@ -108,6 +115,12 @@
   : Run vertex-wise linear model on local site data
 
 - [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md)
+  :
+
+  Run vertex-wise linear mixed model using
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+
+- [`run_vw_lmm2()`](https://seredef.github.io/verywise/reference/run_vw_lmm2.md)
   :
 
   Run vertex-wise linear mixed model using
@@ -129,15 +142,25 @@
 - [`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
   : Simulate longitudinal FreeSurfer vertex-wise data
 
+- [`simulate_freesurfer_data2()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data2.md)
+  : Simulate longitudinal FreeSurfer vertex-wise data
+
 - [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
   : Simulate (longitudinal) phenotype data
+
+- [`simulate_long_pheno_data2()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data2.md)
+  : Simulate longitudinal phenotype data
 
 - [`simulate_longit_dataset()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md)
   : Simulate a longitudinal brain surface dataset with associated
   phenotype data
 
+- [`simulate_longit_dataset2()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset2.md)
+  : Simulate a longitudinal brain surface dataset with associated
+  phenotype data
+
 - [`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
-  : Run a single linear mixed model and extract statistics
+  : Estimate a single outcome linear mixed model and extract statistics
 
 - [`subset_supersubject()`](https://seredef.github.io/verywise/reference/subset_supersubject.md)
   : Subset an existing supersubject matrix by matching folder IDs

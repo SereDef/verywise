@@ -4,7 +4,7 @@ This is is the main function for conducting voxel-wise linear mixed
 model analyses on brain morphology. It will first check use inputs,
 prepare the phenotype data(list) and run a linear mixed model at each
 voxel using the
-[`single_lmm`](https://seredef.github.io/verywise/reference/single_lmm.md)
+[`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
 function.
 
 The function supports analysis of both single and multiple imputed
@@ -23,6 +23,7 @@ run_voxw_lmm(
   brain_template = NULL,
   apply_mask = NULL,
   weights = NULL,
+  REML = TRUE,
   lmm_control = lme4::lmerControl(),
   seed = 3108,
   n_cores = 1,
@@ -79,6 +80,12 @@ run_voxw_lmm(
   weights. If this is a string, the function look for a column with that
   name in the phenotype data. Note that these are not normalized or
   standardized in any way. Default: `NULL` (no weights).
+
+- REML:
+
+  Logical specifying whether to optimize the REML criterion (as opposed
+  to the log-likelihood). Default: TRUE. Use `REML = FALSE` if you
+  intend to do model comparison (using AIC output).
 
 - lmm_control:
 
@@ -171,7 +178,7 @@ format.
 
 ## See also
 
-[`single_lmm`](https://seredef.github.io/verywise/reference/single_lmm.md)
+[`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
 for single-voxel modeling
 
 ## Author
