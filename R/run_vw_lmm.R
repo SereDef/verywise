@@ -1,16 +1,18 @@
 #' @title
-#' Run vertex-wise linear mixed model using \code{lme4::lmer()}
+#' Run vertex-wise linear mixed model using [lme4::lmer()]
 #'
 #' @description
-#' This is is the main function for conducting vertex-wise linear mixed model
+#' This is the main function for conducting vertex-wise linear mixed model
 #' analyses on brain surface metrics. It will first check use inputs, prepare
-#' the phenotype data(list) and run a linear mixed model at each vertex of the
-#' specified hemisphere using the \code{\link{single_lmm}} function.
+#' the phenotype data(list) and the brain (outcome) data, then it will fit a 
+#' linear mixed model at each vertex of the specified hemisphere using the 
+#' [refit_lmm()] function, extract key statistics and perform multiple testing
+#' correction.
 #'
 #' The function supports analysis of both single and multiple imputed datasets.
-#' It also automatically handles cortical masking, and provides cluster-wise
-#' correction for multiple testing using FreeSurfer's Monte Carlo simulation
-#' approach.
+#' It also automatically handles cortical masking, and provides two multiple 
+#' testing strategies: FDR or cluster-wise correction using FreeSurfer's Monte 
+#' Carlo simulation approach.
 #'
 #' @param formula A model formula object. This should specify a linear mixed
 #'   model \code{lme4} syntax. The outcome variable should be one of the
@@ -129,7 +131,7 @@
 #' }
 #'
 #' \strong{Statistical Approach:}
-#' The function uses \code{lme4::lmer()} for mixed-effects modeling, enabling
+#' The function uses [lme4::lmer()] for mixed-effects modeling, enabling
 #' analysis of longitudinal and hierarchical data. P-values are computed using
 #' the t-as-z approximation, with cluster-wise correction applied using
 #' FreeSurfer's Monte Carlo simulation approach.
@@ -396,14 +398,14 @@ run_vw_lmm <- function(
              verbose = verbose)
 
   vw_message("Statistical model fitting", type='step', verbose = verbose)
-
-  # Cache the model frame: `single_lmm` uses an "update"-based workflow to minimize
+  
+  # Cache the model frame: `refit_lmm` uses an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  model_template <- precompile_model(formula = formula, tmp_data = data1, 
-    tmp_y = ss[, good_verts[1]], measure = measure, 
+  model_template <- precompile_model(formula = formula, data_list = data_list, 
+    tmp_y = ss[, good_verts[1]], measure = measure, weights = weights,
     lmm_control = lmm_control, REML = REML, verbose = verbose)
   
-  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {summary(model_template)$ngrps}} groups"), 
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {summary(model_template[[1]])$ngrps}} groups"), 
     verbose = verbose)
 
   # Prepare FBM output =========================================================
@@ -448,7 +450,7 @@ run_vw_lmm <- function(
     expr = {
       foreach::foreach(chunk = chunk_seq, 
         .packages = c("bigstatsr"), 
-        .export = c("single_lmm", "vw_pool",
+        .export = c("refit_lmm", "vw_pool",
                     "init_progress_tracker", "update_progress_tracker")
     ) %dopar% { # Only parallel if n_cores > 1
 
@@ -465,11 +467,7 @@ run_vw_lmm <- function(
         vertex <- ss[, v]
 
         # Loop through imputed datasets and run analyses
-        out_stats <- lapply(data_list, single_lmm,
-                            y = vertex,
-                            y_name = paste0("vw_", measure),
-                            model_template = model_template,
-                            weights = weights)
+        out_stats <- lapply(model_template, refit_lmm, y = vertex)
 
         # Pool results
         pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")

@@ -1,7 +1,6 @@
-#' @title
-#' Simulate a longitudinal brain surface dataset with associated phenotype data
+#' @title Simulate a longitudinal brain surface dataset with associated phenotype data
 #'
-#' @description
+#' @description 
 #' Generates a synthetic longitudinal dataset for multiple sites/cohorts,
 #' each with multiple timepoints/sessions per subject. The function produces:
 #'
@@ -81,6 +80,21 @@ simulate_longit_dataset <- function(path,
   seed = 3108,
   verbose = TRUE,
   ...) {
+  
+    # betas = c(sex = -0.2, age = 0.3),
+    # tau2 = 0.01,
+    # sigma2 = 0.01,
+    # fs_template = "fsaverage",
+    # roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
+    # location_association = NULL,
+    # measure = "thickness",
+    # hemi = "lh",
+    # fwhmc = "fwhm10",
+    # vw_mean = 5,
+    # vw_sd = 0.5,
+    # overwrite = TRUE,
+    # seed = 3108,
+    # verbose = TRUE
 
   # Create directory in path if it does not exist
   if (!dir.exists(path)) dir.create(path,
@@ -215,8 +229,8 @@ simulate_long_pheno_data <- function(data_structure = list(
           id = baseline$id,
           time = sessions[s],
           sex = baseline$sex,
-          age = round(baseline$age + stats::rnorm(n_subjects, mean = s*5, sd = 1.5)),
-          wisdom = baseline$wisdom
+          age = round(baseline$age + stats::rnorm(n_subjects, mean = (s-1L)*4, sd = 1.5)),
+          wisdom = round(baseline$wisdom + stats::rnorm(n_subjects, mean = 1, sd = 1))
         )
         t1 <- rbind(t1, t2)
       }
@@ -293,7 +307,7 @@ simulate_freesurfer_data <- function(path,
                                      hemi = "lh",
                                      fwhmc = "fwhm10",
                                      vw_mean = 6.5,
-                                     vw_sd = 1.5,
+                                     vw_sd = 0.5,
                                      subj_sd = 0.2, 
                                      site_sd = 0.1,
                                      roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
@@ -313,7 +327,7 @@ simulate_freesurfer_data <- function(path,
     data_structure,
     function(site) site$n_subjects * length(site$sessions)))
 
-  vw_message(' * ', total_n_files, ' total files.', verbose = verbose)
+  vw_message('* {.val2 {total_n_files}} total files.', verbose = verbose)
 
   file_counter <- 1
 
@@ -395,7 +409,7 @@ simulate_freesurfer_data <- function(path,
 
           vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter] + # fixed
                                 ri_subj[i] + ri_site[l] + # random
-                                stats::rnorm(sum(assoc_roi), mean = 0, sd = 0.5) # error
+                                stats::rnorm(sum(assoc_roi), mean = 0, sd = vw_sd) # error
         }
 
         file_counter <- file_counter + 1

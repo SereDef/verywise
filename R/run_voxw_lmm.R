@@ -5,7 +5,7 @@
 #' This is is the main function for conducting voxel-wise linear mixed model
 #' analyses on brain morphology. It will first check use inputs, prepare
 #' the phenotype data(list) and run a linear mixed model at each voxel using
-#' the \code{\link{single_lmm}} function.
+#' the [single_lmm()] function.
 #'
 #' The function supports analysis of both single and multiple imputed datasets.
 #' --TODO-- It also automatically handles roi masking, and provides cluster-wise
@@ -36,6 +36,9 @@
 #'   is a string, the function look for a column with that name in the phenotype
 #'   data. Note that these are not normalized or standardized in any way.
 #'   Default: \code{NULL} (no weights).
+#' @param REML Logical specifying whether to optimize the REML criterion (as opposed to
+#'   the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend to do model
+#'   comparison (using AIC output).
 #' @param lmm_control Optional list (of correct class, resulting from
 #'   \code{lmerControl()} containing control parameters to be passed to
 #'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
@@ -110,7 +113,7 @@
 #' }
 #'
 #' @seealso
-#' \code{\link{single_lmm}} for single-voxel modeling
+#' [single_lmm()] for single-voxel modeling
 #'
 #'
 #' @author Serena Defina, 2026.
@@ -128,6 +131,7 @@ run_voxw_lmm <- function(
   apply_mask = NULL,
   # Modeling settings
   weights = NULL,
+  REML = TRUE,
   lmm_control = lme4::lmerControl(),
   # Reproducibility and parallel processing
   seed = 3108,
@@ -143,7 +147,7 @@ run_voxw_lmm <- function(
   # Check user input ===========================================================
   vw_message("Checking user inputs...", verbose = verbose)
 
-  # measure <- check_formula(formula)
+  measure <- check_formula(formula, measure_control = FALSE)
 
   # subj_dir <- check_path(subj_dir)
   # ss_exists <- check_ss_exists(subj_dir, ss_file)
@@ -243,9 +247,9 @@ run_voxw_lmm <- function(
   # cache the model frame to avoid re-generating it them each time
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  model_template <- precompile_model(
-    formula = formula, tmp_data = data1, tmp_y = ss[,good_voxels[1]],
-    measure = 'value', lmm_control = lmm_control, verbose = verbose)
+  # model_template <- precompile_model(
+  #   formula = formula, tmp_data = data1, tmp_y = ss[,good_voxels[1]],
+  #   measure = 'value', lmm_control = lmm_control, verbose = verbose)
 
   # Prepare FBM output =========================================================
 
@@ -313,8 +317,11 @@ run_voxw_lmm <- function(
 
         # Loop through imputed datasets and run analyses
         out_stats <- lapply(data_list, single_lmm,
-                            y = voxel, y_name = 'vw_value',
-                            model_template = model_template,
+                            y = voxel,
+                            y_name = paste0("vw_", measure),
+                            model_formula = formula,
+                            REML = REML, 
+                            lmm_control = lmm_control,
                             weights = weights)
 
         # Pool results

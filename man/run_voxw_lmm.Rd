@@ -12,6 +12,7 @@ run_voxw_lmm(
   brain_template = NULL,
   apply_mask = NULL,
   weights = NULL,
+  REML = TRUE,
   lmm_control = lme4::lmerControl(),
   seed = 3108,
   n_cores = 1,
@@ -52,6 +53,10 @@ You can use this argument to specify inverse-probability weights. If this
 is a string, the function look for a column with that name in the phenotype
 data. Note that these are not normalized or standardized in any way.
 Default: \code{NULL} (no weights).}
+
+\item{REML}{Logical specifying whether to optimize the REML criterion (as opposed to
+the log-likelihood). Default: TRUE. Use \code{REML = FALSE} if you intend to do model
+comparison (using AIC output).}
 
 \item{lmm_control}{Optional list (of correct class, resulting from
 \code{lmerControl()} containing control parameters to be passed to
@@ -129,7 +134,7 @@ Results are also automatically saved to disk in --TODO-- format.
 This is is the main function for conducting voxel-wise linear mixed model
 analyses on brain morphology. It will first check use inputs, prepare
 the phenotype data(list) and run a linear mixed model at each voxel using
-the \code{\link{single_lmm}} function.
+the \code{\link[=single_lmm]{single_lmm()}} function.
 
 The function supports analysis of both single and multiple imputed datasets.
 --TODO-- It also automatically handles roi masking, and provides cluster-wise
@@ -143,7 +148,7 @@ correction for multiple testing using cluster size permutation.
 }
 }
 \seealso{
-\code{\link{single_lmm}} for single-voxel modeling
+\code{\link[=single_lmm]{single_lmm()}} for single-voxel modeling
 }
 \author{
 Serena Defina, 2026.

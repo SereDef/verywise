@@ -2,9 +2,17 @@
 % Please edit documentation in R/lmm_helpers.R
 \name{single_lmm}
 \alias{single_lmm}
-\title{Run a single linear mixed model and extract statistics}
+\title{Estimate a single outcome linear mixed model and extract statistics}
 \usage{
-single_lmm(imp, y, y_name, model_template = NULL, weights = NULL)
+single_lmm(
+  imp,
+  y,
+  y_name,
+  model_formula = NULL,
+  REML,
+  lmm_control,
+  weights = NULL
+)
 }
 \arguments{
 \item{imp}{A data.frame containing the phenotype dataset
@@ -15,11 +23,17 @@ vertex from the super-subject matrix.}
 
 \item{y_name}{String with the outcome name (as specified in the formula)}
 
-\item{model_template}{Pre-compiled model object for faster
-estimation. \code{single_lmm} uses an "update"-based
-workflow instead of refitting the model from scratch. This minimizes
-repeated parsing and model construction overhead, significantly reducing
-computation time for large-scale vertex-wise analyses.}
+\item{model_formula}{A model formula object. This should specify a linear mixed
+model \code{lme4} syntax. Example: \code{vw_thickness ~ age * sex + site + (1|participant_id)}.}
+
+\item{REML}{Logical specifying whether to optimize the REML criterion (as opposed to
+the log-likelihood). Default: TRUE. Use \code{REML = FALSE} if you intend to do model
+comparison (using AIC output).}
+
+\item{lmm_control}{Optional list (of correct class, resulting from \code{\link[lme4:lmerControl]{lme4::lmerControl()}}
+containing control parameters to be passed to \code{\link[lme4:lmer]{lme4::lmer()}} (e.g. optimizer choice,
+convergence criteria, see the \code{?lmerControl} documentation for details.
+Default: (uses default settings).}
 
 \item{weights}{Optional string or numeric vector of weights for the linear mixed model.
 You can use this argument to specify inverse-probability weights. If this
@@ -28,24 +42,31 @@ data. Note that these are not normalized or standardized in any way.
 Default: \code{NULL} (no weights).}
 }
 \value{
-A list with two elements:
-\itemize{
-\item \code{stats} - A data.frame with columns:
-\itemize{
-\item \code{term} - Fixed effect term names
-\item \code{qhat} - Parameter estimates
-\item \code{se} - Standard errors
+A named \code{list} with one of two shapes:
+\strong{On error:}
+\describe{
+\item{\code{error}}{\code{character(1)}. The error message produced by \code{\link[lme4:refit]{lme4::refit()}}.}
 }
-\item \code{resid} - A numeric vector of model residuals
-\item \code{warning} - Warning message(s) if any
+\strong{On success:}
+\describe{
+\item{\code{stats}}{A \code{data.frame} with columns \code{term} (character), \code{qhat} (numeric,
+fixed-effect estimate), and \code{se} (numeric, standard error), one row per
+fixed-effect term.}
+\item{\code{resid}}{Named numeric vector of model residuals from \code{\link[stats:residuals]{stats::residuals()}},
+used downstream for smoothness estimation.}
+\item{\code{model_fit}}{Unnamed numeric vector of length 5 containing, in order:
+\code{is_singular} (0/1), \code{AIC}, \code{ICC}, \code{R2_marginal}, \code{R2_conditional}.}
+\item{\code{warning}}{\code{character} vector of any warning or message strings captured
+during refitting. Zero-length if none occurred. Singular-fit boundary warnings
+are suppressed from this vector when singularity is already flagged in \code{model_fit}.}
 }
 }
 \description{
-Fits a linear mixed model to a single vertex outcome using
-\code{lme4::lmer()} and extracts fixed effects statistics. This function
+Fits a linear mixed model to a single vertex outcome using \code{\link[lme4:lmer]{lme4::lmer()}} and
+extracts fixed effects and model fit statistics. This function
 is called repeatedly across all cortical vertices during vertex-wise
-analysis.
+analysis in the \code{\link[=run_vw_lmm2]{run_vw_lmm2()}} pipeline.
 }
 \seealso{
-\code{\link{run_vw_lmm}} for the main interface.
+\code{\link[=run_vw_lmm2]{run_vw_lmm2()}} for the main interface.
 }

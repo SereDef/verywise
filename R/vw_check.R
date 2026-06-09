@@ -1,4 +1,4 @@
-check_formula <- function(formula) {
+check_formula <- function(formula, measure_control = TRUE) {
   if (missing(formula) || !inherits(formula, "formula")) {
     stop("`formula` must be a valid R formula object.")
   }
@@ -6,7 +6,7 @@ check_formula <- function(formula) {
   # TMP: Assume the brain measure is always the OUTCOME
   measure <- gsub("vw_", "", all.vars(formula)[1])
 
-  check_measure(measure)
+  if (measure_control) check_measure(measure)
 
   return(measure)
 }

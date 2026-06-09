@@ -1,147 +1,122 @@
-precompile_model2 <- function(formula,
-                             data_list,
-                             tmp_y,
-                             measure,
-                             weights,
-                             REML = TRUE,
-                             lmm_control = lme4::lmerControl(calc.derivs=FALSE),
-                             verbose) {
-  
-  if (verbose) cli::cli_progress_step('Construct model template', spinner=TRUE)
-
-  # Fit model template (once per imputed dataset)
-  model_template <- lapply(data_list, function(imp) {
-
-    imp[paste0("vw_", measure)] <- tmp_y  # dummy outcome
-
-      #   if (!is.null(weights) && !is.numeric(weights)) {
-      #   imp[[".w"]] <- imp[[weights]]
-      #   lme4::lmer(update(formula, . ~ . ), data = imp, REML = REML,
-      #              control = lmm_control, weights = .w)
-      # } else {
-      #   lme4::lmer(formula, data = imp, REML = REML,
-      #              control = lmm_control, weights = weights)
-      # } |> suppressMessages()
-    
-    if (is.character(weights)) {
-      weight_vec <- imp[[weights]]
-    } else { # Null or numeric...?
-      weight_vec <- weights
-    }
-
-    tmp_fit <- suppressMessages(do.call(lme4::lmer, 
-      list(formula = formula, data = imp, REML = REML, 
-           control = lmm_control, weights = weight_vec)))
-
-    # Embed the control settings into the call so update() can access them ?  
-    # tmp_fit@call$control <- lmm_control
-    # mp_fit@call$REML <- REML
-
-    return(tmp_fit)
-  })
-
-  if (verbose) cli::cli_progress_done()
-  model_template
-}
-
-
-single_lmm2 <- function(model_template_i, y) {
-
-  error_msg <- NULL
-  warning_msg <- character(0)
-
-  # Refit linear mixed model using `lme4::refit`
-  fit <- withCallingHandlers(
-    tryCatch(
-      lme4::refit(model_template_i, newresp = y),
-      error = function(e) { 
-        error_msg <<- conditionMessage(e)
-        NULL
-      }),
-    warning = function(w) {
-      warning_msg <<- c(warning_msg, conditionMessage(w))
-      invokeRestart("muffleWarning")
-    },
-    message = function(m) {
-      warning_msg <<- c(warning_msg, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
-  )
-
-  if (!is.null(error_msg)) {
-    result <- list("error" = error_msg)
-    return(result)
-  }
-
-  coefs <- fixef(fit) # Fixed effects estimates
-  ses   <- sqrt(diag(as.matrix(vcov(fit)))) # Their standard errors
-  
-  fixed_stats <- data.frame(
-    term = names(coefs),
-    qhat = as.numeric(coefs),
-    se   = as.numeric(ses),
-    row.names = NULL,
-    check.names = FALSE)
-  
-  # Also extract model residuals for smoothness estimation
-  resid <- residuals(fit)
-
-  # Model performance ------------------------------------
-  
-  is_singular <- as.numeric(isSingular(fit))
-
-  # Add singularity to performance grid, but do not print the warning
-  if (is_singular) {
-    warning_msg <- warning_msg[!grepl("boundary (singular) fit", warning_msg, 
-                                      fixed = TRUE)]
-  }
-
-  # Add model performance metrics 
-  aic <- AIC(fit)
-  # icc <- icc(fit)[['ICC_adjusted']]
-  # r2 <- t(r2_nakagawa(fit))
-  
-
-  # Use lme4 directly – no extra dependencies, no interactive prompts:
-  vc <- VarCorr(fit)
-  var_rand <- sum(sapply(vc, function(x) sum(diag(as.matrix(x)))))
-  var_resid <- attr(vc, "sc")^2
-  var_fix <- var(predict(fit, re.form = NA)) # var(as.vector(X %*% beta))
-
-  icc <- safe_calc(var_rand / (var_rand + var_resid))
-  r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))
-  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_rand + var_resid))
-  
-  # varpart <- get_variance(fit, tolerance = 1e-12) # more lenient than default
-
-  # icc <- safe_calc(varpart$var.random / (varpart$var.random + varpart$var.residual))
-
-  # r2_margin <- safe_calc(varpart$var.fixed / 
-  #   (varpart$var.fixed + varpart$var.random + varpart$var.residual))
-  
-  # r2_condit <- safe_calc((varpart$var.fixed + varpart$var.random) /
-  #       (varpart$var.fixed + varpart$var.random + varpart$var.residual))
-  
-  # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
-  perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
-  
-  # Extract residual degrees of freedom for Barnard-Rubin adjustment
-  # Normally, this would be the number of independent observation minus the
-  # number of fitted parameters, but not exactly what is done here.
-  # Following the `broom.mixed` package approach, which `mice::pool` relies on
-  # resid_df <- df.residual(fit)
-
-  # TODO: implement "stack of interest"?
-
-  # coef(fit)$id # A matrix of effects by random variable
-  # lme4::ranef(fit) # extract random effects (these should sum to 0)
-  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
-
-  list("stats" = fixed_stats, "resid" = resid, "model_fit" = perf,
-       "warning" = warning_msg)
-
-}
-
+#' @title Run vertex-wise linear mixed model using [lme4::lmer()]
+#'
+#' @description
+#' This is an alternative to the main function for conducting vertex-wise 
+#' linear mixed model analyses on brain surface metrics. 
+#' This is almost identical to [run_vw_lmm()] but it estimates a linear 
+#' mixed model from scratch at each vertex (instead of refitting from a template)
+#' This is done using the [single_lmm()] function. 
+#'
+#' Use this pipeline when you have reason to believe that the random effect 
+#' structure is very different across vertices. In all test I have run so far, 
+#' `run_vw_lmm()` and `run_vw_lmm2()` give identical fixed term results.  
+#'
+#' @param formula A model formula object. This should specify a linear mixed
+#'   model \code{lme4} syntax. The outcome variable should be one of the
+#'   supported brain surface metrics (see Details). Example:
+#'   \code{vw_thickness ~ age * sex + site + (1|participant_id)}.
+#' @param pheno Either a \code{data.frame}/\code{tibble} containing the
+#'   "phenotype" data (i.e., already loaded in the global environment), or a
+#'   string specifying the file path to phenotype data. Supported file formats:
+#'   .rds, .csv, .txt, .sav (SPSS).
+#'   The data should be in \strong{long} format and it should contain all the
+#'   variables specified in the left-hand side of the \code{formula} (i.e., after the `~`) 
+#'   plus the \code{folder_id} column.
+#' @param subj_dir Character string specifying the path to FreeSurfer data
+#'   directory. Must follow the verywise directory structure (see package
+#'   vignette for details).
+#' @param outp_dir Character string specifying the output directory for results.
+#'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
+#'   current working directory (not recommended).
+#' @param hemi Character string specifying which hemisphere to analyze.
+#'   Options: `"lh"` (left hemisphere: default), `"rh"` (right hemisphere).
+#' @param fs_template Character string specifying the FreeSurfer template for
+#'   vertex registration. Options:
+#'   \itemize{
+#'   \item \code{"fsaverage"} (default) = 163842 vertices (highest resolution),
+#'   \item \code{"fsaverage6"} = 40962 vertices,
+#'   \item \code{"fsaverage5"} = 10242 vertices,
+#'   \item \code{"fsaverage4"} = 2562 vertices,
+#'   \item \code{"fsaverage3"} = 642 vertices
+#'   }
+#'   Note that lower resolutions should be only used to downsample the brain
+#'   map, for faster model tuning. The final analyses should also run using
+#'   \code{fs_template = "fsaverage"} to avoid (small) imprecisions in vertex
+#'   registration and smoothing.
+#' @param apply_cortical_mask Logical indicating whether to exclude non-cortical
+#'   vertices from analysis. Default: \code{TRUE} (recommended).
+#' @param folder_id Character string specifying the column name in \code{pheno}
+#'   that contains subject directory names of the input neuroimaging data
+#'   (e.g. "sub-001_ses-baseline" or "site1/sub-010_ses-F1"). These are expected
+#'   to be nested inside \code{subj_dir}.
+#'   Default: \code{"folder_id"}.
+#' @param tolerate_surf_not_found Integer indicating how many brain surface
+#'   files listed in \code{folder_id} can be missing from \code{subj_dir}. If
+#'   the number of missing or corrupted files is
+#'   \code{ > tolerate_surf_not_found } execution will stop.
+#'   Default: \code{20L}.
+#' @param weights Optional string or numeric vector of weights for the linear mixed model.
+#'   You can use this argument to specify inverse-probability weights. If this
+#'   is a string, the function look for a column with that name in the phenotype
+#'   data. Note that these are not normalized or standardized in any way.
+#'   Default: \code{NULL} (no weights).
+#' @param lmm_control Optional list (of correct class, resulting from
+#'   \code{lmerControl()} containing control parameters to be passed to
+#'   \code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
+#'   see the \code{?lmerControl} documentation for details.
+#'   Default: (uses default settings).
+#' @param REML Logical specifying whether to optimize the REML criterion (as opposed to
+#'   the log-likelihood). Default: TRUE. Use `REML = FALSE` if you intend to do model
+#'   comparison (using AIC output).
+#' @param seed Integer specifying the random seed for reproducibility
+#'   Default: 3108.
+#' @param n_cores Integer specifying the number of CPU cores for parallel
+#'   processing.
+#'   Default: 1.
+#' @param chunk_size Integer specifying the number of vertices processed per
+#'   chunk in parallel operations. Larger values use more memory but may be
+#'   faster.
+#'   Default: 1000.
+#' @param FS_HOME Character string specifying the FreeSurfer home directory.
+#'   Defaults to \code{FREESURFER_HOME} environment variable.
+#' @param fwhm Numeric value specifying the full-width half-maximum for
+#'   smoothing kernel. Default: 10.
+#' @param mcz_thr Numeric value for the Monte Carlo simulation threshold. 
+#' Any of the following are accepted (equivalent values are separated by `/`):
+#'   \itemize{
+#'   \item 13 / 1.3 / 0.05,
+#'   \item 20 / 2.0 / 0.01,
+#'   \item 23 / 2.3 / 0.005,
+#'   \item 30 / 3.0 / 0.001, \* default
+#'   \item 33 / 3.3 / 0.0005,
+#'   \item 40 / 4.0 / 0.0001.
+#' }
+#' @param cwp_thr Numeric value for cluster-wise p-value threshold (on top of all
+#'  corrections). Set this should be set to `0.025` when both hemispheres are analyzed,
+#'  and `0.05` for single hemisphere analyses.
+#'  Default: `0.025`.
+#' @param save_optional_cluster_info Logical indicating whether to save additional
+#'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+#'  for details. Default: \code{FALSE}.
+#' @param save_ss Logical indicating whether to save the super-subject matrix
+#'  ("ss") as an .rds file that can be then re-used in future analyses. This can
+#'  also be a character string specifying the directory where ss should be saved.
+#'  When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
+#'  default. Default: \code{FALSE}.
+#' @param save_residuals Logical indicating whether to save the residuals.mgh
+#'   file. Default: \code{FALSE}.
+#' @param verbose Logical indicating whether to display progress messages.
+#'   Default: \code{TRUE}.
+#'
+#' @details
+#' See [run_vw_lmm()] for details. 
+#'
+#' @author Serena Defina, 2026.
+#'
+#' @importFrom foreach %dopar%
+#' 
+#' @export
+#'
 run_vw_lmm2 <- function(
   # Basic settings
   formula,
@@ -330,14 +305,8 @@ run_vw_lmm2 <- function(
              verbose = verbose)
 
   vw_message("Statistical model fitting", type='step', verbose = verbose)
-
-  # Cache the model frame: `single_lmm` uses an "update"-based workflow to minimize
-  # repeated parsing and model construction overhead
-  model_template <- precompile_model2(formula = formula, data_list = data_list, 
-    tmp_y = ss[, good_verts[1]], measure = measure, weights = weights,
-    lmm_control = lmm_control, REML = REML, verbose = verbose)
   
-  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {summary(model_template[[1]])$ngrps}} groups"), 
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters"), 
     verbose = verbose)
 
   # Prepare FBM output =========================================================
@@ -382,7 +351,7 @@ run_vw_lmm2 <- function(
     expr = {
       foreach::foreach(chunk = chunk_seq, 
         .packages = c("bigstatsr"), 
-        .export = c("single_lmm2", "vw_pool",
+        .export = c("single_lmm", "vw_pool",
                     "init_progress_tracker", "update_progress_tracker")
     ) %dopar% { # Only parallel if n_cores > 1
 
@@ -399,8 +368,13 @@ run_vw_lmm2 <- function(
         vertex <- ss[, v]
 
         # Loop through imputed datasets and run analyses
-        out_stats <- lapply(model_template, single_lmm2,
-                            y = vertex)
+        out_stats <- lapply(data_list, single_lmm,
+                            y = vertex,
+                            y_name = paste0("vw_", measure),
+                            model_formula = formula,
+                            REML = REML, 
+                            lmm_control = lmm_control,
+                            weights = weights)
 
         # Pool results
         pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
