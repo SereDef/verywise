@@ -19,7 +19,7 @@ Value for the residual degrees of freedom
 \description{
 Edited from \code{mice::barnard.rubin}. This function computes the residual
 degrees of freedom for hypothesis testing, as proposed by Barnard & Rubin (1999).
-It is used by the \code{\link{vw_pool}} function.
+It is used by the \code{\link[=vw_pool]{vw_pool()}} function.
 }
 \references{
 Barnard, J. and Rubin, D.B. (1999). Small sample degrees of

@@ -34,6 +34,7 @@
 #'  Note that if a model failed for that dataset \code{out_stats} has form
 #'  \code{list("error"="Error message")}
 #' @param m Integer indicating the number of (imputed) dataset
+#' @param n_terms Integer indicating the number of fixed effect terms
 #' @param pvalue_method String indicating which approximation methods should be
 #'   used to compute p-values. Options: \code{"t-as-z"}, \code{"wald-chi2"},
 #'   \code{"satterthwaite"} (see Details). Default: \code{"t-as-z"}.
@@ -60,7 +61,7 @@
 #' Luke, S.G. (2017). *Evaluating significance in linear mixed-effects models in R.*
 #' Behavior research methods, 49(4), 1494-1502.
 #'
-vw_pool <- function(out_stats, m,
+vw_pool <- function(out_stats, m, n_terms,
                     pvalue_method = "t-as-z",
                     min_pvalue =  2^-149
                     ) {
@@ -135,39 +136,35 @@ vw_pool <- function(out_stats, m,
   # If sample is large enough, do not perform Barnard-Rubin adjustment
   # dfcom <- ifelse(dfcom > 1e+05, Inf, dfcom)
 
-  # Pool model output
-  pooled_stats <- model_output %>%
-    dplyr::group_by(.data$term) %>%
-    dplyr::summarize(
-      # Number of imputations
-      m = m,
-      # Mean coefficient
-      qbar = mean(.data$qhat),
-      # Mean squared SE
-      ubar = mean(.data$se^2),
-      b = stats::var(.data$qhat),
-      # Calculate the total variance
-      t = .data$ubar + (1 + 1 / .data$m) * .data$b,
-      # Proportion of total variance due to missingness
-      # lambda = (1 + 1 / .data$m) * .data$b / .data$t,
-      # Model degrees of freedom
-      # dfcom = dfcom,
-      # Barnard-Rubin adjusted degrees of freedom
-      # df = barnard.rubin(.data$lambda, .data$m, dfcom = Inf), #.data$dfcom),
-      # Df with Rubin's rules
-      # df <- (m - 1) * (1 + (u_bar / ((1 + 1/m) * b)))^2
-      # Relative increase in variance due to non-response
-      # riv = (1 + 1 / .data$m) * .data$b / .data$ubar,
-      # Fraction of missing information
-      # fmi = (.data$riv + 2 / (.data$df + 3)) / (.data$riv + 1),
-    )
+  # Pooled coefficient
+  qbar <- matrix(model_output$qhat, nrow = n_terms)
+  coef <- rowMeans(qbar)
+  # Within-imputation variance (mean squared SE)
+  ubar <- rowMeans(matrix(model_output$se^2, nrow = n_terms))
+  # Between-imputation variance
+  b <- apply(qbar, 1, stats::var)
+  # Total variance
+  t <- ubar + (1 + 1 / m) * b
 
-  # Pooled estimates
-  coef = pooled_stats$qbar
+  # Proportion of total variance due to missingness
+  # lambda = (1 + 1 / m) * b / t
+  # Model degrees of freedom
+  # dfcom = dfcom
+  # Barnard-Rubin adjusted degrees of freedom
+  # df = barnard.rubin(lambda, m, dfcom = Inf), #.dfcom)
+  # Df with Rubin's rules
+  # df <- (m - 1) * (1 + (ubar / ((1 + 1/m) * b)))^2
+  # Relative increase in variance due to non-response
+  # riv = (1 + 1 / m) * b / ubar
+  # Fraction of missing information
+  # fmi = (riv + 2 / (df + 3)) / (riv + 1)
+
   # Pooled standard errors
-  se = sqrt(pooled_stats$t)
+  se <- sqrt(t)
+
   # Pooled test statistics
   tval = coef / se
+
   # Pooled p-values
   pval <- 2 * (1 - pnorm(abs(tval))) # t-as-z approach
   pval[pval < min_pvalue] <- min_pvalue
@@ -193,13 +190,13 @@ vw_pool <- function(out_stats, m,
 #' Pooled degrees of freedom calculation
 #'
 #' @description
-#' Edited from \code{mice::barnard.rubin}. This function computes the residual
+#' Edited from `mice::barnard.rubin`. This function computes the residual
 #' degrees of freedom for hypothesis testing, as proposed by Barnard & Rubin (1999).
-#' It is used by the \code{\link{vw_pool}} function.
+#' It is used by the [vw_pool()] function.
 #'
 #' @param lambda : Proportion of total variance due to missingness
 #' @param m : Number of imputed datasets
-#' @param dfcom : Residual degrees of freedom, estimated using \code{stats::df.residual()}
+#' @param dfcom : Residual degrees of freedom, estimated using `stats::df.residual()`
 #'
 #' @return  Value for the residual degrees of freedom
 #'

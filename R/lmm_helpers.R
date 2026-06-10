@@ -414,7 +414,7 @@ single_lmm <- function(imp, y, y_name, model_formula = NULL,
   var_resid <- attr(vc, "sc")^2
   var_fix <- var(predict(fit, re.form = NA)) # var(as.vector(X %*% beta))
 
-  icc <- safe_calc(var_rand / (var_fix + var_rand + var_resid))
+  icc <- safe_calc(var_rand / (var_rand + var_resid))
   r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))
   r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_rand + var_resid))
   

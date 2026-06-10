@@ -377,7 +377,7 @@ run_vw_lmm2 <- function(
                             weights = weights)
 
         # Pool results
-        pooled_stats <- vw_pool(out_stats, m = m, pvalue_method="t-as-z")
+        pooled_stats <- vw_pool(out_stats, m = m, n_terms = fe_n, pvalue_method="t-as-z")
 
         # Log errors (if any)
         if (is.character(pooled_stats)) {

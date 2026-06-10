@@ -4,7 +4,7 @@
 \alias{vw_pool}
 \title{Pool \code{lme4::lmer} model output across imputed datasets}
 \usage{
-vw_pool(out_stats, m, pvalue_method = "t-as-z", min_pvalue = 2^-149)
+vw_pool(out_stats, m, n_terms, pvalue_method = "t-as-z", min_pvalue = 2^-149)
 }
 \arguments{
 \item{out_stats}{Output of \code{\link{single_lmm}}, i.e.: a list containing:
@@ -18,6 +18,8 @@ Note that if a model failed for that dataset \code{out_stats} has form
 \code{list("error"="Error message")}}
 
 \item{m}{Integer indicating the number of (imputed) dataset}
+
+\item{n_terms}{Integer indicating the number of fixed effect terms}
 
 \item{pvalue_method}{String indicating which approximation methods should be
 used to compute p-values. Options: \code{"t-as-z"}, \code{"wald-chi2"},
