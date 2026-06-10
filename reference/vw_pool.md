@@ -20,7 +20,7 @@ datasets, for lack of a better idea of how to combine them.
 ## Usage
 
 ``` r
-vw_pool(out_stats, m, pvalue_method = "t-as-z", min_pvalue = 2^-149)
+vw_pool(out_stats, m, n_terms, pvalue_method = "t-as-z", min_pvalue = 2^-149)
 ```
 
 ## Arguments
@@ -44,6 +44,10 @@ vw_pool(out_stats, m, pvalue_method = "t-as-z", min_pvalue = 2^-149)
 - m:
 
   Integer indicating the number of (imputed) dataset
+
+- n_terms:
+
+  Integer indicating the number of fixed effect terms
 
 - pvalue_method:
 

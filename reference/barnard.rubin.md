@@ -3,7 +3,7 @@
 Edited from `mice::barnard.rubin`. This function computes the residual
 degrees of freedom for hypothesis testing, as proposed by Barnard &
 Rubin (1999). It is used by the
-[`vw_pool`](https://seredef.github.io/verywise/reference/vw_pool.md)
+[`vw_pool()`](https://seredef.github.io/verywise/reference/vw_pool.md)
 function.
 
 ## Usage

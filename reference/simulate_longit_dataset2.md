@@ -236,8 +236,8 @@ truth <- simulate_longit_dataset2(
   site_sd           = 0.1,
   fs_template       = "fsaverage3"
 )
-#> ── Simulating longitudinal dataset ───────────────────── verywise v1.3.5.9000 ──
-#> ! `path` specified (/tmp/RtmpSpeIqK/longit_sim1cfe529a611b) does not exist.
+#> ── Simulating longitudinal dataset ────────────────────────── verywise v1.3.6 ──
+#> ! `path` specified (/tmp/RtmpeqW9nk/longit_sim1d49264765d) does not exist.
 #>   I'll try to create it.
 #> • creating phenotype file...
 #> * creating FreeSurfer dataset (
