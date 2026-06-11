@@ -3,6 +3,17 @@
 Routes each call to the appropriate `cli` alert type based on the
 conventional leading-character prefixes used in the existing codebase:
 
+|                  |                        |
+|------------------|------------------------|
+| Prefix in `msg`  | Rendered as            |
+| `" * "` / `"* "` | bullet (`cli_bullets`) |
+| `" ! "` / `" !"` | warning alert          |
+| `"NOTE:"`        | info alert             |
+| anything else    | `cli_text`             |
+
+Use the explicit typed variants (`vw_step`, `vw_bullet`, …) for new call
+sites rather than relying on auto-detection.
+
 ## Usage
 
 ``` r
@@ -24,16 +35,3 @@ vw_message(..., verbose = TRUE, type = NULL)
 
   Optional override: `"info"`, `"step"`, `"bullet"`, `"warning"`,
   `"success"`, `"note"`, `"sub"`.
-
-## Details
-
-|                  |                        |
-|------------------|------------------------|
-| Prefix in `msg`  | Rendered as            |
-| `" * "` / `"* "` | bullet (`cli_bullets`) |
-| `" ! "` / `" !"` | warning alert          |
-| `"NOTE:"`        | info alert             |
-| anything else    | `cli_text`             |
-
-Use the explicit typed variants (`vw_step`, `vw_bullet`, …) for new call
-sites rather than relying on auto-detection.

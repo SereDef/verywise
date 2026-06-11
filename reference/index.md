@@ -33,7 +33,7 @@
   : Count Vertices for a FreeSurfer Template Surface
 
 - [`create_cortex_mask()`](https://seredef.github.io/verywise/reference/create_cortex_mask.md)
-  : @title Save logical cortex mask from FreeSurfer cortex.label files
+  : Save logical cortex mask from FreeSurfer cortex.label files
 
 - [`estimate_fwhm()`](https://seredef.github.io/verywise/reference/estimate_fwhm.md)
   : Estimate full-width half maximum (FWHM)
@@ -95,9 +95,6 @@
 - [`precompile_model()`](https://seredef.github.io/verywise/reference/precompile_model.md)
   : Pre-compile a linear mixed model template
 
-- [`prettify_message()`](https://seredef.github.io/verywise/reference/prettify_message.md)
-  : Print pretty messages to console
-
 - [`refit_lmm()`](https://seredef.github.io/verywise/reference/refit_lmm.md)
   : Refit a pre-compiled linear mixed model with a new outcome and
   extract statistics
@@ -140,24 +137,13 @@
   dataset
 
 - [`simulate_freesurfer_data()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data.md)
-  : Simulate longitudinal FreeSurfer vertex-wise data
-
-- [`simulate_freesurfer_data2()`](https://seredef.github.io/verywise/reference/simulate_freesurfer_data2.md)
-  : Simulate longitudinal FreeSurfer vertex-wise data
+  : Simulate longitudinal FreeSurfer vertex-wise surface data
 
 - [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
-  : Simulate (longitudinal) phenotype data
-
-- [`simulate_long_pheno_data2()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data2.md)
   : Simulate longitudinal phenotype data
 
 - [`simulate_longit_dataset()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md)
-  : Simulate a longitudinal brain surface dataset with associated
-  phenotype data
-
-- [`simulate_longit_dataset2()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset2.md)
-  : Simulate a longitudinal brain surface dataset with associated
-  phenotype data
+  : Simulate a complete longitudinal brain surface dataset
 
 - [`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
   : Estimate a single outcome linear mixed model and extract statistics
@@ -182,9 +168,6 @@
 
   Pool [`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) model
   output across imputed datasets
-
-- [`vw_pretty_message()`](https://seredef.github.io/verywise/reference/vw_pretty_message.md)
-  : Print decorated message to console if verbose = TRUE
 
 - [`vw_summarize_outp_dir()`](https://seredef.github.io/verywise/reference/vw_summarize_outp_dir.md)
   : Summarise output directory: measures × hemispheres per subdirectory

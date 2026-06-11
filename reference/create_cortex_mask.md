@@ -1,6 +1,6 @@
-# @title Save logical cortex mask from FreeSurfer cortex.label files
+# Save logical cortex mask from FreeSurfer cortex.label files
 
-@title Save logical cortex mask from FreeSurfer cortex.label files
+Save logical cortex mask from FreeSurfer cortex.label files
 
 ## Usage
 

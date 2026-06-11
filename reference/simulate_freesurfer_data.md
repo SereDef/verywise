@@ -1,31 +1,33 @@
-# Simulate longitudinal FreeSurfer vertex-wise data
+# Simulate longitudinal FreeSurfer vertex-wise surface data
 
-Simulates FreeSurfer-formatted brain surface data for multiple
-cohorts/sites and multiple timepoints/sessions. The output folder
-structure emulates that produced by the FreeSurfer `recon-all` command,
-with directories named: `sub-<ID>_ses-<SESSION>`.
+Writes one `.mgh` file per observation (subject × session) to `path`,
+mimicking the FreeSurfer recon-all output layout. Vertex values are
+generated from a mixed-effects model with:
 
-The vertex-wise data are stored as `.mgh` files, with optional
-simulation of an association with a phenotype variable.
+- ROI-specific fixed effects specified via `roi_associations`;
+
+- a scalar subject random intercept (shared across all vertices);
+
+- an optional scalar site random intercept.
 
 ## Usage
 
 ``` r
 simulate_freesurfer_data(
   path,
+  pheno = NULL,
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
-  fs_template = "fsaverage",
-  measure = "thickness",
+  roi_associations = list(),
+  simulate_other_rois = FALSE,
   hemi = "lh",
-  fwhmc = "fwhm10",
-  vw_mean = 6.5,
+  measure = "thickness",
+  vw_mean = 2.5,
   vw_sd = 0.5,
   subj_sd = 0.2,
   site_sd = 0.1,
-  roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
-  simulate_association = NULL,
-  location_association = NULL,
+  fs_template = "fsaverage",
+  fwhmc = "fwhm10",
   seed = 3108,
   verbose = TRUE
 )
@@ -35,114 +37,117 @@ simulate_freesurfer_data(
 
 - path:
 
-  Character string. Directory where the dataset should be created. Will
-  be created if it does not exist.
+  Character string; root directory in which to write `.mgh` files.
+  Created if it does not exist.
+
+- pheno:
+
+  `data.frame` in long format from
+  [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md),
+  or `NULL` to auto-generate a minimal bookkeeping frame from
+  `data_structure`.
 
 - data_structure:
 
-  Named list defining cohorts/sites. Each element is a list with:
+  Named list; see
+  [`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md).
+  Ignored when `pheno` is supplied.
 
-  `"sessions"`
+- roi_associations:
 
-  :   Character vector of session labels.
+  Named list of named numeric vectors. Names of the list are
+  Desikan-Killiany ROI labels; names of each vector are column names in
+  `pheno`; values are beta coefficients. Example:
+  `list(temporalpole = c(age = 0.3, wisdom = 0.5))`.
 
-  `"n_subjects"`
+- simulate_other_rois:
 
-  :   Integer number of subjects.
-
-- fs_template:
-
-  Character (default = `"fsaverage"`). FreeSurfer template for vertex
-  registration. This is used to determine the size of the synthetic
-  brain surface data. Options:
-
-  - `"fsaverage"` = 163842 vertices (highest resolution)
-
-  - `"fsaverage6"` = 40962 vertices
-
-  - `"fsaverage5"` = 10242 vertices
-
-  - `"fsaverage4"` = 2562 vertices
-
-  - `"fsaverage3"` = 642 vertices
-
-- measure:
-
-  Character (default = `"thickness"`). Surface measure to simulate. This
-  is used for file names.
+  Logical; if `TRUE` all non-association ROIs are simulated under the
+  null.
 
 - hemi:
 
-  Character (default = `"lh"`). Hemisphere code: `"lh"` (left) or `"rh"`
-  (right). This is used for file names.
+  One of `"lh"` or `"rh"`.
 
-- fwhmc:
+- measure:
 
-  Character (default = `"fwhm10"`). Full-width half maximum smoothing
-  parameter. This is used for file names.
+  Character; FreeSurfer surface measure, e.g. `"thickness"` or `"area"`.
 
 - vw_mean:
 
-  Numeric (default = `6.5`). Mean of the simulated vertex-wise values.
+  Numeric; mean of the vertex-level residual noise (i.e. grand-mean
+  cortical thickness).
 
 - vw_sd:
 
-  Numeric (default = `0.5`). Standard deviation of the simulated
-  vertex-wise values.
+  Numeric \\\geq 0\\; SD of vertex-level residual noise.
 
 - subj_sd:
 
-  Numeric (default = `0.2`). Standard deviation of the random intercept
-  for subject (relevant in multi-session datasets).
+  Numeric \\\geq 0\\; SD of the subject random intercept.
 
 - site_sd:
 
-  Numeric (default = `0.1`). Standard deviation of the random intercept
-  for site (relevant in multi-site datasets).
+  Numeric \\\geq 0\\; SD of the site random intercept. Ignored when
+  there is only one site (intercept drawn as a single value).
 
-- roi_subset:
+- fs_template:
 
-  Character vector (default = c('temporalpole', 'frontalpole',
-  'entorhinal')). Vertex-wise data is simulated by default only within a
-  smaller subset (~1.5%) of the total surface. The rest of the vertex
-  values are set to 0, so they won't be analysed, saving time during
-  estimation. The region locations are extracted from the annotation
-  files in that are distributed with FreeSurfer and saved internally in
-  R/sysdata.rda.
+  Character; FreeSurfer template space, e.g. `"fsaverage"`.
 
-- simulate_association:
+- fwhmc:
 
-  Optional. If numeric, must be of length equal to the number of
-  generated files; if character, must have the format
-  `"<beta> * <variable_name>"`. Associations are injected into one small
-  region (the entorhinal cortex).
-
-- location_association:
-
-  Optional string or character vector. If specified, the association is
-  only present within these ROIs. The rest of the vertex values will be
-  set to have no relationship with any of the predictors. The region
-  locations are extracted from the annotation files in that are
-  distributed with FreeSurfer and saved internally in R/sysdata.rda.
+  Character; smoothing kernel label, e.g. `"fwhm10"`.
 
 - seed:
 
-  Integer (default = `3108`). Random seed.
+  Integer random seed.
 
 - verbose:
 
-  Logical (default = `TRUE`). If `TRUE`, print progress messages.
+  Logical; progress messages.
 
 ## Value
 
-Invisibly returns `NULL`. Vertex-wise data are written to `path` in
-FreeSurfer-compatible format.
+`NULL` invisibly. Side effect: `.mgh` files written to
+`path/<folder_id>/surf/<hemi>.<measure>.<fwhmc>.<fs_template>.mgh`.
+
+## ROI targeting
+
+- `simulate_other_rois = FALSE`:
+
+  Only ROIs in `roi_associations` are filled; all other vertices remain
+  0.
+
+- `simulate_other_rois = TRUE`:
+
+  All Desikan-Killiany cortical ROIs are filled. ROIs absent from
+  `roi_associations` are simulated under the null (no fixed effects,
+  noise only).
+
+## Data-generating process
+
+For observation \\i\\ and vertex \\v\\ in ROI \\r\\: \$\$y\_{iv} =
+\mathbf{x}\_i^\top \boldsymbol{\beta}\_r + b_i + b\_{\text{site}(i)} +
+\varepsilon\_{iv}\$\$ where \\b_i \sim N(0, \sigma\_\text{subj}^2)\\,
+\\b_s \sim N(0, \sigma\_\text{site}^2)\\, and \\\varepsilon\_{iv} \sim
+N(\mu\_\text{vw}, \sigma\_\text{vw}^2)\\. Random effects are scalar (not
+vertex-specific).
 
 ## See also
 
-[`simulate_longit_dataset`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md),
-[`simulate_long_pheno_data`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md)
+[`simulate_long_pheno_data()`](https://seredef.github.io/verywise/reference/simulate_long_pheno_data.md),
+[`simulate_longit_dataset()`](https://seredef.github.io/verywise/reference/simulate_longit_dataset.md)
 
-## Author
+## Examples
 
-Serena Defina, 2024.
+``` r
+if (FALSE) { # dir.exists("path/to/simulated_brains")
+simulate_freesurfer_data(
+  path = 'path/to/simulated_brains',
+  pheno = pheno,
+  roi_associations = list(temporalpole = c(age = 0.3)),
+  hemi = "both"
+)
+}
+```

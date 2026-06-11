@@ -3,7 +3,7 @@
 Clean the super-subject matrix of the vertices that have 0 value or are
 not located on the cortex, according to FreeSurfer `*cortical.mask.mgh`
 file distributed in `inst/extdata`. This function is used in
-[`build_supersubject`](https://seredef.github.io/verywise/reference/build_supersubject.md).
+[`build_supersubject()`](https://seredef.github.io/verywise/reference/build_supersubject.md).
 
 ## Usage
 
@@ -15,11 +15,11 @@ mask_cortex(hemi = "lh", fs_template = "fsaverage")
 
 - hemi:
 
-  : (default = "lh") hemisphere ("lh" or "rh")
+  (default = "lh") hemisphere ("lh" or "rh")
 
 - fs_template:
 
-  : (default = "fsaverage")
+  (default = "fsaverage")
 
 ## Value
 
