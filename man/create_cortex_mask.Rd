@@ -2,8 +2,7 @@
 % Please edit documentation in R/mask_cortex.R
 \name{create_cortex_mask}
 \alias{create_cortex_mask}
-\title{@title
-Save logical cortex mask from FreeSurfer cortex.label files}
+\title{Save logical cortex mask from FreeSurfer cortex.label files}
 \usage{
 create_cortex_mask(
   freesurfer_home = "",
@@ -24,6 +23,5 @@ create_cortex_mask(
 \item{outp_path}{: path where to save the logical mask}
 }
 \description{
-@title
 Save logical cortex mask from FreeSurfer cortex.label files
 }

@@ -2,94 +2,105 @@
 % Please edit documentation in R/simulate_longit_dataset.R
 \name{simulate_longit_dataset}
 \alias{simulate_longit_dataset}
-\title{Simulate a longitudinal brain surface dataset with associated phenotype data}
+\title{Simulate a complete longitudinal brain surface dataset}
 \usage{
 simulate_longit_dataset(
   path,
-  data_structure = list(cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 10),
-    cohort2 = list(sessions = c("01", "02"), n_subjects = 20)),
+  data_structure = list(cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 100),
+    cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
+  baseline = list(age = c(mean = 10, sd = 0.5), sex = c(levels = c("Male", "Female")),
+    wisdom = c(mean = 0, sd = 1)),
+  change = list(age = c(mean = 4, sd = 0.5), wisdom = c(mean = 1, sd = 0.5)),
+  roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), entorhinal = c(age =
+    0.9), frontalpole = c(wisdom = 0.7)),
+  simulate_other_rois = FALSE,
+  hemi = "both",
+  measure = "thickness",
+  vw_mean = 2.5,
+  vw_sd = 0.5,
+  subj_sd = 0.2,
+  site_sd = 0.1,
   fs_template = "fsaverage",
-  roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
-  simulate_association = NULL,
-  location_association = NULL,
-  overwrite = TRUE,
+  fwhmc = "fwhm10",
   seed = 3108,
-  verbose = TRUE,
-  ...
+  verbose = TRUE
 )
 }
 \arguments{
-\item{path}{Character string. Directory where the dataset should be created.
-Will be created if it does not exist.}
+\item{path}{Character string; root directory in which to write \code{.mgh} files.
+Created if it does not exist.}
 
-\item{data_structure}{Named list defining cohorts/sites. Each element is a
-list with:
+\item{data_structure}{Named list specifying site/cohort structure.  Each
+element must be a list with:
 \describe{
-\item{\code{"sessions"}}{Character vector of session labels.}
-\item{\code{"n_subjects"}}{Integer number of subjects.}
+\item{\code{sessions}}{Character vector of unique session labels.}
+\item{\code{n_subjects}}{Positive integer, number of subjects.}
 }}
 
-\item{fs_template}{Character (default = \code{"fsaverage"}). FreeSurfer
-template for vertex registration. This is used to determine the size of
-the synthetic brain surface data. Options:
-\itemize{
-\item \code{"fsaverage"} = 163842 vertices (highest resolution)
-\item \code{"fsaverage6"} = 40962 vertices
-\item \code{"fsaverage5"} = 10242 vertices
-\item \code{"fsaverage4"} = 2562 vertices
-\item \code{"fsaverage3"} = 642 vertices
-}}
+\item{baseline}{Named list defining baseline distributions.  Supports continuous
+covariates (\code{c(mean, sd)}) and categorical covariates (\code{c(levels = ...)}).
+See section \strong{Supported covariates}.}
 
-\item{roi_subset}{Character vector (default = c('temporalpole', 'frontalpole',
-'entorhinal')). Vertex-wise data is simulated by default only within a
-smaller subset (~1.5\%) of the total surface. The rest of the vertex values
-are set to 0, so they won't be analysed, saving time during estimation.
-The region locations are extracted from the annotation files in that
-are distributed with FreeSurfer and saved internally in R/sysdata.rda.}
+\item{change}{Named list of \code{c(mean, sd)} specifying the per-wave mean shift and
+noise SD for longitudinal covariates.  Only continuous variables should appear
+here.}
 
-\item{simulate_association}{Optional. If numeric, must be of length equal to
-the number of generated files; if character, must have the format
-\code{"<beta> * <variable_name>"}. Associations are injected into one small
-region (the entorhinal cortex).}
+\item{roi_associations}{Named list of named numeric vectors. Names of the list
+are Desikan-Killiany ROI labels; names of each vector are column names in
+\code{pheno}; values are beta coefficients.
+Example: \code{list(temporalpole = c(age = 0.3, wisdom = 0.5))}.}
 
-\item{location_association}{Optional string or character vector. If specified,
-the association is only present within these ROIs. The rest of the vertex values
-will be set to have no relationship with any of the predictors. The region
-locations are extracted from the annotation files in that are distributed with
-FreeSurfer and saved internally in R/sysdata.rda.}
+\item{simulate_other_rois}{Logical; if \code{TRUE} all non-association ROIs are
+simulated under the null.}
 
-\item{overwrite}{Logical (default = \code{TRUE}). Whether to overwrite an
-existing phenotype file.}
+\item{hemi}{One of \code{"lh"}, \code{"rh"}, or \code{"both"} (default: \code{"both"}).}
 
-\item{seed}{Integer (default = \code{3108}). Random seed.}
+\item{measure}{Character; FreeSurfer surface measure, e.g. \code{"thickness"} or
+\code{"area"}.}
 
-\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
-progress messages.}
+\item{vw_mean}{Numeric; mean of the vertex-level residual noise (i.e.
+grand-mean cortical thickness).}
 
-\item{...}{Additional arguments passed to \code{\link{simulate_freesurfer_data}}.}
+\item{vw_sd}{Numeric \eqn{\geq 0}; SD of vertex-level residual noise.}
+
+\item{subj_sd}{Numeric \eqn{\geq 0}; SD of the subject random intercept.}
+
+\item{site_sd}{Numeric \eqn{\geq 0}; SD of the site random intercept.
+Ignored when there is only one site (intercept drawn as a single value).}
+
+\item{fs_template}{Character; FreeSurfer template space, e.g. \code{"fsaverage"}.}
+
+\item{fwhmc}{Character; smoothing kernel label, e.g. \code{"fwhm10"}.}
+
+\item{seed}{Integer random seed for reproducibility.}
+
+\item{verbose}{Logical}
 }
 \value{
-Invisibly returns \code{NULL}. Data and phenotype files are written to
-\code{path}.
+\code{NULL} invisibly. Side effects: \code{phenotype.csv} and vertex-wise
+\code{.mgh} files written under \code{path}.
 }
 \description{
-Generates a synthetic longitudinal dataset for multiple sites/cohorts,
-each with multiple timepoints/sessions per subject. The function produces:
-
-\itemize{
-\item Brain surface data in FreeSurfer \code{.mgh} format, organised
-in a verywise folder structure (see vignettes for details).
-\item A matching \code{pheno} data frame with mock participant sex and
-age, saved as \file{"phenotype.csv"} in the \code{path} directory.
+High-level wrapper that:
+\enumerate{
+\item Generates a longitudinal phenotype \code{data.frame} via
+\code{\link[=simulate_long_pheno_data]{simulate_long_pheno_data()}};
+\item Writes it to \code{path/phenotype.csv};
+\item Calls \code{\link[=simulate_freesurfer_data]{simulate_freesurfer_data()}} for each requested hemisphere.
 }
-
-This is useful for testing pipelines or demonstrations where realistic
-FreeSurfer-style data and phenotypic information are required.
+}
+\examples{
+\dontshow{if (dir.exists('path/to/simulated/dataset')) withAutoprint(\{ # examplesIf}
+simulate_longit_dataset(
+  path = 'path/to/simulated/dataset/',
+  data_structure = list(
+    GENR = list(sessions = c("01", "02", "03"), n_subjects = 50)
+  ),
+  roi_associations = list(temporalpole = c(age = 1.3)),
+  hemi = "lh"
+)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link{simulate_freesurfer_data}},
-\code{\link{simulate_long_pheno_data}}
-}
-\author{
-Serena Defina, 2024.
+\code{\link[=simulate_long_pheno_data]{simulate_long_pheno_data()}}, \code{\link[=simulate_freesurfer_data]{simulate_freesurfer_data()}}
 }

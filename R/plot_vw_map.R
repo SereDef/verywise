@@ -1,47 +1,42 @@
 #' @title Plot vertex-wise coefficient maps on a 3D cortical surface
-#'
+#' 
 #' @description
 #' Locates the vertex-wise coefficient MGH files for a given model term and
 #' surface measure, optionally applies cluster-wise significance (CWS) masking,
 #' and renders the result on a standard fsaverage surface via
-#' \code{\link{plot_vw_surf}}.
+#' [plot_vw_surf()].
 #'
-#' Surface maps are loaded directly in R using \code{load.mgh()} without any
-#' Python dependency at the file-loading stage. The Python/nilearn rendering
-#' backend is invoked only through \code{\link{plot_vw_surf}}.
+#' Surface maps are loaded directly in R using [load.mgh()] without any
+#' Python dependency at the file-loading stage. The `Python/nilearn` rendering
+#' backend is invoked only through [plot_vw_surf()].
 #'
 #' @param res_dir Character. Path to the directory containing FreeSurfer-style
-#'   vertex-wise result files (\code{*.mgh}) and \code{stack_names.txt}.
+#'   vertex-wise result files (`*.mgh`) and `stack_names.txt`.
 #' @param term Character. Name of the model term to visualize (matched against
-#'   entries in \code{stack_names.txt}).
-#' @param measure Character. Surface measure to load, e.g. \code{"area"},
-#'   \code{"thickness"}, \code{"volume"}. Default \code{"area"}.
-#' @param hemi Character. Which hemisphere(s) to plot: \code{"both"} (default),
-#'   \code{"lh"}, or \code{"rh"}.
-#' @param surface Character. Surface mesh: \code{"pial"} (default) or
-#'   \code{"inflated"}.
+#'   entries in `stack_names.txt`).
+#' @param measure Character. Surface measure to load, e.g. `"area"`, `"thickness"`,
+#'   `"volume"`. Default `"area"`.
+#' @param hemi Character. Which hemisphere(s) to plot: `"both"` (default), `"lh"` or `"rh"`.
+#' @param surface Character. Surface mesh: `"pial"` (default) or `"inflated"`.
 #' @param threshold Controls vertex-level masking before plotting:
 #'   \describe{
-#'     \item{\code{"cws"} (default)}{Cluster-wise significance masking. Loads
-#'       the matching \code{*.cache.*.sig.ocn.mgh} file and sets all vertices
-#'       not belonging to a significant cluster (OCN label \code{== 0}) to
-#'       \code{NA}. If no OCN file is found, the unmasked coefficients are
-#'       plotted with a warning.}
-#'     \item{Numeric}{Passed directly to \code{\link{plot_vw_surf}} as an
-#'       absolute-value threshold (vertices with \code{|value| < threshold}
-#'       are hidden).}
-#'     \item{\code{NULL}}{No masking; all vertices are rendered.}
+#'     \item{`"cws"` (default)}{Cluster-wise significance masking. Loads the matching 
+#'       `*.cache.*.sig.ocn.mgh` file and sets all vertices not belonging to a significant 
+#'       cluster (OCN label == 0) to `NA`. If no OCN file is found, the unmasked coefficients
+#'       are plotted with a warning.}
+#'     \item{Numeric}{Passed directly to [plot_vw_surf()] as an absolute-value threshold 
+#'       (vertices with `|value| < threshold` are hidden).}
+#'     \item{`NULL`}{No masking; all vertices are rendered.}
 #'   }
-#' @param ... Additional arguments forwarded to \code{\link{plot_vw_surf}},
-#'   e.g. \code{views}, \code{cmap}, \code{vmin}, \code{vmax},
-#'   \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
-#'   \code{dpi}, \code{fs_home}, \code{fs_template}.
+#' @param ... Additional arguments forwarded to [plot_vw_surf()],
+#'   e.g. `views`, `cmap`, `vmin`, `vmax`, `colorbar`, `colorbar_label`, `title`, `to_file`,
+#'   `dpi`, `fs_home`, `fs_template.`
 #'
-#' @return Invisibly: the output of \code{\link{plot_vw_surf}} — the temp HTML
-#'   file path (interactive mode) or \code{to_file} path (static PNG mode).
+#' @return Invisibly: the output of [plot_vw_surf()] — the temp HTML file path (interactive 
+#'   mode) or `to_file` path (static PNG mode).
 #'   Called primarily for its side-effect of opening or saving the figure.
 #'
-#' @seealso \code{\link{plot_vw_surf}}, \code{\link{plot_vw_diff}}
+#' @seealso [plot_vw_surf()], [plot_vw_diff()]
 #'
 #' @examplesIf rlang::is_installed("reticulate") && dir.exists("~/results/fs_results")
 #' # Both hemispheres, interctive plot, cluster-wise masking (default)
@@ -79,6 +74,8 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
                         ...
                         # outline_rois = NULL
                       ) {
+  
+  require_packages('reticulate', call_fn = 'plot_vw_map')
 
   # Match mesh arguments
   hemi <- match.arg(hemi)
@@ -126,7 +123,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
     }
 
     # load coef via nibabel through reticulate
-    coef <- load.mgh(coef_file)$x
+    coef <- load.mgh(coef_file)
 
     if (identical(threshold, "cws")) {
       # ocn_file <- file.path(res_dir,
@@ -143,7 +140,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
           ocn_file <- ocn_file[1]
         }
 
-        ocn <- load.mgh(ocn_file)$x
+        ocn <- load.mgh(ocn_file)
         # keep only vertices belonging to a significant cluster (ocn is a
         # positive integer label; non-significant vertices are 0)
         coef[ocn==0] <- NA
@@ -163,7 +160,7 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
           fdr_file <- fdr_file[1]
         }
 
-        fdr <- load.mgh(fdr_file)$x
+        fdr <- load.mgh(fdr_file)
         # keep only vertices belonging to a significant cluster (ocn is a
         # positive integer label; non-significant vertices are 0)
         coef[!eval(str2lang(threshold))] <- NA

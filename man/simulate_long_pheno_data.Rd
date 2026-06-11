@@ -2,47 +2,81 @@
 % Please edit documentation in R/simulate_longit_dataset.R
 \name{simulate_long_pheno_data}
 \alias{simulate_long_pheno_data}
-\title{Simulate (longitudinal) phenotype data}
+\title{Simulate longitudinal phenotype data}
 \usage{
 simulate_long_pheno_data(
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
+  baseline = list(age = c(mean = 10, sd = 0.5), sex = c(levels = c("Male", "Female")),
+    wisdom = c(mean = 0, sd = 1)),
+  change = list(age = c(mean = 4, sd = 0.5), wisdom = c(mean = 1, sd = 0.5)),
   seed = 3108,
   verbose = TRUE
 )
 }
 \arguments{
-\item{data_structure}{Named list defining cohorts/sites. Each element is a
-list with:
+\item{data_structure}{Named list specifying site/cohort structure.  Each
+element must be a list with:
 \describe{
-\item{\code{"sessions"}}{Character vector of session labels.}
-\item{\code{"n_subjects"}}{Integer number of subjects.}
+\item{\code{sessions}}{Character vector of unique session labels.}
+\item{\code{n_subjects}}{Positive integer, number of subjects.}
 }}
 
-\item{seed}{Integer (default = \code{3108}). Random seed.}
+\item{baseline}{Named list defining baseline distributions.  Supports continuous
+covariates (\code{c(mean, sd)}) and categorical covariates (\code{c(levels = ...)}).
+See section \strong{Supported covariates}.}
 
-\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
-progress messages.}
+\item{change}{Named list of \code{c(mean, sd)} specifying the per-wave mean shift and
+noise SD for longitudinal covariates.  Only continuous variables should appear
+here.}
+
+\item{seed}{Integer random seed for reproducibility.}
+
+\item{verbose}{Logical}
 }
 \value{
-A \code{data.frame} in long format with columns:
-\code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{wisdom}, \code{folder_id}.
+A \code{data.frame} in long format with one row per subject × session.
+Always contains columns \code{site}, \code{id}, \code{time}, \code{folder_id}, + all covariates
+declared in \code{baseline}.
 }
 \description{
-Generates synthetic phenotype data in long format for multiple cohorts/sites
-and multiple timepoints/sessions per subject. Each record contains:
-\itemize{
-\item Subject ID
-\item Session/timepoint
-\item Sex
-\item Age
-\item Wisdom
-\item \code{folder_id} field matching the FreeSurfer directory structure
+Generates a long-format phenotype \code{data.frame} for one or more cohorts/sites
+across multiple sessions / time points.
 }
+\section{Supported covariates}{
+
+Covariates are declared through the \code{baseline} argument. The type of covariate
+is inferred from the names of each list element:
+\describe{
+\item{Continuous (e.g. \code{age}, \code{wisdom})}{Specify \code{c(mean = m, sd = s)}.
+Baseline values are drawn from \eqn{N(\var{m}, \var{s}^2)}.}
+\item{Categorical (e.g. \code{sex})}{Specify \code{c(levels = c("Male", "Female"))}.
+Each subject is assigned a level with equal probability and this value
+is held constant across sessions.}
+}
+}
+
+\section{Change model}{
+
+Follow-up values for continuous variables listed in \code{change} are computed as:
+\deqn{y_{i,s} = y_{i,1} + (s-1)\bar{\delta} + \varepsilon, \quad \varepsilon \sim N(0, \sigma_\delta^2)}
+where \eqn{s} is the 1-based session index.  The deviation from baseline is
+drawn independently at each session.
+The variance \eqn{\sigma_\delta^2} is constant across sessions; only the mean
+shift accumulates linearly.
+}
+
+\examples{
+pheno <- simulate_long_pheno_data(
+  data_structure = list(
+    GENR = list(sessions = c("01", "02"), n_subjects = 50)
+  ),
+  baseline = list(age = c(mean = 10, sd = 1), sex = c(levels = c("Male", "Female"))),
+  change   = list(age = c(mean = 4, sd = 0.5))
+)
+head(pheno)
+
 }
 \seealso{
-\code{\link{simulate_longit_dataset}}, \code{\link{simulate_freesurfer_data}}
-}
-\author{
-Serena Defina, 2024.
+\code{\link[=simulate_freesurfer_data]{simulate_freesurfer_data()}}, \code{\link[=simulate_longit_dataset]{simulate_longit_dataset()}}
 }

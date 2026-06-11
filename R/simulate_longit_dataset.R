@@ -1,422 +1,507 @@
-#' @title Simulate a longitudinal brain surface dataset with associated phenotype data
+# =============================================================================
+# Longitudinal simulation helpers
+# =============================================================================
+
+#' @title Build a minimal phenotype data frame from a data structure specification
+#' @description
+#' Creates a long-format data frame with one row per subject × session
+#' combination, containing bookkeeping columns used by the simulation
+#' pipeline. No phenotypic variables are added.
 #'
-#' @description 
-#' Generates a synthetic longitudinal dataset for multiple sites/cohorts,
-#' each with multiple timepoints/sessions per subject. The function produces:
-#'
-#' \itemize{
-#'   \item Brain surface data in FreeSurfer \code{.mgh} format, organised
-#'   in a verywise folder structure (see vignettes for details).
-#'   \item A matching \code{pheno} data frame with mock participant sex and
-#'   age, saved as \file{"phenotype.csv"} in the \code{path} directory.
-#' }
-#'
-#' This is useful for testing pipelines or demonstrations where realistic
-#' FreeSurfer-style data and phenotypic information are required.
-#'
-#' @param path Character string. Directory where the dataset should be created.
-#'   Will be created if it does not exist.
-#' @param data_structure Named list defining cohorts/sites. Each element is a
-#'   list with:
+#' @param data_structure A named list where each element corresponds to one
+#'   site/cohort. Every element must contain:
 #'   \describe{
-#'     \item{\code{"sessions"}}{Character vector of session labels.}
-#'     \item{\code{"n_subjects"}}{Integer number of subjects.}
+#'     \item{\code{sessions}}{Character vector of unique session labels
+#'       (e.g. \code{c("01", "02")}).}
+#'     \item{\code{n_subjects}}{Positive integer giving the number of
+#'       subjects at this site.}
 #'   }
-#' @param fs_template Character (default = \code{"fsaverage"}). FreeSurfer
-#'   template for vertex registration. This is used to determine the size of
-#'   the synthetic brain surface data. Options:
-#'   \itemize{
-#'     \item \code{"fsaverage"} = 163842 vertices (highest resolution)
-#'     \item \code{"fsaverage6"} = 40962 vertices
-#'     \item \code{"fsaverage5"} = 10242 vertices
-#'     \item \code{"fsaverage4"} = 2562 vertices
-#'     \item \code{"fsaverage3"} = 642 vertices
+#'
+#' @return A \code{data.frame} in long format with columns:
+#'   \describe{
+#'     \item{\code{id}}{Integer subject identifier (within-site).}
+#'     \item{\code{site}}{Site/cohort label (character).}
+#'     \item{\code{time}}{Session label (character).}
+#'     \item{\code{folder_id}}{FreeSurfer-style path fragment,
+#'       e.g. \code{"cohort1/sub-1_ses-01"}.}
 #'   }
-#' @param roi_subset Character vector (default = c('temporalpole', 'frontalpole',
-#'   'entorhinal')). Vertex-wise data is simulated by default only within a 
-#'   smaller subset (~1.5%) of the total surface. The rest of the vertex values
-#'   are set to 0, so they won't be analysed, saving time during estimation. 
-#'   The region locations are extracted from the annotation files in that 
-#'   are distributed with FreeSurfer and saved internally in R/sysdata.rda.
-#' @param simulate_association Optional. If numeric, must be of length equal to
-#'   the number of generated files; if character, must have the format
-#'   \code{"<beta> * <variable_name>"}. Associations are injected into one small
-#'   region (the entorhinal cortex).
-#' @param location_association Optional string or character vector. If specified, 
-#'   the association is only present within these ROIs. The rest of the vertex values
-#'   will be set to have no relationship with any of the predictors. The region
-#'   locations are extracted from the annotation files in that are distributed with
-#'   FreeSurfer and saved internally in R/sysdata.rda.
-#' @param overwrite Logical (default = \code{TRUE}). Whether to overwrite an
-#'   existing phenotype file.
-#' @param seed Integer (default = \code{3108}). Random seed.
-#' @param verbose Logical (default = \code{TRUE}). If \code{TRUE}, print
-#'   progress messages.
-#' @param ... Additional arguments passed to \code{\link{simulate_freesurfer_data}}.
 #'
-#'
-#' @seealso
-#' \code{\link{simulate_freesurfer_data}},
-#' \code{\link{simulate_long_pheno_data}}
-#'
-#' @author Serena Defina, 2024.
-#'
-#' @return
-#' Invisibly returns \code{NULL}. Data and phenotype files are written to
-#' \code{path}.
-#'
-#' @export
-#'
-simulate_longit_dataset <- function(path,
-  data_structure = list("cohort1" = list("sessions" = c("01", "02", "03"),
-                                         "n_subjects" = 10),
-                        "cohort2" = list("sessions" = c("01", "02"),
-                                         "n_subjects" = 20)),
-  fs_template = "fsaverage",
-  roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
-  simulate_association =  NULL,
-  location_association = NULL,
-  overwrite = TRUE,
-  seed = 3108,
-  verbose = TRUE,
-  ...) {
-  
-    # betas = c(sex = -0.2, age = 0.3),
-    # tau2 = 0.01,
-    # sigma2 = 0.01,
-    # fs_template = "fsaverage",
-    # roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
-    # location_association = NULL,
-    # measure = "thickness",
-    # hemi = "lh",
-    # fwhmc = "fwhm10",
-    # vw_mean = 5,
-    # vw_sd = 0.5,
-    # overwrite = TRUE,
-    # seed = 3108,
-    # verbose = TRUE
+#' @keywords internal
+build_minimal_pheno <- function(data_structure) {
+  stopifnot(is.list(data_structure), !is.null(names(data_structure)))
 
-  # Create directory in path if it does not exist
-  if (!dir.exists(path)) dir.create(path,
-                                    showWarnings = FALSE, recursive = TRUE)
+  site_dfs <- lapply(names(data_structure), function(site) {
+    spec <- data_structure[[site]]
 
-  pheno_file_path <- file.path(path, "phenotype.csv")
-
-  if (!overwrite & file.exists(pheno_file_path)) {
-    vw_message(" * re-using existing phenotype file created on: ",
-               file.info(pheno_file_path)[,"mtime"], verbose = verbose)
-    pheno <- utils::read.csv(pheno_file_path)
-
-  } else {
-    if (overwrite & file.exists(pheno_file_path)) {
-      vw_message(" * overwriting existing phenotype file created on: ",
-                 file.info(pheno_file_path)[,"mtime"], verbose = verbose)
+    if (!is.list(spec) || is.null(spec$sessions) || is.null(spec$n_subjects)) {
+      vw_error("Each element of data_structure must contain 'sessions' and 'n_subjects'.")
     }
 
-    # Simulate phenotype data
-    pheno <- simulate_long_pheno_data(
-      data_structure = data_structure,
-      seed = seed,
-      verbose = verbose
-    )
+    sess <- as.character(spec$sessions)
+    n <- as.integer(spec$n_subjects)
 
-    # TODO: make this also a multiple imputation object for testing
-    utils::write.csv(pheno,
-                     file = pheno_file_path,
-                     row.names = FALSE
-    )
-  }
-
-  if (!is.null(simulate_association)) {
-    if (is.numeric(simulate_association)) {
-      stopifnot(length(simulate_association) == nrow(pheno))
-    } else if (is.character(simulate_association)) {
-      parsed_ass <- strsplit(simulate_association, ' ', fixed = TRUE)[[1]]
-      beta <- as.numeric(parsed_ass[1])
-      var <- pheno[, parsed_ass[3]]
-      var_z <- if (is.factor(var) || is.character(var)) {
-        as.numeric(as.factor(var)) - 1 # dummy code 
-      } else {
-        # scale(var) # Z-score 
-        var - mean(var) # mean - center
-      }
-      simulate_association <- as.vector(beta * var_z)
-    } else {
-      stop('`simulate_association` is not correctly specified.')
+    if (length(sess) < 1L || anyNA(sess) || anyDuplicated(sess)) {
+      vw_error("Sessions must be a non-empty character vector with unique labels.")
     }
-  }
+    if (n <= 0L) {
+      vw_error("n_subjects must be a positive integer for site '{site}'")
+    }
 
-  # Simulate FreeSurfer data to match
-  simulate_freesurfer_data(
-    path = path,
-    data_structure = data_structure,
-    fs_template = fs_template,
-    roi_subset = roi_subset,
-    simulate_association = simulate_association,
-    location_association = location_association,
-    seed = seed,
-    verbose = verbose,
-    ...
-  )
+    min_pheno <- expand.grid(id = seq_len(n), site = site, time = sess, stringsAsFactors = FALSE)
+
+    min_pheno$folder_id <- file.path(site, paste0("sub-", min_pheno$id, "_ses-", min_pheno$time))
+
+    min_pheno
+  })
+
+  do.call(rbind, site_dfs)
 }
 
-
-#' @title
-#' Simulate (longitudinal) phenotype data
-#'
+#' @title Validate a user-supplied phenotype data frame
 #' @description
-#' Generates synthetic phenotype data in long format for multiple cohorts/sites
-#' and multiple timepoints/sessions per subject. Each record contains:
-#' \itemize{
-#'   \item Subject ID
-#'   \item Session/timepoint
-#'   \item Sex
-#'   \item Age
-#'   \item Wisdom
-#'   \item \code{folder_id} field matching the FreeSurfer directory structure
+#' Checks that `pheno` is a `data.frame` containing all columns required 
+#' by `roi_associations` + a `folder_id` column. If `pheno = NULL` and 
+#' `roi_associations` is empty, a minimal bookkeeping-only phenotype is built
+#' from `data_structure`.
+#'
+#' @param pheno A `data.frame` in long format, or `NULL`.
+#' @param data_structure Named list passed to [build_minimal_pheno()]
+#'   when `pheno = NULL`.
+#' @param roi_associations Named list of numeric vectors as accepted by
+#'   [simulate_freesurfer_data()].
+#'
+#' @return The validated (or freshly built) `data.frame`.
+#'
+#' @keywords internal
+validate_pheno <- function(pheno, data_structure, roi_associations) {
+  
+  if (is.null(pheno)) {
+    if (length(roi_associations) > 0) vw_error('If associations are specified a matching phenotype must be provided')
+    return(build_minimal_pheno(data_structure))
+  }
+
+  if (!is.data.frame(pheno)) vw_error("'pheno' must be a data.frame in long format.")
+
+  required_vars <- c(unique(unlist(lapply(roi_associations, names))), 'folder_id')
+  missing_cols  <- setdiff(required_vars, names(pheno))
+  if (length(missing_cols) > 0L) vw_error("'pheno' is missing required column(s): {missing_cols}")
+  
+  pheno
+}
+
+#' @title Validate ROI association specifications
+#' @description
+#' Checks that `roi_associations` is a named list of named numeric vectors whose names
+#' correspond to known Desikan-Killiany ROI labels.
+#'
+#' @param roi_associations Named list of named numeric vectors specifying fixed-effect 
+#'   beta coefficients per ROI.  May be `NULL` or an empty `list()`.
+#' @param simulate_other_rois Logical. If `FALSE`, an empty `roi_associations` is an 
+#'   error because no data would be simulated.
+#'
+#' @return The validated `roi_associations` list (invisibly).
+#'
+#' @keywords internal
+validate_roi_associations <- function(roi_associations, simulate_other_rois) {
+
+  if (is.null(roi_associations) || length(roi_associations) == 0L) {
+    if (!simulate_other_rois) vw_error("simulate_other_rois is FALSE but roi_associations is empty! No data is simulated.") 
+    return(list())
+  }
+  if (!is.list(roi_associations) || is.null(names(roi_associations))) vw_error("'roi_associations' must be a named list of named numeric vectors.")
+  
+  if (anyDuplicated(names(roi_associations))) {
+    vw_error("'roi_associations' contains duplicated ROI names. That is not allowed.")
+  }
+
+  dk_rois <- unique(locate_roi()$roi_label)
+  dk_rois <- dk_rois[!is.na(dk_rois)]
+
+  unknown_rois <- setdiff(names(roi_associations), dk_rois)
+  if (length(unknown_rois) > 0L) {
+    vw_error("Unknown ROI(s) in 'roi_associations': {unknown_rois}. Please use one of: {dk_rois}")
+  }
+
+  lapply(roi_associations, function(x) {
+    stopifnot(is.numeric(x) && !is.null(names(x)))
+  })
+  
+  roi_associations
+}
+
+# =============================================================================
+#  simulate_long_pheno_data()
+# =============================================================================
+
+#' @title Simulate longitudinal phenotype data
+#' @description
+#' Generates a long-format phenotype `data.frame` for one or more cohorts/sites 
+#' across multiple sessions / time points.
+#'
+#' @section Supported covariates:
+#' Covariates are declared through the `baseline` argument. The type of covariate
+#' is inferred from the names of each list element:
+#' \describe{
+#'   \item{Continuous (e.g. `age`, `wisdom`)}{Specify `c(mean = m, sd = s)`.
+#'      Baseline values are drawn from \eqn{N(\var{m}, \var{s}^2)}.}
+#'   \item{Categorical (e.g. `sex`)}{Specify `c(levels = c("Male", "Female"))`.
+#'     Each subject is assigned a level with equal probability and this value 
+#'     is held constant across sessions.}
 #' }
 #'
-#' @inheritParams simulate_longit_dataset
+#' @section Change model:
+#' Follow-up values for continuous variables listed in `change` are computed as:
+#' \deqn{y_{i,s} = y_{i,1} + (s-1)\bar{\delta} + \varepsilon, \quad \varepsilon \sim N(0, \sigma_\delta^2)}
+#' where \eqn{s} is the 1-based session index.  The deviation from baseline is
+#' drawn independently at each session.
+#' The variance \eqn{\sigma_\delta^2} is constant across sessions; only the mean 
+#' shift accumulates linearly.
 #'
-#' @return
-#' A \code{data.frame} in long format with columns:
-#' \code{site}, \code{id}, \code{time}, \code{sex}, \code{age}, \code{wisdom}, \code{folder_id}.
+#' @param data_structure Named list specifying site/cohort structure.  Each
+#'   element must be a list with:
+#'   \describe{
+#'     \item{`sessions`}{Character vector of unique session labels.}
+#'     \item{`n_subjects`}{Positive integer, number of subjects.}
+#'   }
+#' @param baseline Named list defining baseline distributions.  Supports continuous 
+#'   covariates (`c(mean, sd)`) and categorical covariates (`c(levels = ...)`).
+#'   See section **Supported covariates**.
+#' @param change Named list of `c(mean, sd)` specifying the per-wave mean shift and 
+#'   noise SD for longitudinal covariates.  Only continuous variables should appear 
+#'   here.
+#' @param seed Integer random seed for reproducibility.
+#' @param verbose Logical
 #'
-#' @seealso
-#' \code{\link{simulate_longit_dataset}}, \code{\link{simulate_freesurfer_data}}
+#' @return A `data.frame` in long format with one row per subject × session.
+#' Always contains columns `site`, `id`, `time`, `folder_id`, + all covariates 
+#' declared in `baseline`.
 #'
-#' @author
-#' Serena Defina, 2024.
+#' @seealso [simulate_freesurfer_data()], [simulate_longit_dataset()]
+#'
+#' @examples
+#' pheno <- simulate_long_pheno_data(
+#'   data_structure = list(
+#'     GENR = list(sessions = c("01", "02"), n_subjects = 50)
+#'   ),
+#'   baseline = list(age = c(mean = 10, sd = 1), sex = c(levels = c("Male", "Female"))),
+#'   change   = list(age = c(mean = 4, sd = 0.5))
+#' )
+#' head(pheno)
 #'
 #' @export
-#'
-simulate_long_pheno_data <- function(data_structure = list(
-                                       "cohort1" = list(
-                                         "sessions" = c("01", "02"),
-                                         "n_subjects" = 100
-                                       ),
-                                       "cohort2" = list(
-                                         "sessions" = c("01", "02"),
-                                         "n_subjects" = 150
-                                       )
-                                     ),
-                                     seed = 3108,
-                                     verbose = TRUE) {
+#' 
+simulate_long_pheno_data <- function(
+    data_structure = list(
+      cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
+      cohort2 = list(sessions = c("01", "02"), n_subjects = 150)
+    ),
+    baseline = list(age = c(mean=10, sd=0.5), 
+                    sex = c(levels=c('Male','Female')), 
+                    wisdom = c(mean = 0, sd = 1)),
+    change = list(age = c(mean=4, sd=0.5), 
+                  wisdom = c(mean = 1, sd = 0.5)),
+    seed           = 3108,
+    verbose        = TRUE) {
 
-  vw_message(" * creating phenotype file...", verbose = verbose)
+  if (verbose) cli::cli_progress_step('Generate phenotype data', spinner=TRUE)
   set.seed(seed)
 
-  fake_data <- lapply(names(data_structure), function(site) {
-    n_subjects <- data_structure[[site]]$n_subjects
-    sessions <- data_structure[[site]]$sessions
-    
-    # Create baseline dataset (session 1)
-    baseline <- data.frame(
-      id = 1:n_subjects,
-      time = sessions[1],
-      sex = sample(c("Male", "Female"), n_subjects, replace = TRUE),
-      age = round(stats::rnorm(n_subjects, mean = 20, sd = 2), 1),
-      wisdom = round(stats::rnorm(n_subjects, mean = 10, sd = 3), 1)
-    )
+  site_frames <- lapply(names(data_structure), function(site) {
+    spec <- data_structure[[site]]
+    n <- as.integer(spec$n_subjects)
+    sess <- spec$sessions
 
-    if (length(sessions) == 1) {
-      return(baseline)
-    
-    } else {
-      t1 <- baseline
-      for (s in seq(2, length(sessions))) {
-        t2 <- data.frame(
-          id = baseline$id,
-          time = sessions[s],
-          sex = baseline$sex,
-          age = round(baseline$age + stats::rnorm(n_subjects, mean = (s-1L)*4, sd = 1.5)),
-          wisdom = round(baseline$wisdom + stats::rnorm(n_subjects, mean = 1, sd = 1))
-        )
-        t1 <- rbind(t1, t2)
+    baseline_df <- data.frame(id = seq_len(n), site = site, time = sess[1])
+
+    for (var in names(baseline)) {
+      var_def <- baseline[[var]]
+      if (identical(sort(names(var_def)), c("mean", "sd"))) {
+        baseline_df[[var]] <- stats::rnorm(n, mean = var_def['mean'], sd = var_def['sd'])
+      } else {
+        raw <- sample(unname(var_def), n, replace = TRUE)
+        baseline_df[[var]] <- factor(raw, levels = unname(var_def))
       }
-      return(t1)
+    }
+
+    long_df <- if (length(sess) == 1) { baseline_df 
+    } else {
+      follow_dfs <- lapply(seq(2, length(sess)), function(s) {
+        follow_df <- baseline_df
+        follow_df$time <- sess[s]
+
+        for (var in names(change)) {
+          var_def <- change[[var]]
+          follow_df[[var]] <- baseline_df[[var]] + stats::rnorm(n, mean = (s-1L)*var_def['mean'], sd = var_def['sd'])
+        }
+
+        follow_df
+      })
+
+      do.call(rbind, c(list(baseline_df), follow_dfs))
     }
   })
-  names(fake_data) <- names(data_structure)
+  
+  pheno <- do.call(rbind, site_frames)
 
-  long_df <- dplyr::bind_rows(fake_data, .id = "site")
+  pheno$folder_id = file.path(pheno$site, paste0("sub-", pheno$id, "_ses-", pheno$time))
 
-  long_df["folder_id"] <- file.path(
-    long_df$site,
-    paste0(
-      "sub-", long_df$id,
-      "_ses-", long_df$time
-    )
-  )
-  return(long_df)
+  vw_message(c("i" = "{.val {nrow(pheno)}} total observations (from {.val2 {length(data_structure)}} site{?s} 
+                       and {.val2 {length(unique(pheno$time))}} wave{?s})", 
+               " " = "Variables: {.strong {names(pheno)}}"), verbose = verbose)
+
+  pheno
 }
 
+# =============================================================================
+#  simulate_freesurfer_data()
+# =============================================================================
 
-#' @title
-#' Simulate longitudinal FreeSurfer vertex-wise data
-#'
+#' @title Simulate longitudinal FreeSurfer vertex-wise surface data
 #' @description
-#' Simulates FreeSurfer-formatted brain surface data for multiple cohorts/sites
-#' and multiple timepoints/sessions. The output folder structure emulates that
-#' produced by the FreeSurfer \code{recon-all} command, with directories named:
-#' \code{sub-<ID>_ses-<SESSION>}.
+#' Writes one `.mgh` file per observation (subject × session) to `path`, mimicking
+#' the FreeSurfer recon-all output layout. Vertex values are generated from a 
+#' mixed-effects model with:
+#' \itemize{
+#'   \item ROI-specific fixed effects specified via `roi_associations`;
+#'   \item a scalar subject random intercept (shared across all vertices);
+#'   \item an optional scalar site random intercept.
+#' }
 #'
-#' The vertex-wise data are stored as \code{.mgh} files, with optional simulation
-#' of an association with a phenotype variable.
+#' @section ROI targeting:
+#' \describe{
+#'   \item{`simulate_other_rois = FALSE`}{Only ROIs in `roi_associations` are filled;
+#'      all other vertices remain 0.}
+#'   \item{`simulate_other_rois = TRUE`}{All Desikan-Killiany cortical ROIs are filled.
+#'     ROIs absent from `roi_associations` are simulated under the null (no fixed effects,
+#'     noise only).}
+#' }
 #'
-#' @inheritParams simulate_longit_dataset
-#' @param measure Character (default = \code{"thickness"}). Surface measure to
-#'   simulate. This is used for file names.
-#' @param hemi Character (default = \code{"lh"}). Hemisphere code: \code{"lh"}
-#'   (left) or \code{"rh"} (right). This is used for file names.
-#' @param fwhmc Character (default = \code{"fwhm10"}). Full-width half maximum
-#'   smoothing parameter. This is used for file names.
-#' @param vw_mean Numeric (default = \code{6.5}). Mean of the simulated
-#'   vertex-wise values.
-#' @param vw_sd Numeric (default = \code{0.5}). Standard deviation of the
-#'   simulated vertex-wise values.
-#' @param subj_sd Numeric (default = \code{0.2}). Standard deviation of the
-#'   random intercept for subject (relevant in multi-session datasets).
-#' @param site_sd Numeric (default = \code{0.1}). Standard deviation of the
-#'   random intercept for site (relevant in multi-site datasets).
+#' @section Data-generating process:
+#' For observation \eqn{i} and vertex \eqn{v} in ROI \eqn{r}: 
+#' \deqn{y_{iv} = \mathbf{x}_i^\top \boldsymbol{\beta}_r + b_i + b_{\text{site}(i)} + \varepsilon_{iv}}
+#' where \eqn{b_i \sim N(0, \sigma_\text{subj}^2)},
+#' \eqn{b_s \sim N(0, \sigma_\text{site}^2)}, and
+#' \eqn{\varepsilon_{iv} \sim N(\mu_\text{vw}, \sigma_\text{vw}^2)}.
+#' Random effects are scalar (not vertex-specific).
 #'
-#' @author Serena Defina, 2024.
-
-#' @return
-#' Invisibly returns \code{NULL}. Vertex-wise data are written to \code{path}
-#' in FreeSurfer-compatible format.
+#' @param path Character string; root directory in which to write `.mgh` files. 
+#'   Created if it does not exist.
+#' @param pheno `data.frame` in long format from [simulate_long_pheno_data()], 
+#'   or `NULL` to auto-generate a minimal bookkeeping frame from `data_structure`.
+#' @param data_structure Named list; see [simulate_long_pheno_data()].
+#'   Ignored when `pheno` is supplied.
+#' @param roi_associations Named list of named numeric vectors. Names of the list
+#'   are Desikan-Killiany ROI labels; names of each vector are column names in 
+#'   `pheno`; values are beta coefficients. 
+#'   Example: `list(temporalpole = c(age = 0.3, wisdom = 0.5))`.
+#' @param simulate_other_rois Logical; if `TRUE` all non-association ROIs are 
+#'   simulated under the null.
+#' @param hemi One of `"lh"` or `"rh"`.
+#' @param measure Character; FreeSurfer surface measure, e.g. `"thickness"` or
+#'   `"area"`.
+#' @param vw_mean Numeric; mean of the vertex-level residual noise (i.e. 
+#'   grand-mean cortical thickness).
+#' @param vw_sd Numeric \eqn{\geq 0}; SD of vertex-level residual noise.
+#' @param subj_sd Numeric \eqn{\geq 0}; SD of the subject random intercept.
+#' @param site_sd Numeric \eqn{\geq 0}; SD of the site random intercept.
+#'   Ignored when there is only one site (intercept drawn as a single value).
+#' @param fs_template Character; FreeSurfer template space, e.g. `"fsaverage"`.
+#' @param fwhmc Character; smoothing kernel label, e.g. `"fwhm10"`.
+#' @param seed Integer random seed.
+#' @param verbose Logical; progress messages.
 #'
-#' @seealso
-#' \code{\link{simulate_longit_dataset}}, \code{\link{simulate_long_pheno_data}}
+#' @return `NULL` invisibly. Side effect: `.mgh` files written to
+#'   `path/<folder_id>/surf/<hemi>.<measure>.<fwhmc>.<fs_template>.mgh`.
+#' @seealso [simulate_long_pheno_data()], [simulate_longit_dataset()]
 #'
+#' @examplesIf dir.exists('path/to/simulated_brains')
+#' simulate_freesurfer_data(
+#'   path = 'path/to/simulated_brains',
+#'   pheno = pheno,
+#'   roi_associations = list(temporalpole = c(age = 0.3)),
+#'   hemi = "both"
+#' )
+#'
+#' @importFrom stats rnorm setNames
 #' @export
-#'
-simulate_freesurfer_data <- function(path,
-                                     data_structure = list(
-                                       "cohort1" = list(
-                                         "sessions" = c("01", "02"),
-                                         "n_subjects" = 100
-                                       ),
-                                       "cohort2" = list(
-                                         "sessions" = c("01", "02"),
-                                         "n_subjects" = 150
-                                       )
-                                     ),
-                                     fs_template = "fsaverage",
-                                     measure = "thickness",
-                                     hemi = "lh",
-                                     fwhmc = "fwhm10",
-                                     vw_mean = 6.5,
-                                     vw_sd = 0.5,
-                                     subj_sd = 0.2, 
-                                     site_sd = 0.1,
-                                     roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'),
-                                     simulate_association = NULL,
-                                     location_association = NULL,
-                                     seed = 3108,
-                                     verbose = TRUE) {
+#' 
+simulate_freesurfer_data <- function(
+    path,
+    pheno = NULL,
+    data_structure = list(
+      cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
+      cohort2 = list(sessions = c("01", "02"), n_subjects = 150)
+    ),
+    roi_associations = list(),
+    simulate_other_rois = FALSE,
+    hemi = "lh",
+    measure = "thickness",
+    vw_mean = 2.5,
+    vw_sd = 0.5,
+    subj_sd = 0.2,
+    site_sd = 0.1,
+    fs_template = "fsaverage",
+    fwhmc = "fwhm10",
+    seed = 3108,
+    verbose = TRUE) {
 
   hemi_name <- if (hemi == "lh") "left" else "right"
-  vw_message(" * creating FreeSurfer dataset (", hemi_name," hemisphere)...",
-             verbose = verbose)
+
+  if (verbose) cli::cli_progress_step('Generate FreeSurfer dataset ({hemi_name} hemisphere)', spinner=TRUE)
+ 
+  stopifnot(
+    is.numeric(vw_sd), vw_sd >= 0,
+    is.numeric(subj_sd), subj_sd >= 0,
+    is.numeric(site_sd), site_sd >= 0
+  )
+
   set.seed(seed)
 
   check_path(path, create_if_not = TRUE)
 
-  total_n_files = sum(sapply(
-    data_structure,
-    function(site) site$n_subjects * length(site$sessions)))
-
-  vw_message('* {.val2 {total_n_files}} total files.', verbose = verbose)
-
-  file_counter <- 1
-
-  n_verts <- count_vertices(fs_template)
-
-  # First isolate some regions from annotation file in R/sysdata.rda
-  # Default: 'temporalpole', 'frontalpole', 'entorhinal'
-  # I chose these because they are a small subset (~1.5%) of the surface
-  # The rest of the values are left to 0 so they won't be analysed
-  if (!is.null(roi_subset)) {
-    roi_locs <- locate_roi(rois = roi_subset, n_verts = n_verts, hemi = hemi, verbose = verbose)
-  } else {
-    # Everything
-    # roi_locs <- !logical(n_verts)
-
-    # All vertices with a little bit of cleanup
-    all_rois <- locate_roi(hemi = hemi)$roi_label
-    all_good_rois <- all_rois[!is.na(all_rois) & all_rois != 'unknown']
-    roi_locs <- locate_roi(rois = all_good_rois, n_verts = n_verts, hemi = hemi, verbose = verbose)
-  }
+  roi_associations <- validate_roi_associations(roi_associations = roi_associations, simulate_other_rois = simulate_other_rois)
+  pheno <- validate_pheno(pheno = pheno, data_structure = data_structure, roi_associations = roi_associations)
   
-  if (!is.null(simulate_association)) {
-    if (!is.null(location_association)) {
-      # Associations only in your fav region
-      assoc_roi <- locate_roi(rois=location_association, n_verts = n_verts, hemi = hemi,
-                              verbose = verbose)
-    } else {
-      # Associations across the whole subset
-      assoc_roi <- roi_locs
+  n_verts <- count_vertices(fs_template)
+  n_obs <- nrow(pheno)
+
+  ss <- matrix(0, nrow = n_obs, ncol = n_verts, dimnames = list(pheno$folder_id, NULL))
+
+  # Build random terms 
+    
+  subj_key <- paste(pheno$site, pheno$id, sep = ":")  # e.g. "GENR:1"
+  unique_subjs <- unique(subj_key)
+  subj_re_map <- setNames(rnorm(length(unique_subjs), 0, subj_sd), unique_subjs)
+  ri_subj <- subj_re_map[subj_key] # intercept: same subject across timepoints gets same RE
+  
+  unique_sites <- unique(pheno$site)
+  if (length(unique_sites) == 1) { ri_site = 0L } else {
+    site_re_map <- setNames(rnorm(length(unique_sites), 0, site_sd), unique_sites)
+    ri_site <- site_re_map[pheno$site] 
+  }
+
+  roi_map <- aparc.annot[[hemi]]$label_names[1:n_verts]
+
+  if (simulate_other_rois) {
+    roi_locs <- which(!roi_map %in% names(roi_associations))
+    ss[, roi_locs] <- ri_site + ri_subj + rnorm(n_obs * length(roi_locs), mean = vw_mean, sd = vw_sd)
+    ss[, roi_locs] <- pmax(ss[, roi_locs], 0.001)
+  }
+
+  if (length(roi_associations) > 0) {
+    for (roi in names(roi_associations)) {
+      roi_spec <- roi_associations[[roi]]
+      fixed_part <- as.vector(as.matrix(pheno[names(roi_spec)]) %*% roi_spec)
+      roi_locs <- which(roi_map == roi)
+      ss[, roi_locs] <- fixed_part + ri_site + ri_subj + rnorm(n_obs * length(roi_locs), mean = vw_mean, sd = vw_sd)
+      ss[, roi_locs] <- pmax(ss[, roi_locs], 0.001)
     }
   }
 
-  # File name
   mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
 
-  # Start from a vector of type double, filled with 0s
-  vw_data <- numeric(n_verts)
-
-  # Simulate random intercepts per site
-  # TODO: let use specify std dev of random itercept?
-  ri_site <- if (length(data_structure) > 1) {
-    stats::rnorm(length(data_structure), mean = 0, sd = site_sd) } else { c(0L) }
-
-  for (l in seq_along(data_structure)) {
-    site <- names(data_structure[l])
-    sess <- data_structure[[l]]$sessions
-    n <- data_structure[[l]]$n_subjects
-
-    # Simulate random intercepts per subject
-    # TODO: let use specify std dev of random itercept?
-    ri_subj <- stats::rnorm(n, mean = 0, sd = subj_sd)
-
-    # Create site / cohort folder  --------------------------------------------
-    site_dir <- file.path(path, site)
-    dir.create(site_dir, showWarnings = FALSE)
-
-    vw_message(" * ", site, ": ", n, " (subjects) x ", length(sess),
-      " (sessions) cortical ", measure, " files", verbose = verbose)
-
-    for (t in sess) {
-      for (i in seq_len(n)) {
-      
-        # Create subject folder structure -------------------------------------
-        sub_dir <- file.path(site_dir, paste0("sub-", i, "_ses-", t))
-
-        dir.create(file.path(sub_dir, "surf"), recursive = TRUE, showWarnings = FALSE)
-        # Not creating "stats" and "mri" subfolders
-
-        # Randomly generated vertex-wise data
-        vw_data[roi_locs] <- vw_mean + # fixed
-                             ri_subj[i] + ri_site[l] + # random
-                             stats::rnorm(sum(roi_locs), mean = 0, sd = vw_sd) # error
-        vw_data[vw_data < 0] <- 0.1 # make sure it is non-negative
-
-        # Specify association cluster
-        if (!is.null(simulate_association)) {
-          stopifnot(is.numeric(simulate_association) &&
-                   (length(simulate_association) == total_n_files))
-
-          vw_data[assoc_roi] <- vw_mean + simulate_association[file_counter] + # fixed
-                                ri_subj[i] + ri_site[l] + # random
-                                stats::rnorm(sum(assoc_roi), mean = 0, sd = vw_sd) # error
-        }
-
-        file_counter <- file_counter + 1
-
-        save.mgh(as.mgh(vw_data), file.path(sub_dir, "surf", mgh_fname))
-        invisible(NULL)
-      }
-    }
+  for (obs in pheno$folder_id) {
+    obs_dir <- file.path(path, obs, "surf")
+    dir.create(obs_dir, recursive = TRUE, showWarnings = FALSE)
+    save.mgh(as.mgh(ss[obs, ]), file.path(obs_dir, mgh_fname))
   }
+
+  invisible(NULL)
+}
+
+# =============================================================================
+#  simulate_longit_dataset()
+# =============================================================================
+
+#' @title Simulate a complete longitudinal brain surface dataset
+#' @description
+#' High-level wrapper that:
+#' \enumerate{
+#'   \item Generates a longitudinal phenotype `data.frame` via
+#'         [simulate_long_pheno_data()];
+#'   \item Writes it to `path/phenotype.csv`;
+#'   \item Calls [simulate_freesurfer_data()] for each requested hemisphere.
+#' }
+#'
+#' @inheritParams simulate_long_pheno_data
+#' @inheritParams simulate_freesurfer_data
+#' @param hemi One of `"lh"`, `"rh"`, or `"both"` (default: `"both"`).
+#'
+#' @return `NULL` invisibly. Side effects: `phenotype.csv` and vertex-wise
+#'   `.mgh` files written under `path`.
+#'
+#' @seealso [simulate_long_pheno_data()], [simulate_freesurfer_data()]
+#'
+#' @examplesIf dir.exists('path/to/simulated/dataset')
+#' simulate_longit_dataset(
+#'   path = 'path/to/simulated/dataset/',
+#'   data_structure = list(
+#'     GENR = list(sessions = c("01", "02", "03"), n_subjects = 50)
+#'   ),
+#'   roi_associations = list(temporalpole = c(age = 1.3)),
+#'   hemi = "lh"
+#' )
+#'
+#' @export
+#' 
+simulate_longit_dataset <- function(
+    path,
+    data_structure = list(
+      cohort1 = list(sessions = c("01", "02", "03"), n_subjects = 100),
+      cohort2 = list(sessions = c("01", "02"), n_subjects = 150)
+    ),
+    baseline = list(age = c(mean=10, sd=0.5), 
+                    sex = c(levels=c('Male','Female')), 
+                    wisdom = c(mean = 0, sd = 1)),
+    change = list(age = c(mean=4, sd=0.5), 
+                  wisdom = c(mean = 1, sd = 0.5)),
+    roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), 
+                            entorhinal = c(age = 0.9), 
+                            frontalpole = c(wisdom = 0.7)),
+    simulate_other_rois = FALSE,
+    hemi = "both",
+    measure = "thickness",
+    vw_mean = 2.5,
+    vw_sd = 0.5,
+    subj_sd = 0.2,
+    site_sd = 0.1,
+    fs_template = "fsaverage",
+    fwhmc = "fwhm10",
+    seed = 3108,
+    verbose = TRUE) {
+
+  vw_init_message("Simulating longitudinal dataset", verbose = verbose)
+
+  check_path(path, create_if_not = TRUE)
+
+  pheno <- simulate_long_pheno_data(
+    data_structure = data_structure,
+    baseline = baseline,
+    change = change,
+    seed = seed,
+    verbose = verbose)
+  
+  utils::write.csv(pheno, file.path(path,'phenotype.csv'), row.names = FALSE)
+  
+  hemis <- if (hemi == 'both') c('lh', 'rh') else c(hemi) 
+  
+  lapply(hemis, function(h) {
+    simulate_freesurfer_data(path = path,
+                              pheno = pheno,
+                              roi_associations = roi_associations,
+                              simulate_other_rois = simulate_other_rois,
+                              hemi = h,
+                              measure = measure,
+                              vw_mean = vw_mean,
+                              vw_sd = vw_sd,
+                              subj_sd = subj_sd,
+                              site_sd = site_sd,
+                              fs_template = fs_template,
+                              fwhmc = fwhmc,
+                              seed = seed,
+                              verbose = verbose)
+  })
+  
+  vw_message("Done! :)", type = "step", verbose = verbose)
+  invisible(NULL)
 }

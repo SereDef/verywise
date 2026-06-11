@@ -208,7 +208,7 @@ compute_clusters <- function(stack_path,
       stats::setNames(real_errors, rep("x", length(real_errors)))), verbose = TRUE)
   }
   
-  ocn_map <- load.mgh(outp_files[["ocn"]])$x
+  ocn_map <- load.mgh(outp_files[["ocn"]])
 
   return(ocn_map)
 }

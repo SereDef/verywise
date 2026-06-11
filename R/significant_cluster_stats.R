@@ -58,7 +58,7 @@ significant_cluster_stats <- function(stat, ss_dir, res_dir, term, measure, hemi
 
   ocn_map_file <- file.path(res_dir, paste(hemi, measure, stack, "cache.th30.abs.sig.ocn.mgh", sep = "."))
   
-  clusters <- load.mgh(ocn_map_file)$x
+  clusters <- load.mgh(ocn_map_file)
 
   if (max(clusters) == 0) {
     message('No significant clusters found')

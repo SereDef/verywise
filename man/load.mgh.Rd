@@ -4,10 +4,13 @@
 \alias{load.mgh}
 \title{Load an MGH file into memory}
 \usage{
-load.mgh(file_path)
+load.mgh(file_path, as_vector = TRUE)
 }
 \arguments{
-\item{file_path}{: the (full) path to the mgh file.}
+\item{file_path}{The (full) path to the mgh file.}
+
+\item{as_vector}{Logical. Return the entire object or just the vertex values
+as a vector.}
 }
 \value{
 A mgh object with data and various header elements

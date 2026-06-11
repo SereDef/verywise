@@ -1,6 +1,4 @@
-# ============================== FBM operations ===============================
-#' @title
-#' Check if any elements are 0 in FBM
+#' @title Check if any elements are 0 in FBM
 #'
 #' @description
 #' Check if any row elements in a FBM are 0. This is used to clean up the
@@ -56,8 +54,7 @@ fbm_col_has_0 <- function(X, n_cores = 1,
 }
 
 
-#' @title
-#' Check if any elements are NA in FBM
+#' @title Check if any elements are NA in FBM
 #'
 #' @description
 #' Check if any row elements in a FBM are NA. This is used to clean up the
@@ -111,7 +108,8 @@ fbm_col_has_na <- function(X, n_cores = 1,
   return(problem_verts)
 }
 
-
+#' @title Generate a set of backing file (bk) names
+#' @keywords internal
 build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
 
   if (verbose) cli::cli_progress_step('Generate file-backed output containers', spinner=TRUE)

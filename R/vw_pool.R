@@ -47,8 +47,7 @@
 #'
 #' @return A list containing the pooled coefficients, SEs, t- and p- values.
 #'
-#' @importFrom rlang .data
-#' @importFrom stats pnorm
+#' @importFrom stats pnorm var
 #'
 #' @author Serena Defina, 2024.
 #'
@@ -142,7 +141,7 @@ vw_pool <- function(out_stats, m, n_terms,
   # Within-imputation variance (mean squared SE)
   ubar <- rowMeans(matrix(model_output$se^2, nrow = n_terms))
   # Between-imputation variance
-  b <- apply(qbar, 1, stats::var)
+  b <- apply(qbar, 1, var)
   # Total variance
   t <- ubar + (1 + 1 / m) * b
 

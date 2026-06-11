@@ -8,19 +8,18 @@ vw_error(msg, ..., call = rlang::caller_env())
 }
 \arguments{
 \item{msg}{A character string or named character vector passed to
-\code{cli::cli_abort()}. Use names \code{"i"}, \code{"x"}, \code{"v"},
-\code{">"} for bullet formatting, e.g.
-\code{c("Something failed.", "i" = "Check {.arg x}.")}.}
+\code{\link[cli:cli_abort]{cli::cli_abort()}}. Use names \code{"i"}, \code{"x"}, \code{"v"}, \code{">"} for bullet
+formatting, e.g. \code{c("Something failed.", "i" = "Check {.arg x}.")}.}
 
-\item{...}{Additional arguments forwarded to \code{cli::cli_abort()}
+\item{...}{Additional arguments forwarded to \code{\link[cli:cli_abort]{cli::cli_abort()}}
 (e.g. \code{class}, \code{call}, \code{.internal}).}
 
-\item{call}{Caller enviroment (\code{rlang::caller_env()})}
+\item{call}{Caller enviroment (\code{\link[rlang:stack]{rlang::caller_env()}})}
 }
 \description{
-Wrapper around \code{cli::cli_abort()} that applies \code{VW_THEME} and
+Wrapper around \code{\link[cli:cli_abort]{cli::cli_abort()}} that applies \code{VW_THEME} and
 reports the call from the correct frame. Accepts the same \code{msg}
-conventions as \code{vw_message()}: a plain string, a named character
+conventions as \code{\link[=vw_message]{vw_message()}}: a plain string, a named character
 vector (for bullet-style bodies), or inline cli markup.
 }
 \author{

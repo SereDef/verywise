@@ -16,13 +16,10 @@ vw_message(..., verbose = TRUE, type = NULL)
 }
 \description{
 Routes each call to the appropriate \code{cli} alert type based on the
-conventional leading-character prefixes used in the existing codebase:
-}
-\details{
-\tabular{ll}{
+conventional leading-character prefixes used in the existing codebase:\tabular{ll}{
    Prefix in \code{msg} \tab Rendered as \cr
    \code{" * "} / \code{"* "} \tab bullet (\code{cli_bullets}) \cr
-   \code{" ! "} / \code{"   !"} \tab warning alert \cr
+   \code{" ! "} / \code{"  !"} \tab warning alert \cr
    \code{"NOTE:"} \tab info alert \cr
    anything else \tab \code{cli_text} \cr
 }

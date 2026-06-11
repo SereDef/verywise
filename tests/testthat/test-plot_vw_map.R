@@ -95,14 +95,13 @@ test_that("cws masking preserves coefficient values for significant vertices", {
   stack <- paste0("stack", ids[ids$stack_name == "age", "stack_number"])
 
   raw_coef <- load.mgh(
-    file.path(res_dir, paste("lh", "area", stack, "coef.mgh", sep = "."))
-  )$x
+    file.path(res_dir, paste("lh", "area", stack, "coef.mgh", sep = ".")))
 
   ocn_file <- list.files(res_dir,
     pattern = paste0("^lh\\.area\\.", stack, "\\.cache\\..*\\.sig\\.ocn\\.mgh$"),
     full.names = TRUE
   )
-  raw_ocn <- load.mgh(ocn_file)$x
+  raw_ocn <- load.mgh(ocn_file)
 
   args <- capture_surf_args(term = "age", hemi = "lh", threshold = "cws")
 

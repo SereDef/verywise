@@ -103,61 +103,56 @@ locate_roi <- function(rois = NULL, n_verts = 163842, hemi = c('lh','rh'), verbo
                       all.x = FALSE, all.y = TRUE)
   roi_lookup <- roi_lookup[order(-roi_lookup$vw_prop), ]
 
-  # Groups
-  roi_lookup <- roi_lookup %>%
-    dplyr::mutate(roi_lobe = dplyr::case_when(
-      roi_label %in% c('superiorfrontal',      # 12.179
-                       'precentral',           # 10.740
-                       'rostralmiddlefrontal', #  7.243
-                       'lateralorbitofrontal', #  4.188
-                       'caudalmiddlefrontal',  #  3.736
-                       'paracentral',          #  3.294
-                       'parsopercularis',      #  3.119
-                       'medialorbitofrontal',  #  2.653
-                       'parstriangularis',     #  2.046
-                       'parsorbitalis',        #    956
-                       'frontalpole'           #    272
-                       ) ~ "frontal",
-      roi_label %in% c('superiorparietal', # 10.456
-                       'postcentral',      #  9.519
-                       'supramarginal',    #  8.600
-                       'inferiorparietal', #  7.871
-                       'precuneus'         #  7.308
-                       ) ~ "parietal",
-      roi_label %in% c('superiortemporal',   # 7.271
-                       'fusiform',           # 4.714
-                       'middletemporal',     # 4.452
-                       'inferiortemporal',   # 4.415
-                       'bankssts',           # 2.137
-                       'parahippocampal',    # 1.838
-                       'entorhinal',         # 1.102
-                       'transversetemporal', # 1.064
-                       'temporalpole'        #   839
-                       ) ~ "temporal",
-      roi_label %in% c('lateraloccipital', # 6.379
-                       'lingual',          # 4.205
-                       'pericalcarine',    # 1.912
-                       'cuneus'            # 1.630
-                       ) ~ "occipital",
-      roi_label %in% c('posteriorcingulate',       # 3.266  # (Parietal)
-                       'isthmuscingulate',         # 2.531  # (Parietal)
-                       'caudalanteriorcingulate',  # 1.439  # (Frontal)
-                       'rostralanteriorcingulate'  # 1.350. # (Frontal)
-                       ) ~ "cingulate",
-      roi_label %in% c('insula' # 5.229
-                       ) ~ "insula",
+  # Group by lobe (vertex count noted next to each region)
+  lobe_map <- list(
+    frontal = c('superiorfrontal',      # 12.179
+                'precentral',           # 10.740
+                'rostralmiddlefrontal', #  7.243
+                'lateralorbitofrontal', #  4.188
+                'caudalmiddlefrontal',  #  3.736
+                'paracentral',          #  3.294
+                'parsopercularis',      #  3.119
+                'medialorbitofrontal',  #  2.653
+                'parstriangularis',     #  2.046
+                'parsorbitalis',        #    956
+                'frontalpole'),         #    272
+    parietal = c('superiorparietal', # 10.456
+                'postcentral',       #  9.519
+                'supramarginal',     #  8.600
+                'inferiorparietal',  #  7.871
+                'precuneus'),        #  7.308
+    temporal = c('superiortemporal',  # 7.271
+                'fusiform',           # 4.714
+                'middletemporal',     # 4.452
+                'inferiortemporal',   # 4.415
+                'bankssts',           # 2.137
+                'parahippocampal',    # 1.838
+                'entorhinal',         # 1.102
+                'transversetemporal', # 1.064
+                'temporalpole'),      #   839
+    occipital = c('lateraloccipital', # 6.379
+                'lingual',            # 4.205
+                'pericalcarine',      # 1.912
+                'cuneus'),            # 1.630
+    cingulate = c('posteriorcingulate',      # 3.266  # (Parietal)
+                'isthmuscingulate',          # 2.531  # (Parietal)
+                'caudalanteriorcingulate',   # 1.439  # (Frontal)
+                'rostralanteriorcingulate'), # 1.350. # (Frontal)
+    insula = c("insula") # 5.229
+  )
 
-      TRUE ~ "none"
-    )) %>%
-    dplyr::group_by(roi_lobe) %>%
-    dplyr::mutate(lobe_count = sum(.data$vw_count),
-                  lobe_prop = sum(.data$vw_prop)) %>%
-    as.data.frame()
+  # Named lookup vector: roi_label -> lobe
+  roi_to_lobe <- stats::setNames(
+    rep(names(lobe_map), lengths(lobe_map)), unlist(lobe_map, use.names = FALSE))
+
+  roi_lookup$roi_lobe <- roi_to_lobe[roi_lookup$roi_label]
+  roi_lookup$roi_lobe[is.na(roi_lookup$roi_lobe)] <- "none"
+
+  lobe_stats <- stats::aggregate(
+    cbind(lobe_count = vw_count, lobe_prop = vw_prop) ~ roi_lobe, data = roi_lookup, FUN = sum)
 
   # If no input ROIs are provided just return the entire lookup
-  if (is.null(rois)) {
-    return(roi_lookup)
-  }
+  if (is.null(rois)) return(roi_lookup)
 
   # If only one ROI is provided make sure this is a vector
   rois <- as.vector(rois, mode = "character")

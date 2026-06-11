@@ -2,109 +2,113 @@
 % Please edit documentation in R/simulate_longit_dataset.R
 \name{simulate_freesurfer_data}
 \alias{simulate_freesurfer_data}
-\title{Simulate longitudinal FreeSurfer vertex-wise data}
+\title{Simulate longitudinal FreeSurfer vertex-wise surface data}
 \usage{
 simulate_freesurfer_data(
   path,
+  pheno = NULL,
   data_structure = list(cohort1 = list(sessions = c("01", "02"), n_subjects = 100),
     cohort2 = list(sessions = c("01", "02"), n_subjects = 150)),
-  fs_template = "fsaverage",
-  measure = "thickness",
+  roi_associations = list(),
+  simulate_other_rois = FALSE,
   hemi = "lh",
-  fwhmc = "fwhm10",
-  vw_mean = 6.5,
+  measure = "thickness",
+  vw_mean = 2.5,
   vw_sd = 0.5,
   subj_sd = 0.2,
   site_sd = 0.1,
-  roi_subset = c("temporalpole", "frontalpole", "entorhinal"),
-  simulate_association = NULL,
-  location_association = NULL,
+  fs_template = "fsaverage",
+  fwhmc = "fwhm10",
   seed = 3108,
   verbose = TRUE
 )
 }
 \arguments{
-\item{path}{Character string. Directory where the dataset should be created.
-Will be created if it does not exist.}
+\item{path}{Character string; root directory in which to write \code{.mgh} files.
+Created if it does not exist.}
 
-\item{data_structure}{Named list defining cohorts/sites. Each element is a
-list with:
-\describe{
-\item{\code{"sessions"}}{Character vector of session labels.}
-\item{\code{"n_subjects"}}{Integer number of subjects.}
-}}
+\item{pheno}{\code{data.frame} in long format from \code{\link[=simulate_long_pheno_data]{simulate_long_pheno_data()}},
+or \code{NULL} to auto-generate a minimal bookkeeping frame from \code{data_structure}.}
 
-\item{fs_template}{Character (default = \code{"fsaverage"}). FreeSurfer
-template for vertex registration. This is used to determine the size of
-the synthetic brain surface data. Options:
-\itemize{
-\item \code{"fsaverage"} = 163842 vertices (highest resolution)
-\item \code{"fsaverage6"} = 40962 vertices
-\item \code{"fsaverage5"} = 10242 vertices
-\item \code{"fsaverage4"} = 2562 vertices
-\item \code{"fsaverage3"} = 642 vertices
-}}
+\item{data_structure}{Named list; see \code{\link[=simulate_long_pheno_data]{simulate_long_pheno_data()}}.
+Ignored when \code{pheno} is supplied.}
 
-\item{measure}{Character (default = \code{"thickness"}). Surface measure to
-simulate. This is used for file names.}
+\item{roi_associations}{Named list of named numeric vectors. Names of the list
+are Desikan-Killiany ROI labels; names of each vector are column names in
+\code{pheno}; values are beta coefficients.
+Example: \code{list(temporalpole = c(age = 0.3, wisdom = 0.5))}.}
 
-\item{hemi}{Character (default = \code{"lh"}). Hemisphere code: \code{"lh"}
-(left) or \code{"rh"} (right). This is used for file names.}
+\item{simulate_other_rois}{Logical; if \code{TRUE} all non-association ROIs are
+simulated under the null.}
 
-\item{fwhmc}{Character (default = \code{"fwhm10"}). Full-width half maximum
-smoothing parameter. This is used for file names.}
+\item{hemi}{One of \code{"lh"} or \code{"rh"}.}
 
-\item{vw_mean}{Numeric (default = \code{6.5}). Mean of the simulated
-vertex-wise values.}
+\item{measure}{Character; FreeSurfer surface measure, e.g. \code{"thickness"} or
+\code{"area"}.}
 
-\item{vw_sd}{Numeric (default = \code{0.5}). Standard deviation of the
-simulated vertex-wise values.}
+\item{vw_mean}{Numeric; mean of the vertex-level residual noise (i.e.
+grand-mean cortical thickness).}
 
-\item{subj_sd}{Numeric (default = \code{0.2}). Standard deviation of the
-random intercept for subject (relevant in multi-session datasets).}
+\item{vw_sd}{Numeric \eqn{\geq 0}; SD of vertex-level residual noise.}
 
-\item{site_sd}{Numeric (default = \code{0.1}). Standard deviation of the
-random intercept for site (relevant in multi-site datasets).}
+\item{subj_sd}{Numeric \eqn{\geq 0}; SD of the subject random intercept.}
 
-\item{roi_subset}{Character vector (default = c('temporalpole', 'frontalpole',
-'entorhinal')). Vertex-wise data is simulated by default only within a
-smaller subset (~1.5\%) of the total surface. The rest of the vertex values
-are set to 0, so they won't be analysed, saving time during estimation.
-The region locations are extracted from the annotation files in that
-are distributed with FreeSurfer and saved internally in R/sysdata.rda.}
+\item{site_sd}{Numeric \eqn{\geq 0}; SD of the site random intercept.
+Ignored when there is only one site (intercept drawn as a single value).}
 
-\item{simulate_association}{Optional. If numeric, must be of length equal to
-the number of generated files; if character, must have the format
-\code{"<beta> * <variable_name>"}. Associations are injected into one small
-region (the entorhinal cortex).}
+\item{fs_template}{Character; FreeSurfer template space, e.g. \code{"fsaverage"}.}
 
-\item{location_association}{Optional string or character vector. If specified,
-the association is only present within these ROIs. The rest of the vertex values
-will be set to have no relationship with any of the predictors. The region
-locations are extracted from the annotation files in that are distributed with
-FreeSurfer and saved internally in R/sysdata.rda.}
+\item{fwhmc}{Character; smoothing kernel label, e.g. \code{"fwhm10"}.}
 
-\item{seed}{Integer (default = \code{3108}). Random seed.}
+\item{seed}{Integer random seed.}
 
-\item{verbose}{Logical (default = \code{TRUE}). If \code{TRUE}, print
-progress messages.}
+\item{verbose}{Logical; progress messages.}
 }
 \value{
-Invisibly returns \code{NULL}. Vertex-wise data are written to \code{path}
-in FreeSurfer-compatible format.
+\code{NULL} invisibly. Side effect: \code{.mgh} files written to
+\verb{path/<folder_id>/surf/<hemi>.<measure>.<fwhmc>.<fs_template>.mgh}.
 }
 \description{
-Simulates FreeSurfer-formatted brain surface data for multiple cohorts/sites
-and multiple timepoints/sessions. The output folder structure emulates that
-produced by the FreeSurfer \code{recon-all} command, with directories named:
-\code{sub-<ID>_ses-<SESSION>}.
+Writes one \code{.mgh} file per observation (subject × session) to \code{path}, mimicking
+the FreeSurfer recon-all output layout. Vertex values are generated from a
+mixed-effects model with:
+\itemize{
+\item ROI-specific fixed effects specified via \code{roi_associations};
+\item a scalar subject random intercept (shared across all vertices);
+\item an optional scalar site random intercept.
+}
+}
+\section{ROI targeting}{
 
-The vertex-wise data are stored as \code{.mgh} files, with optional simulation
-of an association with a phenotype variable.
+\describe{
+\item{\code{simulate_other_rois = FALSE}}{Only ROIs in \code{roi_associations} are filled;
+all other vertices remain 0.}
+\item{\code{simulate_other_rois = TRUE}}{All Desikan-Killiany cortical ROIs are filled.
+ROIs absent from \code{roi_associations} are simulated under the null (no fixed effects,
+noise only).}
+}
+}
+
+\section{Data-generating process}{
+
+For observation \eqn{i} and vertex \eqn{v} in ROI \eqn{r}:
+\deqn{y_{iv} = \mathbf{x}_i^\top \boldsymbol{\beta}_r + b_i + b_{\text{site}(i)} + \varepsilon_{iv}}
+where \eqn{b_i \sim N(0, \sigma_\text{subj}^2)},
+\eqn{b_s \sim N(0, \sigma_\text{site}^2)}, and
+\eqn{\varepsilon_{iv} \sim N(\mu_\text{vw}, \sigma_\text{vw}^2)}.
+Random effects are scalar (not vertex-specific).
+}
+
+\examples{
+\dontshow{if (dir.exists('path/to/simulated_brains')) withAutoprint(\{ # examplesIf}
+simulate_freesurfer_data(
+  path = 'path/to/simulated_brains',
+  pheno = pheno,
+  roi_associations = list(temporalpole = c(age = 0.3)),
+  hemi = "both"
+)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link{simulate_longit_dataset}}, \code{\link{simulate_long_pheno_data}}
-}
-\author{
-Serena Defina, 2024.
+\code{\link[=simulate_long_pheno_data]{simulate_long_pheno_data()}}, \code{\link[=simulate_longit_dataset]{simulate_longit_dataset()}}
 }

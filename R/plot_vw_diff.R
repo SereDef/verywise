@@ -46,11 +46,13 @@ plot_vw_diff <- function(lh_a = NULL, lh_b = NULL,
                          rh_a = NULL, rh_b = NULL,
                          label_a = "a", label_b = "b",
                          ...) {
+  
+  require_packages('reticulate', call_fn = 'plot_vw_diff')
 
   # helper: load from file path or return numeric vector as-is
   .resolve <- function(x, arg_name) {
     if (is.null(x))       return(NULL)
-    if (is.character(x))  return(load.mgh(x)$x)
+    if (is.character(x))  return(load.mgh(x))
     if (is.numeric(x))    return(as.numeric(x))
     vw_error("{.arg {arg_name}} must be a numeric vector or a file path, not {.cls {class(x)}}.")
   }

@@ -142,28 +142,28 @@ run_voxw_lmm <- function(
   save_residuals = FALSE,
   verbose = TRUE) {
 
-  # vw_message(pretty_message(paste(hemi_name, "hemisphere")), verbose = verbose)
+  vw_init_message('Linear mixed model', verbose = verbose)
 
-  # Check user input ===========================================================
-  vw_message("Checking user inputs...", verbose = verbose)
+  require_packages('bigreadr', call_fn = 'run_voxw_lmm')
 
   measure <- check_formula(formula, measure_control = FALSE)
+  model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  # subj_dir <- check_path(subj_dir)
-  # ss_exists <- check_ss_exists(subj_dir, ss_file)
+  vw_message('* Outcome: {.val2 voxel values}', verbose = verbose)
+  vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
+
+  # Check user input ===========================================================
+  vw_message("User input validation and set-up", type='step', verbose = verbose)
+
+  if (verbose) cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
 
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
-
-  # check_freesurfer_setup(FS_HOME, verbose = verbose)
-
-  n_cores <- check_cores(n_cores)
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1,
                       upper = 5000) # for memory safety
-  # check_numeric_param(fwhm, lower = 1, upper = 30)
-  # check_numeric_param(mcz_thr, lower = 0)
-  # check_numeric_param(cwp_thr, lower = 0)
+  
+  n_cores <- check_cores(n_cores)
 
   # Other set-up stuff =========================================================
 
@@ -176,63 +176,50 @@ run_voxw_lmm <- function(
   set.seed(seed)
 
   # Read phenotype data (if not already loaded) ================================
-  vw_message("Checking and preparing phenotype dataset...", verbose = verbose)
+
+  if (verbose) cli::cli_progress_step('Load and transform phenotype', spinner=TRUE)
 
   if (is.character(pheno)) pheno <- load_pheno_file(pheno)
 
   # Transform to list of dataframes (imputed and single datasets alike)
   data_list <- imp2list(pheno); rm(pheno)
 
-  # Check that the data_list is not empty, it contains data.frames of the same
-  # dims, and that "folder_id" and all variables specified in the formula are
-  # present in the data
-  # TODO: simplify check 
-  # check_data_list(data_list, folder_id, formula)
-
   # Extract first dataset
   data1 <- data_list[[1]]
 
-  vw_message(" * ", length(data_list), " datasets of dimention: ", nrow(data1),
-             " x ", ncol(data1), verbose = verbose)
+  if (verbose) cli::cli_progress_done()
+
+  vw_message(" * Phenotype: {.val {length(data_list)}} dataset{?s} of dimensions
+             {.val2 { nrow(data1) }} x {.val2 { ncol(data1) }}.", verbose = verbose)
 
   check_weights(weights, data1)
 
   fixed_terms <- unpack_formula(formula, data1)
 
-  # Check that the stacks are not overwritten by mistake and
-  # Save the stack names (i.e. fixed terms) to a lookup file
-  # check_stack_file(fixed_terms, outp_dir)
-
   # Read and clean vertex data =================================================
 
-  # vw_message("Checking and preparing brain surface data...", verbose = verbose)
-
-
-  vw_message(" * reading super-subject file: ", ss_file, verbose = verbose)
+  vw_message("Brain data processing", type='step', verbose = verbose)
+  vw_message("* reading super-subject file from {.path {ss_file}}", verbose = verbose)
 
   ss <- bigstatsr::big_read(ss_file, type = 'float', select = 1:brain_template,
                             backingfile = file.path(outp_dir, "ss"))
   
   on.exit(unlink(file.path(outp_dir, "ss.bk")))
 
-  vw_message(" * cleaning super-subject matrix...", verbose = verbose)
+  if (verbose) cli::cli_progress_step('Clean and chunk super-subject matrix', spinner=TRUE)
 
-  # Cortical mask
-  # is_cortex <- mask_cortex(hemi = hemi, fs_template = fs_template)
-
-  # good_verts <- which(!is_cortex);
+  vw_message(c("!" = "Note that the brain data values are checked in this pipeline."),
+             verbose = verbose)
   good_voxels <- 1:brain_template # TMP
 
   # Ensure phenotype and ss row order matches ==================================
-  # data_list <- check_row_match(ss_file = ss$bk,
-  #                              data = data_list,
-  #                              folder_ids = folder_ids)
+  vw_message(c("!" = "Note that the match between rows in the phenotype vs. brain data is not checked in this pipeline."),
+             verbose = verbose)
 
   data1 <- data_list[[1]]
-
-  # Unpack model ===============================================================
-  vw_message("Statistical model preparation...",
-             "\n * call: ", deparse(formula), verbose = verbose)
+  
+  # Prepare chunk sequence =====================================================
+  chunk_seq <- make_chunk_sequence(good_voxels, chunk_size = chunk_size)
 
   # Number of vertices
   vw_n <- length(good_voxels)
@@ -243,56 +230,58 @@ run_voxw_lmm <- function(
   # Number of (imputed) datasets
   m <- length(data_list)
 
+  if (verbose) cli::cli_progress_done()
+
+  vw_message(c(">" = "Ready to run {.val {length(good_voxels)}} models 
+                     (split in {.val2 {length(chunk_seq)}} chunks)."),
+             verbose = verbose)
+
+  vw_message("Statistical model fitting", type='step', verbose = verbose)
+
   # "Pre-compile the model"
   # cache the model frame to avoid re-generating it them each time
   # single_lmm can leverage an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  # model_template <- precompile_model(
-  #   formula = formula, tmp_data = data1, tmp_y = ss[,good_voxels[1]],
-  #   measure = 'value', lmm_control = lmm_control, verbose = verbose)
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters"), 
+      verbose = verbose)
 
   # Prepare FBM output =========================================================
 
   result_path <- outp_dir # file.path(outp_dir, paste(hemi, measure, sep = "."))
 
   # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "resid") # "t",
+  res_bk_names <- c("coef", "se", "p", "fitstats", "resid")
   res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
                                    verbose = verbose)
   # These files will be removed by "on.exit" by convert_to_mgh
 
   fbm_precision <- "float" # single precision – 32 bits
 
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
+  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, type = fbm_precision,
                          backingfile = res_bk_paths["coef"])  # Coefficients
   s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["se"])    # Standard errors
-  # t_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0,
-  #                        backingfile = res_bk_paths["t"])     # t values
   p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
                          backingfile = res_bk_paths["p"])     # P values
   r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
                          backingfile = res_bk_paths["resid"]) # Residuals
+  # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
+  f_vw <- bigstatsr::FBM(5, vw_n, init = NA_real_, type = fbm_precision,
+                         backingfile = res_bk_paths["fitstats"])   
 
   log_file <- paste0(result_path, "/issues.log") # Log model fitting issues
 
-  # Prepare chunk sequence =====================================================
-  vw_message(" * chunk dataset", verbose = verbose)
-  chunk_seq <- make_chunk_sequence(good_voxels, chunk_size = chunk_size)
-
   # Parallel analyses ==========================================================
-  vw_message("Running analyses...\n",
-             " * dimentions: ", n_obs, " observations x ", length(good_voxels),
-             " (of ", vw_n, " total) vertices.", verbose = verbose)
 
   progress_file <- paste0(result_path, "/progress.log")
   on.exit(if(file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
-  vw_message(" * fitting linear mixed models...\n",
-             "   this may take some time, check the ", basename(progress_file),
-             " file for updates.", verbose = verbose)
-  
+  if (verbose) {
+    cli::cli_progress_step("Fitting linear mixed models... 
+    this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
+    spinner=TRUE)
+  }
   with_parallel(n_cores = n_cores, 
     seed = seed,
     verbose = verbose, 
@@ -341,70 +330,28 @@ run_voxw_lmm <- function(
               append = TRUE)
         }
 
-        # Write results to their respective FBM
+         # Write results to their respective FBM
         c_vw[, v] <- pooled_stats$coef
         s_vw[, v] <- pooled_stats$se
-        p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
+        p_vw[, v] <- pooled_stats$p
+        f_vw[, v] <- pooled_stats$fitstats
         r_vw[, v] <- pooled_stats$resid
       }
     }
   })
 
-  out <- list(c_vw, s_vw, p_vw, r_vw) # t_vw,
-  # "coefficients", "standard_errors", "t_values", "p_values", "residuals"
+  if (verbose) cli::cli_progress_done()
+
+  out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
+  # "coefficients", "standard_errors", "p_values", "fit_statistics", "residuals"
   names(out) <- res_bk_names
 
-  # Post-processing ============================================================
+  # Post-processing ==========================================================
+  # TODO: multiple testing correction? =======================================
+  vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
+  vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
 
-  # Save model statistics into separate .mgh files
-  # convert_to_mgh(out,
-  #                result_path,
-  #                stacks = seq_along(fixed_terms),
-  #                stat_names = c(res_bk_names,'-log10p'),
-  #                verbose = verbose)
-
-  # resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
-  # if (!save_residuals) on.exit(file.remove(resid_mgh_path), add = TRUE)
-
-  # # Estimate full-width half maximum (using FreeSurfer) ========================
-  # vw_message("Estimating data smoothness for multiple testing correction...",
-  #            verbose = verbose)
-
-  # fwhm <- estimate_fwhm(result_path = result_path,
-  #                       hemi = hemi,
-  #                       mask = good_verts,
-  #                       fs_template = fs_template)
-
-  # # Clamp fwhm to [1, 30]
-  # fwhm_clamped <- min(max(fwhm, 1), 30)
-
-  # if (fwhm != fwhm_clamped) {
-  #   direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
-  #   vw_message(sprintf(" * estimated smoothness is %s, which is really %s",
-  #                      fwhm, direction), verbose = verbose)
-  #   fwhm <- fwhm_clamped
-  # } else {
-  #   vw_message(sprintf(" * estimated smoothness = %s", fwhm), verbose = verbose)
-  # }
-
-  # # Apply cluster-wise correction (using FreeSurfer) ===========================
-  # vw_message("Clusterwise correction...", verbose = verbose)
-
-  # for (stack_n in seq_along(fixed_terms)){
-  #   stack_path <- paste0(result_path, ".stack", stack_n)
-  #   fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
-  #   compute_clusters(stack_path = stack_path,
-  #                    hemi = hemi,
-  #                    fwhm = fwhm,
-  #                    FS_HOME = FS_HOME,
-  #                    mcz_thr = mcz_thr,
-  #                    cwp_thr = cwp_thr,
-  #                    full_surfcluster_output = save_optional_cluster_info,
-  #                    mask = paste0(result_path, ".finalMask.mgh"),
-  #                    verbose = fs_verbosity)
-  # }
-
-  vw_pretty_message("Done! :)")
+  vw_message("Done! :)", type='step', verbose = verbose)
 
   return(out)
 }

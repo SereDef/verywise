@@ -120,12 +120,7 @@ run_vw_meta <- function(term,
 
   if (verbose) cli::cli_progress_step('User input validation and set-up', spinner=TRUE)
   
-  if (!requireNamespace("metafor", quietly = TRUE)) {
-    vw_error(c(
-      "verywise meta-analysis requires {.pkg metafor}.",
-      "i" = "Install it with {.code install.packages('metafor')}."
-    ))
-  }
+  require_packages('metafor', call_fn = 'run_vw_meta')
 
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
   
@@ -227,8 +222,8 @@ run_vw_meta <- function(term,
 
     res_path <- stack_paths[s]
 
-    ef_vw[s, ] <- load.mgh(paste0(res_path, ".coef.mgh"))$x
-    se_vw[s, ] <- load.mgh(paste0(res_path, ".se.mgh"))$x
+    ef_vw[s, ] <- load.mgh(paste0(res_path, ".coef.mgh"))
+    se_vw[s, ] <- load.mgh(paste0(res_path, ".se.mgh"))
 
   }
 
@@ -362,4 +357,4 @@ run_vw_meta <- function(term,
   vw_message("Done! :)", type='step', verbose = verbose)
 
   return(out)
-  }
+}

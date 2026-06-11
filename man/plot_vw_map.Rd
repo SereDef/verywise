@@ -16,52 +16,47 @@ plot_vw_map(
 }
 \arguments{
 \item{res_dir}{Character. Path to the directory containing FreeSurfer-style
-vertex-wise result files (\code{*.mgh}) and \code{stack_names.txt}.}
+vertex-wise result files (\verb{*.mgh}) and \code{stack_names.txt}.}
 
 \item{term}{Character. Name of the model term to visualize (matched against
 entries in \code{stack_names.txt}).}
 
-\item{measure}{Character. Surface measure to load, e.g. \code{"area"},
-\code{"thickness"}, \code{"volume"}. Default \code{"area"}.}
+\item{measure}{Character. Surface measure to load, e.g. \code{"area"}, \code{"thickness"},
+\code{"volume"}. Default \code{"area"}.}
 
-\item{hemi}{Character. Which hemisphere(s) to plot: \code{"both"} (default),
-\code{"lh"}, or \code{"rh"}.}
+\item{hemi}{Character. Which hemisphere(s) to plot: \code{"both"} (default), \code{"lh"} or \code{"rh"}.}
 
-\item{surface}{Character. Surface mesh: \code{"pial"} (default) or
-\code{"inflated"}.}
+\item{surface}{Character. Surface mesh: \code{"pial"} (default) or \code{"inflated"}.}
 
 \item{threshold}{Controls vertex-level masking before plotting:
 \describe{
-\item{\code{"cws"} (default)}{Cluster-wise significance masking. Loads
-the matching \code{*.cache.*.sig.ocn.mgh} file and sets all vertices
-not belonging to a significant cluster (OCN label \code{== 0}) to
-\code{NA}. If no OCN file is found, the unmasked coefficients are
-plotted with a warning.}
-\item{Numeric}{Passed directly to \code{\link{plot_vw_surf}} as an
-absolute-value threshold (vertices with \code{|value| < threshold}
-are hidden).}
+\item{\code{"cws"} (default)}{Cluster-wise significance masking. Loads the matching
+\verb{*.cache.*.sig.ocn.mgh} file and sets all vertices not belonging to a significant
+cluster (OCN label == 0) to \code{NA}. If no OCN file is found, the unmasked coefficients
+are plotted with a warning.}
+\item{Numeric}{Passed directly to \code{\link[=plot_vw_surf]{plot_vw_surf()}} as an absolute-value threshold
+(vertices with \verb{|value| < threshold} are hidden).}
 \item{\code{NULL}}{No masking; all vertices are rendered.}
 }}
 
-\item{...}{Additional arguments forwarded to \code{\link{plot_vw_surf}},
-e.g. \code{views}, \code{cmap}, \code{vmin}, \code{vmax},
-\code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
-\code{dpi}, \code{fs_home}, \code{fs_template}.}
+\item{...}{Additional arguments forwarded to \code{\link[=plot_vw_surf]{plot_vw_surf()}},
+e.g. \code{views}, \code{cmap}, \code{vmin}, \code{vmax}, \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
+\code{dpi}, \code{fs_home}, \code{fs_template.}}
 }
 \value{
-Invisibly: the output of \code{\link{plot_vw_surf}} — the temp HTML
-file path (interactive mode) or \code{to_file} path (static PNG mode).
+Invisibly: the output of \code{\link[=plot_vw_surf]{plot_vw_surf()}} — the temp HTML file path (interactive
+mode) or \code{to_file} path (static PNG mode).
 Called primarily for its side-effect of opening or saving the figure.
 }
 \description{
 Locates the vertex-wise coefficient MGH files for a given model term and
 surface measure, optionally applies cluster-wise significance (CWS) masking,
 and renders the result on a standard fsaverage surface via
-\code{\link{plot_vw_surf}}.
+\code{\link[=plot_vw_surf]{plot_vw_surf()}}.
 
-Surface maps are loaded directly in R using \code{load.mgh()} without any
-Python dependency at the file-loading stage. The Python/nilearn rendering
-backend is invoked only through \code{\link{plot_vw_surf}}.
+Surface maps are loaded directly in R using \code{\link[=load.mgh]{load.mgh()}} without any
+Python dependency at the file-loading stage. The \code{Python/nilearn} rendering
+backend is invoked only through \code{\link[=plot_vw_surf]{plot_vw_surf()}}.
 }
 \examples{
 \dontshow{if (rlang::is_installed("reticulate") && dir.exists("~/results/fs_results")) withAutoprint(\{ # examplesIf}
@@ -93,5 +88,5 @@ plot_vw_map(
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link{plot_vw_surf}}, \code{\link{plot_vw_diff}}
+\code{\link[=plot_vw_surf]{plot_vw_surf()}}, \code{\link[=plot_vw_diff]{plot_vw_diff()}}
 }

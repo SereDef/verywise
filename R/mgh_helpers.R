@@ -106,16 +106,16 @@ fbm2mgh <-function(fbm, fnames, mode = '1row.1file') {
   invisible(NULL)
 }
 
-#' @title
-#' Load an MGH file into memory
+#' @title Load an MGH file into memory
 #'
-#' @param file_path : the (full) path to the mgh file.
+#' @param file_path The (full) path to the mgh file.
+#' @param as_vector Logical. Return the entire object or just the vertex values
+#'   as a vector.
 #'
 #' @author Heath Perdoe, 2013.
 #' @return A mgh object with data and various header elements
 #' @export
-#'
-load.mgh <- function(file_path) {
+load.mgh <- function(file_path, as_vector = TRUE) {
   to_read <- file(file_path, "rb")
   v <- readBin(to_read, integer(), endian = "big")
   ndim1 <- readBin(to_read, integer(), endian = "big")
@@ -131,10 +131,10 @@ load.mgh <- function(file_path) {
   x <- readBin(to_read, double(), size = 4, n = ndim1 * nframes, endian = "big")
   close(to_read)
 
-  list(
-    x = x, v = v, ndim1 = ndim1, ndim2 = ndim2, ndim3 = ndim3, nframes =
-      nframes, type = type, dof = dof
-  )
+  if (as_vector) { x } else {
+    list(x = x, v = v, ndim1 = ndim1, ndim2 = ndim2, ndim3 = ndim3, 
+         nframes = nframes, type = type, dof = dof)
+  }
 }
 
 #' @title

@@ -34,7 +34,7 @@ test_that("run_voxw_lmm runs on minimal data", {
 
   # Structure of result
   expect_type(res, "list")
-  expect_named(res, c("coef", "se", "p", "resid"))
+  expect_named(res, c('coef', 'se', 'p', 'fitstats', 'resid'))
 
   # Check that each element is an FBM and has the expected dimensions
   coef_fbm <- res$coef

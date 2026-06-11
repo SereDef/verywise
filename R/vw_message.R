@@ -1,92 +1,3 @@
-#' @title
-#' Print pretty messages to console
-#'
-#' @description
-#' Adds fillers to messages
-#'
-#' @param content : The message to print
-#' @param fill : (default "=")
-#' @param tot_nchar : (default: 60)
-#' @param center : (default: TRUE) center the content.
-#'
-#' @return A prettyfyed console message.
-#'
-#' @author Serena Defina, 2025.
-#'
-prettify_message <- function(content, fill = "=", tot_nchar = 80, center = TRUE) {
-
-  # Add space around the content
-  content <- paste0(" ", content, " ")
-
-  # Content length
-  content_nchar <- nchar(content)
-
-  # Repeat filling pattern
-  rep_fill <- function(fill, n) {
-    return (paste(rep(fill, n), collapse=""))
-  }
-
-  # Paste fillers and message
-  if(content_nchar > tot_nchar) {
-    tot_nchar <- content_nchar
-    pretty_message <- paste0("\n", fill, content, fill, "\n")
-  } else {
-    fill_space <- tot_nchar - content_nchar
-    if (center) {
-      # If not even, add a space...?
-      filler <- rep_fill(fill, ceiling(fill_space/2))
-      pretty_message <- paste0("\n", filler, content, filler, "\n")
-    } else {
-      filler <- rep_fill(fill, fill_space)
-      pretty_message <- paste0("\n", fill, content, filler, "\n")
-    }
-  }
-  # TODO: make sure this always has the same nchar...?
-
-  return(pretty_message)
-}
-
-
-#' @title
-#' Print decorated message to console if verbose = TRUE
-#'
-#' @param msg Content to print
-#' @param ... Other arguments to pass to prettify_message
-#' @param verbose (default = TRUE)
-#'
-vw_pretty_message <- function(msg, ..., verbose = TRUE) {
-  if (verbose) message(prettify_message(msg, ...))
-  invisible()
-}
-
-# vw_setup_cli_output <- function() {
-#   if (!interactive()) {
-#     old <- options(
-#       cli.ansi = FALSE,
-#       cli.unicode = FALSE,
-#       cli.progress_clear = FALSE
-#     )
-#     return(old)
-#   }
-#   invisible(NULL)
-# }
-
-vw_init_message <- function(model_type, verbose = TRUE) {
-  cli::cli_rule(left=model_type, 
-    right=paste0('verywise v', utils::packageVersion('verywise')))
-}
-
-# #' @title
-# #' Print message to console if verbose = TRUE
-# #'
-# #' @param ... : content to print
-# #' @param verbose (default = TRUE)
-# #'
-# vw_message <- function(..., verbose = TRUE) {
-#   if (verbose) message(...)
-#   invisible()
-# }
-
 
 VW_THEME <- list(
   ".val"  = list(color = "blue", "font-weight" = "bold"),
@@ -99,17 +10,26 @@ VW_THEME <- list(
   # '.file' = list() use default
 )
 
-#' Print a styled message to the console
-#'
+
+#' @title Print pipeline title with verywise version noted
+#' @keywords internal
+vw_init_message <- function(model_type, verbose = TRUE) {
+  cli::cli_rule(left=model_type, 
+    right=paste0('verywise v', utils::packageVersion('verywise')))
+}
+
+
+#' @title Print a styled message to the console
+#' @description
 #' Routes each call to the appropriate `cli` alert type based on the
 #' conventional leading-character prefixes used in the existing codebase:
 #'
-#' | Prefix in `msg` | Rendered as |
-#' |-----------------|-------------|
-#' | `" * "` / `"* "` | bullet (`cli_bullets`) |
-#' | `" ! "` / `"   !"` | warning alert |
-#' | `"NOTE:"` | info alert |
-#' | anything else | `cli_text` |
+#' | Prefix in `msg`    | Rendered as |
+#' |--------------------|-------------|
+#' | `" * "` / `"* "`   | bullet (`cli_bullets`) |
+#' | `" ! "` / `"  !"`  | warning alert |
+#' | `"NOTE:"`          | info alert |
+#' | anything else      | `cli_text` |
 #'
 #' Use the explicit typed variants (`vw_step`, `vw_bullet`, …) for new call
 #' sites rather than relying on auto-detection.
@@ -118,6 +38,7 @@ VW_THEME <- list(
 #' @param verbose Logical (default `TRUE`).
 #' @param type  Optional override: `"info"`, `"step"`, `"bullet"`,
 #'   `"warning"`, `"success"`, `"note"`, `"sub"`.
+#' 
 #' @export
 #' 
 vw_message <- function(..., verbose = TRUE, type = NULL) {
@@ -176,18 +97,17 @@ vw_message <- function(..., verbose = TRUE, type = NULL) {
 #' @title Themed error
 #'
 #' @description
-#' Wrapper around \code{cli::cli_abort()} that applies \code{VW_THEME} and
-#' reports the call from the correct frame. Accepts the same \code{msg}
-#' conventions as \code{vw_message()}: a plain string, a named character
+#' Wrapper around [cli::cli_abort()] that applies `VW_THEME` and
+#' reports the call from the correct frame. Accepts the same `msg`
+#' conventions as [vw_message()]: a plain string, a named character
 #' vector (for bullet-style bodies), or inline cli markup.
 #'
 #' @param msg  A character string or named character vector passed to
-#'   \code{cli::cli_abort()}. Use names \code{"i"}, \code{"x"}, \code{"v"},
-#'   \code{">"} for bullet formatting, e.g.
-#'   \code{c("Something failed.", "i" = "Check {.arg x}.")}.
-#' @param ...  Additional arguments forwarded to \code{cli::cli_abort()}
-#'   (e.g. \code{class}, \code{call}, \code{.internal}).
-#' @param call Caller enviroment (`rlang::caller_env()`)
+#'   [cli::cli_abort()]. Use names `"i"`, `"x"`, `"v"`, `">"` for bullet
+#'   formatting, e.g. `c("Something failed.", "i" = "Check {.arg x}.")`.
+#' @param ...  Additional arguments forwarded to [cli::cli_abort()]
+#'   (e.g. `class`, `call`, `.internal`).
+#' @param call Caller enviroment ([rlang::caller_env()])
 #'
 #' @author Serena Defina, 2026.
 #'
@@ -199,7 +119,7 @@ vw_error <- function(msg, ..., call = rlang::caller_env()) {
 }
 
 # ---------------------------------------------------------------------------
-# Internal dispatcher
+# Internal dispatchers
 # ---------------------------------------------------------------------------
 
 #' @keywords internal

@@ -171,9 +171,9 @@ build_supersubject <- function(subj_dir,
 
        tryCatch({
          if (fs_template != data_resolution$fs_template) {
-           ss[i, ] <- load.mgh(file_path)$x[1:n_verts]
+           ss[i, ] <- load.mgh(file_path)[1:n_verts]
          } else {  # avoid sub-setting if not necessary
-           ss[i, ] <- load.mgh(file_path)$x
+           ss[i, ] <- load.mgh(file_path)
          }
        }, error = function(e) {
          # Track failed observations

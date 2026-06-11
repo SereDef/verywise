@@ -15,12 +15,12 @@ Authors@R: c(
     person("Ryan", "Muetzel", 
            email = "r.muetzel@erasmusmc.nl", role = c("ctb", "fnd"))
            )
-Description: Whole-brain (vertex-wise) multilevel modeling. 
+Description: Whole-brain (i.e. cerebrum) vertex-wise multilevel modeling. 
  The package allows for vertex- (or voxel-)wise application of several statistical models, 
  including (distributed) linear mixed models and random-effect meta-analyses. 
  It reads brain data from FreeSurfer MGH format or plain matrices. 
  It can handle imputed datasets from several packages (mice, mi, amelia, etc.). 
- Multiple testing correction is achieved using MCZ simulations from FreeSurfer.
+ Multiple testing correction is achieved using FDR or MCZ simulations from FreeSurfer.
 License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
@@ -44,12 +44,10 @@ Imports:
     cli,
     doParallel,
     doRNG (>= 1.5),
-    dplyr,
     foreach,
     lme4 (>= 1.1.35.5),
-    magrittr,
     rlang
-SystemRequirements: Unix (not supported on Windows), FreeSurfer
+SystemRequirements: Unix (not supported on Windows), FreeSurfer (for some functionality)
 Config/Needs/website: rmarkdown
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

@@ -85,6 +85,8 @@ plot_vw_surf <- function(
     to_file = NULL,
     dpi = 150L) {
 
+  require_packages('reticulate', call_fn = 'plot_vw_surf')
+
   # --- input validation ----------------------------------------------------
   if (is.null(lh) && is.null(rh))
     vw_error("At least one of `lh` or `rh` must be supplied.")
@@ -175,7 +177,7 @@ check_hemi <- function(hemi, fs_template) {
     if (!file.exists(hemi)) vw_error("{hemi_name} file not found: {.file {hemi}}")
     
     if (grepl('\\.mgh$', hemi, ignore.case = TRUE)) {
-      hemi <- load.mgh(hemi)$x
+      hemi <- load.mgh(hemi)
     } else {
       # nilearn.surface.load_surf_data()
       nilearn_surf_ext <- c("\\.mgz$", "\\.gii$", "\\.nii$",
@@ -211,13 +213,6 @@ check_hemi <- function(hemi, fs_template) {
 
 .vw_surf_init_py <- function() {
   if (isTRUE(.vw_surf_env$ready)) return(invisible(NULL))
-  
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    vw_error(c(
-      "Surface plotting requires {.pkg reticulate}.",
-      "i" = "Install it with {.code install.packages('reticulate')}."
-    ))
-  }
 
   missing_pkgs <- Filter(
     function(x) !reticulate::py_module_available(x),

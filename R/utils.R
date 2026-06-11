@@ -45,3 +45,37 @@ list.dirs.till <- function(path, n) {
 
 #' @importFrom cli cli_progress_step cli_progress_done
 NULL
+
+
+# ========================== Suggested packages ===============================
+
+#' @title Assert that suggested packages are installed
+#' @description
+#' Call at the top of any function that uses packages listed in `Suggests:`.
+#' Throws an informative error via `vw_error()` if any are missing,
+#' naming the function that requires them so the user knows why.
+#'
+#' @param ... Package names as unquoted symbols or character strings.
+#' @param call_fn Character string; name of the calling function shown in the
+#'   error message. Defaults to the name of the immediate caller.
+#'
+#' @return `NULL` invisibly if all packages are available.
+#'
+#' @examples
+#' my_function <- function() {
+#'   require_packages(reticulate, bigreadr)
+#'   # ... rest of function
+#' }
+#'
+#' @keywords internal
+require_packages <- function(..., call_fn = 'verywise') {
+  pkgs <- as.character(substitute(list(...))[-1L])
+  missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1L), quietly = TRUE)]
+
+  if (length(missing)) {
+    vw_error(c("The {.fn {call_fn}} function requires the {.pkg {missing}} package{?s}.",
+               ">" ="Install {?it/them} with: {.code install.packages({deparse(missing)})}"))
+  }
+
+  invisible(NULL)
+}
