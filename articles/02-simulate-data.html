@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-06-11</h4>
+            <h4 data-toc-skip class="date">2026-06-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/02-simulate-data.Rmd" class="external-link"><code>vignettes/articles/02-simulate-data.Rmd</code></a></small>
       <div class="d-none name"><code>02-simulate-data.Rmd</code></div>
@@ -83,8 +83,8 @@ Defina</h4>
 </h2>
 <p>If you are eager to get started with <code>verywise</code> but do not
 have access to a dataset (yet), you can generate both a set of
-ready-made FreeSurfer <strong>brain surface files</strong> and a
-<strong>phenotype file</strong> to go with them.</p>
+<strong>brain surface files</strong> that mimic real FreeSurfer output
+and a <strong>phenotype file</strong> to go with them.</p>
 <p>The simulated dataset will automatically be stored into a
 <code>verywise</code> directory structure and will be ready for you to
 analyze.</p>
@@ -95,114 +95,120 @@ analyze.</p>
 <p>Now, decide what data you want to generate. In this (small) example,
 I will simulate a dataset with 250 subjects, who belong to two cohorts
 (including 100 and 150 subjects respectively) and all underwent two MRI
-sessions (<code>"01"</code> and <code>"02"</code>). I am only interested
-in surface area, so I will only be generating <code>"area"</code> maps.
-The resolution of these fake surface maps is 163842 vertices
-(corresponding to the most detailed FreeSurfer template
-<code>"fsaverage"</code>).</p>
-<p>To make this more realistic, I want to inject a positive association
-between <code>"age"</code> and surface area in my data (beta = 3.5).
-This association will only be present in the <code>"frontalpole"</code>
-region from the Desikan-Killiany atlas.</p>
+sessions (<code>"01"</code> and <code>"02"</code>).</p>
+<p>These subjects are on average 10 years old at baseline (i.e. at
+session <code>"01"</code>) and then attendend session <code>"02"</code>
+after 4 years (on average). I also simulate their sex (50% males) and
+wisdom (mean = 0 and SD = 1), which also increases by 1 SD on average
+over time (i.e., between sessions).</p>
+<p>On the brain side, i simulate surface <code>"area"</code> maps across
+both hemispheres a. The resolution of these fake surface maps is 163842
+vertices (corresponding to the most detailed FreeSurfer template
+<code>"fsaverage"</code>). The mean area is 2.5 (SD = 0.5)</p>
+<p>I also inject a few associations between my covariates and surface
+area in my favorite regions from the Desikan-Killiany atlas.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">data_structure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"cohort1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"n_subjects"</span> <span class="op">=</span> <span class="fl">100</span>, </span>
-<span>                                        <span class="st">"sessions"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>,<span class="st">"02"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>                       <span class="st">"cohort2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"n_subjects"</span> <span class="op">=</span> <span class="fl">150</span>, </span>
-<span>                                        <span class="st">"sessions"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>,<span class="st">"02"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">data_structure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      cohort1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
+<span>      cohort2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sessions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"01"</span>, <span class="st">"02"</span><span class="op">)</span>, n_subjects <span class="op">=</span> <span class="fl">150</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">baseline</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>mean<span class="op">=</span><span class="fl">10</span>, sd<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span>, </span>
+<span>  sex <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>levels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Male'</span>,<span class="st">'Female'</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  wisdom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">change</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>mean<span class="op">=</span><span class="fl">4</span>, sd<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  wisdom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">1</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">roi_associations</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  temporalpole <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fl">1.3</span>, sex <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, </span>
+<span>  entorhinal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span>, </span>
+<span>  frontalpole <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>wisdom <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
 <span></span>
 <span><span class="co"># Simulate FreeSurfer and phenotype dataset for both hemispheres</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">hemi</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'lh'</span>,<span class="st">'rh'</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span></span>
-<span>  <span class="fu"><a href="../reference/simulate_longit_dataset.html">simulate_longit_dataset</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/simulate_longit_dataset.html">simulate_longit_dataset</a></span><span class="op">(</span></span>
 <span>    path <span class="op">=</span> <span class="st">"path/to/verywise/simulated_example"</span>,</span>
 <span>    data_structure <span class="op">=</span> <span class="va">data_structure</span>,</span>
-<span>    measure <span class="op">=</span> <span class="st">"area"</span>,</span>
-<span>    hemi <span class="op">=</span> <span class="va">hemi</span>,</span>
-<span>    fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>, <span class="co"># FreeSurfer template (largest available: 163842 vertices)</span></span>
-<span>    vw_mean <span class="op">=</span> <span class="fl">5</span>, <span class="co"># mean surface area value</span></span>
-<span>    vw_sd <span class="op">=</span> <span class="fl">0.1</span>, <span class="co"># standard deviation of surface area values</span></span>
-<span>    subj_sd <span class="op">=</span> <span class="fl">0.02</span>, <span class="co"># variability between subjects</span></span>
-<span>    site_sd <span class="op">=</span> <span class="fl">0.01</span>, <span class="co"># variability between sites</span></span>
-<span>    <span class="co"># (optionally) only simulate data within certain ROIs:</span></span>
-<span>    <span class="co"># roi_subset = c('temporalpole', 'frontalpole', 'entorhinal'), </span></span>
-<span>    simulate_association <span class="op">=</span> <span class="st">"3.5 * age"</span>,</span>
-<span>    location_association <span class="op">=</span> <span class="st">"frontalpole"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span>    baseline <span class="op">=</span> <span class="va">baseline</span>,</span>
+<span>    change <span class="op">=</span> <span class="va">change</span>,</span>
+<span>    roi_associations <span class="op">=</span> <span class="va">roi_associations</span>,</span>
+<span>    measure <span class="op">=</span> <span class="st">"area"</span>, vw_mean <span class="op">=</span> <span class="fl">2.5</span>, vw_sd <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>    fs_template <span class="op">=</span> <span class="st">"fsaverage"</span><span class="op">)</span></span></code></pre></div>
 <p>This should give you everything you need to play around with
 <code>verywise</code> model fitting. If you do run a model using this
 data now, you should be able to recover an association with age located
-in a single cluster, perfectly overlapping with the frontal pole region.
-How <em>neat</em>.</p>
-<p>Under the hood, <code>simulate_dataset()</code> will call two
+in two clusters (perfectly overlapping with the temporalpole and
+entorhinal regions), same goes for sex and age. How <em>neat</em>.</p>
+<p>Under the hood, <code><a href="../reference/simulate_longit_dataset.html">simulate_longit_dataset()</a></code> will call two
 functions:</p>
 <ul>
 <li>
-<code><a href="../reference/simulate_freesurfer_data.html">simulate_freesurfer_data()</a></code> to generate the brain
-surface files, and</li>
-<li>
 <code><a href="../reference/simulate_long_pheno_data.html">simulate_long_pheno_data()</a></code> to generate the phenotype
 data</li>
+<li>
+<code><a href="../reference/simulate_freesurfer_data.html">simulate_freesurfer_data()</a></code> to generate the brain
+surface files</li>
 </ul>
 <p>You can also call these two functions separately, in case you only
 need one of the two data sources.</p>
-</div>
-<div class="section level2">
-<h2 id="only-generate-the-brain-data">Only generate the brain data<a class="anchor" aria-label="anchor" href="#only-generate-the-brain-data"></a>
-</h2>
+<div class="section level3">
+<h3 id="only-generate-the-brain-data">Only generate the brain data<a class="anchor" aria-label="anchor" href="#only-generate-the-brain-data"></a>
+</h3>
 <p>If you have a phenotype dataset already, but you are waiting for the
 FreeSurfer data to cook.</p>
-<p>In this case I have a single dataset / cohort called
-<code>"my_site"</code> with 100 subjects who underwent three MRI
-sessions (<code>"baseline"</code>, <code>"F1"</code> and
-<code>"F2"</code>). The phenotype data is ready and stored in a CSV file
+<p>In this case the phenotype data is ready and stored in a CSV file
 located at <code>"path/to/my_phenotype_data.rds"</code>. This dataset
-should contain 300 rows (100 subjects x 3 sessions), and a few variables
-of interest, including <code>"wisdom"</code>.</p>
-<p>Let’s simulate left hemisphere thickness maps, smoothed at
-<code>10mm</code> FWHM, with an overall mean of <code>6.5</code> (mm
-thickness) and a standard deviation of <code>1.5</code>. This time, to
-save us some time, I will use a smaller surface template
-(<code>"fsaverage3"</code>), which has only <code>40962</code> vertices
-in total.</p>
-<p>I also want to inject a positive association between
-<code>"wisdom"</code> and thickness (beta = 10) in the
-<code>"entorhinal"</code> and <code>"temporalpole"</code> regions.</p>
+should be in long format and it should contain, a “folder_id” variable
+as well as the the two variables “good_variable” and “bad_variable” that
+I am going to use to simulate a positive and a negative association
+respectively.</p>
+<p>The following code will simulate left hemisphere thickness maps,
+smoothed at <code>10mm</code> FWHM, with an overall mean of
+<code>6.5</code> (mm thickness) and a standard deviation of
+<code>1.5</code>. This time, to save us some time, I will use a smaller
+surface template (<code>"fsaverage3"</code>), which has only
+<code>40962</code> vertices in total.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">phenotype_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"path/to/my_phenotype_data.rds"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">data_structure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"my_site"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"sessions"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"baseline"</span>, <span class="st">"F1"</span>, <span class="st">"F2"</span><span class="op">)</span>,</span>
-<span>                                        <span class="st">"n_subjects"</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
 <span><span class="co"># Simulate FreeSurfer dataset</span></span>
 <span><span class="fu"><a href="../reference/simulate_freesurfer_data.html">simulate_freesurfer_data</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"path/to/simulated_FreeSurfer_output"</span>,</span>
-<span>                         data_structure <span class="op">=</span> <span class="va">data_structure</span>,</span>
-<span>                         fs_template <span class="op">=</span> <span class="st">"fsaverage3"</span>,</span>
+<span>                         pheno <span class="op">=</span> <span class="va">phenotype_data</span>,</span>
+<span>                         roi_associations <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>                         frontalpole <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>good_variable <span class="op">=</span> <span class="fl">0.7</span>, bad_variable <span class="op">=</span> <span class="op">-</span><span class="fl">0.3</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                         measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
 <span>                         hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
-<span>                         fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>, <span class="co"># smoothness level</span></span>
+<span>                         fs_template <span class="op">=</span> <span class="st">"fsaverage3"</span>, <span class="co"># smaller template</span></span>
 <span>                         vw_mean <span class="op">=</span> <span class="fl">6.5</span>,</span>
 <span>                         vw_sd <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>                         subj_sd <span class="op">=</span> <span class="fl">0.2</span>, </span>
-<span>                         site_sd <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>                         simulate_association <span class="op">=</span> <span class="fl">10</span> <span class="op">*</span> <span class="va">phenotype</span><span class="op">$</span><span class="va">wisdom</span>,</span>
-<span>                         location_association <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'temporalpole'</span>, <span class="st">'entorhinal'</span><span class="op">)</span>,</span>
-<span>                         seed <span class="op">=</span> <span class="va">my_random_seed_I_did_not_forget_to_set</span><span class="op">)</span></span></code></pre></div>
+<span>                         site_sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="only-generate-the-phenotype-data">Only generate the phenotype data<a class="anchor" aria-label="anchor" href="#only-generate-the-phenotype-data"></a>
-</h2>
+<div class="section level3">
+<h3 id="only-generate-the-phenotype-data">Only generate the phenotype data<a class="anchor" aria-label="anchor" href="#only-generate-the-phenotype-data"></a>
+</h3>
 <p>On the other hand, if you already have some surfaces to use but you
 would like a phenotype to go with it, you can generate a minimal “long
-format” dataframe (with variables: <code>folder_id</code>,
-<code>id</code>, <code>site</code>, <code>age</code>, <code>sex</code>,
-<code>wisdom</code>).</p>
+format” data.frame with the variables you like (though you may need to
+adapt the “folder_id” variable to your brain data structure).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate phenotype dataset, using the same data_structure as above</span></span>
-<span><span class="va">phenotype_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_long_pheno_data.html">simulate_long_pheno_data</a></span><span class="op">(</span>data_structure <span class="op">=</span> <span class="va">data_structure</span>,</span>
+<span><span class="va">phenotype_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_long_pheno_data.html">simulate_long_pheno_data</a></span><span class="op">(</span>data_structure <span class="op">=</span> <span class="va">data_structure</span>, </span>
+<span>                                           baseline <span class="op">=</span> <span class="va">baseline</span>, </span>
+<span>                                           change <span class="op">=</span> <span class="va">change</span>,</span>
 <span>                                           seed <span class="op">=</span> <span class="va">my_random_seed_I_did_not_forget_to_set</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="other-parameters">Other parameters<a class="anchor" aria-label="anchor" href="#other-parameters"></a>
+</h3>
+<p><code><a href="../reference/simulate_longit_dataset.html">simulate_longit_dataset()</a></code> also takes a handful of other
+(optional) parameters that you may find useful. Please refer to the
+function documentation for more details.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="simulate-distributed-data">Simulate “distributed” data<a class="anchor" aria-label="anchor" href="#simulate-distributed-data"></a>
@@ -230,7 +236,6 @@ dataset for testing:</p>
 <span>    vw_sd <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>    tau2 <span class="op">=</span> <span class="fl">0.1</span>, <span class="co"># Between-site variance of the random intercept</span></span>
 <span>    sigma2 <span class="op">=</span> <span class="fl">0.05</span>, <span class="co"># Within-site residual variance</span></span>
-<span></span>
 <span>    betas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sex <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span>, age <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span>,</span>
 <span>    roi_subset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'temporalpole'</span>, <span class="st">'frontalpole'</span>, <span class="st">'entorhinal'</span><span class="op">)</span>,</span>
 <span>    location_association <span class="op">=</span> <span class="st">'frontalpole'</span>,</span>

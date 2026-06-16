@@ -24,6 +24,7 @@ simulate_longit_dataset(
   roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), entorhinal = c(age =
     0.9), frontalpole = c(wisdom = 0.7)),
   simulate_other_rois = FALSE,
+  only_save_ss_matrix = FALSE,
   hemi = "both",
   measure = "thickness",
   vw_mean = 2.5,
@@ -80,6 +81,10 @@ simulate_longit_dataset(
 
   Logical; if `TRUE` all non-association ROIs are simulated under the
   null.
+
+- only_save_ss_matrix:
+
+  only save the supersubject matrix
 
 - hemi:
 

@@ -80,6 +80,7 @@ mixed-effects model with:</p><ul><li><p>ROI-specific fixed effects specified via
 <span>  subj_sd <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  site_sd <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  save_ss <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  fwhmc <span class="op">=</span> <span class="st">"fwhm10"</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -146,6 +147,11 @@ Ignored when there is only one site (intercept drawn as a single value).</p></dd
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
 <dd><p>Character; FreeSurfer template space, e.g. <code>"fsaverage"</code>.</p></dd>
+
+
+<dt id="arg-save-ss">save_ss<a class="anchor" aria-label="anchor" href="#arg-save-ss"></a></dt>
+<dd><p>Logical; whether to save only the supersubject matrix directly
+or write the individual observation surface (.mgh) files.</p></dd>
 
 
 <dt id="arg-fwhmc">fwhmc<a class="anchor" aria-label="anchor" href="#arg-fwhmc"></a></dt>

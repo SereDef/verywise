@@ -27,6 +27,7 @@ simulate_freesurfer_data(
   subj_sd = 0.2,
   site_sd = 0.1,
   fs_template = "fsaverage",
+  save_ss = FALSE,
   fwhmc = "fwhm10",
   seed = 3108,
   verbose = TRUE
@@ -94,6 +95,11 @@ simulate_freesurfer_data(
 - fs_template:
 
   Character; FreeSurfer template space, e.g. `"fsaverage"`.
+
+- save_ss:
+
+  Logical; whether to save only the supersubject matrix directly or
+  write the individual observation surface (.mgh) files.
 
 - fwhmc:
 
