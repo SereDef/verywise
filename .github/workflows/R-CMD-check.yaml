@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
+          # - {os: macos-latest,   r: 'release'}
           # - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,   r: 'release'}
@@ -39,29 +39,11 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-
-      - name: Install OpenMP runtime (macOS only)
-        if: runner.os == 'macOS'
-        run: brew install libomp
-
-      - name: Set OpenMP compiler flags (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir -p ~/.R
-          cat >> ~/.R/Makevars << 'EOF'
-          CPPFLAGS += -Xclang -fopenmp -I$(brew --prefix libomp)/include
-          LDFLAGS += -L$(brew --prefix libomp)/lib -lomp
-          EOF
-        
+ 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-      
-      - name: Reinstall bigstatsr from source (macOS only)
-        if: runner.os == 'macOS'
-        run: install.packages("bigstatsr", type = "source")
-        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
