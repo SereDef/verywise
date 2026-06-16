@@ -18,6 +18,7 @@ simulate_freesurfer_data(
   subj_sd = 0.2,
   site_sd = 0.1,
   fs_template = "fsaverage",
+  save_ss = FALSE,
   fwhmc = "fwhm10",
   seed = 3108,
   verbose = TRUE
@@ -57,6 +58,9 @@ grand-mean cortical thickness).}
 Ignored when there is only one site (intercept drawn as a single value).}
 
 \item{fs_template}{Character; FreeSurfer template space, e.g. \code{"fsaverage"}.}
+
+\item{save_ss}{Logical; whether to save only the supersubject matrix directly
+or write the individual observation surface (.mgh) files.}
 
 \item{fwhmc}{Character; smoothing kernel label, e.g. \code{"fwhm10"}.}
 

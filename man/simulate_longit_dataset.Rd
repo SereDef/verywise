@@ -14,6 +14,7 @@ simulate_longit_dataset(
   roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), entorhinal = c(age =
     0.9), frontalpole = c(wisdom = 0.7)),
   simulate_other_rois = FALSE,
+  only_save_ss_matrix = FALSE,
   hemi = "both",
   measure = "thickness",
   vw_mean = 2.5,
@@ -52,6 +53,8 @@ Example: \code{list(temporalpole = c(age = 0.3, wisdom = 0.5))}.}
 
 \item{simulate_other_rois}{Logical; if \code{TRUE} all non-association ROIs are
 simulated under the null.}
+
+\item{only_save_ss_matrix}{only save the supersubject matrix}
 
 \item{hemi}{One of \code{"lh"}, \code{"rh"}, or \code{"both"} (default: \code{"both"}).}
 

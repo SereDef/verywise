@@ -86,6 +86,10 @@ validate_pheno <- function(pheno, data_structure, roi_associations) {
   missing_cols  <- setdiff(required_vars, names(pheno))
   if (length(missing_cols) > 0L) vw_error("'pheno' is missing required column(s): {missing_cols}")
   
+  pheno[required_vars] <- lapply(pheno[required_vars], function(x) {
+    if (is.factor(x)) as.numeric(as.character(x)) else x
+  })
+
   pheno
 }
 
@@ -306,6 +310,8 @@ simulate_long_pheno_data <- function(
 #' @param site_sd Numeric \eqn{\geq 0}; SD of the site random intercept.
 #'   Ignored when there is only one site (intercept drawn as a single value).
 #' @param fs_template Character; FreeSurfer template space, e.g. `"fsaverage"`.
+#' @param save_ss Logical; whether to save only the supersubject matrix directly 
+#'  or write the individual observation surface (.mgh) files.
 #' @param fwhmc Character; smoothing kernel label, e.g. `"fwhm10"`.
 #' @param seed Integer random seed.
 #' @param verbose Logical; progress messages.
@@ -341,6 +347,7 @@ simulate_freesurfer_data <- function(
     subj_sd = 0.2,
     site_sd = 0.1,
     fs_template = "fsaverage",
+    save_ss = FALSE,
     fwhmc = "fwhm10",
     seed = 3108,
     verbose = TRUE) {
@@ -348,7 +355,8 @@ simulate_freesurfer_data <- function(
   hemi_name <- if (hemi == "lh") "left" else "right"
 
   if (verbose) cli::cli_progress_step('Generate FreeSurfer dataset ({hemi_name} hemisphere)', spinner=TRUE)
- 
+
+
   stopifnot(
     is.numeric(vw_sd), vw_sd >= 0,
     is.numeric(subj_sd), subj_sd >= 0,
@@ -365,10 +373,19 @@ simulate_freesurfer_data <- function(
   n_verts <- count_vertices(fs_template)
   n_obs <- nrow(pheno)
 
-  ss <- matrix(0, nrow = n_obs, ncol = n_verts, dimnames = list(pheno$folder_id, NULL))
+  backing <- file.path(path, paste(hemi, measure, fs_template, "supersubject.bk", 
+                       sep="."))
+  if (file.exists(backing)) file.remove(backing) # TODO: warn the user
 
+  ss <- bigstatsr::FBM(
+      nrow = n_obs,
+      ncol = n_verts,
+      init = 0, 
+      type = "float",
+      backingfile = gsub(".bk$", "", backing),
+      create_bk = !file.exists(backing))
+  
   # Build random terms 
-    
   subj_key <- paste(pheno$site, pheno$id, sep = ":")  # e.g. "GENR:1"
   unique_subjs <- unique(subj_key)
   subj_re_map <- setNames(rnorm(length(unique_subjs), 0, subj_sd), unique_subjs)
@@ -379,6 +396,8 @@ simulate_freesurfer_data <- function(
     site_re_map <- setNames(rnorm(length(unique_sites), 0, site_sd), unique_sites)
     ri_site <- site_re_map[pheno$site] 
   }
+
+  cli::cli_progress_step('Populate super-subject matrix', spinner=TRUE)
 
   roi_map <- aparc.annot[[hemi]]$label_names[1:n_verts]
 
@@ -398,12 +417,20 @@ simulate_freesurfer_data <- function(
     }
   }
 
-  mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
+  if (save_ss) {
+    cli::cli_progress_step('Save super-subject matrix', spinner=TRUE)
+    ss$save()
+  } else {
+    cli::cli_progress_step('Write into .mgh files', spinner=TRUE)
 
-  for (obs in pheno$folder_id) {
-    obs_dir <- file.path(path, obs, "surf")
-    dir.create(obs_dir, recursive = TRUE, showWarnings = FALSE)
-    save.mgh(as.mgh(ss[obs, ]), file.path(obs_dir, mgh_fname))
+    mgh_fname <- paste(hemi, measure, fwhmc, fs_template, "mgh", sep = ".")
+
+    for (i in seq_along(pheno$folder_id)) {
+      obs <- pheno$folder_id[i]
+      obs_dir <- file.path(path, obs, "surf")
+      dir.create(obs_dir, recursive = TRUE, showWarnings = FALSE)
+      save.mgh(as.mgh(ss[i, ]), file.path(obs_dir, mgh_fname))
+    }
   }
 
   invisible(NULL)
@@ -426,6 +453,7 @@ simulate_freesurfer_data <- function(
 #' @inheritParams simulate_long_pheno_data
 #' @inheritParams simulate_freesurfer_data
 #' @param hemi One of `"lh"`, `"rh"`, or `"both"` (default: `"both"`).
+#' @param only_save_ss_matrix only save the supersubject matrix
 #'
 #' @return `NULL` invisibly. Side effects: `phenotype.csv` and vertex-wise
 #'   `.mgh` files written under `path`.
@@ -459,6 +487,7 @@ simulate_longit_dataset <- function(
                             entorhinal = c(age = 0.9), 
                             frontalpole = c(wisdom = 0.7)),
     simulate_other_rois = FALSE,
+    only_save_ss_matrix = FALSE,
     hemi = "both",
     measure = "thickness",
     vw_mean = 2.5,
@@ -487,19 +516,20 @@ simulate_longit_dataset <- function(
   
   lapply(hemis, function(h) {
     simulate_freesurfer_data(path = path,
-                              pheno = pheno,
-                              roi_associations = roi_associations,
-                              simulate_other_rois = simulate_other_rois,
-                              hemi = h,
-                              measure = measure,
-                              vw_mean = vw_mean,
-                              vw_sd = vw_sd,
-                              subj_sd = subj_sd,
-                              site_sd = site_sd,
-                              fs_template = fs_template,
-                              fwhmc = fwhmc,
-                              seed = seed,
-                              verbose = verbose)
+                            pheno = pheno,
+                            roi_associations = roi_associations,
+                            simulate_other_rois = simulate_other_rois,
+                            hemi = h,
+                            measure = measure,
+                            vw_mean = vw_mean,
+                            vw_sd = vw_sd,
+                            subj_sd = subj_sd,
+                            site_sd = site_sd,
+                            fs_template = fs_template,
+                            save_ss = only_save_ss_matrix,
+                            fwhmc = fwhmc,
+                            seed = seed,
+                            verbose = verbose)
   })
   
   vw_message("Done! :)", type = "step", verbose = verbose)
