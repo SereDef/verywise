@@ -11,13 +11,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-The `run_vw_*()"` functions from `verywise` are designed to run a single vertex-wise analysis: i.e. a single model and in only one hemisphere. This is done on purpose, to keep things simple and modular, and maximize computational efficiency, while avoiding issues with nested parallelization.
+The `run_vw_*()"` functions from `verywise` are designed to run one vertex-wise analysis: i.e. a single model and in only one hemisphere. This is done on purpose, to keep things simple and modular, and maximize computational efficiency, while avoiding issues with nested parallelization.
 
-However, in practice, you will probably want to run more that a single hemisphere vertex-wise analysis, for example, you likely want to analyze both left and right hemispheres, and possibly assess multiple models (i.e. looking a more than one brain outcome, or at more than one set of predictors and so on). 
+However, in practice, you are probably interested in both hemispheres, and possibly you'd like to assess multiple models (i.e. looking a more than one brain outcome, or at more than one set of predictors and so on). 
 
 You can do this *sequentially* of course, just by calling the `run_vw_*()"` multiple times with varying specifications. But if you have a large number of analyses to run, this can quickly become time-consuming.
 
-So here are some tips on running multiple `verywise` analyses *in parallel*, using **SLURM job arrays** (since this is a common setup on HPC clusters).
+So here are some tips for running multiple `verywise` analyses *in parallel*, using **SLURM job arrays** (since this is a common setup on HPC clusters).
 
 ### 1. Create a list of analysis specifications
 First, let's design our `analysis.R` script, which will be called by each job in the SLURM array. This will change quite a bit depending on your specific analyses, but here is an example of what it could look like. 

@@ -580,6 +580,8 @@ run_vw_lmm <- function(
     out[['clust']] <- ct_vw
     vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
       term_names = fixed_terms, verbose = verbose)
+     # remove ct_bk_path["clust"] bk 
+    
   } else {
     vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
   }

@@ -15,7 +15,11 @@ knitr::opts_chunk$set(
 
 Check out the output directory. You should see something like this
 
-[TODO: add image]
+```{r, echo = FALSE}
+#| fig.alt: >
+#|   Example of a phenotype data frame.
+knitr::include_graphics("05-output-structure.png", dpi=200)
+```
 
 ## Extracting mean/median cluster values 
 Sometimes, you may want to extract the mean or the median value of a specific cluster from your results, for example to use this in further analysis. You can do this in `verywise` using the `significant_cluster_stats()` function. 

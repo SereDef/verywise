@@ -1,0 +1,120 @@
+---
+title: "Extracting and visualizing `verywise` results"
+author: "Serena Defina"
+date: "`r Sys.Date()`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## `verywise` output
+
+Check out the output directory. You should see something like this
+
+```{r, echo = FALSE}
+#| fig.alt: >
+#|   Example of a phenotype data frame.
+knitr::include_graphics("05-output-structure.png", dpi=200)
+```
+
+
+#### Model converge 
+Get too greedy with model complexity, you may incur in convergence issues. 
+
+These will be soon stored in the output --> TODO
+
+A common problem we have seen is **singular fits**. These are typically caused by a number of random-effect levels that is too small (e.g. < 5; see more info [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#singular-fits))
+
+#### Model fit information 
+
+These will be soon stored in the output --> TODO
+
+BIC, AIC, logLik, deviance
+
+More on AIC in the context of LMM [here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#can-i-use-aic-for-mixed-models-how-do-i-count-the-number-of-degrees-of-freedom-for-a-random-effect)
+
+##### ICC
+Intra-class correlation coefficient, indicates whether there is clustering in the data.
+
+### More modeling options: ML vs REML 
+Restricted maximum likelihood [TODO: add info]
+
+## Extracting mean/median cluster values 
+Sometimes, you may want to extract the mean or the median value of a specific cluster from your results, for example to use this in further analysis. You can do this in `verywise` using the `significant_cluster_stats()` function. 
+
+ <ins>Note</ins>: ideally, you should run your analyses with `save_ss = TRUE` or `save_ss = "path/to/ss"`, or you have called `build_supersubject()` in your pipeline, for this to sun smoothly.
+
+```{r extract-cluster, eval = FALSE}
+# Extract mean from significant clusters
+df <- significant_cluster_stats(stat = "mean", # or "median"
+                                ss_dir = "path/to/ss_directory", 
+                                res_dir = "path/to/results", 
+                                term = "age", # term of interest 
+                                measure = "thickness", 
+                                hemi = "lh")
+```
+
+
+#### Convergence warnings
+
+`lme4` may emit convergence warnings during a vertex-wise run. The most
+common are:
+
+- **`isSingular`**: The model is singular, meaning one or more random
+  effect variance components is estimated at (or near) zero. This
+  frequently occurs at low-signal brain regions (e.g. medial wall
+  vertices near the cortical mask boundary) and is not necessarily
+  cause for alarm. If singular fits affect the vast majority of vertices
+  (> 50%), your random structure is likely too complex for the data and
+  should be simplified.
+- **`Model failed to converge`**: The optimizer did not reach a
+  satisfactory solution. Try a different optimizer via the `lmm_control`
+  argument:
+
+  ```r
+  run_vw_lmm(
+    ...,
+    lmm_control = lmerControl(optimizer = "bobyqa")
+  )
+  ```
+
+Convergence flags and singular fit counts per vertex are stored in the
+`model_info.rds` output file for post-hoc inspection.
+
+#### Model fit statistics
+
+Per-vertex AIC, BIC, log-likelihood, and deviance are stored in
+`model_info.rds`. These are most useful for **comparing model
+specifications globally** — for example, plotting the distribution of
+BIC differences across the brain when evaluating whether to include an
+additional random slope. Interpreting these statistics on a per-vertex
+basis is generally not informative.
+
+For more on AIC in the context of LMMs, see
+[here](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#can-i-use-aic-for-mixed-models-how-do-i-count-the-number-of-degrees-of-freedom-for-a-random-effect).
+
+#### ICC
+
+The intra-class correlation coefficient (ICC) indicates the degree of
+clustering in the data — i.e. how much variance in the brain metric is
+attributable to the grouping factor (e.g. site, subject). A high ICC
+confirms that the random effect is warranted. ICC values are reported in
+the `model_info.rds` output.
+
+### ML vs. REML
+
+By default, `lme4::lmer` uses **restricted maximum likelihood (REML)**,
+which produces unbiased estimates of variance components and is the
+correct choice when the goal is to estimate and interpret random
+effects. Use **maximum likelihood (ML)** only when comparing models
+with *different fixed effects* via a likelihood ratio test, since REML
+likelihood values are not comparable across models with different fixed
+structures. Switch to ML by passing `REML = FALSE` via `lmm_control`.
+
+
+## {-}
+Next article: [Run vertex-wise federated / meta- analyses](06-run-vw-meta-and-fed.html)
