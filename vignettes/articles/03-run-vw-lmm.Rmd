@@ -208,7 +208,7 @@ These are all `mgh` files that you can read using FreeSurfer or `verywise` itsel
 
 > Note: a "compressed version" of this output is on its way! If you would like something else to be outputted, let us know! 
 
-The model fit outputs are discussed more in detail in [this article](04-run-slurm-array.html)
+The model fit outputs are discussed more in detail in [this article](07-model-fit-comparison.html)
 
 ### A note on *P*-values 
 

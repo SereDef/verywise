@@ -164,7 +164,6 @@ ssh <node_name>
 top -u <user_name> # q to exit 
 ```
 
-
 ## Performance tips
 
 `verywise` is designed to be fast, but runtime depends heavily on:
@@ -241,7 +240,11 @@ Once the model behaves as expected, rerun the final analysis on the high-resolut
 
 You may cut ~20% computation time by disabling derivative calculations through `lmm_control = lmerControl(calc.derivs = FALSE)`, but this is usually better left for later-stage analyses once you are already confident that the model behaves well.
 
-During model development, diagnostics are often more valuable than a speed-up.
+During model development, diagnostics are often more valuable than a speed-up. See [this article](07-model-fit-comparison.html) for more information on model convergence and fit. 
+
+### Center and scale continuous predictors.
+
+Convergence is generally easier when all continuous predictors are on a comparable numerical scale. s
 
 ## {-}
 Next article: [Inspect and *visualize* verywise results](05-visualize-results.html)
