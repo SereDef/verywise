@@ -45,6 +45,7 @@
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
     <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
     <li><a class="dropdown-item" href="../articles/06-run-vw-meta-and-fed.html">Running vertex-wise federated analyses and meta-analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/07-model-fit-comparison.html">Model fit and model comparisons</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -70,7 +71,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-06-16</h4>
+            <h4 data-toc-skip class="date">2026-06-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/05-visualize-results.Rmd" class="external-link"><code>vignettes/articles/05-visualize-results.Rmd</code></a></small>
       <div class="d-none name"><code>05-visualize-results.Rmd</code></div>
@@ -78,34 +79,16 @@ Defina</h4>
 
     
     
-<div class="section level2">
-<h2 id="verywise-output">
-<code>verywise</code> output<a class="anchor" aria-label="anchor" href="#verywise-output"></a>
-</h2>
-<p>Check out the output directory. You should see something like
-this</p>
-<p>[TODO: add image]</p>
-</div>
-<div class="section level2">
-<h2 id="extracting-meanmedian-cluster-values">Extracting mean/median cluster values<a class="anchor" aria-label="anchor" href="#extracting-meanmedian-cluster-values"></a>
-</h2>
-<p>Sometimes, you may want to extract the mean or the median value of a
-specific cluster from your results, for example to use this in further
-analysis. You can do this in <code>verywise</code> using the
-<code><a href="../reference/significant_cluster_stats.html">significant_cluster_stats()</a></code> function.</p>
-<p><ins>Note</ins>: ideally, you should run your analyses with
-<code>save_ss = TRUE</code> or <code>save_ss = "path/to/ss"</code>, or
-you have called <code><a href="../reference/build_supersubject.html">build_supersubject()</a></code> in your pipeline, for
-this to sun smoothly.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Extract mean from significant clusters</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/significant_cluster_stats.html">significant_cluster_stats</a></span><span class="op">(</span>stat <span class="op">=</span> <span class="st">"mean"</span>, <span class="co"># or "median"</span></span>
-<span>                                ss_dir <span class="op">=</span> <span class="st">"path/to/ss_directory"</span>, </span>
-<span>                                res_dir <span class="op">=</span> <span class="st">"path/to/results"</span>, </span>
-<span>                                term <span class="op">=</span> <span class="st">"age"</span>, <span class="co"># term of interest </span></span>
-<span>                                measure <span class="op">=</span> <span class="st">"thickness"</span>, </span>
-<span>                                hemi <span class="op">=</span> <span class="st">"lh"</span><span class="op">)</span></span></code></pre></div>
-</div>
+<p>All done with the analyses? That was a handful, you must be hungry
+for some brain maps.</p>
+<p>There are two main ways to inspect and visualize
+<code>verywise</code> results:</p>
+<ul>
+<li>directly in R, using <code>verywise</code> plotting and extraction
+functions</li>
+<li>in your browser, using the <code>verywiseWIZard</code> web
+application</li>
+</ul>
 <div class="section level2">
 <h2 id="visualizing-results">Visualizing results<a class="anchor" aria-label="anchor" href="#visualizing-results"></a>
 </h2>
@@ -119,72 +102,126 @@ You can run this locally or try it out <a href="https://seredef-verywise-wizard.
 <p>Note: if you are using the online version of the WIZard, with results
 hosted on GitHub, you may want to look into the
 <code><a href="../reference/move_result_files.html">move_result_files()</a></code> helper function, to organize your
-results in a way that is safe (i.e., does not expose individual level
-data) and quick.</p>
+results in a way that is efficient to upload and safe (i.e., does not
+expose individual level data) and quick.</p>
 </div>
 <div class="section level3">
-<h3 id="verywise-plotting-functions">
-<code>verywise</code> plotting functions<a class="anchor" aria-label="anchor" href="#verywise-plotting-functions"></a>
+<h3 id="plotting-directly-in-verywise">Plotting directly in <code>verywise</code><a class="anchor" aria-label="anchor" href="#plotting-directly-in-verywise"></a>
 </h3>
-<p>Plots can also be generated using <code>verywise</code> directly. You
-can use these functions in R, but they are Python wrappers, so they will
-require the <code>reticulate</code> package installed.</p>
-<p>You can plot (thresholded) estimate maps like so:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>If you are in no mood to move or upload results around, you can just
+stay where you are and use generate plots directly from R using
+<code>verywise</code>.</p>
+<p>Note however that these plotting functions rely on Python-based
+surface visualization under the hood, so you will need
+<code>reticulate</code> installed and Python installed.</p>
+<p>The main plotting helpers are:</p>
+<ul>
+<li>
+<code><a href="../reference/plot_vw_map.html">plot_vw_map()</a></code> for plotting (thresholded)
+beta/coefficient maps (more info below)</li>
+<li>
+<code><a href="../reference/plot_vw_diff.html">plot_vw_diff()</a></code> for plotting a difference between two
+brain surface maps. You can use this to check whether two terms have
+similar spatial mapping for example, or to compare the fit of two models
+(see the <a href="07-model-fit-comparison.html">model comparison
+article</a>).</li>
+<li>
+<code><a href="../reference/plot_vw_surf.html">plot_vw_surf()</a></code> a more flexible / customizable
+lower-level function, if you want more direct control over what gets
+plotted and how.</li>
+</ul>
+<p>You can use these functions in R, but they are Python wrappers, so
+they will require the <code>reticulate</code> package installed.</p>
+<p>The most common function used is <code><a href="../reference/plot_vw_map.html">plot_vw_map()</a></code>. It takes
+a <code>verywise</code> results directory, locates the coefficient map
+for a term of interest, optionally applies a threshold, and renders the
+result on a brain surface either interactively (HTML) or as a PNG.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_vw_map.html">plot_vw_map</a></span><span class="op">(</span></span>
 <span>  res_dir <span class="op">=</span> <span class="st">"/path/to/output"</span>,</span>
 <span>  term <span class="op">=</span> <span class="st">"age"</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">'area'</span>, </span>
-<span>  hemi <span class="op">=</span> <span class="st">"both"</span>, <span class="co"># (default) or "lh", "rh" for single hemisphere</span></span>
-<span>  surface <span class="op">=</span> <span class="st">"pial"</span>, <span class="co"># or "inflated"</span></span>
-<span>  threshold <span class="op">=</span> <span class="st">'fdr&lt;0.05'</span>,</span>
-<span>  to_file <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># interactive visualization or static output</span></span>
-<span>  <span class="co"># optional argument </span></span>
+<span>  measure <span class="op">=</span> <span class="st">"area"</span>, </span>
+<span>  hemi <span class="op">=</span> <span class="st">"both"</span>,                <span class="co"># (default) or "lh", "rh" for single hemisphere</span></span>
+<span>  surface <span class="op">=</span> <span class="st">"pial"</span>,             <span class="co"># or "inflated"</span></span>
+<span>  threshold <span class="op">=</span> <span class="st">"fdr&lt;0.05"</span>,</span>
+<span>  to_file <span class="op">=</span> <span class="cn">NULL</span>,               <span class="co"># interactive visualization or static output</span></span>
+<span>  <span class="co"># --- optional arguments ---</span></span>
+<span>  title <span class="op">=</span> <span class="st">"Effect of age on Surface Area"</span>,</span>
 <span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
-<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span>, <span class="co"># quicker: use local maps </span></span>
-<span>  <span class="co"># outline_rois = c("entorhinal", "precuneus") # TODO: not yet available</span></span>
+<span>  fs_home <span class="op">=</span> <span class="st">"/path/to/FREESURFER_HOME"</span>, <span class="co"># uses local maps which is quicker than downloading and caching</span></span>
+<span>  <span class="co"># outline_rois = c("entorhinal", "precuneus") # TODO: not yet available (coming!)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The <code>threshold</code> argument can be one of:</p>
+<p>The <code>threshold</code> argument controls which parts of the beta
+map are shown. Common choices include:</p>
 <ul>
 <li>
-<code>"cws"</code> for cluster-wise significant (the default) -
-provided that such clusters were estimated at the analysis stage</li>
+<strong><code>"cws"</code></strong>: cluster-wise significant
+vertices (default), assuming cluster correction was computed during the
+analysis.</li>
 <li>
-<code>"fdr&lt;0.05"</code> for other multiple testing corrected
-thresholds (such as FDR) - provided that these were estimated at the
-analysis stage</li>
-<li>a numeric value e.g. <code>0.001</code> which is interpreted as a
-beta value threshold,</li>
+<strong><code>"fdr&lt;0.05"</code></strong>: an FDR-corrected
+significance level, assuming FDR-adjusted p-values were calculated at
+the analysis stage. Note, use whatever threshold you like
+(e.g. <code>"fdr&lt;0.001"</code>), we’ll do the rest.</li>
+<li>
+<strong>A numeric value</strong>, e.g. <code>0.001</code>:
+interpreted as a raw coefficient (absolute) threshold</li>
 </ul>
-<p>When <code>to_file= NULL</code> verywise will try to open an 3D
-interactive visualization of the brain map in the Viewer window (e.g. in
-RStudio) or the default browser. This can be saved as an HTML file, but
-often you may prefer a “static” PNG image were the all the brain is
-visible. This can be obtained by setting
-<code>to_file = path/to/figure.png</code> or similar output file path.
-The figures will then look similar to this:</p>
+<p>In practice, <code>"cws"</code> is often the most interpretable
+option for final figures, while numeric thresholds can be useful during
+early exploration.</p>
+<p>When <code>to_file = NULL</code> (the default), <code>verywise</code>
+will open an interactive 3D brain visualization in the RStudio Viewer or
+in your default browser. You can then play with this, rotate the brains,
+zoom in certain regions, and when you hover over the map, get
+information about each vertex value and the DK region it is in.</p>
+<p>This can be saved as an HTML file, but often, for manuscripts,
+reports, or slide decks, you may prefer a “static” image. In that case,
+provide a file path to <code>to_file</code>, for <a href="example:%60to_file" class="uri">example:`to_file</a> =
+path/to/figures/age_area_cws.png`</p>
+<p>This produces a static image in which all views of the brain are
+visible at once, which is usually easier to share and reproduce.</p>
 <p><img src="05-example-png.png" class="r-plt" alt="Example of a verywise input directory structure." width="1700"></p>
-<p>Another useful function is <code><a href="../reference/plot_vw_diff.html">plot_vw_diff()</a></code> and
-<code><a href="../reference/plot_vw_surf.html">plot_vw_surf()</a></code></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="on-an-hcp-cluster">On an HCP cluster<a class="anchor" aria-label="anchor" href="#on-an-hcp-cluster"></a>
+<h2 id="plotting-on-an-hcp-cluster">Plotting on an HCP cluster<a class="anchor" aria-label="anchor" href="#plotting-on-an-hcp-cluster"></a>
 </h2>
-<p>If you want to make plots directly on an HPC cluster (e.g. Snellius)
-you will need to have some version of chrome installed (kaleido one
-works) and set up an Xvfb process <strong>before</strong> starting R
-(e.g. in your job script or in the shell before launching R):</p>
-<p>For example, on Snellius, I do:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">module</span> load 2025</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">module</span> load Xvfb/21.1.18-GCCcore-14.2.0</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">Xvfb</span> :99 <span class="at">-screen</span> 0 1280x1024x24 <span class="kw">&amp;</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="bu">export</span> <span class="va">DISPLAY</span><span class="op">=</span>:99</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">sleep</span> 1  <span class="co"># give Xvfb time to start</span></span></code></pre></div>
-<p>Troubleshooting:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># check for existing Xvfb processed running on this node </span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"Xvfb.*:99"</span></span></code></pre></div>
+<p>If you want to render plots directly on an HPC cluster
+(e.g. Snellius), this is possible but you will need a working browser
+backend such as Chrome or Chromium (kaleido default works well) and and
+a virtual display such as <code>Xvfb</code>.</p>
+<p>You will have to set up an Xvfb process <strong>before</strong>
+starting R (e.g. in your job script or in the shell before launching R).
+For example, on Snellius, I do:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">module</span> load 2025</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="ex">module</span> load Xvfb/21.1.18-GCCcore-14.2.0</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="ex">Xvfb</span> :99 <span class="at">-screen</span> 0 1280x1024x24 <span class="kw">&amp;</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="bu">export</span> <span class="va">DISPLAY</span><span class="op">=</span>:99</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">sleep</span> 1  <span class="co"># give Xvfb time to start</span></span></code></pre></div>
+<p>For troubleshooting, you can use the helper
+<code><a href="../reference/plot_sitrep.html">plot_sitrep()</a></code>.</p>
+</div>
+<div class="section level2">
+<h2 id="extracting-meanmedian-cluster-values">Extracting mean/median cluster values<a class="anchor" aria-label="anchor" href="#extracting-meanmedian-cluster-values"></a>
+</h2>
+<p>Sometimes, you may want to extract the mean or the median value of a
+specific cluster from your results, for example to use this in further
+analysis. You can do this in <code>verywise</code> using the
+<code><a href="../reference/significant_cluster_stats.html">significant_cluster_stats()</a></code> function.</p>
+<p><ins>Note</ins>: ideally, you should run your analyses with
+<code>save_ss = TRUE</code> or <code>save_ss = "path/to/ss"</code>, or
+you have called <code><a href="../reference/build_supersubject.html">build_supersubject()</a></code> in your pipeline, for
+this to sun smoothly.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract mean from significant clusters</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/significant_cluster_stats.html">significant_cluster_stats</a></span><span class="op">(</span>stat <span class="op">=</span> <span class="st">"mean"</span>, <span class="co"># or "median"</span></span>
+<span>                                ss_dir <span class="op">=</span> <span class="st">"path/to/ss_directory"</span>, </span>
+<span>                                res_dir <span class="op">=</span> <span class="st">"path/to/results"</span>, </span>
+<span>                                term <span class="op">=</span> <span class="st">"age"</span>, <span class="co"># term of interest </span></span>
+<span>                                measure <span class="op">=</span> <span class="st">"thickness"</span>, </span>
+<span>                                hemi <span class="op">=</span> <span class="st">"lh"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="section"></h2>

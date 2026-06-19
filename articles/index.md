@@ -16,3 +16,5 @@
   results](https://seredef.github.io/verywise/articles/05-visualize-results.md):
 - [Running vertex-wise federated analyses and
   meta-analyses](https://seredef.github.io/verywise/articles/06-run-vw-meta-and-fed.md):
+- [Model fit and model
+  comparisons](https://seredef.github.io/verywise/articles/07-model-fit-comparison.md):

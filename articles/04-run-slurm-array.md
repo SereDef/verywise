@@ -1,37 +1,45 @@
 # Run many \`verywise\` analyses in parallel (on SLURM)
 
-The `run_vw_*()"` functions from `verywise` are designed to run a single
-vertex-wise analysis: i.e. a single model and in only one hemisphere.
-This is done on purpose, to keep things simple and modular, and maximize
-computational efficiency, while avoiding issues with nested
-parallelization.
+## Define a job array
 
-However, in practice, you will probably want to run more that a single
-hemisphere vertex-wise analysis, for example, you likely want to analyze
-both left and right hemispheres, and possibly assess multiple models
-(i.e. looking a more than one brain outcome, or at more than one set of
-predictors and so on).
+The `run_vw_*()"` functions in `verywise` are designed to run **one**
+vertex-wise analysis: i.e. a single model in one hemisphere.
 
-You can do this *sequentially* of course, just by calling the
-`run_vw_*()"` multiple times with varying specifications. But if you
-have a large number of analyses to run, this can quickly become
-time-consuming.
+However, in practice, you are probably interested in both hemispheres,
+and possibly you’d like to assess multiple models (i.e. looking a more
+than one brain outcome, or at more than one set of predictors and so
+on).
 
-So here are some tips on running multiple `verywise` analyses *in
-parallel*, using **SLURM job arrays** (since this is a common setup on
-HPC clusters).
+This kind of design is intentional. Keeping each run modular makes the
+workflow easier to debug, and gives you better control over resource
+allocation. Let me explain :)
 
-### 1. Create a list of analysis specifications
+You can of course simply run your analyses *sequentially* by calling
+`run_vw_*()` multiple times with different arguments / specifications.
+But if you have many analyses to run, this can quickly become slow and
+inconvenient.
 
-First, let’s design our `analysis.R` script, which will be called by
-each job in the SLURM array. This will change quite a bit depending on
-your specific analyses, but here is an example of what it could look
-like.
+This article shows an example of how to run **many `verywise` analyses
+*in parallel*** using **SLURM job arrays**, which are a common workflow
+on HPC clusters.
 
-We start by defining some constants: things that will be the same across
-all the analyses (note: you don’t really *need* to set these up as
-variables, but I think it makes the code cleaner and easier to maintain,
-and I am in charge here so we do this how I like it).
+### A) Create a list of analysis specifications
+
+Start by creating an `analysis.R` script (you can call this however you
+like of course, but I am low on fantasy today). This script has two
+jobs, broadly: define the set of analyses you will run and run one of
+those analysis. We will call this script as many times as there are
+analyses in the set (and jobs in the SLURM array).
+
+The exact content of `analysis.R` will depend on your study, but the
+basic structure looks something like this:
+
+*Step 1*
+
+: define paths and **constants**. These are things that will be the same
+across all the analyses (note: you don’t really *need* to set these up
+as variables, but I think it makes the code cleaner and easier to
+maintain, and I am in charge here so we do this how I like it).
 
 ``` r
 
@@ -41,10 +49,8 @@ library(verywise)
 # Define project paths and constants ----------------------------------------------
 
 proj_dir <- "path/to/main/project/directory"
-
 fs_home <- "/path/to/FREESURFER_HOME"
 subj_dir <- "path/to/freesurfer/data"
-
 outp_dir <- file.path(proj_dir, "results")
 
 pheno_filepath <- file.path(proj_dir, 'phenotype_clean.rds')
@@ -52,6 +58,19 @@ pheno_filepath <- file.path(proj_dir, 'phenotype_clean.rds')
 # this part of the formula will be constant across all analyses
 covariates <- 'birth_weight + SES + ethnicity' 
 random_effects <- '(1 | id)'
+```
+
+*Step 2*: Read **SLURM environment variables**. There are two key
+variables you can use to manage the parallel workflow:
+
+- `analysis_id` (the array task ID) tells the script *which analysis* to
+  run
+- `n_cores` (number of CPUs per task) tells `verywise` how many
+  resources (CPU cores) can be used to run each analysis
+
+We will define these values in the SLURM job script below (be patient).
+
+``` r
 
 # Get SLURM parameters ------------------------------------------------------------
 
@@ -59,16 +78,9 @@ analysis_id <- as.integer(Sys.getenv('SLURM_ARRAY_TASK_ID', unset = 1))
 n_cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK', unset = 1))
 ```
 
-Note the `analysis_id` and `n_cores` variables, which catch the array
-task ID and number of CPUs from the SLURM environment. These are used to
-select *which of our many analyses* to run, and how many resources can
-be used to run it. We will define these values in the SLURM job script
-below.
-
-Now, let’s organize all our analyses into a ***grid of analysis
-specifications*** (i.e. combinations of hemispheres, outcomes, models,
-datasets etc). Each row of this grid will correspond to a single
-analysis.
+*Step 3*: Build a **grid of analyses**. It’s time to define all
+combinations of parameters (i.e. combinations of hemispheres, outcomes,
+models, datasets etc) that you want to run.
 
 In this example I want to analyze both hemispheres (`lh` and `rh`),
 three different outcomes (`thickness`, `area` and `w_g.pct`), and a two
@@ -81,16 +93,14 @@ models).
 The base R function
 [`expand.grid()`](https://rdrr.io/r/base/expand.grid.html) is a useful
 way to create such a grid of all possible parameter combinations, but
-you can also create this manually if you prefer (for example, if only
-certain combinations make sense for you).
+you can also create this manually (for example, if only certain
+combinations make sense for you).
 
-We then use the `analysis_id` variable to select one specific parameter
-combination (i.e. a row in the grid) and use that to define the current
-analysis. For example, we: a. take the value of hemisphere (just making
-sure it is a character string and not a factor); b. format the outcome
-variable name correctly (adding the `vw_` prefix); c. define the model
-formula for the current analysis (e.g. with or without interaction
-term).
+*Step 4*
+
+: We then use the `analysis_id` variable to select one specific
+parameter combination (i.e. a row in the grid) and use that to define
+the analysis.
 
 ``` r
 
@@ -113,7 +123,10 @@ outc <- paste0('vw_', params$outc)
 model_spec <- as.formula(paste(outc, '~ age', params$mode, 'sex +', covariates, '+', random_effects))
 ```
 
-Finally, let’s run the analysis with all our “current” parameters:
+*Step 5*
+
+: Run the model with the selected combination of parameters, for
+example:
 
 ``` r
 
@@ -129,13 +142,21 @@ output <- run_vw_lmm(formula = model_spec,
                      save_ss = TRUE)
 ```
 
-### 2. Create a job script
+### B) Create a job script
 
-All of this was fun, but we still need to create a SLURM job script
-(e.g. `run_analyses.sh`), which will submit the job array to the
-scheduler and stuff done for us. Here we will specify how many analyses
-we want to run (i.e. the size of the array), and how many resources to
-allocate to each job.
+All of this was fun, but we still need to run the actual analyses. So
+lastly create a SLURM job script (e.g. `run_analyses.sh`), which will
+submit the job array to the scheduler and get stuff done. This script
+will tell the scheduler:
+
+- how many jobs to launch (i.e. how many analyses) using the `--array`
+  argument. This range should match the number of rows in `param_grid`
+  (or a subset of them)
+- how many resources to allocate to each job (so that each analysis will
+  run in parallel) using the `--cpus-per-task`
+- which R script to run (e.g. our `analysis.R`)
+- (optionally) you can also control other aspects, e.g. set a time
+  limit, logs, and email notifications
 
 ``` sh
 #!/bin/bash
@@ -143,10 +164,10 @@ allocate to each job.
 #SBATCH --job-name=verywise_job_array
 #SBATCH --array=1-12 # 12 models in total (see above)
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=64   # NOTE R limit parallel processes = 124
-#SBATCH --time=1-00:00:00    # 1 day time limit, just to be on the safe side
-#SBATCH --error=analysis_log%a
-#SBATCH --output=analysis_log%a
+#SBATCH --cpus-per-task=64    # NOTE R limit parallel processes = 124
+#SBATCH --time=1-00:00:00     # 1 day time limit, just to be on the safe side
+#SBATCH --error=logs/analysis_%a
+#SBATCH --output=logs/analysis_%a
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=your.email@email.com
 
@@ -160,17 +181,66 @@ Rscript analysis.R
 Then, inside your project directory, submit the job array to SLURM with:
 `sbatch run_analyses.sh`.
 
-### Performance tip 1: avoid implicit parallelization
+### (Optional) Monitor your jobs
 
-On some systems, *implicit parallelism* in low-level matrix algebra
-libraries (BLAS/LAPACK) can interfere with explicit parallelization used
-internally by `verywise`, secretly slowing your analyses down. If you
-feel like processing is taking too long for your liking, I recommend
-disabling these implicit threading libraries (*before starting R*).
+Use `squeue` to see whether your array tasks are queued or running (and
+for how long)
 
-You can do so, for example by setting the following environment
-variables in your shell or in your SLURM job script (before calling
-`Rscript [...]`):
+``` sh
+squeue -u $USER
+```
+
+To inspect CPU and memory usage for a running job:
+
+``` sh
+sstat -j <your_job_ID>.batch --format=JobID,AveCPU,AveRSS,MaxRSS
+```
+
+Or, for more info, log in to the node that is running your job (you can
+see them in `squeue`) and peak at what is going on:
+
+``` sh
+ssh <node_name>
+top -u <user_name> # q to exit 
+```
+
+## Performance tips
+
+`verywise` is designed to be fast, but runtime depends heavily on:
+
+- the number of vertices in the template
+- model complexity (e.g. number of predictors and variable
+  transformations)
+- the random-effects structure (e.g. number of groups, correlated random
+  terms)
+- the number of imputations,
+- and the available hardware.
+
+Simple models with a moderate number of fixed effects and a single
+random term often finish within minutes under modest resources (e.g. \<
+10 cores). But more complex models can take hours or even days.
+
+Say you got greedy. You are running several high-resolution LMM models
+with many parameters (e.g. \> 15), a complex random effect structure
+(e.g. multiple correlated random effects and \> 10.000 groups), in a
+multiple imputation setting (e.g. with 30 datasets). Even with a good
+parallel set up (e.g. I tried this with 64 workers on my hands), you can
+expect such analyses to take a 1 or 2 days to finish running.
+
+Here are a few tricks can help mantaining speed even when scaling up to
+large analysis batches.
+
+### Avoid implicit parallelization
+
+On some systems, low-level matrix libraries such as BLAS, LAPACK,
+OpenBLAS, MKL, or Accelerate may use their own hidden threading. This
+can interfere with the explicit parallelization used by `verywise` and
+actually make your analyses slower. If you feel like processing is
+taking too long for your liking, this may be a likely cause.
+
+To avoid this problem, it is best to disable implicit threading. You can
+do so, for example by setting the following environment variables in
+your shell or in your SLURM job script (before calling `Rscript [...]`):
 
 ``` sh
 export OPENBLAS_NUM_THREADS=1
@@ -180,71 +250,84 @@ export VECLIB_MAXIMUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 ```
 
-Also note that using a very large number of cores (e.g. **\> 120**) may
-sometimes cause worker initialization or other issues (e.g. R parallel
-processes limits).
+### Number of cores and chunk size
 
-### Performance tip 2: precompute and re-use the super-subject matrix
+Using more cores will not always get you faster analyses. Using a very
+large number of cores (e.g. **\> 120**) may instead cause worker startup
+and scheduling issues on some systems (e.g. addionally you may run into
+R parallel processes limits).
+
+Internally, verywise spits the job into “chunks” (i.e. groups of
+vertices) that are independently run in parallel. You can further
+optimize the speed of your analyses by picking a smart chunk size:
+e.g. by splitting the size of your template of choice by the number of
+cores available, and then further divide this number so that the chunks
+remain reasonably small (1000-2000 max) to avoid bottlenecks and memory
+issues.
+
+### Precompute and re-use the super-subject matrix
 
 If you find yourself running multiple analyses on the same dataset
-(i.e. *same dataset* and *same brain outcome*), you can save some
-computation time by pre-computing the “super-subject matrix” only once,
+(i.e. *same hemisphere* and *same brain measure*), you can save some
+computation time by precomputing the “super-subject matrix” only once,
 and re-using it across all your analyses.
+
+This is especially helpful when you are fitting many alternative model
+specifications to the same imaging data.
 
 ``` r
 
 library(verywise)
 
-supsubj_dir = "/path/to/save/ss"
+pheno <- readRDS("/path/to/phenotype_clean.rds")
+supsubj_dir <- "/path/to/save/ss"
 
 ss <- build_supersubject(
-                  subj_dir = "/path/to/freesurfer/subjects",
-                  folder_ids = pheno[, 'folder_id'], # assuming 'pheno' is your phenotype data frame
-                  supsubj_dir = supsubj_dir,
-                  measure = "thickness",
-                  hemi = "lh",
-                  fs_template = "fsaverage",
-                  n_cores = 4)
+  subj_dir = "/path/to/freesurfer/subjects",
+  folder_ids = pheno[, 'folder_id'],
+  supsubj_dir = supsubj_dir,
+  measure = "thickness",
+  hemi = "lh",
+  fs_template = "fsaverage",
+  n_cores = 4
+)                  
 ```
 
 Then simply use `supsubj_dir` as your `subj_dir` argument in
 [`run_vw_lmm()`](https://seredef.github.io/verywise/reference/run_vw_lmm.md),
 and we will do the rest :)
 
-## Check if your job is stuck
+### Tune models at low resolution first
 
-`verywise` is designed to be fast (but reasonable). Simpler models
-(e.g. with ~10 fixed effects + a random intercept fit in a single
-dataset) will run in a few minutes even under modest resources (e.g. \<
-10 cores).
+Before launching a large batch of high-resolution analyses, test the
+model on a lower-resolution template such as `fsaverage3` or
+`fsaverage4`. You can do this using the `fs_template` argument. This is
+useful for:
 
-To get a good sense of how much time and resources your model will need,
-it is a good idea to first test it on a lower-dimensional brain atlas
-(e.g. `fsaverage3` or `fsaverage3`). Don’t forget to pick `chunk_size`
-accordingly, so you can then do some easy math and estimate how long
-does a single model take on average to fit.
+- checking that the model converges,
+- estimating approximate runtime and resources (i.e. CPU and memory) you
+  need
+- tuning the model (i.e. find the optimal specification)
 
-Say you got greedy. You are running several high-resolution LMM models
-with many parameters (e.g. \> 15), a complex random effect structure
-(e.g. multiple correlated random effects and \> 10.000 groups), in a
-multiple imputation setting (e.g. with 30 datasets). Even with a good
-parallel set up (e.g. I tried this with 96 workers on my hands), you can
-expect such analyses to take a couple of days to finish running.
+Once the model behaves as expected, rerun the final analysis on the
+high-resolution`fsaverage` template.
 
-If you are not sure whether you should be waiting that long for your
-results, here is a quick way to check that your job did not get stuck:
+### Use `lmm_control` with `calc.derivs = FALSE`
 
-``` sh
-sstat -j <your_job_ID>.batch --format=JobID,AveCPU,AveRSS,MaxRSS
-```
+You may cut ~20% computation time by disabling derivative calculations
+through `lmm_control = lmerControl(calc.derivs = FALSE)`, but this is
+usually better left for later-stage analyses once you are already
+confident that the model behaves well.
 
-Or, for more info, log in to the node that is running your job (you can
-see them in `squeue` and peak at what is going on:
+During model development, diagnostics are often more valuable than a
+speed-up. See [this
+article](https://seredef.github.io/verywise/articles/07-model-fit-comparison.md)
+for more information on model convergence and fit.
 
-``` sh
-ssh <node_name>
-top -u <user_name> # q to exit 
-```
+### Center and scale continuous predictors.
+
+Convergence is generally easier when all continuous predictors are on a
+comparable numerical scale. s
 
 ## 
 

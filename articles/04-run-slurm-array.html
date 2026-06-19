@@ -45,6 +45,7 @@
     <li><a class="dropdown-item" href="../articles/04-run-slurm-array.html">Run many `verywise` analyses in parallel (on SLURM)</a></li>
     <li><a class="dropdown-item" href="../articles/05-visualize-results.html">Extracting and visualizing `verywise` results</a></li>
     <li><a class="dropdown-item" href="../articles/06-run-vw-meta-and-fed.html">Running vertex-wise federated analyses and meta-analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/07-model-fit-comparison.html">Model fit and model comparisons</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -70,7 +71,7 @@
                         <h4 data-toc-skip class="author">Serena
 Defina</h4>
             
-            <h4 data-toc-skip class="date">2026-06-16</h4>
+            <h4 data-toc-skip class="date">2026-06-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/SereDef/verywise/blob/main/vignettes/articles/04-run-slurm-array.Rmd" class="external-link"><code>vignettes/articles/04-run-slurm-array.Rmd</code></a></small>
       <div class="d-none name"><code>04-run-slurm-array.Rmd</code></div>
@@ -78,34 +79,45 @@ Defina</h4>
 
     
     
-<p>The <code>run_vw_*()"</code> functions from <code>verywise</code> are
-designed to run a single vertex-wise analysis: i.e. a single model and
-in only one hemisphere. This is done on purpose, to keep things simple
-and modular, and maximize computational efficiency, while avoiding
-issues with nested parallelization.</p>
-<p>However, in practice, you will probably want to run more that a
-single hemisphere vertex-wise analysis, for example, you likely want to
-analyze both left and right hemispheres, and possibly assess multiple
-models (i.e. looking a more than one brain outcome, or at more than one
-set of predictors and so on).</p>
-<p>You can do this <em>sequentially</em> of course, just by calling the
-<code>run_vw_*()"</code> multiple times with varying specifications. But
-if you have a large number of analyses to run, this can quickly become
-time-consuming.</p>
-<p>So here are some tips on running multiple <code>verywise</code>
-analyses <em>in parallel</em>, using <strong>SLURM job arrays</strong>
-(since this is a common setup on HPC clusters).</p>
+<div class="section level2">
+<h2 id="define-a-job-array">Define a job array<a class="anchor" aria-label="anchor" href="#define-a-job-array"></a>
+</h2>
+<p>The <code>run_vw_*()"</code> functions in <code>verywise</code> are
+designed to run <strong>one</strong> vertex-wise analysis: i.e. a single
+model in one hemisphere.</p>
+<p>However, in practice, you are probably interested in both
+hemispheres, and possibly you’d like to assess multiple models
+(i.e. looking a more than one brain outcome, or at more than one set of
+predictors and so on).</p>
+<p>This kind of design is intentional. Keeping each run modular makes
+the workflow easier to debug, and gives you better control over resource
+allocation. Let me explain :)</p>
+<p>You can of course simply run your analyses <em>sequentially</em> by
+calling <code>run_vw_*()</code> multiple times with different arguments
+/ specifications. But if you have many analyses to run, this can quickly
+become slow and inconvenient.</p>
+<p>This article shows an example of how to run <strong>many
+<code>verywise</code> analyses <em>in parallel</em></strong> using
+<strong>SLURM job arrays</strong>, which are a common workflow on HPC
+clusters.</p>
 <div class="section level3">
-<h3 id="create-a-list-of-analysis-specifications">1. Create a list of analysis specifications<a class="anchor" aria-label="anchor" href="#create-a-list-of-analysis-specifications"></a>
+<h3 id="a-create-a-list-of-analysis-specifications">A) Create a list of analysis specifications<a class="anchor" aria-label="anchor" href="#a-create-a-list-of-analysis-specifications"></a>
 </h3>
-<p>First, let’s design our <code>analysis.R</code> script, which will be
-called by each job in the SLURM array. This will change quite a bit
-depending on your specific analyses, but here is an example of what it
-could look like.</p>
-<p>We start by defining some constants: things that will be the same
-across all the analyses (note: you don’t really <em>need</em> to set
-these up as variables, but I think it makes the code cleaner and easier
-to maintain, and I am in charge here so we do this how I like it).</p>
+<p>Start by creating an <code>analysis.R</code> script (you can call
+this however you like of course, but I am low on fantasy today). This
+script has two jobs, broadly: define the set of analyses you will run
+and run one of those analysis. We will call this script as many times as
+there are analyses in the set (and jobs in the SLURM array).</p>
+<p>The exact content of <code>analysis.R</code> will depend on your
+study, but the basic structure looks something like this:</p>
+<ins>
+Step 1
+</ins>
+<p>: define paths and <strong>constants</strong>. These are things that
+will be the same across all the analyses (note: you don’t really
+<em>need</em> to set these up as variables, but I think it makes the
+code cleaner and easier to maintain, and I am in charge here so we do
+this how I like it).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load verywise</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span>
@@ -113,31 +125,37 @@ to maintain, and I am in charge here so we do this how I like it).</p>
 <span><span class="co"># Define project paths and constants ----------------------------------------------</span></span>
 <span></span>
 <span><span class="va">proj_dir</span> <span class="op">&lt;-</span> <span class="st">"path/to/main/project/directory"</span></span>
-<span></span>
 <span><span class="va">fs_home</span> <span class="op">&lt;-</span> <span class="st">"/path/to/FREESURFER_HOME"</span></span>
 <span><span class="va">subj_dir</span> <span class="op">&lt;-</span> <span class="st">"path/to/freesurfer/data"</span></span>
-<span></span>
 <span><span class="va">outp_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">proj_dir</span>, <span class="st">"results"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pheno_filepath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">proj_dir</span>, <span class="st">'phenotype_clean.rds'</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># this part of the formula will be constant across all analyses</span></span>
 <span><span class="va">covariates</span> <span class="op">&lt;-</span> <span class="st">'birth_weight + SES + ethnicity'</span> </span>
-<span><span class="va">random_effects</span> <span class="op">&lt;-</span> <span class="st">'(1 | id)'</span></span>
-<span></span>
-<span><span class="co"># Get SLURM parameters ------------------------------------------------------------</span></span>
+<span><span class="va">random_effects</span> <span class="op">&lt;-</span> <span class="st">'(1 | id)'</span></span></code></pre></div>
+<p><ins>Step 2</ins>: Read <strong>SLURM environment variables</strong>.
+There are two key variables you can use to manage the parallel
+workflow:</p>
+<ul>
+<li>
+<code>analysis_id</code> (the array task ID) tells the script
+<em>which analysis</em> to run</li>
+<li>
+<code>n_cores</code> (number of CPUs per task) tells
+<code>verywise</code> how many resources (CPU cores) can be used to run
+each analysis</li>
+</ul>
+<p>We will define these values in the SLURM job script below (be
+patient).</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get SLURM parameters ------------------------------------------------------------</span></span>
 <span></span>
 <span><span class="va">analysis_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">'SLURM_ARRAY_TASK_ID'</span>, unset <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">n_cores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">'SLURM_CPUS_PER_TASK'</span>, unset <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Note the <code>analysis_id</code> and <code>n_cores</code> variables,
-which catch the array task ID and number of CPUs from the SLURM
-environment. These are used to select <em>which of our many
-analyses</em> to run, and how many resources can be used to run it. We
-will define these values in the SLURM job script below.</p>
-<p>Now, let’s organize all our analyses into a <strong><em>grid of
-analysis specifications</em></strong> (i.e. combinations of hemispheres,
-outcomes, models, datasets etc). Each row of this grid will correspond
-to a single analysis.</p>
+<p><ins>Step 3</ins>: Build a <strong>grid of analyses</strong>. It’s
+time to define all combinations of parameters (i.e. combinations of
+hemispheres, outcomes, models, datasets etc) that you want to run.</p>
 <p>In this example I want to analyze both hemispheres (<code>lh</code>
 and <code>rh</code>), three different outcomes (<code>thickness</code>,
 <code>area</code> and <code>w_g.pct</code>), and a two model
@@ -147,16 +165,15 @@ specifications: one including an interaction between sex and age
 outcomes x 2 models).</p>
 <p>The base R function <code><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid()</a></code> is a useful way to
 create such a grid of all possible parameter combinations, but you can
-also create this manually if you prefer (for example, if only certain
-combinations make sense for you).</p>
-<p>We then use the <code>analysis_id</code> variable to select one
+also create this manually (for example, if only certain combinations
+make sense for you).</p>
+<ins>
+Step 4
+</ins>
+<p>: We then use the <code>analysis_id</code> variable to select one
 specific parameter combination (i.e. a row in the grid) and use that to
-define the current analysis. For example, we: a. take the value of
-hemisphere (just making sure it is a character string and not a factor);
-b. format the outcome variable name correctly (adding the
-<code>vw_</code> prefix); c. define the model formula for the current
-analysis (e.g. with or without interaction term).</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+define the analysis.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define parameter space ==========================================================</span></span>
 <span></span>
 <span><span class="va">hemis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'lh'</span>,<span class="st">'rh'</span><span class="op">)</span></span>
@@ -174,9 +191,12 @@ analysis (e.g. with or without interaction term).</p>
 <span><span class="va">outc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">'vw_'</span>, <span class="va">params</span><span class="op">$</span><span class="va">outc</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">as.formula</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">outc</span>, <span class="st">'~ age'</span>, <span class="va">params</span><span class="op">$</span><span class="va">mode</span>, <span class="st">'sex +'</span>, <span class="va">covariates</span>, <span class="st">'+'</span>, <span class="va">random_effects</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Finally, let’s run the analysis with all our “current”
-parameters:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<ins>
+Step 5
+</ins>
+<p>: Run the model with the selected combination of parameters, for
+example:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run analysis --------------------------------------------------------------------</span></span>
 <span></span>
 <span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_vw_lmm.html">run_vw_lmm</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">model_spec</span>,</span>
@@ -189,107 +209,181 @@ parameters:</p>
 <span>                     save_ss <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="create-a-job-script">2. Create a job script<a class="anchor" aria-label="anchor" href="#create-a-job-script"></a>
+<h3 id="b-create-a-job-script">B) Create a job script<a class="anchor" aria-label="anchor" href="#b-create-a-job-script"></a>
 </h3>
-<p>All of this was fun, but we still need to create a SLURM job script
-(e.g. <code>run_analyses.sh</code>), which will submit the job array to
-the scheduler and stuff done for us. Here we will specify how many
-analyses we want to run (i.e. the size of the array), and how many
-resources to allocate to each job.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#SBATCH --job-name=verywise_job_array</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#SBATCH --array=1-12 # 12 models in total (see above)</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#SBATCH --ntasks=1</span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#SBATCH --cpus-per-task=64   # </span><span class="al">NOTE</span><span class="co"> R limit parallel processes = 124</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#SBATCH --time=1-00:00:00    # 1 day time limit, just to be on the safe side</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#SBATCH --error=analysis_log%a</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#SBATCH --output=analysis_log%a</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#SBATCH --mail-type=</span><span class="re">END</span><span class="co">,FAIL</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#SBATCH --mail-user=your.email@email.com</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co"># Load modules (not always but sometimes necessary on some HPCs) -------------</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="ex">module</span> load R</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co"># Run analyses (in parallel) -------------------------------------------------</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="ex">Rscript</span> analysis.R</span></code></pre></div>
+<p>All of this was fun, but we still need to run the actual analyses. So
+lastly create a SLURM job script (e.g. <code>run_analyses.sh</code>),
+which will submit the job array to the scheduler and get stuff done.
+This script will tell the scheduler:</p>
+<ul>
+<li>how many jobs to launch (i.e. how many analyses) using the
+<code>--array</code> argument. This range should match the number of
+rows in <code>param_grid</code> (or a subset of them)</li>
+<li>how many resources to allocate to each job (so that each analysis
+will run in parallel) using the <code>--cpus-per-task</code>
+</li>
+<li>which R script to run (e.g. our <code>analysis.R</code>)</li>
+<li>(optionally) you can also control other aspects, e.g. set a time
+limit, logs, and email notifications</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#SBATCH --job-name=verywise_job_array</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#SBATCH --array=1-12 # 12 models in total (see above)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#SBATCH --ntasks=1</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#SBATCH --cpus-per-task=64    # </span><span class="al">NOTE</span><span class="co"> R limit parallel processes = 124</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#SBATCH --time=1-00:00:00     # 1 day time limit, just to be on the safe side</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#SBATCH --error=logs/analysis_%a</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#SBATCH --output=logs/analysis_%a</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#SBATCH --mail-type=</span><span class="re">END</span><span class="co">,FAIL</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#SBATCH --mail-user=your.email@email.com</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># Load modules (not always but sometimes necessary on some HPCs) -------------</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="ex">module</span> load R</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co"># Run analyses (in parallel) -------------------------------------------------</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="ex">Rscript</span> analysis.R</span></code></pre></div>
 <p>Then, inside your project directory, submit the job array to SLURM
 with: <code>sbatch run_analyses.sh</code>.</p>
 </div>
 <div class="section level3">
-<h3 id="performance-tip-1-avoid-implicit-parallelization">Performance tip 1: avoid implicit parallelization<a class="anchor" aria-label="anchor" href="#performance-tip-1-avoid-implicit-parallelization"></a>
+<h3 id="optional-monitor-your-jobs">(Optional) Monitor your jobs<a class="anchor" aria-label="anchor" href="#optional-monitor-your-jobs"></a>
 </h3>
-<p>On some systems, <em>implicit parallelism</em> in low-level matrix
-algebra libraries (BLAS/LAPACK) can interfere with explicit
-parallelization used internally by <code>verywise</code>, secretly
-slowing your analyses down. If you feel like processing is taking too
-long for your liking, I recommend disabling these implicit threading
-libraries (<ins>before starting R</ins>).</p>
-<p>You can do so, for example by setting the following environment
-variables in your shell or in your SLURM job script (before calling
-<code>Rscript [...]</code>):</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENBLAS_NUM_THREADS</span><span class="op">=</span>1</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>1</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="bu">export</span> <span class="va">MKL_NUM_THREADS</span><span class="op">=</span>1</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="bu">export</span> <span class="va">VECLIB_MAXIMUM_THREADS</span><span class="op">=</span>1</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="bu">export</span> <span class="va">NUMEXPR_NUM_THREADS</span><span class="op">=</span>1</span></code></pre></div>
-<p>Also note that using a very large number of cores (e.g. <strong>&gt;
-120</strong>) may sometimes cause worker initialization or other issues
-(e.g. R parallel processes limits).</p>
+<p>Use <code>squeue</code> to see whether your array tasks are queued or
+running (and for how long)</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="ex">squeue</span> <span class="at">-u</span> <span class="va">$USER</span></span></code></pre></div>
+<p>To inspect CPU and memory usage for a running job:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">sstat</span> <span class="at">-j</span> <span class="op">&lt;</span>your_job_ID<span class="op">&gt;</span>.batch <span class="at">--format</span><span class="op">=</span>JobID,AveCPU,AveRSS,MaxRSS</span></code></pre></div>
+<p>Or, for more info, log in to the node that is running your job (you
+can see them in <code>squeue</code>) and peak at what is going on:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>node_name<span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">top</span> <span class="at">-u</span> <span class="op">&lt;</span>user_name<span class="op">&gt;</span> <span class="co"># q to exit </span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="performance-tip-2-precompute-and-re-use-the-super-subject-matrix">Performance tip 2: precompute and re-use the super-subject
-matrix<a class="anchor" aria-label="anchor" href="#performance-tip-2-precompute-and-re-use-the-super-subject-matrix"></a>
-</h3>
-<p>If you find yourself running multiple analyses on the same dataset
-(i.e. <em>same dataset</em> and <em>same brain outcome</em>), you can
-save some computation time by pre-computing the “super-subject matrix”
-only once, and re-using it across all your analyses.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">supsubj_dir</span> <span class="op">=</span> <span class="st">"/path/to/save/ss"</span></span>
-<span></span>
-<span><span class="va">ss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_supersubject.html">build_supersubject</a></span><span class="op">(</span></span>
-<span>                  subj_dir <span class="op">=</span> <span class="st">"/path/to/freesurfer/subjects"</span>,</span>
-<span>                  folder_ids <span class="op">=</span> <span class="va">pheno</span><span class="op">[</span>, <span class="st">'folder_id'</span><span class="op">]</span>, <span class="co"># assuming 'pheno' is your phenotype data frame</span></span>
-<span>                  supsubj_dir <span class="op">=</span> <span class="va">supsubj_dir</span>,</span>
-<span>                  measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
-<span>                  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
-<span>                  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
-<span>                  n_cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
-<p>Then simply use <code>supsubj_dir</code> as your
-<code>subj_dir</code> argument in <code><a href="../reference/run_vw_lmm.html">run_vw_lmm()</a></code>, and we will
-do the rest :)</p>
 </div>
 <div class="section level2">
-<h2 id="check-if-your-job-is-stuck">Check if your job is stuck<a class="anchor" aria-label="anchor" href="#check-if-your-job-is-stuck"></a>
+<h2 id="performance-tips">Performance tips<a class="anchor" aria-label="anchor" href="#performance-tips"></a>
 </h2>
-<p><code>verywise</code> is designed to be fast (but reasonable).
-Simpler models (e.g. with ~10 fixed effects + a random intercept fit in
-a single dataset) will run in a few minutes even under modest resources
-(e.g. &lt; 10 cores).</p>
-<p>To get a good sense of how much time and resources your model will
-need, it is a good idea to first test it on a lower-dimensional brain
-atlas (e.g. <code>fsaverage3</code> or <code>fsaverage3</code>). Don’t
-forget to pick <code>chunk_size</code> accordingly, so you can then do
-some easy math and estimate how long does a single model take on average
-to fit.</p>
+<p><code>verywise</code> is designed to be fast, but runtime depends
+heavily on:</p>
+<ul>
+<li>the number of vertices in the template</li>
+<li>model complexity (e.g. number of predictors and variable
+transformations)</li>
+<li>the random-effects structure (e.g. number of groups, correlated
+random terms)</li>
+<li>the number of imputations,</li>
+<li>and the available hardware.</li>
+</ul>
+<p>Simple models with a moderate number of fixed effects and a single
+random term often finish within minutes under modest resources
+(e.g. &lt; 10 cores). But more complex models can take hours or even
+days.</p>
 <p>Say you got greedy. You are running several high-resolution LMM
 models with many parameters (e.g. &gt; 15), a complex random effect
 structure (e.g. multiple correlated random effects and &gt; 10.000
 groups), in a multiple imputation setting (e.g. with 30 datasets). Even
-with a good parallel set up (e.g. I tried this with 96 workers on my
-hands), you can expect such analyses to take a couple of days to finish
+with a good parallel set up (e.g. I tried this with 64 workers on my
+hands), you can expect such analyses to take a 1 or 2 days to finish
 running.</p>
-<p>If you are not sure whether you should be waiting that long for your
-results, here is a quick way to check that your job did not get
-stuck:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">sstat</span> <span class="at">-j</span> <span class="op">&lt;</span>your_job_ID<span class="op">&gt;</span>.batch <span class="at">--format</span><span class="op">=</span>JobID,AveCPU,AveRSS,MaxRSS</span></code></pre></div>
-<p>Or, for more info, log in to the node that is running your job (you
-can see them in <code>squeue</code> and peak at what is going on:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>node_name<span class="op">&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">top</span> <span class="at">-u</span> <span class="op">&lt;</span>user_name<span class="op">&gt;</span> <span class="co"># q to exit </span></span></code></pre></div>
+<p>Here are a few tricks can help mantaining speed even when scaling up
+to large analysis batches.</p>
+<div class="section level3">
+<h3 id="avoid-implicit-parallelization">Avoid implicit parallelization<a class="anchor" aria-label="anchor" href="#avoid-implicit-parallelization"></a>
+</h3>
+<p>On some systems, low-level matrix libraries such as BLAS, LAPACK,
+OpenBLAS, MKL, or Accelerate may use their own hidden threading. This
+can interfere with the explicit parallelization used by
+<code>verywise</code> and actually make your analyses slower. If you
+feel like processing is taking too long for your liking, this may be a
+likely cause.</p>
+<p>To avoid this problem, it is best to disable implicit threading. You
+can do so, for example by setting the following environment variables in
+your shell or in your SLURM job script (before calling
+<code>Rscript [...]</code>):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENBLAS_NUM_THREADS</span><span class="op">=</span>1</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>1</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="bu">export</span> <span class="va">MKL_NUM_THREADS</span><span class="op">=</span>1</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="bu">export</span> <span class="va">VECLIB_MAXIMUM_THREADS</span><span class="op">=</span>1</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="bu">export</span> <span class="va">NUMEXPR_NUM_THREADS</span><span class="op">=</span>1</span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="number-of-cores-and-chunk-size">Number of cores and chunk size<a class="anchor" aria-label="anchor" href="#number-of-cores-and-chunk-size"></a>
+</h3>
+<p>Using more cores will not always get you faster analyses. Using a
+very large number of cores (e.g. <strong>&gt; 120</strong>) may instead
+cause worker startup and scheduling issues on some systems
+(e.g. addionally you may run into R parallel processes limits).</p>
+<p>Internally, verywise spits the job into “chunks” (i.e. groups of
+vertices) that are independently run in parallel. You can further
+optimize the speed of your analyses by picking a smart chunk size:
+e.g. by splitting the size of your template of choice by the number of
+cores available, and then further divide this number so that the chunks
+remain reasonably small (1000-2000 max) to avoid bottlenecks and memory
+issues.</p>
+</div>
+<div class="section level3">
+<h3 id="precompute-and-re-use-the-super-subject-matrix">Precompute and re-use the super-subject matrix<a class="anchor" aria-label="anchor" href="#precompute-and-re-use-the-super-subject-matrix"></a>
+</h3>
+<p>If you find yourself running multiple analyses on the same dataset
+(i.e. <em>same hemisphere</em> and <em>same brain measure</em>), you can
+save some computation time by precomputing the “super-subject matrix”
+only once, and re-using it across all your analyses.</p>
+<p>This is especially helpful when you are fitting many alternative
+model specifications to the same imaging data.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://seredef.github.io/verywise/">verywise</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pheno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"/path/to/phenotype_clean.rds"</span><span class="op">)</span></span>
+<span><span class="va">supsubj_dir</span> <span class="op">&lt;-</span> <span class="st">"/path/to/save/ss"</span></span>
+<span></span>
+<span><span class="va">ss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_supersubject.html">build_supersubject</a></span><span class="op">(</span></span>
+<span>  subj_dir <span class="op">=</span> <span class="st">"/path/to/freesurfer/subjects"</span>,</span>
+<span>  folder_ids <span class="op">=</span> <span class="va">pheno</span><span class="op">[</span>, <span class="st">'folder_id'</span><span class="op">]</span>,</span>
+<span>  supsubj_dir <span class="op">=</span> <span class="va">supsubj_dir</span>,</span>
+<span>  measure <span class="op">=</span> <span class="st">"thickness"</span>,</span>
+<span>  hemi <span class="op">=</span> <span class="st">"lh"</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span>                  </span></code></pre></div>
+<p>Then simply use <code>supsubj_dir</code> as your
+<code>subj_dir</code> argument in <code><a href="../reference/run_vw_lmm.html">run_vw_lmm()</a></code>, and we will
+do the rest :)</p>
+</div>
+<div class="section level3">
+<h3 id="tune-models-at-low-resolution-first">Tune models at low resolution first<a class="anchor" aria-label="anchor" href="#tune-models-at-low-resolution-first"></a>
+</h3>
+<p>Before launching a large batch of high-resolution analyses, test the
+model on a lower-resolution template such as <code>fsaverage3</code> or
+<code>fsaverage4</code>. You can do this using the
+<code>fs_template</code> argument. This is useful for:</p>
+<ul>
+<li>checking that the model converges,</li>
+<li>estimating approximate runtime and resources (i.e. CPU and memory)
+you need</li>
+<li>tuning the model (i.e. find the optimal specification)</li>
+</ul>
+<p>Once the model behaves as expected, rerun the final analysis on the
+high-resolution<code>fsaverage</code> template.</p>
+</div>
+<div class="section level3">
+<h3 id="use-lmm_control-with-calc-derivs-false">Use <code>lmm_control</code> with
+<code>calc.derivs = FALSE</code><a class="anchor" aria-label="anchor" href="#use-lmm_control-with-calc-derivs-false"></a>
+</h3>
+<p>You may cut ~20% computation time by disabling derivative
+calculations through
+<code>lmm_control = lmerControl(calc.derivs = FALSE)</code>, but this is
+usually better left for later-stage analyses once you are already
+confident that the model behaves well.</p>
+<p>During model development, diagnostics are often more valuable than a
+speed-up. See <a href="07-model-fit-comparison.html">this article</a>
+for more information on model convergence and fit.</p>
+</div>
+<div class="section level3">
+<h3 id="center-and-scale-continuous-predictors-">Center and scale continuous predictors.<a class="anchor" aria-label="anchor" href="#center-and-scale-continuous-predictors-"></a>
+</h3>
+<p>Convergence is generally easier when all continuous predictors are on
+a comparable numerical scale. s</p>
+</div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="section"></h2>
