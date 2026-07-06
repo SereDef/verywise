@@ -403,6 +403,10 @@ simulate_freesurfer_data <- function(
   n_verts <- count_vertices(fs_template)
   n_obs <- nrow(pheno)
 
+  # Avoid bigstatsr warning about lost precision (float vs. double)
+  old_opts <- options(bigstatsr.downcast.warning = FALSE)
+  on.exit(options(old_opts), add = TRUE)
+
   backing <- file.path(path, paste(hemi, measure, fs_template, "supersubject.bk", 
                        sep="."))
   if (file.exists(backing)) file.remove(backing) # TODO: warn the user
@@ -463,6 +467,9 @@ simulate_freesurfer_data <- function(
       dir.create(obs_dir, recursive = TRUE, showWarnings = FALSE)
       save.mgh(as.mgh(ss[i, ]), file.path(obs_dir, mgh_fname))
     }
+
+    # Clean-up: remove bk 
+    file.remove(backing)
   }
 
   invisible(NULL)
