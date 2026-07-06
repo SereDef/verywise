@@ -21,6 +21,7 @@ simulate_longit_dataset(
   baseline = list(age = c(mean = 10, sd = 0.5), sex = c(levels = c("Male", "Female")),
     wisdom = c(mean = 0, sd = 1)),
   change = list(age = c(mean = 4, sd = 0.5), wisdom = c(mean = 1, sd = 0.5)),
+  dropout = NULL,
   roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), entorhinal = c(age =
     0.9), frontalpole = c(wisdom = 0.7)),
   simulate_other_rois = FALSE,
@@ -69,6 +70,11 @@ simulate_longit_dataset(
   Named list of `c(mean, sd)` specifying the per-wave mean shift and
   noise SD for longitudinal covariates. Only continuous variables should
   appear here.
+
+- dropout:
+
+  Percent cumulative attrition by the final wave (Default: `NULL` = no
+  attrition)
 
 - roi_associations:
 
