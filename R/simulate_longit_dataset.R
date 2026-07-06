@@ -173,6 +173,7 @@ validate_roi_associations <- function(roi_associations, simulate_other_rois) {
 #' @param change Named list of `c(mean, sd)` specifying the per-wave mean shift and 
 #'   noise SD for longitudinal covariates.  Only continuous variables should appear 
 #'   here.
+#' @param dropout Percent cumulative attrition by the final wave (Default: `NULL` = no attrition)
 #' @param seed Integer random seed for reproducibility.
 #' @param verbose Logical
 #'
@@ -204,6 +205,7 @@ simulate_long_pheno_data <- function(
                     wisdom = c(mean = 0, sd = 1)),
     change = list(age = c(mean=4, sd=0.5), 
                   wisdom = c(mean = 1, sd = 0.5)),
+    dropout = NULL, 
     seed           = 3108,
     verbose        = TRUE) {
 
@@ -214,6 +216,7 @@ simulate_long_pheno_data <- function(
     spec <- data_structure[[site]]
     n <- as.integer(spec$n_subjects)
     sess <- spec$sessions
+    n_waves <- length(sess)
 
     baseline_df <- data.frame(id = seq_len(n), site = site, time = sess[1])
 
@@ -227,9 +230,31 @@ simulate_long_pheno_data <- function(
       }
     }
 
-    long_df <- if (length(sess) == 1) { baseline_df 
+    # Assign each subject a "leave-study" wave index (1-based), 
+    # i.e. the wave AFTER which they stop participating.
+    # Subjects with leave_wave >= n_waves complete the study (no dropout).
+    if (!is.null(dropout) && n_waves > 1) {
+      total_dropout <- dropout
+      # per-wave hazard so that cumulative dropout by final wave ~= total_dropout
+      # using a constant hazard h across (n_waves - 1) transitions:
+      # 1 - (1-h)^(n_waves-1) = total_dropout  =>  h = 1 - (1-total_dropout)^(1/(n_waves-1))
+      h <- 1 - (1 - total_dropout)^(1 / (n_waves - 1))
+
+      leave_wave <- rep(n_waves, n)  # default: everyone completes
+      still_in <- rep(TRUE, n)
+      for (w in seq_len(n_waves - 1)) {
+        drop_now <- still_in & (stats::runif(n) < h)
+        leave_wave[drop_now] <- w
+        still_in[drop_now] <- FALSE
+      }
     } else {
-      follow_dfs <- lapply(seq(2, length(sess)), function(s) {
+      leave_wave <- rep(n_waves, n)
+    }
+
+
+    long_df <- if (n_waves == 1) { baseline_df 
+    } else {
+      follow_dfs <- lapply(seq(2, n_waves), function(s) {
         follow_df <- baseline_df
         follow_df$time <- sess[s]
 
@@ -238,10 +263,15 @@ simulate_long_pheno_data <- function(
           follow_df[[var]] <- baseline_df[[var]] + stats::rnorm(n, mean = (s-1L)*var_def['mean'], sd = var_def['sd'])
         }
 
+        # keep only subjects who are still in the study at wave s
+        follow_df <- follow_df[leave_wave >= s, , drop = FALSE]
+
         follow_df
       })
 
       do.call(rbind, c(list(baseline_df), follow_dfs))
+
+
     }
   })
   
@@ -403,7 +433,8 @@ simulate_freesurfer_data <- function(
 
   if (simulate_other_rois) {
     roi_locs <- which(!roi_map %in% names(roi_associations))
-    ss[, roi_locs] <- ri_site + ri_subj + rnorm(n_obs * length(roi_locs), mean = vw_mean, sd = vw_sd)
+    ss_size <- as.numeric(n_obs) * length(roi_locs)
+    ss[, roi_locs] <- ri_site + ri_subj + rnorm(ss_size, mean = vw_mean, sd = vw_sd)
     ss[, roi_locs] <- pmax(ss[, roi_locs], 0.001)
   }
 
@@ -412,7 +443,8 @@ simulate_freesurfer_data <- function(
       roi_spec <- roi_associations[[roi]]
       fixed_part <- as.vector(as.matrix(pheno[names(roi_spec)]) %*% roi_spec)
       roi_locs <- which(roi_map == roi)
-      ss[, roi_locs] <- fixed_part + ri_site + ri_subj + rnorm(n_obs * length(roi_locs), mean = vw_mean, sd = vw_sd)
+      ss_size <- as.numeric(n_obs) * length(roi_locs)
+      ss[, roi_locs] <- fixed_part + ri_site + ri_subj + rnorm(ss_size, mean = vw_mean, sd = vw_sd)
       ss[, roi_locs] <- pmax(ss[, roi_locs], 0.001)
     }
   }
@@ -483,6 +515,7 @@ simulate_longit_dataset <- function(
                     wisdom = c(mean = 0, sd = 1)),
     change = list(age = c(mean=4, sd=0.5), 
                   wisdom = c(mean = 1, sd = 0.5)),
+    dropout = NULL, 
     roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), 
                             entorhinal = c(age = 0.9), 
                             frontalpole = c(wisdom = 0.7)),
@@ -507,6 +540,7 @@ simulate_longit_dataset <- function(
     data_structure = data_structure,
     baseline = baseline,
     change = change,
+    dropout = dropout, 
     seed = seed,
     verbose = verbose)
   

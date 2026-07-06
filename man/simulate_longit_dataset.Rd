@@ -11,6 +11,7 @@ simulate_longit_dataset(
   baseline = list(age = c(mean = 10, sd = 0.5), sex = c(levels = c("Male", "Female")),
     wisdom = c(mean = 0, sd = 1)),
   change = list(age = c(mean = 4, sd = 0.5), wisdom = c(mean = 1, sd = 0.5)),
+  dropout = NULL,
   roi_associations = list(temporalpole = c(age = 1.3, sex = 0.5), entorhinal = c(age =
     0.9), frontalpole = c(wisdom = 0.7)),
   simulate_other_rois = FALSE,
@@ -45,6 +46,8 @@ See section \strong{Supported covariates}.}
 \item{change}{Named list of \code{c(mean, sd)} specifying the per-wave mean shift and
 noise SD for longitudinal covariates.  Only continuous variables should appear
 here.}
+
+\item{dropout}{Percent cumulative attrition by the final wave (Default: \code{NULL} = no attrition)}
 
 \item{roi_associations}{Named list of named numeric vectors. Names of the list
 are Desikan-Killiany ROI labels; names of each vector are column names in

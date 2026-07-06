@@ -10,6 +10,7 @@ simulate_long_pheno_data(
   baseline = list(age = c(mean = 10, sd = 0.5), sex = c(levels = c("Male", "Female")),
     wisdom = c(mean = 0, sd = 1)),
   change = list(age = c(mean = 4, sd = 0.5), wisdom = c(mean = 1, sd = 0.5)),
+  dropout = NULL,
   seed = 3108,
   verbose = TRUE
 )
@@ -29,6 +30,8 @@ See section \strong{Supported covariates}.}
 \item{change}{Named list of \code{c(mean, sd)} specifying the per-wave mean shift and
 noise SD for longitudinal covariates.  Only continuous variables should appear
 here.}
+
+\item{dropout}{Percent cumulative attrition by the final wave (Default: \code{NULL} = no attrition)}
 
 \item{seed}{Integer random seed for reproducibility.}
 
