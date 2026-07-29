@@ -1,5 +1,7 @@
 # Changelog
 
+## verywise 1.3.7
+
 ## verywise 1.3.3
 
 ## verywise 1.3.2
