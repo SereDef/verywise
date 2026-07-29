@@ -3,7 +3,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
-^inst/Pipeline$
 ^vignettes/articles$
 ^_pkgdown\.yml$
 ^docs$
@@ -15,3 +14,5 @@
 ^CLAUDE\.md$
 ^codemeta\.json$
 ^\.vscode$
+^inst/python/\.venv$
+

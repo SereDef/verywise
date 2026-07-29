@@ -30,17 +30,18 @@ entries in \code{stack_names.txt}).}
 
 \item{threshold}{Controls vertex-level masking before plotting:
 \describe{
-\item{\code{"cws"} (default)}{Cluster-wise significance masking. Loads the matching
-\verb{*.cache.*.sig.ocn.mgh} file and sets all vertices not belonging to a significant
-cluster (OCN label == 0) to \code{NA}. If no OCN file is found, the unmasked coefficients
-are plotted with a warning.}
-\item{Numeric}{Passed directly to \code{\link[=plot_vw_surf]{plot_vw_surf()}} as an absolute-value threshold
-(vertices with \verb{|value| < threshold} are hidden).}
+\item{\code{"cws"} (default)}{Cluster-wise significant. Loads the matching
+\verb{*.cache.*.sig.ocn.mgh} file and masks all vertices not belonging to a significant
+cluster. If no OCN file is found, the unmasked coefficients are plotted with a warning.}
+\item{\code{"fdr <= 0.05"} or \code{"p < 0.01"} etc}{FDR or P values below a threshold. Loads the matching
+\verb{*.fdr.mgh} or \verb{*.p.mgh} file and masks all vertices not meeting the rule.
+If no file is found, the unmasked coefficients are plotted with a warning.}
+\item{Numeric}{Absolute-value threshold (vertices with \verb{|value| < threshold} are hidden).}
 \item{\code{NULL}}{No masking; all vertices are rendered.}
 }}
 
 \item{...}{Additional arguments forwarded to \code{\link[=plot_vw_surf]{plot_vw_surf()}},
-e.g. \code{views}, \code{cmap}, \code{vmin}, \code{vmax}, \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
+e.g. \code{roi_outline}, \code{views}, \code{cmap}, \code{vmin}, \code{vmax}, \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
 \code{dpi}, \code{fs_home}, \code{fs_template.}}
 }
 \value{

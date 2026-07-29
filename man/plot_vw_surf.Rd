@@ -7,62 +7,72 @@
 plot_vw_surf(
   lh = NULL,
   rh = NULL,
-  fs_template = "fsaverage",
-  fs_home = NULL,
-  surface = c("pial", "inflated"),
-  cmap = NULL,
-  bg_map = c("sulc", "curv", "none"),
+  lh_mask = NULL,
+  rh_mask = NULL,
   vmin = NULL,
   vmax = NULL,
-  threshold = NULL,
   views = "all",
+  surface = c("pial", "inflated"),
+  bg_map = c("sulc", "curv", "none"),
+  fs_template = "fsaverage",
+  fs_home = NULL,
   colorbar = TRUE,
   colorbar_label = NULL,
+  colorbar_width = NULL,
+  cmap = NULL,
+  roi_outline = NULL,
   title = NULL,
   to_file = NULL,
-  dpi = 150L
+  dpi = 150L,
+  cell_px = NULL
 )
 }
 \arguments{
-\item{lh}{Numeric vector, \code{.mgh}/\code{.gii} file path, or
-\code{NULL}.}
+\item{lh, rh}{Numeric vector, \code{.mgh}/\verb{.gii`` file path, or }NULL\verb{. At least one of }lh\code{/}rh`` must be supplied.}
 
-\item{rh}{Numeric vector, \code{.mgh}/\code{.gii} file path, or
-\code{NULL}. At least one of \code{lh}/\code{rh} must be supplied.}
+\item{lh_mask, rh_mask}{Masking boolean maps, or \code{NULL} (no masking).}
 
-\item{fs_template}{fsaverage template: \code{"fsaverage3"} through
-\code{"fsaverage"}. Must match the length of lh/rh. Default \code{"fsaverage"}.}
-
-\item{fs_home}{(optional) location of FreeSurfer home for templates.}
-
-\item{surface}{Surface mesh: \code{"pial"} (default) or \code{"inflated"}.}
-
-\item{cmap}{Matplotlib colormap name.}
-
-\item{bg_map}{Background shading: \code{"sulc"} (default),
-\code{"curv"}, or \code{"none"}.}
-
-\item{vmin, vmax}{Numeric colour limits, or \code{NULL} for automatic
-symmetric scaling.}
-
-\item{threshold}{Absolute-value masking threshold, or \code{NULL}
-(no masking).}
+\item{vmin, vmax}{Numeric colormap limits, or \code{NULL} for automatic
+scaling (minimum and maximum of the thresholded data).}
 
 \item{views}{Character vector of camera angles - any subset of
 \code{"lateral"}, \code{"medial"}, \code{"dorsal"}, \code{"ventral"},
 \code{"anterior"}, \code{"posterior"}. Default: \code{"all"}.}
 
+\item{surface}{Surface mesh: \code{"pial"} (default) or \code{"inflated"}.}
+
+\item{bg_map}{Background shading: \code{"sulc"} (default),
+\code{"curv"}, or \code{"none"}.}
+
+\item{fs_template}{Resolution (fsaverage template). Must match the length
+of \code{lh}/\code{rh}. Default: \code{"fsaverage"}.}
+
+\item{fs_home}{(optional) location of FreeSurfer home for templates.}
+
 \item{colorbar}{Logical. Draw a shared colour bar? Default \code{TRUE}.}
 
-\item{colorbar_label}{Character label for the colour bar axis, or
-\code{NULL}.}
+\item{colorbar_label}{Character label for the colour bar axis, or \code{NULL}.}
+
+\item{colorbar_width}{Fraction of one brain panel's width reserved for the
+colorbar/density strip, or \code{NULL} for the mode default
+(static: 0.40, interactive: 0.20).}
+
+\item{cmap}{Matplotlib colormap name.}
+
+\item{roi_outline}{Character vector of DK/aparc region names to outline
+with contour lines (e.g. \code{c("superiorfrontal", "precentral")}),
+or \code{NULL} for no ROI overlay.}
 
 \item{title}{Character figure title, or \code{NULL}.}
 
 \item{to_file}{Path ending in \code{.png} for static export, or
 \code{NULL} for interactive HTML mode.}
 
-\item{dpi}{Integer output resolution for static PNG. Default \code{150L}.}
+\item{dpi}{Integer output resolution for static PNG. Default \code{150}.}
+
+\item{cell_px}{Brain panel size in pixels: a single number, a length-2 vector
+\code{c(width, height)}, or \code{NULL} for the renderer's default
+(static: 400x440, interactive: 500x350).}
 }
 \value{
 Invisibly: \code{to_file} path (static) or the temp HTML
@@ -96,12 +106,12 @@ plot_vw_surf(lh = 'path/to/lh.coef.mgh', fs_template = "fsaverage5")
 plot_vw_surf(
   lh = lh_coef,
   rh = rh_coef,
-  cmap = "RdBu_r",
   threshold = 0.05,
   views = c("lateral", "medial", "dorsal", "ventral"),
+  cmap = "RdBu_r",
   title = "Effect of age on cortical thickness",
   to_file = "figures/age_thickness.png",
-  dpi = 300L
+  dpi = 300
 )
 }
 

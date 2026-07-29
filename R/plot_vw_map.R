@@ -20,16 +20,17 @@
 #' @param surface Character. Surface mesh: `"pial"` (default) or `"inflated"`.
 #' @param threshold Controls vertex-level masking before plotting:
 #'   \describe{
-#'     \item{`"cws"` (default)}{Cluster-wise significance masking. Loads the matching 
-#'       `*.cache.*.sig.ocn.mgh` file and sets all vertices not belonging to a significant 
-#'       cluster (OCN label == 0) to `NA`. If no OCN file is found, the unmasked coefficients
-#'       are plotted with a warning.}
-#'     \item{Numeric}{Passed directly to [plot_vw_surf()] as an absolute-value threshold 
-#'       (vertices with `|value| < threshold` are hidden).}
+#'     \item{`"cws"` (default)}{Cluster-wise significant. Loads the matching 
+#'       `*.cache.*.sig.ocn.mgh` file and masks all vertices not belonging to a significant 
+#'       cluster. If no OCN file is found, the unmasked coefficients are plotted with a warning.}
+#'    \item{`"fdr <= 0.05"` or `"p < 0.01"` etc}{FDR or P values below a threshold. Loads the matching 
+#'       `*.fdr.mgh` or `*.p.mgh` file and masks all vertices not meeting the rule. 
+#'       If no file is found, the unmasked coefficients are plotted with a warning.}
+#'     \item{Numeric}{Absolute-value threshold (vertices with `|value| < threshold` are hidden).}
 #'     \item{`NULL`}{No masking; all vertices are rendered.}
 #'   }
 #' @param ... Additional arguments forwarded to [plot_vw_surf()],
-#'   e.g. `views`, `cmap`, `vmin`, `vmax`, `colorbar`, `colorbar_label`, `title`, `to_file`,
+#'   e.g. `roi_outline`, `views`, `cmap`, `vmin`, `vmax`, `colorbar`, `colorbar_label`, `title`, `to_file`,
 #'   `dpi`, `fs_home`, `fs_template.`
 #'
 #' @return Invisibly: the output of [plot_vw_surf()] — the temp HTML file path (interactive 
@@ -113,80 +114,22 @@ plot_vw_map <- function(res_dir, term,  measure = 'area',
   
   hemis_to_load <- if (hemi == "both") c("lh", "rh") else hemi
 
-  .load_hemi_data <- function(h) {
+  lh_data <- if ("lh" %in% hemis_to_load) load_and_mask_coef("lh", measure, stack, res_dir, threshold)
+  rh_data <- if ("rh" %in% hemis_to_load) load_and_mask_coef("rh", measure, stack, res_dir, threshold)
 
-    coef_file <- file.path(res_dir, paste(h, measure, stack, "coef.mgh", sep = "."))
-
-    if (!file.exists(coef_file)) {
-      vw_message(c("!" = "Coefficient file not found for {h}, skipping: {.file {coef_file}}"))
-      return(NULL)
-    }
-
-    # load coef via nibabel through reticulate
-    coef <- load.mgh(coef_file)
-
-    if (identical(threshold, "cws")) {
-      # ocn_file <- file.path(res_dir,
-      #               paste(h, measure, stack, "cache.th30.abs.sig.ocn.mgh", sep = "."))
-      ocn_file <- list.files(res_dir,
-        pattern = paste0("^", h, "\\.", measure, "\\.", stack, "\\.cache\\..*\\.sig\\.ocn\\.mgh$"),
-        full.names = TRUE)
-      
-      if (length(ocn_file) == 0) {
-        vw_message(c("!" = "No OCN file found for {h}.", "i" = "Plotting unmasked coefficients."))
-      } else {
-        if (length(ocn_file) > 1) {
-          vw_message("!" = "Multiple OCN files found for {h}, using: {.file {basename(ocn_file[1])}}")
-          ocn_file <- ocn_file[1]
-        }
-
-        ocn <- load.mgh(ocn_file)
-        # keep only vertices belonging to a significant cluster (ocn is a
-        # positive integer label; non-significant vertices are 0)
-        coef[ocn==0] <- NA
-      }
-
-    } else if (is.character(threshold) && startsWith(threshold, "fdr")) {
-      
-      fdr_file <- list.files(res_dir,
-        pattern = paste0("^", h, "\\.", measure, "\\.", stack, "\\.fdr.mgh$"),
-        full.names = TRUE)
-      
-      if (length(fdr_file) == 0) {
-        vw_message(c("!" = "No FDR file found for {h}.", "i" = "Plotting unmasked coefficients."))
-      } else {
-        if (length(fdr_file) > 1) {
-          vw_message("!" = "Multiple FDR files found for {h}, using: {.file {basename(fdr_file[1])}}")
-          fdr_file <- fdr_file[1]
-        }
-
-        fdr <- load.mgh(fdr_file)
-        # keep only vertices belonging to a significant cluster (ocn is a
-        # positive integer label; non-significant vertices are 0)
-        coef[!eval(str2lang(threshold))] <- NA
-      } 
-    }
-
-    coef
-    }
-
-  lh_data <- if ("lh" %in% hemis_to_load) .load_hemi_data("lh") else NULL
-  rh_data <- if ("rh" %in% hemis_to_load) .load_hemi_data("rh") else NULL
-
-  if (is.null(lh_data) && is.null(rh_data)) {
+  if (is.null(lh_data[['coef']]) && is.null(rh_data[['coef']])) {
     vw_error(c(
       "No coefficient MGH files found for term {.val {term}} / measure {.val {measure}}.",
       "i" = "Expected e.g. {.file lh.{measure}.{stack}.coef.mgh} in {.file {res_dir}}"))
   }
-      
-  surf_threshold <- if (is.character(threshold)) NULL else threshold
-
+  
   dots  <- list(...)
   title <- dots$title %||% paste("Effect of", term, "on", measure)
   # remove title from dots to avoid duplicate argument
   dots$title <- NULL
 
   do.call(plot_vw_surf, c(
-    list(lh = lh_data, rh = rh_data, surface = surface, threshold = surf_threshold, title = title),
+    list(lh = lh_data[['coef']], rh = rh_data[['coef']], lh_mask = lh_data[['mask']], rh_mask = rh_data[['mask']], 
+         surface = surface, title = title),
          dots))
 }

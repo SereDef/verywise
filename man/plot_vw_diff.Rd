@@ -23,22 +23,22 @@ omit the left hemisphere entirely.}
 hemisphere. Pass \code{NULL} to omit the right hemisphere.}
 
 \item{label_a, label_b}{Short character labels used in the default figure
-title (e.g. \code{"group A"}, \code{"group B"}). Ignored when \code{title}
-is supplied via \code{...}.}
+title (e.g. \code{"group A"}, \code{"group B"}). Ignored when \code{title} is supplied via
+\code{...}.}
 
-\item{...}{Additional arguments forwarded to \code{\link{plot_vw_surf}}
-(e.g. \code{surface}, \code{views}, \code{cmap}, \code{vmin}, \code{vmax},
-\code{threshold}, \code{colorbar}, \code{colorbar_label}, \code{title},
-\code{to_file}, \code{dpi}, \code{fs_home}, \code{fs_template}).}
+\item{...}{Additional arguments forwarded to \code{\link[=plot_vw_surf]{plot_vw_surf()}},
+e.g. \code{roi_outline}, \code{views}, \code{cmap}, \code{vmin}, \code{vmax}, \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},
+\code{dpi}, \code{fs_home}, \code{fs_template.}}
 }
 \value{
-Invisibly: the output of \code{\link{plot_vw_surf}} (temp HTML path
-or \code{to_file} path).
+Invisibly: the output of \code{\link[=plot_vw_surf]{plot_vw_surf()}} — the temp HTML file path (interactive
+mode) or \code{to_file} path (static PNG mode).
+Called primarily for its side-effect of opening or saving the figure.
 }
 \description{
 Computes the vertex-wise difference (\code{a - b}) between two surface maps
 (numeric vectors or MGH/GII file paths) for each hemisphere, then renders
-the result on a standard fsaverage surface via \code{\link{plot_vw_surf}}.
+the result on a standard fsaverage surface via \code{\link[=plot_vw_surf]{plot_vw_surf()}}.
 
 Useful for contrasting two conditions, time-points, groups, or model terms
 without pre-computing the difference outside R.
@@ -60,4 +60,7 @@ plot_vw_diff(
   label_a = "model1", label_b = "model2"
 )
 \dontshow{\}) # examplesIf}
+}
+\seealso{
+\code{\link[=plot_vw_surf]{plot_vw_surf()}}, \code{\link[=plot_vw_map]{plot_vw_map()}} \code{\link[=vw_diff]{vw_diff()}}
 }

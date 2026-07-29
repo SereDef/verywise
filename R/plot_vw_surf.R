@@ -19,33 +19,38 @@
 #' \strong{Static} (\code{to_file} supplied): saves a tiled PNG via
 #' matplotlib.
 #'
-#' @param lh Numeric vector, \code{.mgh}/\code{.gii} file path, or
-#'   \code{NULL}.
-#' @param rh Numeric vector, \code{.mgh}/\code{.gii} file path, or
-#'   \code{NULL}. At least one of \code{lh}/\code{rh} must be supplied.
-#' @param fs_template fsaverage template: \code{"fsaverage3"} through
-#'   \code{"fsaverage"}. Must match the length of lh/rh. Default \code{"fsaverage"}.
-#' @param fs_home (optional) location of FreeSurfer home for templates.
-#' @param surface Surface mesh: \code{"pial"} (default) or \code{"inflated"}.
-#' @param cmap Matplotlib colormap name.
-#' @param bg_map Background shading: \code{"sulc"} (default),
-#'   \code{"curv"}, or \code{"none"}.
-#' @param vmin,vmax Numeric colour limits, or \code{NULL} for automatic
-#'   symmetric scaling.
-#' @param threshold Absolute-value masking threshold, or \code{NULL}
-#'   (no masking).
+#' @param lh,rh Numeric vector, `.mgh`/`.gii`` file path, or
+#'   `NULL`. At least one of `lh`/`rh`` must be supplied.
+#' @param lh_mask,rh_mask Masking boolean maps, or `NULL` (no masking).
+#' @param vmin,vmax Numeric colormap limits, or `NULL` for automatic
+#'   scaling (minimum and maximum of the thresholded data).
 #' @param views Character vector of camera angles - any subset of
-#'   \code{"lateral"}, \code{"medial"}, \code{"dorsal"}, \code{"ventral"},
-#'   \code{"anterior"}, \code{"posterior"}. Default: \code{"all"}.
-#' @param colorbar Logical. Draw a shared colour bar? Default \code{TRUE}.
-#' @param colorbar_label Character label for the colour bar axis, or
-#'   \code{NULL}.
-#' @param title Character figure title, or \code{NULL}.
-#' @param to_file Path ending in \code{.png} for static export, or
-#'   \code{NULL} for interactive HTML mode.
-#' @param dpi Integer output resolution for static PNG. Default \code{150L}.
-#'
-#' @return Invisibly: \code{to_file} path (static) or the temp HTML
+#'   `"lateral"`, `"medial"`, `"dorsal"`, `"ventral"`,
+#'   `"anterior"`, `"posterior"`. Default: `"all"`.
+#' @param surface Surface mesh: `"pial"` (default) or `"inflated"`.
+#' @param bg_map Background shading: `"sulc"` (default),
+#'   `"curv"`, or `"none"`.
+#' @param fs_template Resolution (fsaverage template). Must match the length 
+#'   of `lh`/`rh`. Default: `"fsaverage"`.
+#' @param fs_home (optional) location of FreeSurfer home for templates.
+#' @param colorbar Logical. Draw a shared colour bar? Default `TRUE`.
+#' @param colorbar_label Character label for the colour bar axis, or `NULL`.
+#' @param colorbar_width Fraction of one brain panel's width reserved for the
+#'   colorbar/density strip, or `NULL` for the mode default
+#'   (static: 0.40, interactive: 0.20).
+#' @param cmap Matplotlib colormap name. 
+#' @param roi_outline Character vector of DK/aparc region names to outline
+#'   with contour lines (e.g. `c("superiorfrontal", "precentral")`),
+#'   or `NULL` for no ROI overlay.
+#' @param title Character figure title, or `NULL`.
+#' @param to_file Path ending in `.png` for static export, or
+#'   `NULL` for interactive HTML mode.
+#' @param dpi Integer output resolution for static PNG. Default `150`.
+#' @param cell_px Brain panel size in pixels: a single number, a length-2 vector
+#'   \code{c(width, height)}, or `NULL` for the renderer's default
+#'   (static: 400x440, interactive: 500x350).
+#' 
+#' @return Invisibly: `to_file` path (static) or the temp HTML
 #'   file path (interactive). Called primarily for the side-effect.
 #'
 #' @examples
@@ -57,12 +62,12 @@
 #' plot_vw_surf(
 #'   lh = lh_coef,
 #'   rh = rh_coef,
-#'   cmap = "RdBu_r",
 #'   threshold = 0.05,
 #'   views = c("lateral", "medial", "dorsal", "ventral"),
+#'   cmap = "RdBu_r",
 #'   title = "Effect of age on cortical thickness",
 #'   to_file = "figures/age_thickness.png",
-#'   dpi = 300L
+#'   dpi = 300
 #' )
 #' }
 #'
@@ -70,22 +75,28 @@
 plot_vw_surf <- function(
     lh = NULL,
     rh = NULL,
-    fs_template = "fsaverage",
-    fs_home = NULL,
-    surface = c("pial", "inflated"),
-    cmap = NULL,
-    bg_map = c("sulc", "curv", "none"),
+    lh_mask = NULL,
+    rh_mask = NULL,
     vmin = NULL,
     vmax = NULL,
-    threshold = NULL,
     views = 'all',
+    surface = c("pial", "inflated"),
+    bg_map = c("sulc", "curv", "none"),
+    fs_template = "fsaverage",
+    fs_home = NULL,
     colorbar = TRUE,
     colorbar_label = NULL,
+    colorbar_width = NULL,
+    cmap = NULL,
+    roi_outline = NULL,
     title = NULL,
     to_file = NULL,
-    dpi = 150L) {
+    dpi = 150L,
+    cell_px = NULL) {
 
-  require_packages('reticulate', call_fn = 'plot_vw_surf')
+  # --- initialise Python renderer (once per session) -----------------------
+
+  .vw_surf_init_py()
 
   # --- input validation ----------------------------------------------------
   if (is.null(lh) && is.null(rh))
@@ -102,7 +113,7 @@ plot_vw_surf <- function(
 
   valid_views <- c("lateral", "dorsal", "anterior", 
                    "medial", "ventral", "posterior")
-  if (views == 'all') {
+  if (identical(views, 'all')) {
     views <- if (!is.null(to_file)) valid_views else 'lateral'
   } else {
     bad_views <- setdiff(views, valid_views)
@@ -111,31 +122,44 @@ plot_vw_surf <- function(
         "i" = "Please choose from {.or {.strong {valid_views}}}"))
   }
 
+  if (!is.null(roi_outline)){
+    valid_rois <- locate_roi()$roi_label  
+    bad_rois <- setdiff(roi_outline, valid_rois)
+    if (length(bad_rois))
+        vw_error(c("Invalid ROI{?s}: {bad_rois}",
+        "i" = "Please choose from {.or {.strong {valid_rois[!is.na(valid_rois)]}}}"))
+    if (is.null(fs_home)) {
+      vw_error("We currently only support ROI outlines from FreeSurfer aparc, please provide `fs_home`")
+    }
+    roi_outline <- as.list(roi_outline)
+  }
+
   lh <- check_hemi(lh, fs_template)
   rh <- check_hemi(rh, fs_template)
 
+  lh_mask <- check_mask(lh_mask, fs_template)
+  rh_mask <- check_mask(lh_mask, fs_template)
+
   where_is_my_mesh <- resolve_mesh(fs_template, fs_home)
 
-  # --- initialise Python renderer (once per session) -----------------------
-  reticulate::py_require(c("nilearn", "numpy", "matplotlib", 
-                           "plotly", "kaleido", "choreographer", "logistro"))
-  .vw_surf_init_py()
-
-  common <- list(
-              lh = lh,
-              rh = rh,
-         surface = surface,
-     bg_map_type = bg_map,
-            cmap = cmap,
-            vmin = vmin,
-            vmax = vmax,
-       threshold = threshold,
-          views = as.list(views),
-        colorbar = colorbar,
-  colorbar_label = colorbar_label,
-           title = title,
-     fs_template = fs_template,
-         fs_home = where_is_my_mesh  # NULL: Python None (nilearn download)
+  args <- list(lh = lh,
+               rh = rh,
+          lh_mask = lh_mask,
+          rh_mask = rh_mask,
+             vmin = vmin,
+             vmax = vmax,
+            views = as.list(views),
+          surface = surface,
+      bg_map_type = bg_map,
+      fs_template = fs_template,
+          fs_home = where_is_my_mesh,  # NULL: Python None (nilearn download)
+         colorbar = colorbar,
+   colorbar_label = colorbar_label,
+   colorbar_width = colorbar_width,
+             cmap = cmap,
+        roi_names = roi_outline,
+            title = title,
+          cell_px = cell_px
   )
 
   if (!is.null(to_file)) {
@@ -146,7 +170,7 @@ plot_vw_surf <- function(
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
     do.call(reticulate::py$vw_surf_static_plotly,
-            c(common, list(output_file = to_file, dpi = as.integer(dpi))))
+            c(args, list(output_file = to_file, dpi = as.integer(dpi))))
     
     vw_message("\u2714 Brain map saved to: {.file {to_file}}")
 
@@ -157,7 +181,7 @@ plot_vw_surf <- function(
     tmp_html <- tempfile(fileext = ".html")
 
     do.call(reticulate::py$vw_surf_interactive,
-            c(common, list(output_html = tmp_html)))
+            c(args, list(output_html = tmp_html)))
 
     viewer <- getOption("viewer", utils::browseURL)
     viewer(tmp_html)
@@ -165,45 +189,6 @@ plot_vw_surf <- function(
 
     return(invisible(tmp_html))
   }
-}
-
-check_hemi <- function(hemi, fs_template) {
-  
-  if (is.null(hemi)) return(hemi)  # empty or file path: skip check
-  
-  hemi_name <- deparse(substitute(hemi))
-  
-  if (is.character(hemi)) {
-    if (!file.exists(hemi)) vw_error("{hemi_name} file not found: {.file {hemi}}")
-    
-    if (grepl('\\.mgh$', hemi, ignore.case = TRUE)) {
-      hemi <- load.mgh(hemi)
-    } else {
-      # nilearn.surface.load_surf_data()
-      nilearn_surf_ext <- c("\\.mgz$", "\\.gii$", "\\.nii$",
-                            "\\.nii\\.gz$", "\\.npy$", "\\.txt$", "\\.csv$")
-    
-      if (!any(grepl(paste(nilearn_surf_ext, collapse = "|"), hemi, ignore.case = TRUE)))
-          vw_message(c("!" = "{hemi_name}: unrecognised file extension in {.file {basename(hemi)}}.",
-                      " " = "nilearn will attempt to load it anyway but things may get weird.",
-                      ">" = "try reading it in yourself and providing a vector instead, or using 
-                      one of the supported extensions (e.g. .mgh, .mgz, .csv... see `nilearn.surface.load_surf_data()`)"
-      ))
-
-      return(hemi)
-    }
-  }
-
-  hemi <- as.numeric(hemi)
-
-  n_vert <- count_vertices(fs_template)
-
-  if (length(hemi) != n_vert) {
-      vw_message("!" = "{hemi_name} vector length ({.warn {length(hemi)}}) does not match 
-      {fs_template} template ({n_vert}), I will try to subset it.")
-  }
-
-  hemi
 }
 
 # Session-level init flag
@@ -214,16 +199,29 @@ check_hemi <- function(hemi, fs_template) {
 .vw_surf_init_py <- function() {
   if (isTRUE(.vw_surf_env$ready)) return(invisible(NULL))
 
+  # Ensure reticulate is available
+  require_packages('reticulate', call_fn = 'plot_vw_surf')
+
+  req_pkgs <- c("nilearn", "numpy", "matplotlib", "plotly", "kaleido", 
+                "choreographer", "logistro")
+  
+  # Declare requirements
+  reticulate::py_require(req_pkgs)
+
   missing_pkgs <- Filter(
-    function(x) !reticulate::py_module_available(x),
-    c("matplotlib", "nilearn", "numpy", "plotly", "kaleido"))
+    function(x) !reticulate::py_module_available(x), req_pkgs)
   
   if (length(missing_pkgs) > 0) {
     vw_error(c(
-      "Surface plotting requires Python packages that are not installed:",
+      "Surface plotting requires Python packages that are not available:",
       "i" = "Missing: {.pkg {missing_pkgs}}",
-      ">" = "Install with: {.code reticulate::py_install(c({paste0('\"', missing_pkgs, '\"', collapse=', ')}), pip = TRUE)}",
-      ">" = "Then restart your R session and try again."
+      "i" = "{.pkg verywise} tries to auto-configure these, but this fails if you are using a custom Python setup (e.g., on an HPC cluster) or have {.envvar RETICULATE_PYTHON} set.",
+      " " = "To fix this, choose one of the following options:",
+      "*" = "Unset {.envvar RETICULATE_PYTHON} in your {.file .Renviron} and restart R to let {.pkg verywise} manage the environment.",
+      "*" = "Install the missing packages in your active Python environment via the terminal:",
+      " " = " {.code pip install {paste(missing_pkgs, collapse = ' ')}}",
+      " " = " Then ensure your {.file .Renviron} points directly to that environment's Python:",
+      " " = " {.code RETICULATE_PYTHON=/path/to/your/venv/bin/python}"
     ))
   }
 
@@ -254,35 +252,4 @@ check_hemi <- function(hemi, fs_template) {
   
   .vw_surf_env$ready <- TRUE
   invisible(NULL)
-}
-
-
-# Mesh-resolution helper (R side)
-# Returns the FreeSurfer home path when the template is found locally,
-# or NULL to signal Python to use the nilearn download+cache path (via fetch_surf_fsaverage)
-resolve_mesh <- function(fs_template, fs_home, verbose = TRUE) {
-  
-  if (is.null(fs_home)) {
-    fs_home <- Sys.getenv("FREESURFER_HOME")
-  }
-  
-  if (nzchar(fs_home)) {
-    surf_dir <- file.path(fs_home, "subjects", fs_template, "surf")
-    if (dir.exists(surf_dir)) {
-      vw_message("Using local FreeSurfer mesh from {fs_home}", verbose = verbose, type = 'note')
-      return(fs_home)
-    }
-    vw_message("{fs_template} surface mesh not found in {.path $FREESURFER_HOME/subjects/}
-         {cli::symbol$arrow_right} falling back to nilearn.")
-  }
-
-  # Warn only when the template is not yet cached
-  cache <- file.path(path.expand("~"), "nilearn_data", fs_template)
-  if (!dir.exists(cache) || length(list.files(cache, recursive = TRUE)) == 0L) {
-     vw_message(c("i" = "Will download {fs_template} surface mesh. This may take up to a minute on the first run.",
-                  " " = "Meshes will be then cached in {.path ~/nilearn_data/{fs_template}}",
-                  " " = "Alternatively, provide a path to FreeSurfer (via `fs_home` argument or environment variables)"))
-  }
-
-  NULL 
 }

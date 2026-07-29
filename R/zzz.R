@@ -39,6 +39,10 @@
     }
   }
 
+  # reticulate is only used to plot for now so in Suggests
+  # reticulate::py_require(c("nilearn", "numpy", "matplotlib", 
+  #                         "plotly", "kaleido", "choreographer", "logistro"))
+
 }
 
 utils::globalVariables(c("roi_lobe", "vw_count", "vw_prop", "chunk", "i"))
