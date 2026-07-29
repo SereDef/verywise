@@ -3,7 +3,7 @@
 Computes the vertex-wise difference (`a - b`) between two surface maps
 (numeric vectors or MGH/GII file paths) for each hemisphere, then
 renders the result on a standard fsaverage surface via
-[`plot_vw_surf`](https://seredef.github.io/verywise/reference/plot_vw_surf.md).
+[`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md).
 
 Useful for contrasting two conditions, time-points, groups, or model
 terms without pre-computing the difference outside R.
@@ -43,16 +43,23 @@ plot_vw_diff(
 - ...:
 
   Additional arguments forwarded to
-  [`plot_vw_surf`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
-  (e.g. `surface`, `views`, `cmap`, `vmin`, `vmax`, `threshold`,
-  `colorbar`, `colorbar_label`, `title`, `to_file`, `dpi`, `fs_home`,
-  `fs_template`).
+  [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md),
+  e.g. `roi_outline`, `views`, `cmap`, `vmin`, `vmax`, `colorbar`,
+  `colorbar_label`, `title`, `to_file`, `dpi`, `fs_home`, `fs_template.`
 
 ## Value
 
 Invisibly: the output of
-[`plot_vw_surf`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
-(temp HTML path or `to_file` path).
+[`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
+— the temp HTML file path (interactive mode) or `to_file` path (static
+PNG mode). Called primarily for its side-effect of opening or saving the
+figure.
+
+## See also
+
+[`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md),
+[`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md)
+[`vw_diff()`](https://seredef.github.io/verywise/reference/vw_diff.md)
 
 ## Examples
 

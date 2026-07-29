@@ -107,14 +107,17 @@ entries in <code>stack_names.txt</code>).</p></dd>
 
 <dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
 <dd><p>Controls vertex-level masking before plotting:</p><dl><dt><code>"cws"</code> (default)</dt>
-<dd><p>Cluster-wise significance masking. Loads the matching
-<code>*.cache.*.sig.ocn.mgh</code> file and sets all vertices not belonging to a significant
-cluster (OCN label == 0) to <code>NA</code>. If no OCN file is found, the unmasked coefficients
-are plotted with a warning.</p></dd>
+<dd><p>Cluster-wise significant. Loads the matching
+<code>*.cache.*.sig.ocn.mgh</code> file and masks all vertices not belonging to a significant
+cluster. If no OCN file is found, the unmasked coefficients are plotted with a warning.</p></dd>
+
+<dt><code>"fdr &lt;= 0.05"</code> or <code>"p &lt; 0.01"</code> etc</dt>
+<dd><p>FDR or P values below a threshold. Loads the matching
+<code>*.fdr.mgh</code> or <code>*.p.mgh</code> file and masks all vertices not meeting the rule.
+If no file is found, the unmasked coefficients are plotted with a warning.</p></dd>
 
 <dt>Numeric</dt>
-<dd><p>Passed directly to <code><a href="plot_vw_surf.html">plot_vw_surf()</a></code> as an absolute-value threshold
-(vertices with <code>|value| &lt; threshold</code> are hidden).</p></dd>
+<dd><p>Absolute-value threshold (vertices with <code>|value| &lt; threshold</code> are hidden).</p></dd>
 
 <dt><code>NULL</code></dt>
 <dd><p>No masking; all vertices are rendered.</p></dd>
@@ -125,7 +128,7 @@ are plotted with a warning.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments forwarded to <code><a href="plot_vw_surf.html">plot_vw_surf()</a></code>,
-e.g. <code>views</code>, <code>cmap</code>, <code>vmin</code>, <code>vmax</code>, <code>colorbar</code>, <code>colorbar_label</code>, <code>title</code>, <code>to_file</code>,
+e.g. <code>roi_outline</code>, <code>views</code>, <code>cmap</code>, <code>vmin</code>, <code>vmax</code>, <code>colorbar</code>, <code>colorbar_label</code>, <code>title</code>, <code>to_file</code>,
 <code>dpi</code>, <code>fs_home</code>, <code>fs_template.</code></p></dd>
 
 </dl></div>
@@ -180,7 +183,7 @@ Called primarily for its side-effect of opening or saving the figure.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

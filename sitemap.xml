@@ -18,6 +18,8 @@
 <url><loc>https://seredef.github.io/verywise/reference/build_minimal_pheno.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_output_bks.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_supersubject.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/check_hemi.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/check_mask.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/check_pheno_obj.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/chunk_Ymats.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/chunk_dlmm.html</loc></url>
@@ -37,6 +39,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/init_progress_tracker.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/list.dirs.till.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/load.mgh.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/load_and_mask_coef.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/load_pheno_file.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/locate_roi.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/make_chunk_sequence.html</loc></url>
@@ -50,6 +53,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/precompile_model.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/refit_lmm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/require_packages.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/resolve_mesh.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_voxw_lmm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_vw_fed_aggr.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/run_vw_fed_local.html</loc></url>
@@ -71,6 +75,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/validate_roi_associations.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_chol.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_chol_solve.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/vw_diff.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_error.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_init_message.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/vw_logLL.html</loc></url>

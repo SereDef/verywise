@@ -57,17 +57,22 @@ plot_vw_map(
 
   `"cws"` (default)
 
-  :   Cluster-wise significance masking. Loads the matching
-      `*.cache.*.sig.ocn.mgh` file and sets all vertices not belonging
-      to a significant cluster (OCN label == 0) to `NA`. If no OCN file
-      is found, the unmasked coefficients are plotted with a warning.
+  :   Cluster-wise significant. Loads the matching
+      `*.cache.*.sig.ocn.mgh` file and masks all vertices not belonging
+      to a significant cluster. If no OCN file is found, the unmasked
+      coefficients are plotted with a warning.
+
+  `"fdr <= 0.05"` or `"p < 0.01"` etc
+
+  :   FDR or P values below a threshold. Loads the matching `*.fdr.mgh`
+      or `*.p.mgh` file and masks all vertices not meeting the rule. If
+      no file is found, the unmasked coefficients are plotted with a
+      warning.
 
   Numeric
 
-  :   Passed directly to
-      [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md)
-      as an absolute-value threshold (vertices with
-      `|value| < threshold` are hidden).
+  :   Absolute-value threshold (vertices with `|value| < threshold` are
+      hidden).
 
   `NULL`
 
@@ -77,8 +82,8 @@ plot_vw_map(
 
   Additional arguments forwarded to
   [`plot_vw_surf()`](https://seredef.github.io/verywise/reference/plot_vw_surf.md),
-  e.g. `views`, `cmap`, `vmin`, `vmax`, `colorbar`, `colorbar_label`,
-  `title`, `to_file`, `dpi`, `fs_home`, `fs_template.`
+  e.g. `roi_outline`, `views`, `cmap`, `vmin`, `vmax`, `colorbar`,
+  `colorbar_label`, `title`, `to_file`, `dpi`, `fs_home`, `fs_template.`
 
 ## Value
 

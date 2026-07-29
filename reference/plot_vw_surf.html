@@ -90,20 +90,24 @@ matplotlib.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_vw_surf</span><span class="op">(</span></span>
 <span>  lh <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rh <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
-<span>  fs_home <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  surface <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pial"</span>, <span class="st">"inflated"</span><span class="op">)</span>,</span>
-<span>  cmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bg_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sulc"</span>, <span class="st">"curv"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  lh_mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rh_mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  vmin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  vmax <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  views <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  surface <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pial"</span>, <span class="st">"inflated"</span><span class="op">)</span>,</span>
+<span>  bg_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sulc"</span>, <span class="st">"curv"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
+<span>  fs_home <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  colorbar <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  colorbar_label <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  colorbar_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  roi_outline <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  to_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  dpi <span class="op">=</span> <span class="fl">150L</span></span>
+<span>  dpi <span class="op">=</span> <span class="fl">150L</span>,</span>
+<span>  cell_px <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,46 +115,17 @@ matplotlib.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-lh">lh<a class="anchor" aria-label="anchor" href="#arg-lh"></a></dt>
-<dd><p>Numeric vector, <code>.mgh</code>/<code>.gii</code> file path, or
-<code>NULL</code>.</p></dd>
+<dl><dt id="arg-lh-rh">lh, rh<a class="anchor" aria-label="anchor" href="#arg-lh-rh"></a></dt>
+<dd><p>Numeric vector, <code>.mgh</code>/<code>.gii`` file path, or </code>NULL<code>. At least one of </code>lh<code>/</code>rh“ must be supplied.</p></dd>
 
 
-<dt id="arg-rh">rh<a class="anchor" aria-label="anchor" href="#arg-rh"></a></dt>
-<dd><p>Numeric vector, <code>.mgh</code>/<code>.gii</code> file path, or
-<code>NULL</code>. At least one of <code>lh</code>/<code>rh</code> must be supplied.</p></dd>
-
-
-<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
-<dd><p>fsaverage template: <code>"fsaverage3"</code> through
-<code>"fsaverage"</code>. Must match the length of lh/rh. Default <code>"fsaverage"</code>.</p></dd>
-
-
-<dt id="arg-fs-home">fs_home<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
-<dd><p>(optional) location of FreeSurfer home for templates.</p></dd>
-
-
-<dt id="arg-surface">surface<a class="anchor" aria-label="anchor" href="#arg-surface"></a></dt>
-<dd><p>Surface mesh: <code>"pial"</code> (default) or <code>"inflated"</code>.</p></dd>
-
-
-<dt id="arg-cmap">cmap<a class="anchor" aria-label="anchor" href="#arg-cmap"></a></dt>
-<dd><p>Matplotlib colormap name.</p></dd>
-
-
-<dt id="arg-bg-map">bg_map<a class="anchor" aria-label="anchor" href="#arg-bg-map"></a></dt>
-<dd><p>Background shading: <code>"sulc"</code> (default),
-<code>"curv"</code>, or <code>"none"</code>.</p></dd>
+<dt id="arg-lh-mask-rh-mask">lh_mask, rh_mask<a class="anchor" aria-label="anchor" href="#arg-lh-mask-rh-mask"></a></dt>
+<dd><p>Masking boolean maps, or <code>NULL</code> (no masking).</p></dd>
 
 
 <dt id="arg-vmin-vmax">vmin, vmax<a class="anchor" aria-label="anchor" href="#arg-vmin-vmax"></a></dt>
-<dd><p>Numeric colour limits, or <code>NULL</code> for automatic
-symmetric scaling.</p></dd>
-
-
-<dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
-<dd><p>Absolute-value masking threshold, or <code>NULL</code>
-(no masking).</p></dd>
+<dd><p>Numeric colormap limits, or <code>NULL</code> for automatic
+scaling (minimum and maximum of the thresholded data).</p></dd>
 
 
 <dt id="arg-views">views<a class="anchor" aria-label="anchor" href="#arg-views"></a></dt>
@@ -159,13 +134,46 @@ symmetric scaling.</p></dd>
 <code>"anterior"</code>, <code>"posterior"</code>. Default: <code>"all"</code>.</p></dd>
 
 
+<dt id="arg-surface">surface<a class="anchor" aria-label="anchor" href="#arg-surface"></a></dt>
+<dd><p>Surface mesh: <code>"pial"</code> (default) or <code>"inflated"</code>.</p></dd>
+
+
+<dt id="arg-bg-map">bg_map<a class="anchor" aria-label="anchor" href="#arg-bg-map"></a></dt>
+<dd><p>Background shading: <code>"sulc"</code> (default),
+<code>"curv"</code>, or <code>"none"</code>.</p></dd>
+
+
+<dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>
+<dd><p>Resolution (fsaverage template). Must match the length
+of <code>lh</code>/<code>rh</code>. Default: <code>"fsaverage"</code>.</p></dd>
+
+
+<dt id="arg-fs-home">fs_home<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
+<dd><p>(optional) location of FreeSurfer home for templates.</p></dd>
+
+
 <dt id="arg-colorbar">colorbar<a class="anchor" aria-label="anchor" href="#arg-colorbar"></a></dt>
 <dd><p>Logical. Draw a shared colour bar? Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-colorbar-label">colorbar_label<a class="anchor" aria-label="anchor" href="#arg-colorbar-label"></a></dt>
-<dd><p>Character label for the colour bar axis, or
-<code>NULL</code>.</p></dd>
+<dd><p>Character label for the colour bar axis, or <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-colorbar-width">colorbar_width<a class="anchor" aria-label="anchor" href="#arg-colorbar-width"></a></dt>
+<dd><p>Fraction of one brain panel's width reserved for the
+colorbar/density strip, or <code>NULL</code> for the mode default
+(static: 0.40, interactive: 0.20).</p></dd>
+
+
+<dt id="arg-cmap">cmap<a class="anchor" aria-label="anchor" href="#arg-cmap"></a></dt>
+<dd><p>Matplotlib colormap name.</p></dd>
+
+
+<dt id="arg-roi-outline">roi_outline<a class="anchor" aria-label="anchor" href="#arg-roi-outline"></a></dt>
+<dd><p>Character vector of DK/aparc region names to outline
+with contour lines (e.g. <code>c("superiorfrontal", "precentral")</code>),
+or <code>NULL</code> for no ROI overlay.</p></dd>
 
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
@@ -178,7 +186,13 @@ symmetric scaling.</p></dd>
 
 
 <dt id="arg-dpi">dpi<a class="anchor" aria-label="anchor" href="#arg-dpi"></a></dt>
-<dd><p>Integer output resolution for static PNG. Default <code>150L</code>.</p></dd>
+<dd><p>Integer output resolution for static PNG. Default <code>150</code>.</p></dd>
+
+
+<dt id="arg-cell-px">cell_px<a class="anchor" aria-label="anchor" href="#arg-cell-px"></a></dt>
+<dd><p>Brain panel size in pixels: a single number, a length-2 vector
+<code>c(width, height)</code>, or <code>NULL</code> for the renderer's default
+(static: 400x440, interactive: 500x350).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -197,12 +211,12 @@ file path (interactive). Called primarily for the side-effect.</p>
 <span class="r-in"><span><span class="fu">plot_vw_surf</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  lh <span class="op">=</span> <span class="va">lh_coef</span>,</span></span>
 <span class="r-in"><span>  rh <span class="op">=</span> <span class="va">rh_coef</span>,</span></span>
-<span class="r-in"><span>  cmap <span class="op">=</span> <span class="st">"RdBu_r"</span>,</span></span>
 <span class="r-in"><span>  threshold <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
 <span class="r-in"><span>  views <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lateral"</span>, <span class="st">"medial"</span>, <span class="st">"dorsal"</span>, <span class="st">"ventral"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  cmap <span class="op">=</span> <span class="st">"RdBu_r"</span>,</span></span>
 <span class="r-in"><span>  title <span class="op">=</span> <span class="st">"Effect of age on cortical thickness"</span>,</span></span>
 <span class="r-in"><span>  to_file <span class="op">=</span> <span class="st">"figures/age_thickness.png"</span>,</span></span>
-<span class="r-in"><span>  dpi <span class="op">=</span> <span class="fl">300L</span></span></span>
+<span class="r-in"><span>  dpi <span class="op">=</span> <span class="fl">300</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
@@ -217,7 +231,7 @@ file path (interactive). Called primarily for the side-effect.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

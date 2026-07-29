@@ -12,6 +12,12 @@
   : Build "supersubject" by stacking all vertex data in one large
   file-backed matrix with dimensions n_subjects x n_vertices.
 
+- [`check_hemi()`](https://seredef.github.io/verywise/reference/check_hemi.md)
+  : Validate and load hemisphere data
+
+- [`check_mask()`](https://seredef.github.io/verywise/reference/check_mask.md)
+  : Validate a logical surface mask
+
 - [`check_pheno_obj()`](https://seredef.github.io/verywise/reference/check_pheno_obj.md)
   : Check that object exists in the global environment
 
@@ -61,6 +67,9 @@
 - [`load.mgh()`](https://seredef.github.io/verywise/reference/load.mgh.md)
   : Load an MGH file into memory
 
+- [`load_and_mask_coef()`](https://seredef.github.io/verywise/reference/load_and_mask_coef.md)
+  : Load and threshold coefficient maps
+
 - [`load_pheno_file()`](https://seredef.github.io/verywise/reference/load_pheno_file.md)
   : Load "phenotype" file into R based on its extension
 
@@ -98,6 +107,9 @@
 - [`refit_lmm()`](https://seredef.github.io/verywise/reference/refit_lmm.md)
   : Refit a pre-compiled linear mixed model with a new outcome and
   extract statistics
+
+- [`resolve_mesh()`](https://seredef.github.io/verywise/reference/resolve_mesh.md)
+  : Resolve FreeSurfer surface mesh location
 
 - [`run_voxw_lmm()`](https://seredef.github.io/verywise/reference/run_voxw_lmm.md)
   :
@@ -156,6 +168,9 @@
 
 - [`update_progress_tracker()`](https://seredef.github.io/verywise/reference/update_progress_tracker.md)
   : Update within-chunk progress for a (milestone) vertex
+
+- [`vw_diff()`](https://seredef.github.io/verywise/reference/vw_diff.md)
+  : Compute vertex-wise differences between two maps
 
 - [`vw_error()`](https://seredef.github.io/verywise/reference/vw_error.md)
   : Themed error

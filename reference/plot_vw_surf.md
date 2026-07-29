@@ -22,68 +22,66 @@ HTML file opened in the IDE Viewer or default browser.
 plot_vw_surf(
   lh = NULL,
   rh = NULL,
-  fs_template = "fsaverage",
-  fs_home = NULL,
-  surface = c("pial", "inflated"),
-  cmap = NULL,
-  bg_map = c("sulc", "curv", "none"),
+  lh_mask = NULL,
+  rh_mask = NULL,
   vmin = NULL,
   vmax = NULL,
-  threshold = NULL,
   views = "all",
+  surface = c("pial", "inflated"),
+  bg_map = c("sulc", "curv", "none"),
+  fs_template = "fsaverage",
+  fs_home = NULL,
   colorbar = TRUE,
   colorbar_label = NULL,
+  colorbar_width = NULL,
+  cmap = NULL,
+  roi_outline = NULL,
   title = NULL,
   to_file = NULL,
-  dpi = 150L
+  dpi = 150L,
+  cell_px = NULL
 )
 ```
 
 ## Arguments
 
-- lh:
+- lh, rh:
 
-  Numeric vector, `.mgh`/`.gii` file path, or `NULL`.
+  Numeric vector,
+  `.mgh`/``` .gii`` file path, or  ```NULL`. At least one of `lh`/`rh“
+  must be supplied.
 
-- rh:
+- lh_mask, rh_mask:
 
-  Numeric vector, `.mgh`/`.gii` file path, or `NULL`. At least one of
-  `lh`/`rh` must be supplied.
-
-- fs_template:
-
-  fsaverage template: `"fsaverage3"` through `"fsaverage"`. Must match
-  the length of lh/rh. Default `"fsaverage"`.
-
-- fs_home:
-
-  (optional) location of FreeSurfer home for templates.
-
-- surface:
-
-  Surface mesh: `"pial"` (default) or `"inflated"`.
-
-- cmap:
-
-  Matplotlib colormap name.
-
-- bg_map:
-
-  Background shading: `"sulc"` (default), `"curv"`, or `"none"`.
+  Masking boolean maps, or `NULL` (no masking).
 
 - vmin, vmax:
 
-  Numeric colour limits, or `NULL` for automatic symmetric scaling.
-
-- threshold:
-
-  Absolute-value masking threshold, or `NULL` (no masking).
+  Numeric colormap limits, or `NULL` for automatic scaling (minimum and
+  maximum of the thresholded data).
 
 - views:
 
   Character vector of camera angles - any subset of `"lateral"`,
   `"medial"`, `"dorsal"`, `"ventral"`, `"anterior"`, `"posterior"`.
   Default: `"all"`.
+
+- surface:
+
+  Surface mesh: `"pial"` (default) or `"inflated"`.
+
+- bg_map:
+
+  Background shading: `"sulc"` (default), `"curv"`, or `"none"`.
+
+- fs_template:
+
+  Resolution (fsaverage template). Must match the length of `lh`/`rh`.
+  Default: `"fsaverage"`.
+
+- fs_home:
+
+  (optional) location of FreeSurfer home for templates.
 
 - colorbar:
 
@@ -92,6 +90,22 @@ plot_vw_surf(
 - colorbar_label:
 
   Character label for the colour bar axis, or `NULL`.
+
+- colorbar_width:
+
+  Fraction of one brain panel's width reserved for the colorbar/density
+  strip, or `NULL` for the mode default (static: 0.40, interactive:
+  0.20).
+
+- cmap:
+
+  Matplotlib colormap name.
+
+- roi_outline:
+
+  Character vector of DK/aparc region names to outline with contour
+  lines (e.g. `c("superiorfrontal", "precentral")`), or `NULL` for no
+  ROI overlay.
 
 - title:
 
@@ -104,7 +118,13 @@ plot_vw_surf(
 
 - dpi:
 
-  Integer output resolution for static PNG. Default `150L`.
+  Integer output resolution for static PNG. Default `150`.
+
+- cell_px:
+
+  Brain panel size in pixels: a single number, a length-2 vector
+  `c(width, height)`, or `NULL` for the renderer's default (static:
+  400x440, interactive: 500x350).
 
 ## Value
 
@@ -122,12 +142,12 @@ plot_vw_surf(lh = 'path/to/lh.coef.mgh', fs_template = "fsaverage5")
 plot_vw_surf(
   lh = lh_coef,
   rh = rh_coef,
-  cmap = "RdBu_r",
   threshold = 0.05,
   views = c("lateral", "medial", "dorsal", "ventral"),
+  cmap = "RdBu_r",
   title = "Effect of age on cortical thickness",
   to_file = "figures/age_thickness.png",
-  dpi = 300L
+  dpi = 300
 )
 } # }
 ```
