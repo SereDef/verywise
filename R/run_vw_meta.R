@@ -278,7 +278,8 @@ run_vw_meta <- function(term,
         rma_args <- list(
           yi = ef_vw[, v], 
           sei = se_vw[, v], 
-          method = "REML")
+          method = "REML", 
+          test="knha") # Knapp-Hartung or Hartung-Knapp-Sidik-Jonkman method to account for low k 
 
         # Only add weights to the argument list if they were provided
         if (!is.null(study_weights)) rma_args$weights <- study_weights
