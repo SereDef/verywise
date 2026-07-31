@@ -61,6 +61,8 @@ outputted but <code><a href="run_vw_lmm.html">verywise::run_vw_lmm</a></code> or
 <span>  measure <span class="op">=</span> <span class="st">"area"</span>,</span>
 <span>  <span class="va">study_names</span>,</span>
 <span>  study_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  meta_method <span class="op">=</span> <span class="st">"REML"</span>,</span>
+<span>  meta_pvalue <span class="op">=</span> <span class="st">"knha"</span>,</span>
 <span>  <span class="va">res_dirs</span>,</span>
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mtc <span class="op">=</span> <span class="st">"fdr"</span>,</span>
@@ -99,6 +101,16 @@ Options: <code>"lh"</code> (left hemisphere: default), <code>"rh"</code> (right 
 
 <dt id="arg-study-weights">study_weights<a class="anchor" aria-label="anchor" href="#arg-study-weights"></a></dt>
 <dd><p>Numeric vector of study weights (e.g. sample size)</p></dd>
+
+
+<dt id="arg-meta-method">meta_method<a class="anchor" aria-label="anchor" href="#arg-meta-method"></a></dt>
+<dd><p>Character. Controls meta-analysis method (see <code>metafor</code> method documentation).
+Default: "REML" (random-effect meta-analysis), common alternatives are "FE" (fixed effect meta-analysis)</p></dd>
+
+
+<dt id="arg-meta-pvalue">meta_pvalue<a class="anchor" aria-label="anchor" href="#arg-meta-pvalue"></a></dt>
+<dd><p>Character. Controls p-value estimation. Default: "knha" for Knapp-Hartung or
+Hartung-Knapp-Sidik-Jonkman method (that accounts for low number of studies).</p></dd>
 
 
 <dt id="arg-res-dirs">res_dirs<a class="anchor" aria-label="anchor" href="#arg-res-dirs"></a></dt>
