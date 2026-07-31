@@ -10,6 +10,8 @@ run_vw_meta(
   measure = "area",
   study_names,
   study_weights = NULL,
+  meta_method = "REML",
+  meta_pvalue = "knha",
   res_dirs,
   outp_dir = NULL,
   mtc = "fdr",
@@ -35,6 +37,12 @@ Options: \code{"lh"} (left hemisphere: default), \code{"rh"} (right hemisphere).
 \item{study_names}{Character vector of study names (must match the length of \code{res_dirs}).}
 
 \item{study_weights}{Numeric vector of study weights (e.g. sample size)}
+
+\item{meta_method}{Character. Controls meta-analysis method (see \code{metafor} method documentation).
+Default: "REML" (random-effect meta-analysis), common alternatives are "FE" (fixed effect meta-analysis)}
+
+\item{meta_pvalue}{Character. Controls p-value estimation. Default: "knha" for Knapp-Hartung or
+Hartung-Knapp-Sidik-Jonkman method (that accounts for low number of studies).}
 
 \item{res_dirs}{Character vector. Path to the directories containing vertex-wise result files (\verb{*.mgh}) of each study.}
 

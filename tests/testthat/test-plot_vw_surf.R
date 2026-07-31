@@ -10,6 +10,17 @@ rh_coef_file <- list.files(res_dir, pattern = "^rh\\..*\\.coef\\.mgh$", full.nam
 # ── Setup ─────────────────────────────────────────────────────────────────────
 skip_if_not_installed("reticulate")
 
+# TMP 
+skip_if_no_freesurfer <- function() {
+  fs_home <- Sys.getenv("FREESURFER_HOME")
+  
+  # Skip if environment variable is empty or the directory doesn't exist
+  if (!nzchar(fs_home) || !dir.exists(fs_home)) {
+    testthat::skip("FreeSurfer not found in FREESURFER_HOME")
+  }
+}
+skip_if_no_freesurfer()
+
 # ── Input validation ──────────────────────────────────────────────────────────
 
 test_that("plot_vw_surf validates missing inputs", {

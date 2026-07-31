@@ -12,6 +12,10 @@
 #' @param measure Character. Surface measure, e.g. `'area'`, `'thickness'`, `'volume'`. Defaults to `'area'`.
 #' @param study_names Character vector of study names (must match the length of \code{res_dirs}).
 #' @param study_weights Numeric vector of study weights (e.g. sample size)
+#' @param meta_method Character. Controls meta-analysis method (see `metafor` method documentation). 
+#'    Default: "REML" (random-effect meta-analysis), common alternatives are "FE" (fixed effect meta-analysis)
+#' @param meta_pvalue Character. Controls p-value estimation. Default: "knha" for Knapp-Hartung or 
+#'    Hartung-Knapp-Sidik-Jonkman method (that accounts for low number of studies). 
 #' @param res_dirs Character vector. Path to the directories containing vertex-wise result files (`*.mgh`) of each study.
 #' @param outp_dir Character string specifying the output directory for results.
 #'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
@@ -91,6 +95,8 @@ run_vw_meta <- function(term,
                         measure = "area",
                         study_names, 
                         study_weights = NULL,
+                        meta_method = "REML",
+                        meta_pvalue = "knha",
                         res_dirs,
                         outp_dir = NULL,
                         mtc = 'fdr',
@@ -278,8 +284,8 @@ run_vw_meta <- function(term,
         rma_args <- list(
           yi = ef_vw[, v], 
           sei = se_vw[, v], 
-          method = "REML", 
-          test="knha") # Knapp-Hartung or Hartung-Knapp-Sidik-Jonkman method to account for low k 
+          method = meta_method, 
+          test = meta_pvalue)
 
         # Only add weights to the argument list if they were provided
         if (!is.null(study_weights)) rma_args$weights <- study_weights
