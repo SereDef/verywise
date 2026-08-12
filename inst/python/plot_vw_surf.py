@@ -342,7 +342,7 @@ class VeryWiseColormap:
     """
 
     def __init__(self, lh, rh=None, lh_mask=None, rh_mask=None, cmap=None,
-                 vmin=None, vmax=None, max_discrete=20, n_y=300, n_x=80):
+                 vmin=None, vmax=None, max_discrete=20, n_y=500, n_x=80):
 
         all_vals, sig_vals = self._masked_concat(lh, rh, lh_mask, rh_mask)
 
