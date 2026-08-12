@@ -195,8 +195,9 @@ vw_summarize_outp_dir <- function(outp_dir) {
 
   qs <- stats::quantile(all_diff, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
 
-  stat_vals <- c(Min = qs[[1]], Q1 = qs[[2]], Median = qs[[3]],
-                 Mean = mean(all_diff, na.rm = TRUE), Q3 = qs[[4]], Max = qs[[5]])
+  stat_vals <- round(
+    c(Min = qs[[1]], Q1 = qs[[2]], Median = qs[[3]],
+      Mean = mean(all_diff, na.rm = TRUE), Q3 = qs[[4]], Max = qs[[5]]), digits)
   
   stat_length <- max(pad, max(nchar(stat_vals)) + 2L)
 
