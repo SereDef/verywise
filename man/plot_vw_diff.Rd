@@ -11,6 +11,7 @@ plot_vw_diff(
   rh_b = NULL,
   label_a = "a",
   label_b = "b",
+  cutoffs = 0,
   ...
 )
 }
@@ -25,6 +26,9 @@ hemisphere. Pass \code{NULL} to omit the right hemisphere.}
 \item{label_a, label_b}{Short character labels used in the default figure
 title (e.g. \code{"group A"}, \code{"group B"}). Ignored when \code{title} is supplied via
 \code{...}.}
+
+\item{cutoffs}{Numeric vector or cutoffs for counting positive and negative differences.
+Passed to \code{\link[=vw_diff]{vw_diff()}} for difference summary. Default = 0.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=plot_vw_surf]{plot_vw_surf()}},
 e.g. \code{roi_outline}, \code{views}, \code{cmap}, \code{vmin}, \code{vmax}, \code{colorbar}, \code{colorbar_label}, \code{title}, \code{to_file},

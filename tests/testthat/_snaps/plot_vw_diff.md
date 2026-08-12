@@ -33,10 +33,10 @@
         fs_template = "fsaverage5")
     Message
       i Difference map: Condition A - Condition B (20484 vertices)
-        Min Q1 Median Mean Q3 Max
-        0.50 0.50 0.75 0.75 1.00 1.00
-         
-      * Condition A < Condition B for 0 vertices (0%)
+             Min      Q1  Median    Mean      Q3     Max
+             0.5     0.5    0.75    0.75       1       1
+      * Condition A < Condition B in 0 vertices (0%)
+      * Condition A > Condition B in 20484 vertices (100%)
       i Using local FreeSurfer mesh from /Applications/freesurfer/7.4.1
       ✔ Interactive brain map opened
 

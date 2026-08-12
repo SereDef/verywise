@@ -16,6 +16,8 @@
 #' @param label_a,label_b Short character labels used in the default figure
 #'   title (e.g. `"group A"`, `"group B"`). Ignored when `title` is supplied via 
 #'   `...`.
+#' @param cutoffs Numeric vector or cutoffs for counting positive and negative differences.
+#'   Passed to [vw_diff()] for difference summary. Default = 0.
 #' @param ... Additional arguments forwarded to [plot_vw_surf()]
 #'   (e.g.`surface`,`views`,`cmap`,`vmin`,`vmax`,`threshold`,
 #'   `colorbar`,`colorbar_label`,`title`, `to_file`,`dpi`,`fs_home`,`fs_template`).
@@ -52,13 +54,14 @@
 plot_vw_diff <- function(lh_a = NULL, lh_b = NULL,
                          rh_a = NULL, rh_b = NULL,
                          label_a = "a", label_b = "b",
+                         cutoffs = 0, 
                          ...) {
   
   require_packages('reticulate', call_fn = 'plot_vw_diff')
 
   # helper: load from file path or return numeric vector as-is
   diff_map <- vw_diff(lh_a = lh_a, lh_b = lh_b, rh_a = rh_a, rh_b = rh_b,
-                      label_a = label_a, label_b = label_b)
+                      label_a = label_a, label_b = label_b, cutoffs = cutoffs)
 
   dots <- list(...)
 

@@ -1,52 +1,65 @@
-  .print_median_range <- function(mat, idx, name, digits = 2, pad = 15, note = '',
-     verbose = verbose) {
+.compute_median_range <- function(vec, digits) {
+  q <- round(stats::quantile(vec, probs = c(0, 0.5, 1), na.rm = TRUE), digits)
+  q <- stats::setNames(as.list(q), c("min", "median", "max"))
+  q
+}
 
-    summ <- summary(mat[idx, ], digits = digits)
-
-    form <- paste0("%.",digits,"f")
-
-    vmed <- sprintf(form, summ['Median'])
-    vmin <- sprintf(form, summ['Min.'])
-    vmax <- sprintf(form, summ['Max.'])
-
-    n_space <- pad - cli::ansi_nchar(name, type = "width")
-    filler  <- strrep("\u00a0", max(n_space, 1))
-
-    vw_message("* {.strong {name}}:{filler}{vmed} [{vmin}, {vmax}] {.time {note}}")
-
-    invisible(NULL)
-
-  }
-
-.print_cluster_stats <- function(ocn, coef, idx, name, digits = 2, pad = 15, note = '',
-     verbose = verbose) {
-
+.compute_cluster_stats <- function(ocn, coef, idx, result_path, digits = 4) {
   clust <- ocn[idx, ]
   n_clusters <- max(clust, na.rm = TRUE)
+  out <- list(n_clusters = as.integer(n_clusters))
+  if (n_clusters > 0) {
+    sign_coef <- coef[idx, which(clust > 0)]
+    out[['sign_coef']] <- .compute_median_range(vec=sign_coef, digits=digits)
+    
+    fs_summary_file <- list.files(path=dirname(result_path), 
+      pattern = paste0(basename(result_path), ".*\\.stack", idx, ".*\\.cluster.summary$"), 
+      recursive = TRUE, full.names = TRUE)
+    fs_summary <- utils::read.table(fs_summary_file)
+    fs_summary_map <- c("Cluster ID"="V1", "Cluster size"="V11", "Cluster area"="V4", "Peak" = "V3", "ROI"="V13")
+    out[['clust_info']] <- setNames(fs_summary[fs_summary_map], names(fs_summary_map))
+  }
+  out
+}
 
+.print_median_range <- function(mat, idx=NULL, name='', 
+  digits = 4, pad = 15, note = '', verbose = verbose) {
+  
+  vec <- if (is.null(idx)) mat else mat[idx, ]
+  
+  q <- .compute_median_range(vec=vec, digits=digits)
+  
   n_space <- pad - cli::ansi_nchar(name, type = "width")
   filler  <- strrep("\u00a0", max(n_space, 1))
 
-  msg <- "* {.strong {name}}:{filler}{n_clusters} clusters |"
+  vw_message("* {.strong {name}}:{filler}{.val {cli_round(q[['median']], digits)}} 
+  [{.val {cli_round(q[['min']], digits)}}, {.val {cli_round(q[['max']], digits)}}] 
+  {.time {note}}")
+
+  q
+}
+
+.print_cluster_stats <- function(ocn_mat, coef_mat, idx, name='', result_path='.', digits = 4, pad = 15, note = '',
+     verbose = verbose) {
+  
+  clust_stats <- .compute_cluster_stats(ocn=ocn_mat, coef=coef_mat, idx=idx, result_path=result_path, digits=digits) 
+
+  n_clusters <- clust_stats[['n_clusters']]
+  q <- clust_stats[['sign_coef']]
+
+  n_space <- pad - cli::ansi_nchar(name, type = "width")
+  filler  <- strrep("\u00a0", max(n_space, 1))
+  filler2 <- strrep("\u00a0", 3 - cli::ansi_nchar(n_clusters, type = "width"))
+
+  msg <- "* {.strong {name}}:{filler}{n_clusters} clusters{filler2}|"
 
   if (n_clusters > 0) {
-    sign_coef <- coef[idx, which(clust > 0)]
-
-    summ <- summary(sign_coef, digits = digits)
-
-    form <- paste0("%.",digits,"f")
-
-    vmed <- sprintf(form, summ['Median'])
-    vmin <- sprintf(form, summ['Min.'])
-    vmax <- sprintf(form, summ['Max.'])
-
-    msg <- paste(msg, " {vmed} [{vmin}, {vmax}] {.time {note}}")
-    
+    msg <- paste(msg, "{.val {cli_round(q[['median']], digits)}} [{.val {cli_round(q[['min']], digits)}}, {.val {cli_round(q[['max']], digits)}}] {.time {note}}")
   }
   
   vw_message(msg)
 
-  invisible(NULL)
+  clust_stats
 }
 
 vw_summarize_model_fit <- function(fitstats, verbose = TRUE){
@@ -64,12 +77,15 @@ vw_summarize_model_fit <- function(fitstats, verbose = TRUE){
   vw_message('\nModel fit summary')
   vw_message("* {.strong Singular model fits}: {singular_count} ({.warn {singular_perc}}%)")
 
-  .print_median_range(fitstats, 2, 'AIC', pad = 1, note = '* median [range]')
-  .print_median_range(fitstats, 3, 'ICC')
-  .print_median_range(fitstats, 4, 'Marginal R\u00b2')
-  .print_median_range(fitstats, 5, 'Conditional R\u00b2')
-  
-  invisible(NULL)
+  aic <- .print_median_range(fitstats, 2, 'AIC', pad = 1, note = '* median [range]')
+  icc <- .print_median_range(fitstats, 3, 'ICC')
+  mR2 <- .print_median_range(fitstats, 4, 'Marginal R\u00b2')
+  cR2 <- .print_median_range(fitstats, 5, 'Conditional R\u00b2')
+
+  invisible(
+    list('Singular fits' = list(count = singular_count, percent = singular_perc),
+         'AIC' = aic, 'ICC' = icc, 'Marginal R\u00b2' = mR2, 'Conditional R\u00b2' = cR2)
+  )
 }
 
 vw_summarize_model_est <- function(coef, term_names, verbose = TRUE) {
@@ -78,29 +94,35 @@ vw_summarize_model_est <- function(coef, term_names, verbose = TRUE) {
 
   term_name_length <- max(nchar(term_names)) + 1L
 
+  out <- list()
+
   vw_message('\nModel estimates')
   for (n in seq_along(term_names)){
     note <- if (n == 1) '* median [range]' else ''
-    .print_median_range(coef, n, term_names[n], pad = term_name_length, note = note)
+    term_name <- term_names[n]
+    out[[term_name]] <- .print_median_range(mat=coef, idx=n, name=term_name, pad=term_name_length, note = note)
   }
 
-   invisible(NULL)
+  invisible(out)
 }
 
-vw_summarize_model_clusters <- function(coef, clust, term_names, verbose = TRUE) {
+vw_summarize_model_clusters <- function(coef, clust, term_names, result_path, verbose = TRUE) {
 
   if (!verbose) return(invisible(NULL))
 
   term_name_length <- max(nchar(term_names)) + 1L
 
+  out <- list()
+
   vw_message('\nModel estimates')
   for (n in seq_along(term_names)){
-
     note <- if (n == 1) '* median beta [range]' else ''
-    .print_cluster_stats(clust, coef, n, term_names[n], pad = term_name_length, note = note)
+    term_name <- term_names[n]
+    out[[term_name]] <- .print_cluster_stats(ocn_mat=clust, coef_mat=coef, idx=n, name=term_name, result_path=result_path, 
+                                             pad=term_name_length, note = note)
   }
 
-   invisible(NULL)
+  invisible(out)
 }
 
 #' Summarise output directory: measures × hemispheres per subdirectory
@@ -165,4 +187,75 @@ vw_summarize_outp_dir <- function(outp_dir) {
   }
 
   invisible(result)
+}
+
+#' @title Print difference map summary statistics
+#' @keywords internal
+.print_diff_stats <- function(all_diff, label_a, label_b, digits = 3, pad = 8) {
+
+  qs <- stats::quantile(all_diff, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+
+  stat_vals <- c(Min = qs[[1]], Q1 = qs[[2]], Median = qs[[3]],
+                 Mean = mean(all_diff, na.rm = TRUE), Q3 = qs[[4]], Max = qs[[5]])
+  
+  stat_length <- max(pad, max(nchar(stat_vals)) + 2L)
+
+  n_finite <- sum(is.finite(all_diff))
+
+  # Pad to a fixed width with non-breaking spaces (regular spaces get
+  # collapsed/trimmed by cli's bullet rendering -- see .print_median_range()
+  # and the filler <- strrep("\u00a0", ...) convention used throughout this file)
+  filler <- function(x, pad=stat_length) {
+    n_space <- pad - cli::ansi_nchar(x, type = "width")
+    strrep("\u00a0", max(n_space, 1))
+  }
+
+  header <- paste(vapply(names(stat_vals), 
+    function(nm) paste0(filler(nm), nm), character(1)), collapse = "")
+  
+  values <- paste(
+    vapply(names(stat_vals), function(nm) {
+      plain <- cli::cli_format(cli_round(stat_vals[[nm]], digits))
+      paste0(filler(plain), "{.val {cli_round(stat_vals[['", nm, "']], digits)}}")
+    }, character(1)),
+    collapse = "")
+  
+  vw_message(c(
+    "i" = "Difference map: {.strong {label_a}} - {.strong {label_b}} ({.val {n_finite}} vertices)",
+    " " = "{header}",
+    " " = values
+  ))
+
+  invisible(list(stats = stat_vals, n_finite = n_finite))
+}
+
+#' @title Print one cutoff line (or pair of lines) for a difference map
+#' @keywords internal
+.print_diff_cutoff <- function(all_diff, cutoff, label_a, label_b, n_finite) {
+
+  if (cutoff == 0) {
+    n_neg <- sum(all_diff < 0, na.rm = TRUE)
+    n_pos <- sum(all_diff > 0, na.rm = TRUE)
+    p_neg <- round(100 * n_neg / n_finite, 1)
+    p_pos <- round(100 * n_pos / n_finite, 1)
+
+    vw_message(c(
+      "*" = "{.strong {label_a} {'<'} {label_b}} in {.val {n_neg}} vertices ({.val {p_neg}}%)",
+      "*" = "{.strong {label_a} {'>'} {label_b}} in {.val {n_pos}} vertices ({.val {p_pos}}%)"
+    ))
+    return(invisible(NULL))
+  }
+
+  n_below <- sum(all_diff < -cutoff, na.rm = TRUE)
+  n_above <- sum(all_diff > cutoff, na.rm = TRUE)
+
+  p_below <- round(100 * n_below / n_finite, 1)
+  p_above <- round(100 * n_above / n_finite, 1)
+
+  vw_message(c(
+    "*" = "{.strong {label_a} {'<<'} {label_b}} in {.val {n_below}} vertices ({.val {p_below}}%) [cut-off: {.val {-cutoff}}]",
+    "*" = "{.strong {label_a} {'>>'} {label_b}} in {.val {n_above}} vertices ({.val {p_above}}%) [cut-off: {.val {cutoff}}]"
+  ))
+
+  invisible(NULL)
 }

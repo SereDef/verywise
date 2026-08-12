@@ -1,7 +1,7 @@
 Package: verywise
 Type: Package
 Title: Vertex-wise Statistical Analysis of Neuroimaging data
-Version: 1.3.7
+Version: 1.3.8
 Authors@R: c(
     person("Serena", "Defina", 
             email = "s.defina@erasmusmc.nl", role = c("cre", "aut"), 
@@ -46,7 +46,8 @@ Imports:
     doRNG (>= 1.5),
     foreach,
     lme4 (>= 1.1.35.5),
-    rlang
+    rlang,
+    yaml
 SystemRequirements: Unix (not supported on Windows), FreeSurfer (for some functionality)
 Config/Needs/website: rmarkdown
 Config/testthat/edition: 3

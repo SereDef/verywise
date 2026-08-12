@@ -71,8 +71,13 @@ convert_to_mgh <- function(vw_results,
       mode <- "allrows.1file"
       
     } else if (stat_name == 'fitstats') {
-      stat_mgh_paths <- paste(result_path, c('singular_fit','aic', 'icc','r2_marginal', 'r2_conditional'), 
-                              "mgh", sep = ".")
+      stat_mgh_paths <- paste(result_path, 
+        c('singular_fit','aic', 'icc','r2_marginal', 'r2_conditional'), "mgh", sep = ".")
+      
+    } else if (stat_name == "cov") {
+      # cov FBM always has nrow = 1 (single covariance term across vertices)
+      stat_mgh_paths <- paste(result_path, "cov", "mgh", sep = ".")
+
     } else if (is.null(stacks)) {
       stat_mgh_paths <- paste(result_path, stat_name, "mgh", sep = ".")
     } else {

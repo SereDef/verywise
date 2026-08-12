@@ -127,3 +127,31 @@ build_output_bks <- function(result_path, res_bk_names, verbose = TRUE) {
 
   return(res_bk_paths)
 }
+
+
+#' @title Generate a set of backing file (bk) names
+#' @keywords internal
+build_output_fbm <- function(result_path, type, nrow, ncol, precision = 'float', verbose = FALSE) {
+
+  if (verbose) cli::cli_progress_step('Generate file-backed output containers', spinner=TRUE)
+  
+  init <- switch(type, 
+      coef = NA_real_,
+        se = NA_real_, # 0, 
+         p = 1,
+     resid = 0,
+  fitstats = NA_real_,
+     clust = NA_real_
+  )
+
+  res_bk_path <- paste(result_path, type, sep = ".")
+
+  # Always remove backing files if they already exist
+  res_bk_file <- paste0(res_bk_path, ".bk")
+
+  if (file.exists(res_bk_file)) file.remove(res_bk_file)
+  
+  bigstatsr::FBM(nrow = nrow, ncol = ncol, init = init, type = precision, 
+    backingfile = res_bk_path)
+  
+}

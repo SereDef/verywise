@@ -4,7 +4,7 @@
 \alias{refit_lmm}
 \title{Refit a pre-compiled linear mixed model with a new outcome and extract statistics}
 \usage{
-refit_lmm(model_template_i, y)
+refit_lmm(model_template_i, y, cov_eff = NULL)
 }
 \arguments{
 \item{model_template_i}{Pre-compiled model object for (MI) dataset \code{i}, generated
@@ -13,6 +13,9 @@ the response vector is replaced.}
 
 \item{y}{A numeric vector of outcome values representing a single vertex from the
 super-subject matrix.}
+
+\item{cov_eff}{A vector or fixed effect term indices for which to extract a covariance
+(used in simple slope analyses).}
 }
 \value{
 A named \code{list} with one of two shapes:

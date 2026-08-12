@@ -148,6 +148,8 @@ precompile_model <- function(formula,
 #'   the response vector is replaced.
 #' @param y A numeric vector of outcome values representing a single vertex from the
 #'   super-subject matrix.
+#' @param cov_eff A vector or fixed effect term indices for which to extract a covariance 
+#'   (used in simple slope analyses).
 #'
 #' @returns A named `list` with one of two shapes:
 #' **On error:**
@@ -215,7 +217,7 @@ precompile_model <- function(formula,
 #' 
 #' @export
 #'
-refit_lmm <- function(model_template_i, y) {
+refit_lmm <- function(model_template_i, y, cov_eff = NULL) {
 
   error_msg <- NULL
   warning_msg <- character(0)
@@ -246,12 +248,19 @@ refit_lmm <- function(model_template_i, y) {
   coefs <- fixef(fit) # Fixed effects estimates
   ses   <- sqrt(diag(as.matrix(vcov(fit)))) # Their standard errors
   
+  
   fixed_stats <- data.frame(
     term = names(coefs),
     qhat = as.numeric(coefs),
     se   = as.numeric(ses),
     row.names = NULL,
     check.names = FALSE)
+  
+  if (!is.null(cov_eff)) {
+    cov_int <- unname(as.matrix(vcov(fit))[cov_eff[1], cov_eff[2]])
+  } else {
+    cov_int <- NULL
+  }
   
   # Also extract model residuals for smoothness estimation
   resid <- residuals(fit)
@@ -282,7 +291,10 @@ refit_lmm <- function(model_template_i, y) {
   # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
   perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
   
-  list("stats" = fixed_stats, "resid" = resid, "model_fit" = perf,
+  list("stats" = fixed_stats, 
+       "cov" = cov_int,
+       "resid" = resid, 
+       "model_fit" = perf,
        "warning" = warning_msg)
 
 }

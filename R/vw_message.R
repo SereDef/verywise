@@ -169,3 +169,14 @@ vw_error <- function(msg, ..., call = rlang::caller_env()) {
   invisible(tab)
 }
 
+
+# a thin wrapper class that carries the desired decimal count
+cli_round <- function(x, digits) {
+  structure(x, n_digits = digits, class = c("cli_round", class(x)))
+}
+
+# S3 method dispatched automatically by {.val {...}} via cli_format()
+cli_format.cli_round <- function(x, style = NULL, ...) {
+  formatC(unclass(x), digits = attr(x, "n_digits"), format = "f")
+}
+

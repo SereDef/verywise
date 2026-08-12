@@ -4,7 +4,14 @@
 \alias{vw_pool}
 \title{Pool \code{lme4::lmer} model output across imputed datasets}
 \usage{
-vw_pool(out_stats, m, n_terms, pvalue_method = "t-as-z", min_pvalue = 2^-149)
+vw_pool(
+  out_stats,
+  m,
+  n_terms,
+  pvalue_method = "t-as-z",
+  min_pvalue = 2^-149,
+  cov_eff = NULL
+)
 }
 \arguments{
 \item{out_stats}{Output of \code{\link{single_lmm}}, i.e.: a list containing:
@@ -29,6 +36,9 @@ used to compute p-values. Options: \code{"t-as-z"}, \code{"wald-chi2"},
 Set this to 0L if no trimming should be applied.
 Default: \code{2^-149} ( == 1.401298e-45) the smallest positive subnormal
 float.}
+
+\item{cov_eff}{An optional vector or fixed effect term indices for which to extract
+a covariance (used in simple slope analyses).}
 }
 \value{
 A list containing the pooled coefficients, SEs, t- and p- values.

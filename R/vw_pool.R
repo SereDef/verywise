@@ -42,6 +42,9 @@
 #'   Set this to 0L if no trimming should be applied.
 #'   Default: \code{2^-149} ( == 1.401298e-45) the smallest positive subnormal
 #'   float.
+#' @param cov_eff An optional vector or fixed effect term indices for which to extract
+#'   a covariance (used in simple slope analyses).
+#' 
 #' @note
 #' Used inside \code{\link{run_vw_lmm}}.
 #'
@@ -62,7 +65,8 @@
 #'
 vw_pool <- function(out_stats, m, n_terms,
                     pvalue_method = "t-as-z",
-                    min_pvalue =  2^-149
+                    min_pvalue =  2^-149,
+                    cov_eff = NULL
                     ) {
   
   fails <- Filter(Negate(is.null), lapply(out_stats, `[[`, "error"))
@@ -105,6 +109,7 @@ vw_pool <- function(out_stats, m, n_terms,
       coef = s$qhat,
       se = s$se, # t = s$tval,
       p = s$pval,
+      cov = out_stats$cov,
       fitstats = out_stats$model_fit,
       resid = as.vector(out_stats$resid),
       warning = paste(out_stats$warning, collapse = " || ")
@@ -114,7 +119,6 @@ vw_pool <- function(out_stats, m, n_terms,
 
   # Extract warnings (if any)
   warnings <- lapply(out_stats, `[[`, "warning")
-
   warning_count <- sum(lengths(warnings) > 0)
 
   if (warning_count > 0) {
@@ -170,6 +174,21 @@ vw_pool <- function(out_stats, m, n_terms,
 
   # pval = 2 * pt(-abs(tval), df = pooled_stats$df)
 
+  # Pooled covariance
+  if (!is.null(cov_eff)) {
+    # 1. Within-imputation covariance (ubar_cov)
+    cov_vals <- sapply(out_stats, `[[`, "cov")
+    ubar_cov <- mean(cov_vals, na.rm = TRUE)
+    
+    # 2. Between-imputation covariance (b_cov)
+    b_cov <- stats::cov(qbar[cov_eff[1], ], qbar[cov_eff[2], ])
+    
+    # 3. Total pooled covariance (t_cov)
+    pooled_cov <- ubar_cov + (1 + 1 / m) * b_cov
+  } else {
+    pooled_cov <- NULL
+  }
+
   # Average residuals across imputed datasets
   resid <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'resid')), na.rm=TRUE)
 
@@ -180,6 +199,7 @@ vw_pool <- function(out_stats, m, n_terms,
     "se" = se,
     "p" = pval,
     "fitstats" = model_fit,
+    "cov" = pooled_cov,
     "resid" = resid,
     "warning" = warning_msg
   )

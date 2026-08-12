@@ -236,6 +236,9 @@ load_and_mask_coef <- function(hemi, measure, stack, res_dir, threshold) {
 #' @param rh_a,rh_b Right hemisphere data maps (numeric vectors or file paths) to contrast.
 #' @param label_a Character string representing the name of the first map (`a`).
 #' @param label_b Character string representing the name of the second map (`b`).
+#' @param cutoffs Numeric vector or cutoffs for counting positive and negative differences.
+#'   Default = 0.
+#' @param digits Float precision of th difference summary. 
 #'
 #' @return A named list containing `lh` and `rh` numeric vectors representing 
 #'   the calculated differences (`a - b`).
@@ -243,37 +246,25 @@ load_and_mask_coef <- function(hemi, measure, stack, res_dir, threshold) {
 #' 
 vw_diff <- function(lh_a = NULL, lh_b = NULL,
                     rh_a = NULL, rh_b = NULL,
-                    label_a = "a", label_b = "b") {
+                    label_a = "a", label_b = "b", 
+                    cutoffs = 0, digits = 3) {
   
   lh_diff <- .hemi_diff(.resolve_map(lh_a), .resolve_map(lh_b), "lh")
   rh_diff <- .hemi_diff(.resolve_map(rh_a), .resolve_map(rh_b), "rh")
 
   all_diff <- c(lh_diff, rh_diff)
-  qs <- stats::quantile(all_diff, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
 
-  min_diff <- qs[[1]]
-  max_diff <- qs[[5]]
+  diff_summary <- .print_diff_stats(all_diff, label_a = label_a, label_b = label_b,
+                                    digits = digits, pad = 10)
+  
+  cutoffs <- sort(unique(c(0, cutoffs)))
 
-  stats <- round(
-    c(Min = min_diff, `Q1` = qs[[2]], Median = qs[[3]], 
-      Mean = mean(all_diff, na.rm = TRUE), `Q3` = qs[[4]], Max = max_diff), 3)
+  for (cutoff in cutoffs) {
+    .print_diff_cutoff(all_diff, cutoff = cutoff, label_a = label_a, label_b = label_b,
+                        n_finite = diff_summary$n_finite)
+  }
 
-  stat_names <- paste(sprintf("%7s", names(stats)), collapse = "")
-  stat_value <- paste(sprintf("%7s", format(stats, trim = TRUE)),collapse = "")
-
-  n_finite <- sum(is.finite(all_diff))
-  n_negative <- sum(all_diff < 0, na.rm = TRUE) # b > a
-  p_negative <- round(100 * n_negative / n_finite, 1)
-
-  vw_message(c(
-    "i" = "Difference map: {label_a} - {label_b} ({n_finite} vertices)",
-    " " = "{stat_names}",
-    " " = "{stat_value}",
-    " " = "\u00a0",
-    "*" = "{.strong {label_a} {'<'} {label_b}} for {n_negative} vertices ({p_negative}%)"
-  ))
-
-  return(list('lh'=lh_diff, 'rh'=rh_diff))
+  return(list('lh' = lh_diff, 'rh' = rh_diff))
 }
 
 #' Subtract hemisphere maps safely
@@ -311,4 +302,75 @@ vw_diff <- function(lh_a = NULL, lh_b = NULL,
   if (is.character(x)) return(load.mgh(x))
   if (is.null(x) || is.numeric(x)) return(x)
   vw_error("{.arg {deparse(substitute(x))}} must be a numeric vector or a file path, not {.cls {class(x)}}.")
+}
+
+
+# ── vw_diff() and its printing helpers ────────────────────────────────────────
+# Restructured to match the .print_* pattern used in vw_summarize.R:
+#   - pad with \u00a0 (non-breaking space) instead of plain spaces, since
+#     vw_message()/cli_bullets() trims/collapses regular whitespace and was
+#     breaking the column alignment
+#   - a `cutoffs` argument: 0 is always included (the original a < b line);
+#     any additional cutoff c prints both tails (diff > c and diff < -c)
+
+
+#' @title Print one cutoff line (or pair of lines) for a difference map
+#' @keywords internal
+.print_diff_cutoff <- function(all_diff, cutoff, label_a, label_b, n_finite) {
+
+  if (cutoff == 0) {
+    n_neg <- sum(all_diff < 0, na.rm = TRUE)
+    p_neg <- round(100 * n_neg / n_finite, 1)
+
+    vw_message(c(
+      "*" = "{.strong {label_a} {'<'} {label_b}} for {.val {n_neg}} vertices ({.val {p_neg}}%)"
+    ))
+    return(invisible(NULL))
+  }
+
+  n_above <- sum(all_diff > cutoff, na.rm = TRUE)
+  n_below <- sum(all_diff < -cutoff, na.rm = TRUE)
+  p_above <- round(100 * n_above / n_finite, 1)
+  p_below <- round(100 * n_below / n_finite, 1)
+
+  vw_message(c(
+    "*" = "{.strong {label_a} {'>'} {label_b}} by more than {.val {cutoff}} for {.val {n_above}} vertices ({.val {p_above}}%)",
+    "*" = "{.strong {label_a} {'<'} {label_b}} by more than {.val {-cutoff}} for {.val {n_below}} vertices ({.val {p_below}}%)"
+  ))
+
+  invisible(NULL)
+}
+
+#' @title Compare two vertex-wise maps and print a difference summary
+#'
+#' @param cutoffs Numeric vector of absolute-difference thresholds to report,
+#' in addition to the base `a < b` comparison at 0. For each nonzero cutoff
+#' `c`, prints the count/percentage of vertices where `a` exceeds `b` by more
+#' than `c`, and where `b` exceeds `a` by more than `c`. `0` is always
+#' included even if not explicitly passed. Default: `0`.
+#' @param digits Integer, number of decimal places for the summary statistics
+#' row. Default: `3`.
+#'
+#' @export
+vw_diff <- function(lh_a = NULL, lh_b = NULL,
+                     rh_a = NULL, rh_b = NULL,
+                     label_a = "a", label_b = "b",
+                     cutoffs = 0, digits = 3) {
+
+  lh_diff <- .hemi_diff(.resolve_map(lh_a), .resolve_map(lh_b), "lh")
+  rh_diff <- .hemi_diff(.resolve_map(rh_a), .resolve_map(rh_b), "rh")
+
+  all_diff <- c(lh_diff, rh_diff)
+
+  diff_summary <- .print_diff_stats(all_diff, label_a = label_a, label_b = label_b,
+                                     digits = digits)
+
+  cutoffs <- sort(unique(c(0, cutoffs)))
+
+  for (cutoff in cutoffs) {
+    .print_diff_cutoff(all_diff, cutoff = cutoff, label_a = label_a, label_b = label_b,
+                        n_finite = diff_summary$n_finite)
+  }
+
+  return(list('lh' = lh_diff, 'rh' = rh_diff))
 }

@@ -80,3 +80,82 @@ test_that("run_vw_lmm runs end-to-end with simulated data", {
     file.path(outp_dir, 'lh.area.stack3.cache.th30.abs.sig.ocn.mgh')))
 
 })
+
+# ── save_cov: term covariance extraction through run_vw_lmm() ────────────────
+
+test_that("run_vw_lmm rejects save_cov with non-existent or wrong number of terms", {
+
+  if (!dir.exists(fs_home)) skip("FreeSurfer not found in FREESURFER_HOME")
+
+  outp_dir <- withr::local_tempdir()
+
+  expect_error(
+    run_vw_lmm(
+      formula = test_formula,
+      pheno = pheno,
+      subj_dir = subj_dir,
+      outp_dir = outp_dir,
+      hemi = "lh",
+      save_cov = "age", # only one term, should error before any modeling starts
+      verbose = FALSE
+    ),
+    regexp = "Only one covariance can be extracted"
+  )
+
+  expect_error(
+    run_vw_lmm(
+      formula = test_formula,
+      pheno = pheno,
+      subj_dir = subj_dir,
+      outp_dir = outp_dir,
+      hemi = "lh",
+      save_cov = c("age", "not_a_real_term"),
+      verbose = FALSE
+    ),
+    regexp = "not present in the model"
+  )
+})
+
+test_that("run_vw_lmm returns and saves extracted term covariance when save_cov is set", {
+
+  if (!dir.exists(fs_home)) skip("FreeSurfer not found in FREESURFER_HOME")
+
+  outp_dir <- withr::local_tempdir()
+
+  result <- run_vw_lmm(
+    formula = test_formula,
+    pheno = pheno,
+    subj_dir = subj_dir,
+    outp_dir = outp_dir,
+    hemi = "lh",
+    fs_template = "fsaverage",
+    save_cov = c("age", "wisdom"),
+    lmm_control = lme4::lmerControl(calc.derivs = FALSE, use.last.params = TRUE,
+                                    check.rankX = "ignore", check.nobs.vs.rankZ = "ignore",
+                                    check.nobs.vs.nlev = "ignore", check.nlev.gtreq.5 = "ignore",
+                                    check.nlev.gtr.1 = "ignore", check.nobs.vs.nRE = "ignore",
+                                    check.formula.LHS = "ignore", check.scaleX = "ignore",
+                                    check.conv.grad = "ignore", check.conv.singular = "ignore",
+                                    check.conv.hess = "ignore"),
+    seed = 42,
+    n_cores = 1,
+    chunk_size = 1000,
+    FS_HOME = fs_home,
+    fwhm = 10,
+    mcz_thr = 30,
+    cwp_thr = 0.025,
+    save_optional_cluster_info = FALSE,
+    save_ss = FALSE,
+    save_residuals = FALSE,
+    verbose = TRUE
+  )
+
+  expect_true("cov" %in% names(result))
+  if ("cov" %in% names(result)) {
+    expect_s4_class(result$cov, "FBM")
+  }
+
+  cov_mgh_files <- list.files(outp_dir, pattern = "\\.cov\\.mgh$",
+                               recursive = TRUE, full.names = TRUE)
+  expect_true(length(cov_mgh_files) >= 1)
+})

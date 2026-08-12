@@ -108,6 +108,9 @@
 #'  default. Default: \code{FALSE}.
 #' @param save_residuals Logical indicating whether to save the residuals.mgh
 #'   file. Default: \code{FALSE}.
+#' @param save_cov Character vector of two fixed effect term names of `NULL`. 
+#'   When specified, the covariance between the two terms is extracted and saved
+#'   for later analysis (e.g. simple slopes). 
 #' @param verbose Logical indicating whether to display progress messages.
 #'   Default: \code{TRUE}.
 #'
@@ -239,13 +242,10 @@ run_vw_lmm <- function(
   save_optional_cluster_info = FALSE,
   save_ss = FALSE,
   save_residuals = FALSE,
+  save_cov = NULL,
   verbose = TRUE) {
   
   vw_init_message('Linear mixed model', verbose = verbose)
-
-  # Make output look nice in non-interactive sessions
-  # old_cli_opts <- vw_setup_cli_output()
-  # if (!is.null(old_cli_opts)) on.exit(options(old_cli_opts), add = TRUE)
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
@@ -321,6 +321,21 @@ run_vw_lmm <- function(
   check_stack_file(fixed_terms, outp_dir)
 
   folder_ids <- data1[, folder_id, drop=TRUE] # ensure this is always a character vector 
+
+  if (!is.null(save_cov)) {
+    if (length(save_cov) != 2) {
+      vw_error("Only one covariance can be extracted at the moment, specify 2 terms.")
+    }
+    missing_terms <- setdiff(save_cov, fixed_terms) 
+    if (length(missing_terms) > 0) {
+      vw_error(c(
+          "Term?s {.val {missing_terms}} not present in the model.",
+          "i" = "Available terms: {.or fixed_terms}"))
+    }
+    cov_terms <- which(fixed_terms %in% save_cov)
+  } else {
+    cov_terms <- NULL
+  }
 
   # Read and clean vertex data =================================================
   
@@ -404,33 +419,28 @@ run_vw_lmm <- function(
   model_template <- precompile_model(formula = formula, data_list = data_list, 
     tmp_y = ss[, good_verts[1]], measure = measure, weights = weights,
     lmm_control = lmm_control, REML = REML, verbose = verbose)
+  n_random_groups <- summary(model_template[[1]])$ngrps
   
-  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {summary(model_template[[1]])$ngrps}} groups"), 
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {n_random_groups}} groups"), 
     verbose = verbose)
 
   # Prepare FBM output =========================================================
 
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
-  # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "fitstats", "resid")
-  res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
-                                   verbose = verbose)
-  # These files will be removed "on.exit" by convert_to_mgh
-
-  fbm_precision <- "float" # single precision – 32 bits
-
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["coef"])  # Coefficients
-  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["se"])    # Standard errors
-  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
-                         backingfile = res_bk_paths["p"])     # P values
-  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["resid"]) # Residuals
+  # Temporary output matrices # note: default single precision (32 bits)
+  # Coefficients, SE and P-values 
+  c_vw <- build_output_fbm(result_path, "coef", nrow = fe_n, ncol = vw_n, verbose = verbose) 
+  s_vw <- build_output_fbm(result_path, "se",   nrow = fe_n, ncol = vw_n) 
+  p_vw <- build_output_fbm(result_path, "p",    nrow = fe_n, ncol = vw_n)
+  # Residuals
+  r_vw <- build_output_fbm(result_path, "resid", nrow = n_obs, ncol = vw_n)
   # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
-  f_vw <- bigstatsr::FBM(5, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["fitstats"])   
+  f_vw <- build_output_fbm(result_path, "fitstats", nrow = 5, ncol = vw_n)
+  # Covariance between two terms
+  if (!is.null(cov_terms)) {
+    cov_vw <-  build_output_fbm(result_path, paste0(cov_terms, collapse='cov'), nrow = 1, ncol = vw_n)
+  }
   
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
@@ -467,10 +477,12 @@ run_vw_lmm <- function(
         vertex <- ss[, v]
 
         # Loop through imputed datasets and run analyses
-        out_stats <- lapply(model_template, refit_lmm, y = vertex)
+        out_stats <- lapply(model_template, refit_lmm, y = vertex, 
+          cov_eff = cov_terms)
 
         # Pool results
-        pooled_stats <- vw_pool(out_stats, m = m, n_terms = fe_n, pvalue_method="t-as-z")
+        pooled_stats <- vw_pool(out_stats, m = m, n_terms = fe_n, pvalue_method="t-as-z",
+         cov_eff = cov_terms)
 
         # Log errors (if any)
         if (is.character(pooled_stats)) {
@@ -492,25 +504,25 @@ run_vw_lmm <- function(
         p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
         f_vw[, v] <- pooled_stats$fitstats
         r_vw[, v] <- pooled_stats$resid
+        if (!is.null(cov_terms)) cov_vw[, v] <-  pooled_stats$cov
       }
     }
   })
 
   if (verbose) cli::cli_progress_done()
-
-  out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
+  
   # "coefficients", "standard_errors", "p_values", "fit_statistics", "residuals"
-  names(out) <- res_bk_names
+  out <- list(coef = c_vw, se = s_vw, p = p_vw, fitstats = f_vw, resid = r_vw)
+  if (!is.null(cov_terms)) out[['cov']] <- cov_vw
 
   # Post-processing ============================================================
   vw_message("Post-processing", type='step', verbose = verbose)
 
   # Save model statistics into separate .mgh files
   
-  convert_to_mgh(out,
-                 result_path,
+  convert_to_mgh(out, result_path,
                  stacks = seq_along(fixed_terms),
-                 stat_names = c(res_bk_names,'-log10p'),
+                 stat_names = c(names(out),'-log10p'),
                  verbose = verbose)
 
   resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
@@ -562,10 +574,8 @@ run_vw_lmm <- function(
 
     # else 
     if (is.null(ct_vw)) {
-      # create storage once
-      ct_bk_path <- build_output_bks(result_path, res_bk_names = c('clust'), verbose = FALSE)
-      ct_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, 
-        type = fbm_precision, backingfile = ct_bk_path["clust"])
+      # create cluster storage (once)
+      ct_vw <- build_output_fbm(result_path, 'clust', nrow = fe_n, ncol = vw_n) 
     }
 
     ct_vw[stack_n, ] <- ocn
@@ -575,16 +585,36 @@ run_vw_lmm <- function(
   if (verbose) cli::cli_progress_done()
   
   # Print summary 
-  vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
+  model_fit_summary <- vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
+  
   if (!is.null(ct_vw)) {
     out[['clust']] <- ct_vw
-    vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
-      term_names = fixed_terms, verbose = verbose)
-     # remove ct_bk_path["clust"] bk 
+    model_res_summary <- vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
+      term_names = fixed_terms, result_path = result_path, verbose = verbose)
     
+    file.remove(
+      c(paste0(result_path, '.clust.bk'),
+        list.files(path=outp_dir, 
+          pattern = paste0(basename(result_path), ".*\\.cluster.summary$"), 
+          recursive = TRUE, full.names = TRUE)))
   } else {
-    vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+    model_res_summary <- vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
   }
+
+  yaml::write_yaml(
+    list(
+      'model'=model_desc,
+      'n_datasets'=m,
+      'n_observations'=n_obs,
+      'n_groups'=as.integer(n_random_groups),
+      'n_vertices'=as.integer(count_vertices(fs_template)),
+      'n_vertices_effective'=length(good_verts),
+      'model_fit'=model_fit_summary,
+      'results'= model_res_summary,
+      'covariance_between_terms'=paste(cov_terms, collapse='and'),
+      'date'=as.character(Sys.Date()),
+      'verywise_version'=as.character(utils::packageVersion('verywise'))),
+    file=paste0(result_path, ".model.summary.yml"), column.major = FALSE)
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

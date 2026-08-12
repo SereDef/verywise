@@ -26,7 +26,7 @@ test_that("single_lmm returns correct structure", {
   )
 
   expect_type(result, "list")
-  expect_named(result, c("stats", "resid", "model_fit", "warning"))
+  expect_named(result, c('stats', 'resid', 'model_fit', 'warning'))
 
   expect_s3_class(result$stats, "data.frame")
   expect_true(all(c("term", "qhat", "se") %in% names(result$stats)))
@@ -129,7 +129,7 @@ test_that("single_lmm handles numeric weights without error", {
     weights       = weights_vec
   )
 
-  expect_named(result, c("stats", "resid", "model_fit", "warning"))
+  expect_named(result, c('stats', 'resid', 'model_fit', 'warning'))
 })
 
 test_that("single_lmm handles column-name weights without error", {
@@ -146,7 +146,7 @@ test_that("single_lmm handles column-name weights without error", {
     weights       = "my_weight"
   )
 
-  expect_named(result, c("stats", "resid", "model_fit", "warning"))
+  expect_named(result, c('stats', 'resid', 'model_fit', 'warning'))
 })
 
 
@@ -163,7 +163,7 @@ test_that("refit_lmm returns correct structure", {
   result <- refit_lmm(template_fit, y = test_y)
 
   expect_type(result, "list")
-  expect_named(result, c("stats", "resid", "model_fit", "warning"))
+  expect_named(result, c('stats', 'cov', 'resid', 'model_fit', 'warning'))
 
   expect_s3_class(result$stats, "data.frame")
   expect_true(all(c("term", "qhat", "se") %in% names(result$stats)))
@@ -196,6 +196,42 @@ test_that("refit_lmm returns error element on fitting failure", {
 
   expect_named(result, "error")
   expect_type(result$error, "character")
+})
+
+# ── refit_lmm() covariance extraction (cov_eff) ───────────────────────────────
+
+term_names <- names(lme4::fixef(template_fit))
+age_idx <- which(term_names == "age")
+wisdom_idx <- which(term_names == "wisdom")
+
+test_that("refit_lmm extracts covariance matching vcov(fit) exactly", {
+
+  result <- refit_lmm(template_fit, y = test_y, cov_eff = c(age_idx, wisdom_idx))
+
+  expect_false(is.null(result$cov))
+  expect_type(result$cov, "double")
+  expect_length(result$cov, 1)
+
+  # Independently refit and compare against base vcov() for the same terms
+  fit_check <- lme4::refit(template_fit, newresp = test_y)
+  expected_cov <- unname(as.matrix(stats::vcov(fit_check))[age_idx, wisdom_idx])
+
+  expect_equal(result$cov, expected_cov, tolerance = 1e-8)
+})
+
+test_that("refit_lmm returns NULL covariance when cov_eff is not supplied", {
+
+  result <- refit_lmm(template_fit, y = test_y, cov_eff = NULL)
+
+  expect_null(result$cov)
+})
+
+test_that("refit_lmm covariance is symmetric in term order", {
+
+  result_ab <- refit_lmm(template_fit, y = test_y, cov_eff = c(age_idx, wisdom_idx))
+  result_ba <- refit_lmm(template_fit, y = test_y, cov_eff = c(wisdom_idx, age_idx))
+
+  expect_equal(result_ab$cov, result_ba$cov, tolerance = 1e-10)
 })
 
 # ── precompile_model ──────────────────────────────────────────────────────────

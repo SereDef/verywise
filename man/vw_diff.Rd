@@ -10,7 +10,20 @@ vw_diff(
   rh_a = NULL,
   rh_b = NULL,
   label_a = "a",
-  label_b = "b"
+  label_b = "b",
+  cutoffs = 0,
+  digits = 3
+)
+
+vw_diff(
+  lh_a = NULL,
+  lh_b = NULL,
+  rh_a = NULL,
+  rh_b = NULL,
+  label_a = "a",
+  label_b = "b",
+  cutoffs = 0,
+  digits = 3
 )
 }
 \arguments{
@@ -21,6 +34,15 @@ vw_diff(
 \item{label_a}{Character string representing the name of the first map (\code{a}).}
 
 \item{label_b}{Character string representing the name of the second map (\code{b}).}
+
+\item{cutoffs}{Numeric vector of absolute-difference thresholds to report,
+in addition to the base \code{a < b} comparison at 0. For each nonzero cutoff
+\code{c}, prints the count/percentage of vertices where \code{a} exceeds \code{b} by more
+than \code{c}, and where \code{b} exceeds \code{a} by more than \code{c}. \code{0} is always
+included even if not explicitly passed. Default: \code{0}.}
+
+\item{digits}{Integer, number of decimal places for the summary statistics
+row. Default: \code{3}.}
 }
 \value{
 A named list containing \code{lh} and \code{rh} numeric vectors representing
