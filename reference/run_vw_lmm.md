@@ -40,6 +40,7 @@ run_vw_lmm(
   save_optional_cluster_info = FALSE,
   save_ss = FALSE,
   save_residuals = FALSE,
+  save_cov = NULL,
   verbose = TRUE
 )
 ```
@@ -208,6 +209,12 @@ run_vw_lmm(
 
   Logical indicating whether to save the residuals.mgh file. Default:
   `FALSE`.
+
+- save_cov:
+
+  Character vector of two fixed effect term names of `NULL`. When
+  specified, the covariance between the two terms is extracted and saved
+  for later analysis (e.g. simple slopes).
 
 - verbose:
 

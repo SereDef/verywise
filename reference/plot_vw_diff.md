@@ -18,6 +18,7 @@ plot_vw_diff(
   rh_b = NULL,
   label_a = "a",
   label_b = "b",
+  cutoffs = 0,
   ...
 )
 ```
@@ -39,6 +40,13 @@ plot_vw_diff(
 
   Short character labels used in the default figure title (e.g.
   `"group A"`, `"group B"`). Ignored when `title` is supplied via `...`.
+
+- cutoffs:
+
+  Numeric vector or cutoffs for counting positive and negative
+  differences. Passed to
+  [`vw_diff()`](https://seredef.github.io/verywise/reference/vw_diff.md)
+  for difference summary. Default = 0.
 
 - ...:
 

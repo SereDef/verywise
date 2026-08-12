@@ -13,7 +13,20 @@ vw_diff(
   rh_a = NULL,
   rh_b = NULL,
   label_a = "a",
-  label_b = "b"
+  label_b = "b",
+  cutoffs = 0,
+  digits = 3
+)
+
+vw_diff(
+  lh_a = NULL,
+  lh_b = NULL,
+  rh_a = NULL,
+  rh_b = NULL,
+  label_a = "a",
+  label_b = "b",
+  cutoffs = 0,
+  digits = 3
 )
 ```
 
@@ -35,6 +48,19 @@ vw_diff(
 - label_b:
 
   Character string representing the name of the second map (`b`).
+
+- cutoffs:
+
+  Numeric vector of absolute-difference thresholds to report, in
+  addition to the base `a < b` comparison at 0. For each nonzero cutoff
+  `c`, prints the count/percentage of vertices where `a` exceeds `b` by
+  more than `c`, and where `b` exceeds `a` by more than `c`. `0` is
+  always included even if not explicitly passed. Default: `0`.
+
+- digits:
+
+  Integer, number of decimal places for the summary statistics row.
+  Default: `3`.
 
 ## Value
 

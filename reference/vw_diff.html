@@ -11,7 +11,7 @@ difference distribution."><meta property="og:image" content="https://seredef.git
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,20 @@ difference distribution.</p>
 <span>  rh_a <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rh_b <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label_a <span class="op">=</span> <span class="st">"a"</span>,</span>
-<span>  label_b <span class="op">=</span> <span class="st">"b"</span></span>
+<span>  label_b <span class="op">=</span> <span class="st">"b"</span>,</span>
+<span>  cutoffs <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">vw_diff</span><span class="op">(</span></span>
+<span>  lh_a <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  lh_b <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rh_a <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rh_b <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  label_a <span class="op">=</span> <span class="st">"a"</span>,</span>
+<span>  label_b <span class="op">=</span> <span class="st">"b"</span>,</span>
+<span>  cutoffs <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,6 +96,19 @@ difference distribution.</p>
 
 <dt id="arg-label-b">label_b<a class="anchor" aria-label="anchor" href="#arg-label-b"></a></dt>
 <dd><p>Character string representing the name of the second map (<code>b</code>).</p></dd>
+
+
+<dt id="arg-cutoffs">cutoffs<a class="anchor" aria-label="anchor" href="#arg-cutoffs"></a></dt>
+<dd><p>Numeric vector of absolute-difference thresholds to report,
+in addition to the base <code>a &lt; b</code> comparison at 0. For each nonzero cutoff
+<code>c</code>, prints the count/percentage of vertices where <code>a</code> exceeds <code>b</code> by more
+than <code>c</code>, and where <code>b</code> exceeds <code>a</code> by more than <code>c</code>. <code>0</code> is always
+included even if not explicitly passed. Default: <code>0</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer, number of decimal places for the summary statistics
+row. Default: <code>3</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

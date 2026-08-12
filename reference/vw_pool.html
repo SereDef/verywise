@@ -37,7 +37,7 @@ datasets, for lack of a better idea of how to combine them."><meta property="og:
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,7 +94,14 @@ datasets, for lack of a better idea of how to combine them.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vw_pool</span><span class="op">(</span><span class="va">out_stats</span>, <span class="va">m</span>, <span class="va">n_terms</span>, pvalue_method <span class="op">=</span> <span class="st">"t-as-z"</span>, min_pvalue <span class="op">=</span> <span class="fl">2</span><span class="op">^</span><span class="op">-</span><span class="fl">149</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vw_pool</span><span class="op">(</span></span>
+<span>  <span class="va">out_stats</span>,</span>
+<span>  <span class="va">m</span>,</span>
+<span>  <span class="va">n_terms</span>,</span>
+<span>  pvalue_method <span class="op">=</span> <span class="st">"t-as-z"</span>,</span>
+<span>  min_pvalue <span class="op">=</span> <span class="fl">2</span><span class="op">^</span><span class="op">-</span><span class="fl">149</span>,</span>
+<span>  cov_eff <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -129,6 +136,11 @@ used to compute p-values. Options: <code>"t-as-z"</code>, <code>"wald-chi2"</cod
 Set this to 0L if no trimming should be applied.
 Default: <code>2^-149</code> ( == 1.401298e-45) the smallest positive subnormal
 float.</p></dd>
+
+
+<dt id="arg-cov-eff">cov_eff<a class="anchor" aria-label="anchor" href="#arg-cov-eff"></a></dt>
+<dd><p>An optional vector or fixed effect term indices for which to extract
+a covariance (used in simple slope analyses).</p></dd>
 
 </dl></div>
     <div class="section level2">

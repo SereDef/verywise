@@ -25,7 +25,7 @@ Carlo simulation approach."><meta property="og:image" content="https://seredef.g
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,7 @@ Carlo simulation approach.</p>
 <span>  save_optional_cluster_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  save_ss <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  save_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_cov <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -260,6 +261,12 @@ default. Default: <code>FALSE</code>.</p></dd>
 <dt id="arg-save-residuals">save_residuals<a class="anchor" aria-label="anchor" href="#arg-save-residuals"></a></dt>
 <dd><p>Logical indicating whether to save the residuals.mgh
 file. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-save-cov">save_cov<a class="anchor" aria-label="anchor" href="#arg-save-cov"></a></dt>
+<dd><p>Character vector of two fixed effect term names of <code>NULL</code>.
+When specified, the covariance between the two terms is extracted and saved
+for later analysis (e.g. simple slopes).</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

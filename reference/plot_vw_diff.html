@@ -15,7 +15,7 @@ without pre-computing the difference outside R."><meta property="og:image" conte
 
     <a class="navbar-brand me-2" href="../index.html">verywise</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@ without pre-computing the difference outside R.</p>
 <span>  rh_b <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label_a <span class="op">=</span> <span class="st">"a"</span>,</span>
 <span>  label_b <span class="op">=</span> <span class="st">"b"</span>,</span>
+<span>  cutoffs <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -91,6 +92,11 @@ hemisphere. Pass <code>NULL</code> to omit the right hemisphere.</p></dd>
 <dd><p>Short character labels used in the default figure
 title (e.g. <code>"group A"</code>, <code>"group B"</code>). Ignored when <code>title</code> is supplied via
 <code>...</code>.</p></dd>
+
+
+<dt id="arg-cutoffs">cutoffs<a class="anchor" aria-label="anchor" href="#arg-cutoffs"></a></dt>
+<dd><p>Numeric vector or cutoffs for counting positive and negative differences.
+Passed to <code><a href="vw_diff.html">vw_diff()</a></code> for difference summary. Default = 0.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

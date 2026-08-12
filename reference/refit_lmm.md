@@ -9,7 +9,7 @@ loops (over vertices).
 ## Usage
 
 ``` r
-refit_lmm(model_template_i, y)
+refit_lmm(model_template_i, y, cov_eff = NULL)
 ```
 
 ## Arguments
@@ -25,6 +25,11 @@ refit_lmm(model_template_i, y)
 
   A numeric vector of outcome values representing a single vertex from
   the super-subject matrix.
+
+- cov_eff:
+
+  A vector or fixed effect term indices for which to extract a
+  covariance (used in simple slope analyses).
 
 ## Value
 

@@ -20,7 +20,14 @@ datasets, for lack of a better idea of how to combine them.
 ## Usage
 
 ``` r
-vw_pool(out_stats, m, n_terms, pvalue_method = "t-as-z", min_pvalue = 2^-149)
+vw_pool(
+  out_stats,
+  m,
+  n_terms,
+  pvalue_method = "t-as-z",
+  min_pvalue = 2^-149,
+  cov_eff = NULL
+)
 ```
 
 ## Arguments
@@ -60,6 +67,11 @@ vw_pool(out_stats, m, n_terms, pvalue_method = "t-as-z", min_pvalue = 2^-149)
   Float, used to avoid pvalues == 0L for which log10 is Inf. Set this to
   0L if no trimming should be applied. Default: `2^-149` ( ==
   1.401298e-45) the smallest positive subnormal float.
+
+- cov_eff:
+
+  An optional vector or fixed effect term indices for which to extract a
+  covariance (used in simple slope analyses).
 
 ## Value
 

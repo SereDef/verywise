@@ -17,6 +17,7 @@
 <url><loc>https://seredef.github.io/verywise/reference/barnard.rubin.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_minimal_pheno.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_output_bks.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/build_output_fbm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/build_supersubject.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/check_hemi.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/check_mask.html</loc></url>
@@ -29,6 +30,8 @@
 <url><loc>https://seredef.github.io/verywise/reference/count_vertices.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/create_cortex_mask.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/decompress_site_payloads.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/dot-print_diff_cutoff.html</loc></url>
+<url><loc>https://seredef.github.io/verywise/reference/dot-print_diff_stats.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/drop_random_terms.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/estimate_fwhm.html</loc></url>
 <url><loc>https://seredef.github.io/verywise/reference/fbm2mgh.html</loc></url>
