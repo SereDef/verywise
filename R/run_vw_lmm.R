@@ -591,12 +591,23 @@ run_vw_lmm <- function(
     out[['clust']] <- ct_vw
     model_res_summary <- vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
       term_names = fixed_terms, result_path = result_path, verbose = verbose)
+        
+    files_to_remove <- c(
+      paste0(result_path, ".clust.bk"),
+      list.files(path = outp_dir,
+        pattern = paste0("^", basename(result_path), ".*\\.cluster\\.summary$|^",
+                              basename(result_path), ".*\\.-log10p\\.mgh$"), 
+        recursive = TRUE, full.names = TRUE)
+    )
+
+    file.remove(files_to_remove)
+
+    # file.remove(
+    #   c(paste0(result_path, '.clust.bk'),
+    #     list.files(path=outp_dir, 
+    #       pattern = paste0(basename(result_path), ".*\\.cluster.summary$"), 
+    #       recursive = TRUE, full.names = TRUE)))
     
-    file.remove(
-      c(paste0(result_path, '.clust.bk'),
-        list.files(path=outp_dir, 
-          pattern = paste0(basename(result_path), ".*\\.cluster.summary$"), 
-          recursive = TRUE, full.names = TRUE)))
   } else {
     model_res_summary <- vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
   }

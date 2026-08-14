@@ -138,7 +138,7 @@ plot_vw_surf <- function(
   rh <- check_hemi(rh, fs_template)
 
   lh_mask <- check_mask(lh_mask, fs_template)
-  rh_mask <- check_mask(lh_mask, fs_template)
+  rh_mask <- check_mask(rh_mask, fs_template)
 
   where_is_my_mesh <- resolve_mesh(fs_template, fs_home)
 

@@ -1,6 +1,6 @@
 .compute_median_range <- function(vec, digits) {
   q <- round(stats::quantile(vec, probs = c(0, 0.5, 1), na.rm = TRUE), digits)
-  q <- stats::setNames(as.list(q), c("min", "median", "max"))
+  q <- stats::setNames(as.list(q), c('min', 'median', 'max'))
   q
 }
 
@@ -13,11 +13,18 @@
     out[['sign_coef']] <- .compute_median_range(vec=sign_coef, digits=digits)
     
     fs_summary_file <- list.files(path=dirname(result_path), 
-      pattern = paste0(basename(result_path), ".*\\.stack", idx, ".*\\.cluster.summary$"), 
+      pattern = paste0(basename(result_path), '.*\\.stack', idx, '\\.cache.*\\.cluster.summary$'), 
       recursive = TRUE, full.names = TRUE)
-    fs_summary <- utils::read.table(fs_summary_file)
-    fs_summary_map <- c("Cluster ID"="V1", "Cluster size"="V11", "Cluster area"="V4", "Peak" = "V3", "ROI"="V13")
-    out[['clust_info']] <- setNames(fs_summary[fs_summary_map], names(fs_summary_map))
+    
+    if (length(fs_summary_file) != 1L) {
+      vw_message(c('!' = 'Expected exactly 1 cluster summary for stack {idx}',
+                   'i' = '{length(fs_summary_file)} found: {fs_summary_file}',
+                   '>' = 'Skipping summary.'))
+    } else {
+      fs_summary <- utils::read.table(fs_summary_file)
+      fs_summary_map <- c('Cluster ID'='V1', 'Cluster size'='V11', 'Cluster area'='V4', 'Peak'='V3', 'ROI'='V13')
+      out[['clust_info']] <- setNames(fs_summary[fs_summary_map], names(fs_summary_map))
+    }
   }
   out
 }
@@ -29,8 +36,8 @@
   
   q <- .compute_median_range(vec=vec, digits=digits)
   
-  n_space <- pad - cli::ansi_nchar(name, type = "width")
-  filler  <- strrep("\u00a0", max(n_space, 1))
+  n_space <- pad - cli::ansi_nchar(name, type = 'width')
+  filler  <- strrep('\u00a0', max(n_space, 1))
 
   vw_message("* {.strong {name}}:{filler}{.val {cli_round(q[['median']], digits)}} 
   [{.val {cli_round(q[['min']], digits)}}, {.val {cli_round(q[['max']], digits)}}] 
@@ -47,11 +54,11 @@
   n_clusters <- clust_stats[['n_clusters']]
   q <- clust_stats[['sign_coef']]
 
-  n_space <- pad - cli::ansi_nchar(name, type = "width")
-  filler  <- strrep("\u00a0", max(n_space, 1))
-  filler2 <- strrep("\u00a0", 3 - cli::ansi_nchar(n_clusters, type = "width"))
+  n_space <- pad - cli::ansi_nchar(name, type = 'width')
+  filler  <- strrep('\u00a0', max(n_space, 1))
+  filler2 <- strrep('\u00a0', 3 - cli::ansi_nchar(n_clusters, type = 'width'))
 
-  msg <- "* {.strong {name}}:{filler}{n_clusters} clusters{filler2}|"
+  msg <- '* {.strong {name}}:{filler}{n_clusters} clusters{filler2}|'
 
   if (n_clusters > 0) {
     msg <- paste(msg, "{.val {cli_round(q[['median']], digits)}} [{.val {cli_round(q[['min']], digits)}}, {.val {cli_round(q[['max']], digits)}}] {.time {note}}")
@@ -75,7 +82,7 @@ vw_summarize_model_fit <- function(fitstats, verbose = TRUE){
   singular_perc <- round(singular_count / total_ran * 100)
 
   vw_message('\nModel fit summary')
-  vw_message("* {.strong Singular model fits}: {singular_count} ({.warn {singular_perc}}%)")
+  vw_message('* {.strong Singular model fits}: {singular_count} ({.warn {singular_perc}}%)')
 
   aic <- .print_median_range(fitstats, 2, 'AIC', pad = 1, note = '* median [range]')
   icc <- .print_median_range(fitstats, 3, 'ICC')
@@ -139,11 +146,11 @@ vw_summarize_outp_dir <- function(outp_dir) {
 
   # Parse only files matching {subdir}/{hemi}.{measure}.* 
   parsed <- regmatches(files, 
-    regexec("^(?:([^/]+)/)?([lr]h)\\.([^.]+)\\.", files, perl = TRUE))
+    regexec('^(?:([^/]+)/)?([lr]h)\\.([^.]+)\\.', files, perl = TRUE))
   parsed <- Filter(function(x) length(x) == 4L, parsed)
 
   if (!length(parsed)) {
-    vw_message("! No matching files found in: {.file {outp_dir}}")
+    vw_message('! No matching files found in: {.file {outp_dir}}')
     return(invisible(NULL))
   }
 
@@ -163,11 +170,11 @@ vw_summarize_outp_dir <- function(outp_dir) {
   )
 
   cli::cli_rule()
-  vw_message("Results directory: {.file {outp_dir}}")
+  vw_message('Results directory: {.file {outp_dir}}')
   cli::cli_rule()
 
   for (subdir in names(result)) {
-    vw_message("{.strong {subdir}}")
+    vw_message('{.strong {subdir}}')
     measures <- result[[subdir]]
 
     # compute max measure name width for alignment
@@ -176,14 +183,14 @@ vw_summarize_outp_dir <- function(outp_dir) {
     for (measure in names(measures)) {
       hemis <- measures[[measure]]
       hemi_str <- paste(
-        ifelse(hemis == "lh", cli::col_blue("[lh]"), cli::col_red("[rh]")),
-        collapse = "  "
+        ifelse(hemis == 'lh', cli::col_blue('[lh]'), cli::col_red('[rh]')),
+        collapse = '  '
       )
-      n_space <- 12 - cli::ansi_nchar(measure, type = "width")
-      filler  <- strrep("\u00a0", max(n_space, 1))
-      vw_message(c("*" = "{measure}{filler}{hemi_str}"))
+      n_space <- 12 - cli::ansi_nchar(measure, type = 'width')
+      filler  <- strrep('\u00a0', max(n_space, 1))
+      vw_message(c('*' = '{measure}{filler}{hemi_str}'))
     }
-    cat("\n")
+    cat('\n')
   }
 
   invisible(result)
@@ -205,26 +212,26 @@ vw_summarize_outp_dir <- function(outp_dir) {
 
   # Pad to a fixed width with non-breaking spaces (regular spaces get
   # collapsed/trimmed by cli's bullet rendering -- see .print_median_range()
-  # and the filler <- strrep("\u00a0", ...) convention used throughout this file)
+  # and the filler <- strrep('\u00a0', ...) convention used throughout this file)
   filler <- function(x, pad=stat_length) {
-    n_space <- pad - cli::ansi_nchar(x, type = "width")
-    strrep("\u00a0", max(n_space, 1))
+    n_space <- pad - cli::ansi_nchar(x, type = 'width')
+    strrep('\u00a0', max(n_space, 1))
   }
 
   header <- paste(vapply(names(stat_vals), 
-    function(nm) paste0(filler(nm), nm), character(1)), collapse = "")
+    function(nm) paste0(filler(nm), nm), character(1)), collapse = '')
   
   values <- paste(
     vapply(names(stat_vals), function(nm) {
       plain <- cli::cli_format(cli_round(stat_vals[[nm]], digits))
       paste0(filler(plain), "{.val {cli_round(stat_vals[['", nm, "']], digits)}}")
     }, character(1)),
-    collapse = "")
+    collapse = '')
   
   vw_message(c(
-    "i" = "Difference map: {.strong {label_a}} - {.strong {label_b}} ({.val {n_finite}} vertices)",
-    " " = "{header}",
-    " " = values
+    'i' = 'Difference map: {.strong {label_a}} - {.strong {label_b}} ({.val {n_finite}} vertices)',
+    ' ' = '{header}',
+    ' ' = values
   ))
 
   invisible(list(stats = stat_vals, n_finite = n_finite))
@@ -241,8 +248,8 @@ vw_summarize_outp_dir <- function(outp_dir) {
     p_pos <- round(100 * n_pos / n_finite, 1)
 
     vw_message(c(
-      "*" = "{.strong {label_a} {'<'} {label_b}} in {.val {n_neg}} vertices ({.val {p_neg}}%)",
-      "*" = "{.strong {label_a} {'>'} {label_b}} in {.val {n_pos}} vertices ({.val {p_pos}}%)"
+      '*' = '{.strong {label_a} {"<"} {label_b}} in {.val {n_neg}} vertices ({.val {p_neg}}%)',
+      '*' = '{.strong {label_a} {">"} {label_b}} in {.val {n_pos}} vertices ({.val {p_pos}}%)'
     ))
     return(invisible(NULL))
   }
@@ -254,8 +261,8 @@ vw_summarize_outp_dir <- function(outp_dir) {
   p_above <- round(100 * n_above / n_finite, 1)
 
   vw_message(c(
-    "*" = "{.strong {label_a} {'<<'} {label_b}} in {.val {n_below}} vertices ({.val {p_below}}%) [cut-off: {.val {-cutoff}}]",
-    "*" = "{.strong {label_a} {'>>'} {label_b}} in {.val {n_above}} vertices ({.val {p_above}}%) [cut-off: {.val {cutoff}}]"
+    '*' = '{.strong {label_a} {"<<"} {label_b}} in {.val {n_below}} vertices ({.val {p_below}}%) [cut-off: {.val {-cutoff}}]',
+    '*' = '{.strong {label_a} {">>"} {label_b}} in {.val {n_above}} vertices ({.val {p_above}}%) [cut-off: {.val {cutoff}}]'
   ))
 
   invisible(NULL)
