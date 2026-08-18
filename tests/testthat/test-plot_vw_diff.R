@@ -5,6 +5,17 @@ res_dir <- file.path(subj_dir, "results")
 # ── Setup ─────────────────────────────────────────────────────────────────────
 skip_if_not_installed("reticulate")
 
+# TMP 
+skip_if_no_freesurfer <- function() {
+  fs_home <- Sys.getenv("FREESURFER_HOME")
+  
+  # Skip if environment variable is empty or the directory doesn't exist
+  if (!nzchar(fs_home) || !dir.exists(fs_home)) {
+    testthat::skip("FreeSurfer not found in FREESURFER_HOME")
+  }
+}
+skip_if_no_freesurfer()
+
 # Find two MGH files from fixtures to compute diffs if available
 lh_files <- list.files(res_dir, pattern = "^lh\\..*\\.coef\\.mgh$", full.names = TRUE)
 

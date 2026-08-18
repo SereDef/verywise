@@ -644,7 +644,7 @@ class VeryWiseLayout:
                       "medial", "ventral", "posterior"], # Left medial  | Right medial  | Ventral | Posterior
             "panel_size": (400, 440), # brain panel width, height in px
             "colorbar_width": 0.40,
-            "colorbar_layout": [("spacer", 0.35), ("colorbar", 0.18), ("spacer", 0.02), ("density", 0.45)]
+            "colorbar_layout": [("spacer", 0.38), ("colorbar", 0.17), ("spacer", 0.02), ("density", 0.43)]
         },
         "interactive": {
             "views": ["lateral"],
@@ -730,7 +730,7 @@ class VeryWiseLayout:
 
         return col_widths, cbar_specs, cbar_col, dens_col
 
-    def build_figure(self, colorbar, colorbar_width, horizontal_spacing=0.01, vertical_spacing=0.04):
+    def build_figure(self, colorbar, colorbar_width, horizontal_spacing=0.000, vertical_spacing=0.04):
         """Builds the make_subplots figure with scene + colorbar/density columns."""
         cb_widths, cbar_specs, cbar_col, dens_col = self.build_colormap_panel(
             colorbar, colorbar_width)

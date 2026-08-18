@@ -80,5 +80,5 @@ covariance_between_terms: ''
 random_seed: 42.0
 mcz_threshold: 30.0
 cwp_threshold: 0.025
-date: '2026-08-17'
+date: '2026-08-18'
 verywise_version: 1.3.8
