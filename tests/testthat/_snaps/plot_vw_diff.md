@@ -12,10 +12,9 @@
     Code
       plot_vw_diff(lh_a = lh_a_dummy, lh_b = NULL)
     Condition
-      Error:
-      ! Could not evaluate cli `{}` expression: `null_side`.
-      Caused by error:
-      ! object 'null_side' not found
+      Error in `.hemi_diff()`:
+      ! lh_b is NULL
+      i You must supply both lh_a and lh_b, for a diff to be calculated.
 
 # vw_diff errors with invalid object types
 

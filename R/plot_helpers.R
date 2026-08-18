@@ -278,8 +278,8 @@ vw_diff <- function(lh_a = NULL, lh_b = NULL,
 
     if (is.null(a) || is.null(b)) {
       which_null <- if (is.null(a)) "a" else "b"
-      vw_error(c("{hemi}_{null_side} is NULL", 
-      "i" = "You mush supply both {hemi}_a and {hemi}_b, for a diff to be calculated."))
+      vw_error(c("{hemi}_{which_null} is NULL", 
+      "i" = "You must supply both {hemi}_a and {hemi}_b, for a diff to be calculated."))
     }
     
     if (length(a) != length(b)) {

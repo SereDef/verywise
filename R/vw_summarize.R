@@ -5,13 +5,18 @@
 }
 
 .compute_cluster_stats <- function(ocn, coef, idx, result_path, digits = 4) {
+
   clust <- ocn[idx, ]
+  betas <- coef[idx, ]
+
   n_clusters <- max(clust, na.rm = TRUE)
-  out <- list(n_clusters = as.integer(n_clusters))
+
+  out <- list(n_clusters = as.integer(n_clusters), 
+              beta_summary = .compute_median_range(vec=betas, 
+                digits=digits))
+  
   if (n_clusters > 0) {
-    sign_coef <- coef[idx, which(clust > 0)]
-    out[['sign_coef']] <- .compute_median_range(vec=sign_coef, digits=digits)
-    
+
     fs_summary_file <- list.files(path=dirname(result_path), 
       pattern = paste0(basename(result_path), '.*\\.stack', idx, '\\.cache.*\\.cluster.summary$'), 
       recursive = TRUE, full.names = TRUE)
@@ -22,8 +27,13 @@
                    '>' = 'Skipping summary.'))
     } else {
       fs_summary <- utils::read.table(fs_summary_file)
-      fs_summary_map <- c('Cluster ID'='V1', 'Cluster size'='V11', 'Cluster area'='V4', 'Peak'='V3', 'ROI'='V13')
-      out[['clust_info']] <- setNames(fs_summary[fs_summary_map], names(fs_summary_map))
+      my_summary <- tapply(betas, clust, summary)
+      comb_summary <- cbind(fs_summary, 
+        as.data.frame(do.call(rbind, my_summary[-1]))) # remove non-significant
+      summary_map <- c('cluster_id'='V1', 'cluster_size'='V11', 'cluster_area'='V4', 
+                       'peak_id'='V3', 'peak_ROI'='V13', 
+                       'med_beta'='Median', 'min_beta'='Min.', 'max_beta'='Max.')
+      out[['cluster_summary']] <- setNames(comb_summary[summary_map], names(summary_map))
     }
   }
   out
@@ -52,7 +62,7 @@
   clust_stats <- .compute_cluster_stats(ocn=ocn_mat, coef=coef_mat, idx=idx, result_path=result_path, digits=digits) 
 
   n_clusters <- clust_stats[['n_clusters']]
-  q <- clust_stats[['sign_coef']]
+  q <- clust_stats[['beta_summary']]
 
   n_space <- pad - cli::ansi_nchar(name, type = 'width')
   filler  <- strrep('\u00a0', max(n_space, 1))

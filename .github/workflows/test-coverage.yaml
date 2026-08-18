@@ -47,6 +47,24 @@ jobs:
           disable_search: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Collect updated snapshots
+        if: failure()
+        run: |
+          mkdir -p /tmp/snap-artifact
+          find "${{ runner.temp }}/package" -type d -path "*/testthat/_snaps" \
+            -exec sh -c 'cp -R "$1"/. /tmp/snap-artifact/' _ {} \;
+          echo "Collected files:"
+          find /tmp/snap-artifact -type f
+        shell: bash
+
+      - name: Upload updated snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-snapshots
+          path: /tmp/snap-artifact
+          if-no-files-found: warn
+
       - name: Show testthat output
         if: always()
         run: |

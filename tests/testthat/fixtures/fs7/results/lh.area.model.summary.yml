@@ -27,37 +27,58 @@ model_fit:
 results:
   (Intercept):
     n_clusters: 2
-    sign_coef:
+    beta_summary:
       min: -31.6153
-      median: 5.0156
+      median: 5.015
       max: 5.4893
-    clust_info:
-    - Cluster ID: 1
-      Cluster size: 1926
-      Cluster area: 934.46
-      Peak: 37
-      ROI: temporalpole
-    - Cluster ID: 2
-      Cluster size: 272
-      Cluster area: 200.74
-      Peak: 258
-      ROI: frontalpole
+    cluster_summary:
+    - cluster_id: 1
+      cluster_size: 1926
+      cluster_area: 934.46
+      peak_id: 37
+      peak_ROI: temporalpole
+      med_beta: 5.036463
+      min_beta: 4.5980592
+      max_beta: 5.4892645
+    - cluster_id: 2
+      cluster_size: 272
+      cluster_area: 200.74
+      peak_id: 258
+      peak_ROI: frontalpole
+      med_beta: -29.6487484
+      min_beta: -31.6152534
+      max_beta: -28.0488472
   sexMale:
     n_clusters: 0
+    beta_summary:
+      min: -0.6377
+      median: 0.0171
+      max: 0.723
   age:
     n_clusters: 0
+    beta_summary:
+      min: -0.0619
+      median: -0.0002
+      max: 0.0484
   wisdom:
     n_clusters: 1
-    sign_coef:
-      min: 3.3951
-      median: 3.4968
+    beta_summary:
+      min: -0.0289
+      median: -0.0016
       max: 3.6065
-    clust_info:
-    - Cluster ID: 1
-      Cluster size: 272
-      Cluster area: 200.74
-      Peak: 258
-      ROI: frontalpole
+    cluster_summary:
+    - cluster_id: 1
+      cluster_size: 272
+      cluster_area: 200.74
+      peak_id: 258
+      peak_ROI: frontalpole
+      med_beta: 3.4968359
+      min_beta: 3.3950701
+      max_beta: 3.6065304
+fwhm: 1.0
 covariance_between_terms: ''
-date: '2026-08-12'
+random_seed: 42.0
+mcz_threshold: 30.0
+cwp_threshold: 0.025
+date: '2026-08-17'
 verywise_version: 1.3.8
