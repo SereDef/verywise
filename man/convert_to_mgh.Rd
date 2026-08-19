@@ -7,34 +7,35 @@
 convert_to_mgh(
   vw_results,
   result_path,
-  stacks,
+  fixed_terms = NULL,
+  random_terms = NULL,
   stat_names = c("coef", "se", "p", "-log10p", "resid"),
   verbose = TRUE
 )
 }
 \arguments{
-\item{vw_results}{A named list of \link[bigstatsr]{FBM} objects containing the
+\item{vw_results}{A named list of \link[bigstatsr:FBM-class]{bigstatsr::FBM} objects containing the
 statistical results.}
 
 \item{result_path}{Character string indicating the base output path where the
 \code{.mgh} files will be written.}
 
-\item{stacks}{Vector of stack identifiers (e.g. hemisphere stack IDs) to be
-included in output filenames (for non-residual stats).}
+\item{fixed_terms}{Vector of fixed term names to be included in output filenames
+(as "stack1", "stack2"...).}
+
+\item{random_terms}{Vector of random term names used to label ICC statistics.}
 
 \item{stat_names}{Character vector of statistic names to process.
-Default: \code{c("coef","se","p","-log10p","resid")}.
-The special name \code{"-log10p"} triggers the on-the-fly p-value
-transformation.}
+Default: \code{c("coef", "se","p", "-log10p","resid")}.
+The special name \code{"-log10p"} triggers the on-the-fly p-value transformation.}
 
-\item{verbose}{Logical. Default: \code{TRUE}}
+\item{verbose}{Logical. Default:\code{TRUE}}
 }
 \value{
-Invisibly returns \code{NULL}.
-Side effects: \code{.mgh} files are written to disk.
+Invisibly returns \code{NULL}. Side effects: \code{.mgh} files are written to disk.
 }
 \description{
-This function takes a list of \link[bigstatsr]{FBM} objects storing statistical
+This function takes a list of \link[bigstatsr:FBM-class]{bigstatsr::FBM} objects storing statistical
 results and writes them to FreeSurfer-compatible \code{.mgh} files.
 It supports coefficient, standard error, p-value, and residual maps, with
 optional on-the-fly \eqn{-\log_{10}} transformation of p-values.
@@ -48,24 +49,4 @@ to cut disk space needed for the results in half.
 
 When computing \eqn{-\log_{10}(p)} values, the transformation is applied
 \strong{in chunks of columns} to avoid loading the full FBM into memory.
-}
-\examples{
-\dontrun{
-library(bigstatsr)
-
-# Dummy vw_results list with small FBMs
-vw_results <- list(
-  coef = FBM(5, 10, init = rnorm(50)),
-  se   = FBM(5, 10, init = runif(50, 0.1, 1)),
-  p    = FBM(5, 10, init = runif(50, 0, 1)),
-  resid= FBM(20, 10, init = rnorm(200))
-)
-
-convert_to_mgh(
-  vw_results = vw_results,
-  result_path = "my_results/stat",
-  stacks = 1:5
-)
-}
-
 }

@@ -34,7 +34,7 @@ test_that("run_voxw_lmm runs on minimal data", {
 
   # Structure of result
   expect_type(res, "list")
-  expect_named(res, c('coef', 'se', 'p', 'fitstats', 'resid'))
+  expect_named(res, c('coef', 'se', 'p', 'mfit', 'resid'))
 
   # Check that each element is an FBM and has the expected dimensions
   coef_fbm <- res$coef
@@ -50,9 +50,6 @@ test_that("run_voxw_lmm runs on minimal data", {
 
   expect_equal(dim(r_fbm)[2], ncol(ss_mat))  # residuals: rows = obs, cols = voxels
   expect_equal(dim(r_fbm)[1], nrow(pheno))
-
-  # Backing files are still present for results [TMP]
-  expect_true(file.exists(coef_fbm$backingfile))
 
   # But super‑subject backing file "ss.bk" should be removed
   expect_false(file.exists(file.path(out_dir, "ss.bk")))

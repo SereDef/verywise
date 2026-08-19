@@ -149,7 +149,7 @@ run_voxw_lmm <- function(
   measure <- check_formula(formula, measure_control = FALSE)
   model_desc <- paste(as.character(formula)[c(1,3)], collapse = ' ') # Only lhs
 
-  vw_message('* Outcome: {.val2 voxel values}', verbose = verbose)
+  vw_message('* Outcome: {.val2 voxel values ({measure})}', verbose = verbose)
   vw_message('* Model:   {.val2 {model_desc}}', verbose = verbose)
 
   # Check user input ===========================================================
@@ -158,6 +158,8 @@ run_voxw_lmm <- function(
   if (verbose) cli::cli_progress_step('Check settings and prepare environment', spinner=TRUE)
 
   outp_dir <- check_path(outp_dir, create_if_not = TRUE)
+
+  check_numeric_param(brain_template, integer = TRUE, lower = 1)
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1,
@@ -174,6 +176,8 @@ run_voxw_lmm <- function(
   # Esure reproducible seeds in parallel settings
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
+
+  start.time <- Sys.time()
 
   # Read phenotype data (if not already loaded) ================================
 
@@ -237,50 +241,51 @@ run_voxw_lmm <- function(
              verbose = verbose)
 
   vw_message("Statistical model fitting", type='step', verbose = verbose)
-
-  # "Pre-compile the model"
-  # cache the model frame to avoid re-generating it them each time
-  # single_lmm can leverage an "update"-based workflow to minimize
+  
+  # Cache the model frame: `refit_lmm` uses an "update"-based workflow to minimize
   # repeated parsing and model construction overhead
-  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters"), 
-      verbose = verbose)
+  model_template <- precompile_model(formula = formula, data_list = data_list, 
+    tmp_y = ss[, 1], measure = measure, weights = weights,
+    lmm_control = lmm_control, REML = REML, verbose = verbose)
+  
+  n_random_groups <- summary(model_template[[1]])$ngrps; storage.mode(n_random_groups) <- "integer"
+  n_obs_effective <- sapply(model_template, stats::nobs)  
+  
+  if (length(unique(n_obs_effective)) > 1) {
+    vw_error('Missing pattern is inconsistent across imputations.')
+  } else {
+    n_obs_effective <- n_obs_effective[1]
+  }
+  
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters and {.val2 {n_random_groups}} groups"), 
+    verbose = verbose)
+
 
   # Prepare FBM output =========================================================
 
-  result_path <- outp_dir # file.path(outp_dir, paste(hemi, measure, sep = "."))
+  result_path <- file.path(outp_dir, measure)
 
-  # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "fitstats", "resid")
-  res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
-                                   verbose = verbose)
-  # These files will be removed by "on.exit" by convert_to_mgh
+  # Temporary output matrices # note: default single precision (32 bits)
+  # Coefficients, SE and P-values 
+  c_vw <- build_output_fbm(result_path, "coef", nrow = fe_n, ncol = vw_n, verbose = verbose) 
+  s_vw <- build_output_fbm(result_path, "se",   nrow = fe_n, ncol = vw_n) 
+  p_vw <- build_output_fbm(result_path, "p",    nrow = fe_n, ncol = vw_n)
+  # Residuals
+  r_vw <- build_output_fbm(result_path, "resid", nrow = n_obs_effective, ncol = vw_n)
+  # Fit statistics: singular_fits, aic, r2_conditional, r2_marginal, icc by group
+  f_vw <- build_output_fbm(result_path, "mfit", nrow = (4L + length(n_random_groups)), ncol = vw_n)
 
-  fbm_precision <- "float" # single precision – 32 bits
-
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["coef"])  # Coefficients
-  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["se"])    # Standard errors
-  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
-                         backingfile = res_bk_paths["p"])     # P values
-  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["resid"]) # Residuals
-  # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
-  f_vw <- bigstatsr::FBM(5, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["fitstats"])   
-
-  log_file <- paste0(result_path, "/issues.log") # Log model fitting issues
+  log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
   # Parallel analyses ==========================================================
 
-  progress_file <- paste0(result_path, "/progress.log")
+  progress_file <- paste0(result_path, ".progress.log")
   on.exit(if(file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
   if (verbose) {
-    cli::cli_progress_step("Fitting linear mixed models... 
-    this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
-    spinner=TRUE)
+    cli::cli_progress_step("Fitting linear mixed models... this may take some time", spinner=TRUE)
+    vw_message(c("i"="Check the {.file {basename(progress_file)}} file for updates."))
   }
   with_parallel(n_cores = n_cores, 
     seed = seed,
@@ -305,36 +310,37 @@ run_voxw_lmm <- function(
         voxel <- ss[, v]
 
         # Loop through imputed datasets and run analyses
-        out_stats <- lapply(data_list, single_lmm,
-                            y = voxel,
-                            y_name = paste0("vw_", measure),
-                            model_formula = formula,
-                            REML = REML, 
-                            lmm_control = lmm_control,
-                            weights = weights)
+        out_stats <- lapply(model_template, refit_lmm, y = voxel, 
+          cov_eff = NULL)
+        # out_stats <- lapply(data_list, single_lmm,
+        #                     y = voxel,
+        #                     y_name = paste0("vw_", measure),
+        #                     model_formula = formula,
+        #                     REML = REML, 
+        #                     lmm_control = lmm_control,
+        #                     weights = weights)
 
         # Pool results
-        pooled_stats <- vw_pool(out_stats, m = m, n_terms = fe_n, pvalue_method="t-as-z")
+        pooled_stats <- vw_pool(out_stats, m = m, n_terms = fe_n, 
+          pvalue_method="t-as-z", cov_eff = NULL)
 
         # Log errors (if any)
         if (is.character(pooled_stats)) {
-          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
-              append = TRUE)
+          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file, append = TRUE)
           # & skip to the next value of v
           next
         }
 
         # Log warnings (if any)
         if (pooled_stats$warning != "") {
-          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
-              append = TRUE)
+          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file, append = TRUE)
         }
 
          # Write results to their respective FBM
         c_vw[, v] <- pooled_stats$coef
         s_vw[, v] <- pooled_stats$se
         p_vw[, v] <- pooled_stats$p
-        f_vw[, v] <- pooled_stats$fitstats
+        f_vw[, v] <- pooled_stats$mfit
         r_vw[, v] <- pooled_stats$resid
       }
     }
@@ -342,14 +348,42 @@ run_voxw_lmm <- function(
 
   if (verbose) cli::cli_progress_done()
 
-  out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
-  # "coefficients", "standard_errors", "p_values", "fit_statistics", "residuals"
-  names(out) <- res_bk_names
+  out <- list(coef = c_vw, se = s_vw, p = p_vw, mfit = f_vw, resid = r_vw)
 
   # Post-processing ==========================================================
-  # TODO: multiple testing correction? =======================================
-  vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
-  vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+  vw_message("Post-processing", type='step', verbose = verbose)
+
+  # Save model statistics into separate .mgh files
+  convert_to_mgh(out, result_path,
+                 fixed_terms = fixed_terms,
+                 random_terms = names(n_random_groups),
+                 stat_names = c('coef','se','p','fdr','mfit'),
+                 verbose = verbose)
+
+  # TODO: other multiple testing correction? =======================================
+  model_fit_summary <- vw_summarize_model_fit(fitstats = out$mfit, 
+    random_terms = names(n_random_groups), verbose = verbose)
+  
+  model_res_summary <- vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+
+  end.time <- Sys.time()
+
+  yaml::write_yaml(
+    list(
+      'model'=model_desc,
+      'n_datasets'=m,
+      'n_observations'=n_obs,
+      'n_observations_effective'=n_obs_effective,
+      'n_groups'=as.list(n_random_groups),
+      'n_voxels'=brain_template,
+      'n_voxels_effective'=length(good_voxels),
+      'model_fit' = model_fit_summary,
+      'results'= model_res_summary,
+      'random_seed' = as.integer(seed),
+      'date'=as.character(Sys.Date()),
+      'computation_time_min'=difftime(end.time, start.time, units = "mins"),
+      'verywise_version'=as.character(utils::packageVersion('verywise'))),
+    file=paste0(result_path, ".model.summary.yml"), column.major = FALSE)
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

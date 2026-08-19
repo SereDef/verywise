@@ -163,7 +163,7 @@ test_that("refit_lmm returns correct structure", {
   result <- refit_lmm(template_fit, y = test_y)
 
   expect_type(result, "list")
-  expect_named(result, c('stats', 'cov', 'resid', 'model_fit', 'warning'))
+  expect_named(result, c('stats', 'resid', 'model_fit', 'cov', 'warning'))
 
   expect_s3_class(result$stats, "data.frame")
   expect_true(all(c("term", "qhat", "se") %in% names(result$stats)))

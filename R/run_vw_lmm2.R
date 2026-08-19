@@ -1,4 +1,4 @@
-#' @title Run vertex-wise linear mixed model using [lme4::lmer()]
+#' @title Run vertex-wise linear mixed model using [lme4::lmer()] (without refitting)
 #'
 #' @description
 #' This is an alternative to the main function for conducting vertex-wise 
@@ -77,8 +77,10 @@
 #'   chunk in parallel operations. Larger values use more memory but may be
 #'   faster.
 #'   Default: 1000.
+#' @param mtc Character string: multiple testing correction strategy. 
+#'   Options: `"mcz"` (FreeSurfer MonteCarlo-based cluster correction: default), `"fdr"` (False Discovery Rate).
 #' @param FS_HOME Character string specifying the FreeSurfer home directory.
-#'   Defaults to \code{FREESURFER_HOME} environment variable.
+#'   Defaults to `FREESURFER_HOME` environment variable.
 #' @param fwhm Numeric value specifying the full-width half-maximum for
 #'   smoothing kernel. Default: 10.
 #' @param mcz_thr Numeric value for the Monte Carlo simulation threshold. 
@@ -96,17 +98,17 @@
 #'  and `0.05` for single hemisphere analyses.
 #'  Default: `0.025`.
 #' @param save_optional_cluster_info Logical indicating whether to save additional
-#'  output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
-#'  for details. Default: \code{FALSE}.
+#'  output form `mri_surfcluster` call. See [compute_clusters()]
+#'  for details. Default: `FALSE`.
 #' @param save_ss Logical indicating whether to save the super-subject matrix
 #'  ("ss") as an .rds file that can be then re-used in future analyses. This can
 #'  also be a character string specifying the directory where ss should be saved.
-#'  When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
-#'  default. Default: \code{FALSE}.
+#'  When `TRUE`, the ss matrix will be saved in `<outp_dir>/ss` by
+#'  default. Default: `FALSE`.
 #' @param save_residuals Logical indicating whether to save the residuals.mgh
-#'   file. Default: \code{FALSE}.
+#'   file. Default: `FALSE`.
 #' @param verbose Logical indicating whether to display progress messages.
-#'   Default: \code{TRUE}.
+#'   Default: `TRUE`.
 #'
 #' @details
 #' See [run_vw_lmm()] for details. 
@@ -138,6 +140,7 @@ run_vw_lmm2 <- function(
   n_cores = 1,
   chunk_size = 1000,
   # Cluster estimation
+  mtc = c('mcz', 'fdr'),
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   fwhm = 10,
   mcz_thr = 30,
@@ -149,10 +152,6 @@ run_vw_lmm2 <- function(
   verbose = TRUE) {
   
   vw_init_message('Linear mixed model', verbose = verbose)
-
-  # Make output look nice in non-interactive sessions
-  # old_cli_opts <- vw_setup_cli_output()
-  # if (!is.null(old_cli_opts)) on.exit(options(old_cli_opts), add = TRUE)
 
   hemi <- match.arg(hemi)
   measure <- check_formula(formula)
@@ -177,10 +176,16 @@ run_vw_lmm2 <- function(
 
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
-  check_numeric_param(fwhm, lower = 1, upper = 30)
-  check_numeric_param(mcz_thr, set=c(13, 20, 23, 30, 33, 40))
-  check_numeric_param(cwp_thr, set=c(0.025, 0.05))
+  
+  mtc <- match.arg(mtc) 
 
+  if (mtc == 'mcz') {
+    check_numeric_param(fwhm, lower = 1, upper = 30)
+    check_numeric_param(mcz_thr, set=c(13, 20, 23, 30, 33, 40))
+    check_numeric_param(cwp_thr, set=c(0.025, 0.05))
+    check_freesurfer_setup(FS_HOME, verbose = verbose)
+  }
+  
   n_cores <- check_cores(n_cores)
 
   if (verbose) cli::cli_progress_done()
@@ -195,6 +200,8 @@ run_vw_lmm2 <- function(
   # Esure reproducible seeds in parallel settings
   RNGkind("L'Ecuyer-CMRG")
   set.seed(seed)
+
+  start.time <- Sys.time()
   
   # Read phenotype data (if not already loaded) ================================
 
@@ -306,32 +313,24 @@ run_vw_lmm2 <- function(
 
   vw_message("Statistical model fitting", type='step', verbose = verbose)
   
-  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed parameters"), 
+  random_groups <- sapply(lme4::findbars(formula), function(x) deparse(x[[3]]))
+
+  vw_message(c("i"= "model includes {.val2 {fe_n}} fixed and {.val2 {length(random_groups)}} random parameters."), 
     verbose = verbose)
 
   # Prepare FBM output =========================================================
 
   result_path <- file.path(outp_dir, paste(hemi, measure, sep = "."))
 
-  # Temporary output matrices
-  res_bk_names <- c("coef", "se", "p", "fitstats", "resid")
-  res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
-                                   verbose = verbose)
-  # These files will be removed "on.exit" by convert_to_mgh
-
-  fbm_precision <- "float" # single precision – 32 bits
-
-  c_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["coef"])  # Coefficients
-  s_vw <- bigstatsr::FBM(fe_n, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["se"])    # Standard errors
-  p_vw <- bigstatsr::FBM(fe_n, vw_n, init = 1, type = fbm_precision,
-                         backingfile = res_bk_paths["p"])     # P values
-  r_vw <- bigstatsr::FBM(n_obs, vw_n, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["resid"]) # Residuals
-  # Fit statistics: singular_fits, aic, icc, r2_marginal, r2_conditional
-  f_vw <- bigstatsr::FBM(5, vw_n, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["fitstats"])   
+  # Temporary output matrices # note: default single precision (32 bits)
+  # Coefficients, SE and P-values 
+  c_vw <- build_output_fbm(result_path, "coef", nrow = fe_n, ncol = vw_n, verbose = verbose) 
+  s_vw <- build_output_fbm(result_path, "se",   nrow = fe_n, ncol = vw_n) 
+  p_vw <- build_output_fbm(result_path, "p",    nrow = fe_n, ncol = vw_n)
+  # Residuals
+  r_vw <- build_output_fbm(result_path, "resid", nrow = n_obs, ncol = vw_n)
+  # Fit statistics: singular_fits, aic, r2_conditional, r2_marginal, icc by group
+  f_vw <- build_output_fbm(result_path, "mfit", nrow = (4L + length(random_groups)), ncol = vw_n)
   
   log_file <- paste0(result_path, ".issues.log") # Log model fitting issues
 
@@ -342,8 +341,8 @@ run_vw_lmm2 <- function(
 
   # Progress bar setup # note progressr only works with doFuture not doParallel
   if (verbose) {
-    cli::cli_progress_step("Fitting linear mixed models... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
-    spinner=TRUE)
+    cli::cli_progress_step("Fitting linear mixed models... this may take some time", spinner=TRUE)
+    vw_message(c("i"="Check the {.file {basename(progress_file)}} file for updates."))
   }
   with_parallel(n_cores = n_cores, 
     seed = seed,
@@ -381,23 +380,21 @@ run_vw_lmm2 <- function(
 
         # Log errors (if any)
         if (is.character(pooled_stats)) {
-          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file,
-              append = TRUE)
+          cat(paste0(v, "\t", pooled_stats, "\n"), file = log_file, append = TRUE)
           # & skip to the next value of v
           next
         }
 
         # Log warnings (if any)
         if (pooled_stats$warning != "") {
-          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file,
-              append = TRUE)
+          cat(paste0(v, "\t", pooled_stats$warning, "\n"), file = log_file, append = TRUE)
         }
 
         # Write results to their respective FBM
         c_vw[, v] <- pooled_stats$coef
         s_vw[, v] <- pooled_stats$se
         p_vw[, v] <- pooled_stats$p # -1 * log10(pooled_stats$p) # convert later
-        f_vw[, v] <- pooled_stats$fitstats
+        f_vw[, v] <- pooled_stats$mfit
         r_vw[, v] <- pooled_stats$resid
       }
     }
@@ -405,92 +402,133 @@ run_vw_lmm2 <- function(
 
   if (verbose) cli::cli_progress_done()
 
-  out <- list(c_vw, s_vw, p_vw, f_vw, r_vw)
-  # "coefficients", "standard_errors", "p_values", "fit_statistics", "residuals"
-  names(out) <- res_bk_names
+  out <- list(coef = c_vw, se = s_vw, p = p_vw, mfit = f_vw, resid = r_vw)
 
   # Post-processing ============================================================
   vw_message("Post-processing", type='step', verbose = verbose)
 
+  pval_trans <- switch(mtc, 
+    fdr = 'fdr',
+    mcz = '-log10p')
+
   # Save model statistics into separate .mgh files
-  
-  convert_to_mgh(out,
-                 result_path,
-                 stacks = seq_along(fixed_terms),
-                 stat_names = c(res_bk_names,'-log10p'),
+  convert_to_mgh(out, result_path,
+                 fixed_terms = fixed_terms,
+                 random_terms = random_groups,
+                 stat_names = c(names(out), pval_trans),
                  verbose = verbose)
 
   resid_mgh_path <- paste(result_path, "residuals.mgh", sep = ".")
   if (!save_residuals) on.exit(file.remove(resid_mgh_path), add = TRUE)
-
-  # Estimate full-width half maximum (using FreeSurfer) ========================
-
-  fwhm <- estimate_fwhm(result_path = result_path,
-                        hemi = hemi,
-                        mask = good_verts,
-                        fs_template = fs_template)
-
-  # Clamp fwhm to [1, 30]
-  fwhm_clamped <- min(max(fwhm, 1), 30)
-
-  if (fwhm != fwhm_clamped) {
-    direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
-    vw_message("! estimated smoothness is {.val {fwhm}}, which is really {direction}",
-               verbose = verbose)
-    fwhm <- fwhm_clamped
-  } else {
-    vw_message("Estimated smoothness = {.val {fwhm}}", type = 'note', verbose = verbose)
-  }
-
-  # Apply cluster-wise correction (using FreeSurfer) ===========================
-  # vw_message("Clusterwise correction...", verbose = verbose)
-
-  if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
   
   # clusters
   ct_vw <- NULL 
+  
+  if (mtc == 'mcz') {
+    # Estimate full-width half maximum (using FreeSurfer)
+    fwhm <- estimate_fwhm(result_path = result_path,
+                          hemi = hemi,
+                          mask = good_verts,
+                          fs_template = fs_template)
 
-  for (stack_n in seq_along(fixed_terms)){
-    stack_path <- paste0(result_path, ".stack", stack_n)
-    fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
+    # Clamp fwhm to [1, 30]
+    fwhm_clamped <- min(max(fwhm, 1), 30)
 
-    ocn <- compute_clusters(stack_path = stack_path,
-                     hemi = hemi,
-                     fwhm = fwhm,
-                     FS_HOME = FS_HOME,
-                     mcz_thr = mcz_thr,
-                     cwp_thr = cwp_thr,
-                     fs_template = fs_template,
-                     full_surfcluster_output = save_optional_cluster_info,
-                     mask = paste0(result_path, ".finalMask.mgh"),
-                     verbose = fs_verbosity)
-    
-    if (is.null(ocn)) break # did not compute clusters
-
-    # else 
-    if (is.null(ct_vw)) {
-      # create storage once
-      ct_bk_path <- build_output_bks(result_path, res_bk_names = c('clust'), verbose = FALSE)
-      ct_vw <- bigstatsr::FBM(fe_n, vw_n, init = NA_real_, 
-        type = fbm_precision, backingfile = ct_bk_path["clust"])
+    if (fwhm != fwhm_clamped) {
+      direction <- if (fwhm > 30) "high. Reduced to 30." else "low. Increased to 1."
+      vw_message("! estimated smoothness is {.val {fwhm}}, which is really {direction}",
+                verbose = verbose)
+      fwhm <- fwhm_clamped
+    } else {
+      vw_message("Estimated smoothness = {.val {fwhm}}", type = 'note', verbose = verbose)
     }
 
-    ct_vw[stack_n, ] <- ocn
+    # Apply cluster-wise correction (using FreeSurfer) ===========================
+    # vw_message("Clusterwise correction...", verbose = verbose)
 
+    if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
+
+    for (stack_n in seq_along(fixed_terms)){
+      stack_path <- paste0(result_path, ".stack", stack_n)
+      fs_verbosity <- FALSE # if(stack_n == 1) verbose else FALSE
+
+      ocn <- compute_clusters(stack_path = stack_path,
+                      hemi = hemi,
+                      fwhm = fwhm,
+                      FS_HOME = FS_HOME,
+                      mcz_thr = mcz_thr,
+                      cwp_thr = cwp_thr,
+                      fs_template = fs_template,
+                      full_surfcluster_output = save_optional_cluster_info,
+                      mask = paste0(result_path, ".finalMask.mgh"),
+                      verbose = fs_verbosity)
+      
+      if (is.null(ocn)) break # did not compute clusters
+
+      # else 
+      if (is.null(ct_vw)) {
+        # create cluster storage (once)
+        ct_vw <- build_output_fbm(result_path, 'clust', nrow = fe_n, ncol = vw_n) 
+      }
+
+      ct_vw[stack_n, ] <- ocn
+    }
+    if (verbose) cli::cli_progress_done()
   }
 
-  if (verbose) cli::cli_progress_done()
-  
   # Print summary 
-  vw_summarize_model_fit(fitstats = out$fitstats, verbose = verbose)
+  model_fit_summary <- vw_summarize_model_fit(fitstats = out$mfit, 
+    random_terms = random_groups, verbose = verbose)
+  
   if (!is.null(ct_vw)) {
     out[['clust']] <- ct_vw
-    vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
-      term_names = fixed_terms, verbose = verbose)
+
+    model_res_summary <- vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
+      term_names = fixed_terms, result_path = result_path, verbose = verbose)
+    
+    cluster_correction_info <- list(
+      'fwhm' = fwhm,
+      'mcz_threshold' = mcz_thr,
+      'cwp_threshold' = cwp_thr)
+        
+    files_to_remove <- c(
+      paste0(result_path, ".clust.bk"),
+      list.files(path = outp_dir,
+        pattern = paste0("^", basename(result_path), ".*\\.cluster\\.summary$|^",
+                              basename(result_path), ".*\\.-log10p\\.mgh$"), 
+        recursive = TRUE, full.names = TRUE)
+    )
+    if (!save_optional_cluster_info) {
+    files_to_remove <- c(files_to_remove, paste0(result_path, '.finalMask.mgh')) 
+      # paste0(result_path, c('.fwhm.dat', '.finalMask.mgh'))) 
+    }
+
+    on.exit(file.remove(files_to_remove), add = TRUE)
+    
   } else {
-    # TODO: mask 0 verts (done... NA now )
-    vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+    model_res_summary <- vw_summarize_model_est(coef = out$coef, term_names = fixed_terms, verbose = verbose)
+
+    cluster_correction_info <- ''
   }
+
+  end.time <- Sys.time()
+
+  yaml::write_yaml(
+    list(
+      'model'=model_desc,
+      'n_datasets'=m,
+      'n_observations'=n_obs,
+      'n_groups'=as.list(random_groups),
+      'n_vertices'=as.integer(count_vertices(fs_template)),
+      'n_vertices_effective'=length(good_verts),
+      'model_fit' = model_fit_summary,
+      'results'= model_res_summary,
+      'cluster_correction' = cluster_correction_info,
+      'random_seed' = as.integer(seed),
+      'date'=as.character(Sys.Date()),
+      'computation_time_min'=difftime(end.time, start.time, units = "mins"),
+      'verywise_version'=as.character(utils::packageVersion('verywise'))),
+    file=paste0(result_path, ".model.summary.yml"), column.major = FALSE)
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

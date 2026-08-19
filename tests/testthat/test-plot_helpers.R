@@ -1,3 +1,8 @@
+# Plotting tests require a stable local Python/nilearn/FreeSurfer setup
+skip_on_ci()
+skip_if_not_installed("reticulate")
+skip_if_no_freesurfer()
+
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 subj_dir <- test_path("fixtures", "fs7")
 res_dir <- file.path(subj_dir, "results")

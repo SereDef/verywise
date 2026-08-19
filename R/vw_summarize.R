@@ -9,11 +9,10 @@
   clust <- ocn[idx, ]
   betas <- coef[idx, ]
 
-  n_clusters <- max(clust, na.rm = TRUE)
+  n_clusters <- if (is.null(clust)) 0L else max(clust, na.rm = TRUE)
 
   out <- list(n_clusters = as.integer(n_clusters), 
-              beta_summary = .compute_median_range(vec=betas, 
-                digits=digits))
+              coef_summary = .compute_median_range(vec=betas, digits=digits))
   
   if (n_clusters > 0) {
 
@@ -30,9 +29,11 @@
       my_summary <- tapply(betas, clust, summary)
       comb_summary <- cbind(fs_summary, 
         as.data.frame(do.call(rbind, my_summary[-1]))) # remove non-significant
-      summary_map <- c('cluster_id'='V1', 'cluster_size'='V11', 'cluster_area'='V4', 
+      # fnames <- c('ClusterNo','Max','VtxMax','Size(mm^2)','MNIX','MNIY','MNIZ','CWP',
+      #   'CWPLow','CWPHi','NVtxs','WghtVtx','Annot')
+      summary_map <- c('cluster_id'='V1', 'cluster_size'='V11', 'cluster_area'='V4', 'cluster_p'='V8',
                        'peak_id'='V3', 'peak_ROI'='V13', 
-                       'med_beta'='Median', 'min_beta'='Min.', 'max_beta'='Max.')
+                       'min_coef'='Min.', 'median_coef'='Median', 'max_coef'='Max.')
       out[['cluster_summary']] <- setNames(comb_summary[summary_map], names(summary_map))
     }
   }
@@ -62,7 +63,7 @@
   clust_stats <- .compute_cluster_stats(ocn=ocn_mat, coef=coef_mat, idx=idx, result_path=result_path, digits=digits) 
 
   n_clusters <- clust_stats[['n_clusters']]
-  q <- clust_stats[['beta_summary']]
+  q <- clust_stats[['coef_summary']]
 
   n_space <- pad - cli::ansi_nchar(name, type = 'width')
   filler  <- strrep('\u00a0', max(n_space, 1))
@@ -74,12 +75,12 @@
     msg <- paste(msg, "{.val {cli_round(q[['median']], digits)}} [{.val {cli_round(q[['min']], digits)}}, {.val {cli_round(q[['max']], digits)}}] {.time {note}}")
   }
   
-  vw_message(msg)
+  vw_message(msg, verbose = verbose)
 
   clust_stats
 }
 
-vw_summarize_model_fit <- function(fitstats, verbose = TRUE){
+vw_summarize_model_fit <- function(fitstats, random_terms, verbose = TRUE){
 
   if (!verbose) return(invisible(NULL))
 
@@ -95,29 +96,33 @@ vw_summarize_model_fit <- function(fitstats, verbose = TRUE){
   vw_message('* {.strong Singular model fits}: {singular_count} ({.warn {singular_perc}}%)')
 
   aic <- .print_median_range(fitstats, 2, 'AIC', pad = 1, note = '* median [range]')
-  icc <- .print_median_range(fitstats, 3, 'ICC')
+  cR2 <- .print_median_range(fitstats, 3, 'Conditional R\u00b2')
   mR2 <- .print_median_range(fitstats, 4, 'Marginal R\u00b2')
-  cR2 <- .print_median_range(fitstats, 5, 'Conditional R\u00b2')
+  
+  icc <- lapply(seq_along(random_terms), function(i) {
+    .print_median_range(fitstats, (4L + i), paste('ICC', random_terms[i]))
+  })
+  names(icc) <- random_terms
 
   invisible(
     list('Singular fits' = list(count = singular_count, percent = singular_perc),
-         'AIC' = aic, 'ICC' = icc, 'Marginal R\u00b2' = mR2, 'Conditional R\u00b2' = cR2)
+        'AIC' = aic, 'Conditional R\u00b2' = cR2 , 'Marginal R\u00b2' = mR2, 
+        'ICC' = icc)
   )
 }
 
 vw_summarize_model_est <- function(coef, term_names, verbose = TRUE) {
 
-  if (!verbose) return(invisible(NULL))
-
   term_name_length <- max(nchar(term_names)) + 1L
 
   out <- list()
 
-  vw_message('\nModel estimates')
+  vw_message('\nModel estimates', verbose = verbose)
   for (n in seq_along(term_names)){
     note <- if (n == 1) '* median [range]' else ''
     term_name <- term_names[n]
-    out[[term_name]] <- .print_median_range(mat=coef, idx=n, name=term_name, pad=term_name_length, note = note)
+    out[[term_name]] <- .print_median_range(mat=coef, idx=n, name=term_name, pad=term_name_length, 
+      note = note, verbose = verbose)
   }
 
   invisible(out)
@@ -125,18 +130,16 @@ vw_summarize_model_est <- function(coef, term_names, verbose = TRUE) {
 
 vw_summarize_model_clusters <- function(coef, clust, term_names, result_path, verbose = TRUE) {
 
-  if (!verbose) return(invisible(NULL))
-
   term_name_length <- max(nchar(term_names)) + 1L
 
   out <- list()
 
-  vw_message('\nModel estimates')
+  vw_message('\nModel estimates', verbose = verbose)
   for (n in seq_along(term_names)){
-    note <- if (n == 1) '* median beta [range]' else ''
+    note <- if (n == 1) '* median coef [range]' else ''
     term_name <- term_names[n]
     out[[term_name]] <- .print_cluster_stats(ocn_mat=clust, coef_mat=coef, idx=n, name=term_name, result_path=result_path, 
-                                             pad=term_name_length, note = note)
+                                             pad=term_name_length, note = note, verbose = verbose)
   }
 
   invisible(out)

@@ -137,6 +137,21 @@ check_stack_file <- function(fixed_terms, outp_dir) {
   }
 }
 
+
+check_cov_spec <- function(save_cov, fixed_terms) {
+  if (is.null(save_cov)) return(NULL)
+  
+  if (length(save_cov) != 2) {
+    vw_error("Only one covariance can be extracted at the moment, specify 2 terms.")
+  }
+  missing_terms <- setdiff(save_cov, fixed_terms) 
+  if (length(missing_terms) > 0) {
+    vw_error(c("Term?s {.val {missing_terms}} not present in the model.",
+               "i" = "Available terms: {.or fixed_terms}"))
+  }
+  which(fixed_terms %in% save_cov)
+}
+
 check_ss_exists <- function(path, hemi, measure, fs_template = "fsaverage") {
 
   # First try the exact requested template

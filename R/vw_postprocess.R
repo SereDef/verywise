@@ -2,28 +2,27 @@
 #' Convert statistical result FBMs to FreeSurfer `.mgh` format
 #'
 #' @description
-#' This function takes a list of \link[bigstatsr]{FBM} objects storing statistical
+#' This function takes a list of [bigstatsr::FBM] objects storing statistical
 #' results and writes them to FreeSurfer-compatible `.mgh` files.
 #' It supports coefficient, standard error, p-value, and residual maps, with
 #' optional on-the-fly \eqn{-\log_{10}} transformation of p-values.
 #'
-#' @param vw_results A named list of \link[bigstatsr]{FBM} objects containing the
+#' @param vw_results A named list of [bigstatsr::FBM] objects containing the
 #'   statistical results.
 #' @param result_path Character string indicating the base output path where the
-#'   \code{.mgh} files will be written.
-#' @param stacks Vector of stack identifiers (e.g. hemisphere stack IDs) to be
-#'   included in output filenames (for non-residual stats).
+#'   `.mgh` files will be written.
+#' @param fixed_terms Vector of fixed term names to be included in output filenames
+#'   (as "stack1", "stack2"...).
+#' @param random_terms Vector of random term names used to label ICC statistics.
 #' @param stat_names Character vector of statistic names to process.
-#'   Default: \code{c("coef","se","p","-log10p","resid")}.
-#'   The special name \code{"-log10p"} triggers the on-the-fly p-value
-#'   transformation.
-#' @param verbose Logical. Default: \code{TRUE}
+#'   Default: `c("coef", "se","p", "-log10p","resid")`.
+#'   The special name `"-log10p"` triggers the on-the-fly p-value transformation.
+#' @param verbose Logical. Default:`TRUE`
 #'
-#' @return Invisibly returns \code{NULL}.
-#'   Side effects: \code{.mgh} files are written to disk.
+#' @return Invisibly returns `NULL`. Side effects: `.mgh` files are written to disk.
 #'
 #' @details
-#' For residuals, all rows are written into a single \code{.mgh} file. For other
+#' For residuals, all rows are written into a single `.mgh` file. For other
 #' stats, data is written to one file per row (i.e. term).
 #' Note, by default, the p vector is cast down to float (single precision, 32‑bit), 
 #' meaning about 7 significant decimal digits are stored (accurately). This is done 
@@ -32,30 +31,13 @@
 #' When computing \eqn{-\log_{10}(p)} values, the transformation is applied
 #' **in chunks of columns** to avoid loading the full FBM into memory.
 #'
-#' @examples
-#' \dontrun{
-#' library(bigstatsr)
-#'
-#' # Dummy vw_results list with small FBMs
-#' vw_results <- list(
-#'   coef = FBM(5, 10, init = rnorm(50)),
-#'   se   = FBM(5, 10, init = runif(50, 0.1, 1)),
-#'   p    = FBM(5, 10, init = runif(50, 0, 1)),
-#'   resid= FBM(20, 10, init = rnorm(200))
-#' )
-#'
-#' convert_to_mgh(
-#'   vw_results = vw_results,
-#'   result_path = "my_results/stat",
-#'   stacks = 1:5
-#' )
-#' }
 #'
 #' @export
 #'
 convert_to_mgh <- function(vw_results,
                            result_path,
-                           stacks,
+                           fixed_terms = NULL,
+                           random_terms = NULL,
                            stat_names = c("coef", "se", "p", "-log10p", "resid"),
                            verbose = TRUE){
   
@@ -70,18 +52,16 @@ convert_to_mgh <- function(vw_results,
       stat_mgh_paths <- paste(result_path, "residuals.mgh", sep = ".")
       mode <- "allrows.1file"
       
-    } else if (stat_name == 'fitstats') {
+    } else if (stat_name == 'mfit') {
       stat_mgh_paths <- paste(result_path, 
-        c('singular_fit','aic', 'icc','r2_marginal', 'r2_conditional'), "mgh", sep = ".")
+        c('singular', 'aic', 'r2c', 'r2m', paste0('icc', seq_along(random_terms))), "mgh", sep = ".")
       
-    } else if (stat_name == "cov") {
-      # cov FBM always has nrow = 1 (single covariance term across vertices)
-      stat_mgh_paths <- paste(result_path, "cov", "mgh", sep = ".")
-
-    } else if (is.null(stacks)) {
+    } else if (stat_name == "cov" | is.null(fixed_terms)) {
       stat_mgh_paths <- paste(result_path, stat_name, "mgh", sep = ".")
+
     } else {
-      stat_mgh_paths <- paste(result_path, paste0("stack", stacks), stat_name, "mgh", sep = ".")
+      stat_mgh_paths <- paste(result_path, 
+        paste0("stack", seq_along(fixed_terms)), stat_name, "mgh", sep = ".")
     }
 
     # Apply -log10 transformation

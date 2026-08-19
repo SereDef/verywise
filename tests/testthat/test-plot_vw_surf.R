@@ -1,3 +1,7 @@
+# Plotting tests require a stable local Python/nilearn/FreeSurfer setup
+skip_on_ci()
+skip_if_not_installed("reticulate")
+skip_if_no_freesurfer()
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 subj_dir <- test_path("fixtures", "fs7")
@@ -6,20 +10,6 @@ res_dir <- file.path(subj_dir, "results")
 # Pre-load real fixture data for testing the renderer directly
 lh_coef_file <- list.files(res_dir, pattern = "^lh\\..*\\.coef\\.mgh$", full.names = TRUE)[1]
 rh_coef_file <- list.files(res_dir, pattern = "^rh\\..*\\.coef\\.mgh$", full.names = TRUE)[1]
-
-# ── Setup ─────────────────────────────────────────────────────────────────────
-skip_if_not_installed("reticulate")
-
-# TMP 
-skip_if_no_freesurfer <- function() {
-  fs_home <- Sys.getenv("FREESURFER_HOME")
-  
-  # Skip if environment variable is empty or the directory doesn't exist
-  if (!nzchar(fs_home) || !dir.exists(fs_home)) {
-    testthat::skip("FreeSurfer not found in FREESURFER_HOME")
-  }
-}
-skip_if_no_freesurfer()
 
 # ── Input validation ──────────────────────────────────────────────────────────
 

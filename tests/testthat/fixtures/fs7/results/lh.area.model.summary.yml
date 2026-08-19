@@ -1,7 +1,9 @@
 model: ~ sex + age + wisdom + (1 | id)
 n_datasets: 1
 n_observations: 20
-n_groups: 10
+n_observations_effective: 20
+n_groups:
+  id: 10
 n_vertices: 163842
 n_vertices_effective: 2213
 model_fit:
@@ -12,22 +14,23 @@ model_fit:
     min: -26.7344
     median: 0.2816
     max: 63.0825
-  ICC:
-    min: 0.0
-    median: 0.0586
-    max: 0.8464
-  Marginal R²:
-    min: 0.0012
-    median: 0.1282
-    max: 0.9995
   Conditional R²:
     min: 0.0013
     median: 0.2886
     max: 0.9996
+  Marginal R²:
+    min: 0.0012
+    median: 0.1282
+    max: 0.9995
+  ICC:
+    id:
+      min: 0.0
+      median: 0.0586
+      max: 0.8464
 results:
   (Intercept):
     n_clusters: 2
-    beta_summary:
+    coef_summary:
       min: -31.6153
       median: 5.015
       max: 5.4893
@@ -35,34 +38,36 @@ results:
     - cluster_id: 1
       cluster_size: 1926
       cluster_area: 934.46
+      cluster_p: 0.0001
       peak_id: 37
       peak_ROI: temporalpole
-      med_beta: 5.036463
-      min_beta: 4.5980592
-      max_beta: 5.4892645
+      min_coef: 4.5980592
+      median_coef: 5.036463
+      max_coef: 5.4892645
     - cluster_id: 2
       cluster_size: 272
       cluster_area: 200.74
+      cluster_p: 0.0001
       peak_id: 258
       peak_ROI: frontalpole
-      med_beta: -29.6487484
-      min_beta: -31.6152534
-      max_beta: -28.0488472
+      min_coef: -31.6152534
+      median_coef: -29.6487484
+      max_coef: -28.0488472
   sexMale:
     n_clusters: 0
-    beta_summary:
+    coef_summary:
       min: -0.6377
       median: 0.0171
       max: 0.723
   age:
     n_clusters: 0
-    beta_summary:
+    coef_summary:
       min: -0.0619
       median: -0.0002
       max: 0.0484
   wisdom:
     n_clusters: 1
-    beta_summary:
+    coef_summary:
       min: -0.0289
       median: -0.0016
       max: 3.6065
@@ -70,15 +75,18 @@ results:
     - cluster_id: 1
       cluster_size: 272
       cluster_area: 200.74
+      cluster_p: 0.0001
       peak_id: 258
       peak_ROI: frontalpole
-      med_beta: 3.4968359
-      min_beta: 3.3950701
-      max_beta: 3.6065304
-fwhm: 1.0
+      min_coef: 3.3950701
+      median_coef: 3.4968359
+      max_coef: 3.6065304
+cluster_correction:
+  fwhm: 1.0
+  mcz_threshold: 30.0
+  cwp_threshold: 0.025
 covariance_between_terms: ''
-random_seed: 42.0
-mcz_threshold: 30.0
-cwp_threshold: 0.025
-date: '2026-08-18'
+random_seed: 42
+date: '2026-08-19'
+computation_time_min: 0.854718
 verywise_version: 1.3.8

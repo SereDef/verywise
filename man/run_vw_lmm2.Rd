@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_vw_lmm2.R
 \name{run_vw_lmm2}
 \alias{run_vw_lmm2}
-\title{Run vertex-wise linear mixed model using \code{\link[lme4:lmer]{lme4::lmer()}}}
+\title{Run vertex-wise linear mixed model using \code{\link[lme4:lmer]{lme4::lmer()}} (without refitting)}
 \usage{
 run_vw_lmm2(
   formula,
@@ -20,6 +20,7 @@ run_vw_lmm2(
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  mtc = c("mcz", "fdr"),
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   fwhm = 10,
   mcz_thr = 30,
@@ -112,6 +113,9 @@ chunk in parallel operations. Larger values use more memory but may be
 faster.
 Default: 1000.}
 
+\item{mtc}{Character string: multiple testing correction strategy.
+Options: \code{"mcz"} (FreeSurfer MonteCarlo-based cluster correction: default), \code{"fdr"} (False Discovery Rate).}
+
 \item{FS_HOME}{Character string specifying the FreeSurfer home directory.
 Defaults to \code{FREESURFER_HOME} environment variable.}
 
@@ -135,13 +139,13 @@ and \code{0.05} for single hemisphere analyses.
 Default: \code{0.025}.}
 
 \item{save_optional_cluster_info}{Logical indicating whether to save additional
-output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+output form \code{mri_surfcluster} call. See \code{\link[=compute_clusters]{compute_clusters()}}
 for details. Default: \code{FALSE}.}
 
 \item{save_ss}{Logical indicating whether to save the super-subject matrix
 ("ss") as an .rds file that can be then re-used in future analyses. This can
 also be a character string specifying the directory where ss should be saved.
-When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
+When \code{TRUE}, the ss matrix will be saved in \verb{<outp_dir>/ss} by
 default. Default: \code{FALSE}.}
 
 \item{save_residuals}{Logical indicating whether to save the residuals.mgh

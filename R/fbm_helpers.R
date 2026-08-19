@@ -135,14 +135,7 @@ build_output_fbm <- function(result_path, type, nrow, ncol, precision = 'float',
 
   if (verbose) cli::cli_progress_step('Generate file-backed output containers', spinner=TRUE)
   
-  init <- switch(type, 
-      coef = NA_real_,
-        se = NA_real_, # 0, 
-         p = 1,
-     resid = 0,
-  fitstats = NA_real_,
-     clust = NA_real_
-  )
+  init <- switch(type, p = 1, meta.p = 1, resid = 0, clust = 0, meta.clust = 0, NA_real_)
 
   res_bk_path <- paste(result_path, type, sep = ".")
 
@@ -151,7 +144,6 @@ build_output_fbm <- function(result_path, type, nrow, ncol, precision = 'float',
 
   if (file.exists(res_bk_file)) file.remove(res_bk_file)
   
-  bigstatsr::FBM(nrow = nrow, ncol = ncol, init = init, type = precision, 
-    backingfile = res_bk_path)
+  bigstatsr::FBM(nrow = nrow, ncol = ncol, init = init, type = precision, backingfile = res_bk_path)
   
 }

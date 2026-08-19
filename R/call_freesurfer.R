@@ -48,11 +48,12 @@ estimate_fwhm <- function(result_path,
   # message2(verbose = verbose, cmdStr)
   system(cmd_str, ignore.stdout = !verbose)
 
-  tryCatch({fwhm <- round(utils::read.table(fwhm_estim_path))},
-           error = function(e) {
-             message("mris_fwhm command not running correctly")
-             # TODO: choose a return value in case of error?
-             NA} )
+  tryCatch({
+    fwhm <- round(as.numeric(utils::read.table(fwhm_estim_path)))
+  }, error = function(e) {
+    message("mris_fwhm command not running correctly")
+    # TODO: choose a return value in case of error?
+    NA_real_} )
 
   return(fwhm)
 }

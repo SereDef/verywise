@@ -14,7 +14,7 @@ run_vw_meta(
   meta_pvalue = "knha",
   res_dirs,
   outp_dir = NULL,
-  mtc = "fdr",
+  mtc = c("mcz", "fdr"),
   fs_template = "fsaverage",
   seed = 3108,
   n_cores = 1,
@@ -51,7 +51,7 @@ If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 current working directory (not recommended).}
 
 \item{mtc}{Character string: multiple testing correction strategy.
-Options: \code{"fdr"} (False Discovery Rate: default), \code{"fs"} (FreeSurfer cluster correction).}
+Options: \code{"mcz"} (FreeSurfer MonteCarlo-based cluster correction: default), \code{"fdr"} (False Discovery Rate).}
 
 \item{fs_template}{Character string specifying the FreeSurfer template for
 vertex registration. Options:

@@ -644,7 +644,7 @@ class VeryWiseLayout:
                       "medial", "ventral", "posterior"], # Left medial  | Right medial  | Ventral | Posterior
             "panel_size": (400, 440), # brain panel width, height in px
             "colorbar_width": 0.40,
-            "colorbar_layout": [("spacer", 0.38), ("colorbar", 0.17), ("spacer", 0.02), ("density", 0.43)]
+            "colorbar_layout": [("spacer", 0.39), ("colorbar", 0.17), ("spacer", 0.03), ("density", 0.41)]
         },
         "interactive": {
             "views": ["lateral"],

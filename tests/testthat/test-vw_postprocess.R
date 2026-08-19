@@ -39,7 +39,7 @@ test_that("convert_to_mgh writes correct output for basic stats", {
   # Run with mock
   with_mocked_bindings(
     fbm2mgh = mock_fbm2mgh,
-    convert_to_mgh(vw_results, result_path, stacks = 1:n_terms)
+    convert_to_mgh(vw_results, result_path, fixed_terms = 1:n_terms)
   )
 
   # Check that residuals use correct mode

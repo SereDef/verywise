@@ -256,14 +256,13 @@ refit_lmm <- function(model_template_i, y, cov_eff = NULL) {
     row.names = NULL,
     check.names = FALSE)
   
+  # Covariance ---------------------------------------------
+  
   if (!is.null(cov_eff)) {
     cov_int <- unname(as.matrix(vcov(fit))[cov_eff[1], cov_eff[2]])
   } else {
     cov_int <- NULL
   }
-  
-  # Also extract model residuals for smoothness estimation
-  resid <- residuals(fit)
 
   # Model performance ------------------------------------
   
@@ -274,27 +273,28 @@ refit_lmm <- function(model_template_i, y, cov_eff = NULL) {
     warning_msg <- warning_msg[!grepl("boundary (singular) fit", warning_msg, 
                                       fixed = TRUE)]
   }
-
-  # Add model performance metrics 
-  aic <- AIC(fit)
   
-  # Use lme4 directly – no extra dependencies, no interactive prompts:
+  # Extract variance components to calculate 
   vc <- VarCorr(fit)
-  var_rand <- sum(sapply(vc, function(x) sum(diag(as.matrix(x)))))
-  var_resid <- attr(vc, "sc")^2
+  var_group <- sapply(vc, function(x) sum(diag(as.matrix(x)))) 
+  var_rand <- sum(var_group)
+  var_resid <- var_rand + attr(vc, "sc")^2 # var_resid
   var_fix <- var(predict(fit, re.form = NA)) # var(as.vector(X %*% beta))
 
-  icc <- safe_calc(var_rand / (var_rand + var_resid))
-  r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))
-  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_rand + var_resid))
-  
-  # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
-  perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
+  icc <- safe_calc(var_group / var_resid) # safe_calc(var_rand / var_resid)
+  r2_margin <- safe_calc(var_fix  / (var_fix + var_resid))
+  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_resid))
   
   list("stats" = fixed_stats, 
+       # Extract model residuals for smoothness estimation
+       "resid" = residuals(fit), 
+       # Add model performance metrics 
+       "model_fit" = c(is_singular = is_singular,
+                       aic = AIC(fit),
+                       r2_condit = r2_condit,
+                       r2_margin = r2_margin,
+                       setNames(icc, paste0("icc_", names(icc)))),
        "cov" = cov_int,
-       "resid" = resid, 
-       "model_fit" = perf,
        "warning" = warning_msg)
 
 }
@@ -392,7 +392,7 @@ single_lmm <- function(imp, y, y_name, model_formula = NULL,
   }
 
   coefs <- fixef(fit) # Fixed effects estimates
-  ses   <- sqrt(diag(as.matrix(vcov(fit)))) # Their standard errors
+  ses <- sqrt(diag(as.matrix(vcov(fit)))) # Their standard errors
   
   fixed_stats <- data.frame(
     term = names(coefs),
@@ -400,9 +400,6 @@ single_lmm <- function(imp, y, y_name, model_formula = NULL,
     se   = as.numeric(ses),
     row.names = NULL,
     check.names = FALSE)
-  
-  # Also extract model residuals for smoothness estimation
-  resid <- residuals(fit)
 
   # Model performance ------------------------------------
   
@@ -414,48 +411,26 @@ single_lmm <- function(imp, y, y_name, model_formula = NULL,
                                       fixed = TRUE)]
   }
 
-  # Add model performance metrics 
-  aic <- AIC(fit)
-  # icc <- icc(fit)[['ICC_adjusted']]
-  # r2 <- t(r2_nakagawa(fit))
-  
-
-  # Use lme4 directly – no extra dependencies, no interactive prompts:
+  # Extract variance components to calculate 
   vc <- VarCorr(fit)
-  var_rand <- sum(sapply(vc, function(x) sum(diag(as.matrix(x)))))
-  var_resid <- attr(vc, "sc")^2
+  var_group <- sapply(vc, function(x) sum(diag(as.matrix(x)))) 
+  var_rand <- sum(var_group)
+  var_resid <- var_rand + attr(vc, "sc")^2 # var_resid
   var_fix <- var(predict(fit, re.form = NA)) # var(as.vector(X %*% beta))
 
-  icc <- safe_calc(var_rand / (var_rand + var_resid))
-  r2_margin <- safe_calc(var_fix  / (var_fix + var_rand + var_resid))
-  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_rand + var_resid))
+  icc <- safe_calc(var_group / var_resid) # safe_calc(var_rand / var_resid)
+  r2_margin <- safe_calc(var_fix  / (var_fix + var_resid))
+  r2_condit <- safe_calc((var_fix + var_rand) / (var_fix + var_resid))
   
-  # varpart <- get_variance(fit, tolerance = 1e-12) # more lenient than default
-
-  # icc <- safe_calc(varpart$var.random / (varpart$var.random + varpart$var.residual))
-
-  # r2_margin <- safe_calc(varpart$var.fixed / 
-  #   (varpart$var.fixed + varpart$var.random + varpart$var.residual))
-  
-  # r2_condit <- safe_calc((varpart$var.fixed + varpart$var.random) /
-  #       (varpart$var.fixed + varpart$var.random + varpart$var.residual))
-  
-  # dropping names: singularity, aic, icc, r2_marginal, r2_conditional
-  perf <- c(is_singular, aic, icc, r2_margin, r2_condit)
-  
-  # Extract residual degrees of freedom for Barnard-Rubin adjustment
-  # Normally, this would be the number of independent observation minus the
-  # number of fitted parameters, but not exactly what is done here.
-  # Following the `broom.mixed` package approach, which `mice::pool` relies on
-  # resid_df <- df.residual(fit)
-
-  # TODO: implement "stack of interest"?
-
-  # coef(fit)$id # A matrix of effects by random variable
-  # lme4::ranef(fit) # extract random effects (these should sum to 0)
-  # lme4::VarCorr(fit) # estimated variances, SDs, and correlations between the random-effects terms
-
-  list("stats" = fixed_stats, "resid" = resid, "model_fit" = perf,
+  list("stats" = fixed_stats, 
+       # Extract model residuals for smoothness estimation
+       "resid" = residuals(fit), 
+       # Add model performance metrics 
+       "model_fit" = c(is_singular = is_singular,
+                       aic = AIC(fit),
+                       r2_condit = r2_condit,
+                       r2_margin = r2_margin,
+                       setNames(icc, paste0("icc_", names(icc)))),
        "warning" = warning_msg)
 
 }

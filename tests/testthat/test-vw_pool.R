@@ -26,11 +26,11 @@ out_stats_with_error[[3]] <- list(error = 'You suck')
 
 test_that("vw_pool returns pooled stats for valid input", {
   result <- vw_pool(out_stats, m = 2, n_terms = 3)
-  expect_named(result, c('coef', 'se', 'p', 'fitstats', 'cov', 'resid', 'warning'))
+  expect_named(result, c('coef', 'se', 'p', 'resid', 'mfit', 'cov', 'warning'))
   expect_true(is.numeric(result$coef))
   expect_true(is.numeric(result$se))
   expect_true(is.numeric(result$p))
-  expect_true(is.numeric(result$fitstats))
+  expect_true(is.numeric(result$mfit))
   expect_true(is.matrix(result$resid) || is.numeric(result$resid))
   expect_equal(result$warning, "")
 })

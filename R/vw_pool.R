@@ -80,10 +80,10 @@ vw_pool <- function(out_stats, m, n_terms,
 
   if (m == 1) {
     out_stats <- out_stats[[1]]
-    # No pooling needed, just reformat output (no pooling needed)
+    # No pooling needed, just reformat output
     s <- out_stats$stats
     tval <- s$qhat / s$se
-    # TODO: # https://www.r-bloggers.com/2014/02/three-ways-to-get-parameter-specific-p-values-from-lmer/
+    # TODO: https://www.r-bloggers.com/2014/02/three-ways-to-get-parameter-specific-p-values-from-lmer/
     if (pvalue_method == "t-as-z") {
       # t-as-z method
       # normal approximation
@@ -105,16 +105,15 @@ vw_pool <- function(out_stats, m, n_terms,
       s$pval[s$pval < min_pvalue] <- min_pvalue
     }
 
-    stats <- list(
-      coef = s$qhat,
-      se = s$se, # t = s$tval,
-      p = s$pval,
-      cov = out_stats$cov,
-      fitstats = out_stats$model_fit,
-      resid = as.vector(out_stats$resid),
-      warning = paste(out_stats$warning, collapse = " || ")
+    return(
+      list(coef = s$qhat,
+           se = s$se, # t = s$tval,
+           p = s$pval,
+           resid = as.vector(out_stats$resid),
+           mfit = out_stats$model_fit,
+           cov = out_stats$cov,
+           warning = paste(out_stats$warning, collapse = " || "))
     )
-    return(stats)
   }
 
   # Extract warnings (if any)
@@ -131,7 +130,7 @@ vw_pool <- function(out_stats, m, n_terms,
     warning_msg <- ""
   }
 
-  # Extract estimates and standard errors (i.e. the "stats" data.frame)
+  # Extract estimates and standard errors
   model_output <- do.call(rbind, lapply(out_stats, `[[`, "stats"))
 
   # Residual degrees of freedom (assumed equal across imputations)
@@ -189,19 +188,15 @@ vw_pool <- function(out_stats, m, n_terms,
     pooled_cov <- NULL
   }
 
-  # Average residuals across imputed datasets
-  resid <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'resid')), na.rm=TRUE)
-
-  model_fit <- colMeans(do.call(rbind, lapply(out_stats, `[[`, 'model_fit')), na.rm=TRUE)
-
-  list(
-    "coef" = coef,
-    "se" = se,
-    "p" = pval,
-    "fitstats" = model_fit,
-    "cov" = pooled_cov,
-    "resid" = resid,
-    "warning" = warning_msg
+  list(coef = coef,
+       se = se,
+       p = pval,
+       # Average residuals across imputed datasets
+       resid = colMeans(do.call(rbind, lapply(out_stats, `[[`, 'resid')), na.rm=TRUE),
+       # Average fit statistics across imputed datasets
+       mfit = colMeans(do.call(rbind, lapply(out_stats, `[[`, 'model_fit')), na.rm=TRUE),
+       cov = pooled_cov,
+       warning = warning_msg
   )
 }
 

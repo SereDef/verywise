@@ -21,7 +21,7 @@
 #'   If \code{NULL} (default), creates a "verywise_results" sub-directory in the
 #'   current working directory (not recommended).
 #' @param mtc Character string: multiple testing correction strategy. 
-#'   Options: `"fdr"` (False Discovery Rate: default), `"fs"` (FreeSurfer cluster correction).
+#'   Options: `"mcz"` (FreeSurfer MonteCarlo-based cluster correction: default), `"fdr"` (False Discovery Rate).
 #' @param fs_template Character string specifying the FreeSurfer template for
 #'   vertex registration. Options:
 #'   \itemize{
@@ -99,7 +99,7 @@ run_vw_meta <- function(term,
                         meta_pvalue = "knha",
                         res_dirs,
                         outp_dir = NULL,
-                        mtc = 'fdr',
+                        mtc = c('mcz', 'fdr'),
                         fs_template = 'fsaverage',
                         # Reproducibility and parallel processing
                         seed = 3108,
@@ -168,13 +168,15 @@ run_vw_meta <- function(term,
   }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
   n_cores <- check_cores(n_cores)
+
   check_numeric_param(seed, integer = TRUE, lower = 0)
   check_numeric_param(chunk_size, integer = TRUE, lower = 1, upper = 5000) # for memory safety
 
-  if (mtc == 'fs') {
+  mtc <- match.arg(mtc) 
+
+  if (mtc == 'mcz') {
     check_numeric_param(mcz_thr, set=c(13, 20, 23, 30, 33, 40))
     check_numeric_param(cwp_thr, set=c(0.025, 0.05))
-
     check_freesurfer_setup(FS_HOME, verbose = verbose)
 
     fwhms <- vapply(res_dirs, function(s) {
@@ -183,8 +185,7 @@ run_vw_meta <- function(term,
 
     fwhm <- mean(fwhms)
 
-    vw_message(c("i"="Average smoothness = {.val {fwhm}}", 
-                 " "="input values {fwhms}"))
+    vw_message(c("i"="Average smoothness = {.val {fwhm}}", " "="input values {fwhms}"))
   }
 
   # Cortical mask
@@ -207,39 +208,26 @@ run_vw_meta <- function(term,
   
   # Temporary output matrices
   result_path <- file.path(outp_dir, paste(hemi, measure, term[1], sep = "."))
-
-  res_bk_names <- c(paste0("stud.", c("coef", "se")),
-                    paste0("meta.", c("coef", "se", "p")))
-  res_bk_paths <- build_output_bks(result_path, res_bk_names = res_bk_names,
-                                   verbose = verbose)
-  
-  fbm_precision <- "float" # single precision – 32 bits
   
   # Effect sizes
-  ef_vw <- bigstatsr::FBM(n_studies, n_verts, init = NA_real_, type = fbm_precision,
-                          backingfile = res_bk_paths["stud.coef"])
+  ef_vw <- build_output_fbm(result_path, "stud.coef", nrow = n_studies, ncol = n_verts, 
+    verbose = verbose)
   # Variance of effect sizes
-  se_vw <- bigstatsr::FBM(n_studies, n_verts, init = NA_real_, type = fbm_precision,
-                          backingfile = res_bk_paths["stud.se"])
+  se_vw <- build_output_fbm(result_path, "stud.se", nrow = n_studies, ncol = n_verts)
   
-  on.exit(file.remove(paste0(res_bk_paths[c("stud.coef","stud.se")],'.bk')), add = TRUE)
+  on.exit(file.remove(
+    paste(result_path, 'stud', c('coef', 'se'), 'bk', sep='.')), add = TRUE)
 
   for (s in seq_len(n_studies)) {
-
     res_path <- stack_paths[s]
-
     ef_vw[s, ] <- load.mgh(paste0(res_path, ".coef.mgh"))
     se_vw[s, ] <- load.mgh(paste0(res_path, ".se.mgh"))
-
   }
 
   # Pooled coefficients, standard errors and p-values 
-  c_vw <- bigstatsr::FBM(1, n_verts, init = NA_real_, type = fbm_precision,
-                         backingfile = res_bk_paths["meta.coef"])
-  s_vw <- bigstatsr::FBM(1, n_verts, init = 0, type = fbm_precision,
-                         backingfile = res_bk_paths["meta.se"])
-  p_vw <- bigstatsr::FBM(1, n_verts, init = 1, type = fbm_precision,
-                         backingfile = res_bk_paths["meta.p"])
+  c_vw <- build_output_fbm(result_path, "meta.coef", nrow = 1, ncol = n_verts)
+  s_vw <- build_output_fbm(result_path, "meta.se", nrow = 1, ncol = n_verts)
+  p_vw <- build_output_fbm(result_path, "meta.p", nrow = 1, ncol = n_verts)
   
   # Only process vertex where more than one study has estimate
   problem_verts <- fbm_col_has_na(ef_vw, n_cores = 1L, verbose = verbose)
@@ -262,7 +250,7 @@ run_vw_meta <- function(term,
   on.exit(if (file.exists(progress_file)) file.remove(progress_file), add = TRUE)
 
   if (verbose) {
-    cli::cli_progress_step("Meta-analyzing results... this may take some time, check the {.file {basename(progress_file)}} file for updates.", 
+    cli::cli_progress_step("Meta-analyzing results... check the {.file {basename(progress_file)}} file for updates.", 
     spinner=TRUE)
   }
 
@@ -318,15 +306,18 @@ run_vw_meta <- function(term,
   # Save model statistics into separate .mgh files
   pval_trans <- switch(mtc, 
     fdr = 'fdr',
-    fs = '-log10p')
+    mcz = '-log10p')
   
-  convert_to_mgh(out,
-                 result_path,
-                 stacks = NULL,
+  convert_to_mgh(out, result_path,
+                 fixed_terms = term[1],
+                 random_terms = NULL,
                  stat_names = c("coef", "se", "p", pval_trans),
                  verbose = verbose)
 
-  if (mtc == 'fs') {
+  # clusters
+  ct_vw <- NULL 
+
+  if (mtc == 'mcz') {
     if (verbose) cli::cli_progress_step("Clusterwise correction", spinner=TRUE)
     
     ocn <- compute_clusters(stack_path = result_path,
@@ -341,25 +332,56 @@ run_vw_meta <- function(term,
                       verbose = TRUE)
       
     if (!is.null(ocn)) {
-      ct_bk_path <- build_output_bks(result_path, res_bk_names = c('meta.clust'), verbose = FALSE)
-      ct_vw <- bigstatsr::FBM(1, n_verts, init = NA_real_, 
-        type = fbm_precision, backingfile = ct_bk_path["meta.clust"])
+      ct_vw <- build_output_fbm(result_path, 'meta.clust', nrow = 1, ncol = n_verts) 
       
       ct_vw[1,] <- ocn
     }
 
-    if (verbose) cli::cli_progress_done()
-    
     out[['clust']] <- ct_vw
 
-    vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
-      term_names = term[1], verbose = verbose)
-  } else {
+    model_res_summary <- vw_summarize_model_clusters(coef = out$coef, clust = out$clust, 
+      term_names = term[1],  result_path = result_path, verbose = verbose)
 
-    # TODO better summary for FDR corrected 
-    vw_summarize_model_est(coef = out$coef, term_names = term[1], verbose = verbose)
+    if (verbose) cli::cli_progress_done()
     
+    cluster_correction_info <- list(
+      'input_fwhms' = fwhms,
+      'fwhm' = fwhm,
+      'mcz_threshold' = mcz_thr,
+      'cwp_threshold' = cwp_thr)
+    
+    files_to_remove <- c(
+      # paste0(result_path, ".meta.clust.bk"),
+      list.files(path = outp_dir,
+        pattern = paste0("^", basename(result_path), ".*\\.cluster\\.summary$|^",
+                              basename(result_path), ".*\\.-log10p\\.mgh$"), 
+        recursive = TRUE, full.names = TRUE)
+    )
+
+    on.exit(file.remove(files_to_remove), add = TRUE)
+    
+  } else {
+    # TODO better summary for FDR corrected 
+    model_res_summary <- vw_summarize_model_est(coef = out$coef, term_names = term[1], verbose = verbose)
+    cluster_correction_info <- ''
   }
+
+  yaml::write_yaml(
+    list(
+      'n_studies'=n_studies,
+      'study_weights'=study_weights,
+      'n_vertices'=n_verts,
+      'n_vertices_effective'=length(good_verts),
+      'results'= model_res_summary,
+      'cluster_correction' = cluster_correction_info,
+      'meta_method'=meta_method,
+      'meta_pvalue'=meta_pvalue,
+      'random_seed' = as.integer(seed),
+      'date'=as.character(Sys.Date()),
+      'metafor_version'=as.character(utils::packageVersion('metafor')),
+      'verywise_version'=as.character(utils::packageVersion('verywise'))),
+    file=paste0(result_path, ".meta.summary.yml"), column.major = FALSE)
+
 
   vw_message("Done! :)", type='step', verbose = verbose)
 

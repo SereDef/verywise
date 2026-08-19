@@ -20,6 +20,7 @@ run_vw_lmm(
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  mtc = c("mcz", "fdr"),
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   fwhm = 10,
   mcz_thr = 30,
@@ -81,8 +82,8 @@ Default: \code{"folder_id"}.}
 
 \item{tolerate_surf_not_found}{Integer indicating how many brain surface
 files listed in \code{folder_id} can be missing from \code{subj_dir}. If
-the number of missing or corrupted files is
-\code{ > tolerate_surf_not_found } execution will stop.
+the number of missing or corrupted files is \verb{> tolerate_surf_not_found}
+execution will stop.
 Default: \code{20L}.}
 
 \item{weights}{Optional string or numeric vector of weights for the linear mixed model.
@@ -92,8 +93,8 @@ data. Note that these are not normalized or standardized in any way.
 Default: \code{NULL} (no weights).}
 
 \item{lmm_control}{Optional list (of correct class, resulting from
-\code{lmerControl()} containing control parameters to be passed to
-\code{lme4::lmer()} (e.g. optimizer choice, convergence criteria,
+\code{\link[lme4:lmerControl]{lme4::lmerControl()}} containing control parameters to be passed to
+\code{\link[lme4:lmer]{lme4::lmer()}} (e.g. optimizer choice, convergence criteria,
 see the \code{?lmerControl} documentation for details.
 Default: (uses default settings).}
 
@@ -112,6 +113,9 @@ Default: 1.}
 chunk in parallel operations. Larger values use more memory but may be
 faster.
 Default: 1000.}
+
+\item{mtc}{Character string: multiple testing correction strategy.
+Options: \code{"mcz"} (FreeSurfer MonteCarlo-based cluster correction: default), \code{"fdr"} (False Discovery Rate).}
 
 \item{FS_HOME}{Character string specifying the FreeSurfer home directory.
 Defaults to \code{FREESURFER_HOME} environment variable.}
@@ -136,13 +140,13 @@ and \code{0.05} for single hemisphere analyses.
 Default: \code{0.025}.}
 
 \item{save_optional_cluster_info}{Logical indicating whether to save additional
-output form \code{mri_surfcluster} call. See \code{\link{compute_clusters}}
+output form \code{mri_surfcluster} call. See \code{\link[=compute_clusters]{compute_clusters()}}
 for details. Default: \code{FALSE}.}
 
 \item{save_ss}{Logical indicating whether to save the super-subject matrix
 ("ss") as an .rds file that can be then re-used in future analyses. This can
 also be a character string specifying the directory where ss should be saved.
-When \code{TRUE}, the ss matrix will be saved in \code{<outp_dir>/ss} by
+When \code{TRUE}, the ss matrix will be saved in \verb{<outp_dir>/ss} by
 default. Default: \code{FALSE}.}
 
 \item{save_residuals}{Logical indicating whether to save the residuals.mgh
@@ -156,7 +160,7 @@ for later analysis (e.g. simple slopes).}
 Default: \code{TRUE}.}
 }
 \value{
-A list of file-backed matrices (\code{bigstatsr::FBM} objects)
+A list of file-backed matrices (\link[bigstatsr:FBM-class]{bigstatsr::FBM} objects)
 containing pooled coefficients, SEs, t- and p- values and residuals.
 Results are also automatically saved to disk in .mgh format.
 }
@@ -235,7 +239,8 @@ limits)
 
 \strong{Output Files:}
 Results are saved in FreeSurfer-compatible .mgh format for visualization
-with \href{https://github.com/SereDef/verywise-wizard}{verywiseWIZard},
+using \code{verywise} plotting functions (\code{\link[=plot_vw_map]{plot_vw_map()}},\code{\link[=plot_vw_diff]{plot_vw_diff()}}...),
+the \href{https://github.com/SereDef/verywise-wizard}{verywiseWIZard},
 FreeView or other neuroimaging software.
 }
 \note{
@@ -248,7 +253,7 @@ FreeView or other neuroimaging software.
 }
 }
 \seealso{
-\code{\link{single_lmm}} for single-vertex modeling,
+\code{\link[=single_lmm]{single_lmm()}} for single-vertex modeling,
 \code{vignette("03-run-vw-lmm", package = "verywise")} for detailed
 usage examples.
 }
