@@ -33,6 +33,7 @@ run_vw_lmm(
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  mtc = c("mcz", "fdr"),
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   fwhm = 10,
   mcz_thr = 30,
@@ -116,7 +117,7 @@ run_vw_lmm(
 
   Integer indicating how many brain surface files listed in `folder_id`
   can be missing from `subj_dir`. If the number of missing or corrupted
-  files is ` > tolerate_surf_not_found ` execution will stop. Default:
+  files is `> tolerate_surf_not_found` execution will stop. Default:
   `20L`.
 
 - weights:
@@ -129,7 +130,8 @@ run_vw_lmm(
 
 - lmm_control:
 
-  Optional list (of correct class, resulting from `lmerControl()`
+  Optional list (of correct class, resulting from
+  [`lme4::lmerControl()`](https://rdrr.io/pkg/lme4/man/lmerControl.html)
   containing control parameters to be passed to
   [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (e.g.
   optimizer choice, convergence criteria, see the `?lmerControl`
@@ -155,6 +157,12 @@ run_vw_lmm(
   Integer specifying the number of vertices processed per chunk in
   parallel operations. Larger values use more memory but may be faster.
   Default: 1000.
+
+- mtc:
+
+  Character string: multiple testing correction strategy. Options:
+  `"mcz"` (FreeSurfer MonteCarlo-based cluster correction: default),
+  `"fdr"` (False Discovery Rate).
 
 - FS_HOME:
 
@@ -194,7 +202,7 @@ run_vw_lmm(
 
   Logical indicating whether to save additional output form
   `mri_surfcluster` call. See
-  [`compute_clusters`](https://seredef.github.io/verywise/reference/compute_clusters.md)
+  [`compute_clusters()`](https://seredef.github.io/verywise/reference/compute_clusters.md)
   for details. Default: `FALSE`.
 
 - save_ss:
@@ -224,7 +232,7 @@ run_vw_lmm(
 ## Value
 
 A list of file-backed matrices
-([`bigstatsr::FBM`](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
+([bigstatsr::FBM](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
 objects) containing pooled coefficients, SEs, t- and p- values and
 residuals. Results are also automatically saved to disk in .mgh format.
 
@@ -298,9 +306,10 @@ sometimes cause worker initialization or other issues (e.g. R parallel
 processes limits)
 
 **Output Files:** Results are saved in FreeSurfer-compatible .mgh format
-for visualization with
-[verywiseWIZard](https://github.com/SereDef/verywise-wizard), FreeView
-or other neuroimaging software.
+for visualization using `verywise` plotting functions
+([`plot_vw_map()`](https://seredef.github.io/verywise/reference/plot_vw_map.md),[`plot_vw_diff()`](https://seredef.github.io/verywise/reference/plot_vw_diff.md)...),
+the [verywiseWIZard](https://github.com/SereDef/verywise-wizard),
+FreeView or other neuroimaging software.
 
 ## Note
 
@@ -314,7 +323,7 @@ or other neuroimaging software.
 
 ## See also
 
-[`single_lmm`](https://seredef.github.io/verywise/reference/single_lmm.md)
+[`single_lmm()`](https://seredef.github.io/verywise/reference/single_lmm.md)
 for single-vertex modeling,
 `vignette("03-run-vw-lmm", package = "verywise")` for detailed usage
 examples.

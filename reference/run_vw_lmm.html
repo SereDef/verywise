@@ -92,6 +92,7 @@ Carlo simulation approach.</p>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  mtc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mcz"</span>, <span class="st">"fdr"</span><span class="op">)</span>,</span>
 <span>  FS_HOME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"FREESURFER_HOME"</span><span class="op">)</span>,</span>
 <span>  fwhm <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  mcz_thr <span class="op">=</span> <span class="fl">30</span>,</span>
@@ -171,8 +172,8 @@ Default: <code>"folder_id"</code>.</p></dd>
 <dt id="arg-tolerate-surf-not-found">tolerate_surf_not_found<a class="anchor" aria-label="anchor" href="#arg-tolerate-surf-not-found"></a></dt>
 <dd><p>Integer indicating how many brain surface
 files listed in <code>folder_id</code> can be missing from <code>subj_dir</code>. If
-the number of missing or corrupted files is
-<code> &gt; tolerate_surf_not_found </code> execution will stop.
+the number of missing or corrupted files is <code>&gt; tolerate_surf_not_found</code>
+execution will stop.
 Default: <code>20L</code>.</p></dd>
 
 
@@ -186,7 +187,7 @@ Default: <code>NULL</code> (no weights).</p></dd>
 
 <dt id="arg-lmm-control">lmm_control<a class="anchor" aria-label="anchor" href="#arg-lmm-control"></a></dt>
 <dd><p>Optional list (of correct class, resulting from
-<code>lmerControl()</code> containing control parameters to be passed to
+<code><a href="https://rdrr.io/pkg/lme4/man/lmerControl.html" class="external-link">lme4::lmerControl()</a></code> containing control parameters to be passed to
 <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> (e.g. optimizer choice, convergence criteria,
 see the <code>?lmerControl</code> documentation for details.
 Default: (uses default settings).</p></dd>
@@ -214,6 +215,11 @@ Default: 1.</p></dd>
 chunk in parallel operations. Larger values use more memory but may be
 faster.
 Default: 1000.</p></dd>
+
+
+<dt id="arg-mtc">mtc<a class="anchor" aria-label="anchor" href="#arg-mtc"></a></dt>
+<dd><p>Character string: multiple testing correction strategy.
+Options: <code>"mcz"</code> (FreeSurfer MonteCarlo-based cluster correction: default), <code>"fdr"</code> (False Discovery Rate).</p></dd>
 
 
 <dt id="arg-fs-home">FS_HOME<a class="anchor" aria-label="anchor" href="#arg-fs-home"></a></dt>
@@ -246,7 +252,7 @@ Default: <code>0.025</code>.</p></dd>
 
 <dt id="arg-save-optional-cluster-info">save_optional_cluster_info<a class="anchor" aria-label="anchor" href="#arg-save-optional-cluster-info"></a></dt>
 <dd><p>Logical indicating whether to save additional
-output form <code>mri_surfcluster</code> call. See <code><a href="compute_clusters.html">compute_clusters</a></code>
+output form <code>mri_surfcluster</code> call. See <code><a href="compute_clusters.html">compute_clusters()</a></code>
 for details. Default: <code>FALSE</code>.</p></dd>
 
 
@@ -276,7 +282,7 @@ Default: <code>TRUE</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of file-backed matrices (<code><a href="https://privefl.github.io/bigstatsr/reference/FBM-class.html" class="external-link">bigstatsr::FBM</a></code> objects)
+    <p>A list of file-backed matrices (<a href="https://privefl.github.io/bigstatsr/reference/FBM-class.html" class="external-link">bigstatsr::FBM</a> objects)
 containing pooled coefficients, SEs, t- and p- values and residuals.
 Results are also automatically saved to disk in .mgh format.</p>
     </div>
@@ -334,7 +340,8 @@ cause worker initialization or other issues (e.g. R parallel processes
 limits)</p>
 <p><strong>Output Files:</strong>
 Results are saved in FreeSurfer-compatible .mgh format for visualization
-with <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>,
+using <code>verywise</code> plotting functions (<code><a href="plot_vw_map.html">plot_vw_map()</a></code>,<code><a href="plot_vw_diff.html">plot_vw_diff()</a></code>...),
+the <a href="https://github.com/SereDef/verywise-wizard" class="external-link">verywiseWIZard</a>,
 FreeView or other neuroimaging software.</p>
     </div>
     <div class="section level2">
@@ -348,7 +355,7 @@ FreeView or other neuroimaging software.</p>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="single_lmm.html">single_lmm</a></code> for single-vertex modeling,
+    <div class="dont-index"><p><code><a href="single_lmm.html">single_lmm()</a></code> for single-vertex modeling,
 <code>vignette("03-run-vw-lmm", package = "verywise")</code> for detailed
 usage examples.</p></div>
     </div>

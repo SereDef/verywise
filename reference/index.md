@@ -133,7 +133,8 @@
   :
 
   Run vertex-wise linear mixed model using
-  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (without
+  refitting)
 
 - [`run_vw_meta()`](https://seredef.github.io/verywise/reference/run_vw_meta.md)
   : Vertex-wise Random-Effects Meta-Analysis Across Studies

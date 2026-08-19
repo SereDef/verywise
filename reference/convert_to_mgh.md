@@ -1,7 +1,7 @@
 # Convert statistical result FBMs to FreeSurfer `.mgh` format
 
 This function takes a list of
-[FBM](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
+[bigstatsr::FBM](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
 objects storing statistical results and writes them to
 FreeSurfer-compatible `.mgh` files. It supports coefficient, standard
 error, p-value, and residual maps, with optional on-the-fly
@@ -13,7 +13,8 @@ error, p-value, and residual maps, with optional on-the-fly
 convert_to_mgh(
   vw_results,
   result_path,
-  stacks,
+  fixed_terms = NULL,
+  random_terms = NULL,
   stat_names = c("coef", "se", "p", "-log10p", "resid"),
   verbose = TRUE
 )
@@ -24,7 +25,7 @@ convert_to_mgh(
 - vw_results:
 
   A named list of
-  [FBM](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
+  [bigstatsr::FBM](https://privefl.github.io/bigstatsr/reference/FBM-class.html)
   objects containing the statistical results.
 
 - result_path:
@@ -32,20 +33,24 @@ convert_to_mgh(
   Character string indicating the base output path where the `.mgh`
   files will be written.
 
-- stacks:
+- fixed_terms:
 
-  Vector of stack identifiers (e.g. hemisphere stack IDs) to be included
-  in output filenames (for non-residual stats).
+  Vector of fixed term names to be included in output filenames (as
+  "stack1", "stack2"...).
+
+- random_terms:
+
+  Vector of random term names used to label ICC statistics.
 
 - stat_names:
 
   Character vector of statistic names to process. Default:
-  `c("coef","se","p","-log10p","resid")`. The special name `"-log10p"`
+  `c("coef", "se","p", "-log10p","resid")`. The special name `"-log10p"`
   triggers the on-the-fly p-value transformation.
 
 - verbose:
 
-  Logical. Default: `TRUE`
+  Logical. Default:`TRUE`
 
 ## Value
 
@@ -62,25 +67,3 @@ is done to cut disk space needed for the results in half.
 
 When computing \\-\log\_{10}(p)\\ values, the transformation is applied
 **in chunks of columns** to avoid loading the full FBM into memory.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-library(bigstatsr)
-
-# Dummy vw_results list with small FBMs
-vw_results <- list(
-  coef = FBM(5, 10, init = rnorm(50)),
-  se   = FBM(5, 10, init = runif(50, 0.1, 1)),
-  p    = FBM(5, 10, init = runif(50, 0, 1)),
-  resid= FBM(20, 10, init = rnorm(200))
-)
-
-convert_to_mgh(
-  vw_results = vw_results,
-  result_path = "my_results/stat",
-  stacks = 1:5
-)
-} # }
-```

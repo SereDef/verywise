@@ -1,4 +1,4 @@
-# Run vertex-wise linear mixed model using [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+# Run vertex-wise linear mixed model using [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) (without refitting)
 
 This is an alternative to the main function for conducting vertex-wise
 linear mixed model analyses on brain surface metrics. This is almost
@@ -34,6 +34,7 @@ run_vw_lmm2(
   seed = 3108,
   n_cores = 1,
   chunk_size = 1000,
+  mtc = c("mcz", "fdr"),
   FS_HOME = Sys.getenv("FREESURFER_HOME"),
   fwhm = 10,
   mcz_thr = 30,
@@ -156,6 +157,12 @@ run_vw_lmm2(
   parallel operations. Larger values use more memory but may be faster.
   Default: 1000.
 
+- mtc:
+
+  Character string: multiple testing correction strategy. Options:
+  `"mcz"` (FreeSurfer MonteCarlo-based cluster correction: default),
+  `"fdr"` (False Discovery Rate).
+
 - FS_HOME:
 
   Character string specifying the FreeSurfer home directory. Defaults to
@@ -194,7 +201,7 @@ run_vw_lmm2(
 
   Logical indicating whether to save additional output form
   `mri_surfcluster` call. See
-  [`compute_clusters`](https://seredef.github.io/verywise/reference/compute_clusters.md)
+  [`compute_clusters()`](https://seredef.github.io/verywise/reference/compute_clusters.md)
   for details. Default: `FALSE`.
 
 - save_ss:

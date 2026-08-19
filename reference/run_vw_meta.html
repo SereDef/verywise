@@ -65,7 +65,7 @@ outputted but <code><a href="run_vw_lmm.html">verywise::run_vw_lmm</a></code> or
 <span>  meta_pvalue <span class="op">=</span> <span class="st">"knha"</span>,</span>
 <span>  <span class="va">res_dirs</span>,</span>
 <span>  outp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  mtc <span class="op">=</span> <span class="st">"fdr"</span>,</span>
+<span>  mtc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mcz"</span>, <span class="st">"fdr"</span><span class="op">)</span>,</span>
 <span>  fs_template <span class="op">=</span> <span class="st">"fsaverage"</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">3108</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -125,7 +125,7 @@ current working directory (not recommended).</p></dd>
 
 <dt id="arg-mtc">mtc<a class="anchor" aria-label="anchor" href="#arg-mtc"></a></dt>
 <dd><p>Character string: multiple testing correction strategy.
-Options: <code>"fdr"</code> (False Discovery Rate: default), <code>"fs"</code> (FreeSurfer cluster correction).</p></dd>
+Options: <code>"mcz"</code> (FreeSurfer MonteCarlo-based cluster correction: default), <code>"fdr"</code> (False Discovery Rate).</p></dd>
 
 
 <dt id="arg-fs-template">fs_template<a class="anchor" aria-label="anchor" href="#arg-fs-template"></a></dt>

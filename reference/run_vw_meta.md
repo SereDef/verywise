@@ -19,7 +19,7 @@ run_vw_meta(
   meta_pvalue = "knha",
   res_dirs,
   outp_dir = NULL,
-  mtc = "fdr",
+  mtc = c("mcz", "fdr"),
   fs_template = "fsaverage",
   seed = 3108,
   n_cores = 1,
@@ -83,8 +83,8 @@ run_vw_meta(
 - mtc:
 
   Character string: multiple testing correction strategy. Options:
-  `"fdr"` (False Discovery Rate: default), `"fs"` (FreeSurfer cluster
-  correction).
+  `"mcz"` (FreeSurfer MonteCarlo-based cluster correction: default),
+  `"fdr"` (False Discovery Rate).
 
 - fs_template:
 
