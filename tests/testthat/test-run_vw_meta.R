@@ -7,7 +7,7 @@ set.seed(3108)
 res_dir <- test_path("fixtures", "fs7", "results")
 out_dir <- test_path("fixtures", "rma")
 
-test_that("run_vw_meta runs end-to-end with random terms", {
+test_that("run_vw_meta runs end-to-end with random terms and FDR correction", {
 
   # I meta-analyse two terms from the same model, which makes no sense but 
   # only for the pipeline to run 
@@ -20,6 +20,7 @@ test_that("run_vw_meta runs end-to-end with random terms", {
       study_weights = NULL,
       res_dirs = c(res_dir, res_dir), 
       outp_dir = out_dir,
+      mtc = 'fdr',
       fs_template = "fsaverage",
       n_cores = 1, 
       verbose = TRUE

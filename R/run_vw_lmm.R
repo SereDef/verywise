@@ -585,9 +585,9 @@ run_vw_lmm <- function(
   file.remove(paste(result_path, "residuals.mgh", sep = "."))
 
   if (save_residuals) {
-    vw_message("Residual matrix saved to {.file {r_vw$backing}}",
+    r_vw$save()
+    vw_message("Residual matrix saved to {.file {r_vw$rds}}",
                 verbose = verbose, type = 'note')
-    r_vw$save
   }
 
   # Print summary 
