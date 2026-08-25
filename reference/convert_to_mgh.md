@@ -16,6 +16,7 @@ convert_to_mgh(
   fixed_terms = NULL,
   random_terms = NULL,
   stat_names = c("coef", "se", "p", "-log10p", "resid"),
+  save_resid = FALSE,
   verbose = TRUE
 )
 ```
@@ -45,8 +46,14 @@ convert_to_mgh(
 - stat_names:
 
   Character vector of statistic names to process. Default:
-  `c("coef", "se","p", "-log10p","resid")`. The special name `"-log10p"`
-  triggers the on-the-fly p-value transformation.
+  `c("coef", "se","p", "-log10p","resid")`. The special names:
+  `"-log10p"` and `"fdr"` trigger the on-the-fly p-value
+  transformations.
+
+- save_resid:
+
+  Logical. Keep the backing around to then save residuals as fbm.
+  Default: `FALSE`.
 
 - verbose:
 

@@ -109,7 +109,7 @@ pheno <- simulate_long_pheno_data(
 #> ⠙ Generate phenotype data
 #>   Variables: id, site, time, age, sex, and folder_id
 #> ⠙ Generate phenotype data
-#> ✔ Generate phenotype data [42ms]
+#> ✔ Generate phenotype data [40ms]
 #> 
 head(pheno)
 #>   id site time       age    sex         folder_id
