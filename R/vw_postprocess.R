@@ -16,7 +16,10 @@
 #' @param random_terms Vector of random term names used to label ICC statistics.
 #' @param stat_names Character vector of statistic names to process.
 #'   Default: `c("coef", "se","p", "-log10p","resid")`.
-#'   The special name `"-log10p"` triggers the on-the-fly p-value transformation.
+#'   The special names: `"-log10p"` and `"fdr"` trigger the on-the-fly p-value 
+#'   transformations.
+#' @param save_resid Logical. Keep the backing around to then save residuals as fbm. 
+#'   Default: `FALSE`.
 #' @param verbose Logical. Default:`TRUE`
 #'
 #' @return Invisibly returns `NULL`. Side effects: `.mgh` files are written to disk.
@@ -39,6 +42,7 @@ convert_to_mgh <- function(vw_results,
                            fixed_terms = NULL,
                            random_terms = NULL,
                            stat_names = c("coef", "se", "p", "-log10p", "resid"),
+                           save_resid = FALSE,
                            verbose = TRUE){
   
   if (verbose) cli::cli_progress_step(
@@ -47,10 +51,12 @@ convert_to_mgh <- function(vw_results,
   lapply(stat_names, function(stat_name) {
 
     mode <- "1row.1file"
+    rm_backing <- TRUE
 
     if (stat_name == "resid") {
       stat_mgh_paths <- paste(result_path, "residuals.mgh", sep = ".")
       mode <- "allrows.1file"
+      rm_backing <- !save_resid
       
     } else if (stat_name == 'mfit') {
       stat_mgh_paths <- paste(result_path, 
@@ -108,7 +114,7 @@ convert_to_mgh <- function(vw_results,
     fbm2mgh(fbm = fbm, fnames = stat_mgh_paths, mode = mode)
 
     # Remove .bk files
-    file.remove(fbm$backingfile)
+    if (rm_backing) file.remove(fbm$backingfile)
 
     invisible(NULL)
   })

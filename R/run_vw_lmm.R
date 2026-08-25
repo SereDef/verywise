@@ -525,6 +525,7 @@ run_vw_lmm <- function(
                  fixed_terms = fixed_terms,
                  random_terms = names(n_random_groups),
                  stat_names = c(names(out), pval_trans), # do not save resid as mgh, leave as matrix
+                 save_resid = save_residuals,
                  verbose = verbose)
   
   # clusters
@@ -583,11 +584,10 @@ run_vw_lmm <- function(
   }
 
   file.remove(paste(result_path, "residuals.mgh", sep = "."))
-
   if (save_residuals) {
     r_vw$save()
     vw_message("Residual matrix saved to {.file {r_vw$rds}}",
-                verbose = verbose, type = 'note')
+               verbose = verbose, type = 'note')
   }
 
   # Print summary 
@@ -613,7 +613,7 @@ run_vw_lmm <- function(
         recursive = TRUE, full.names = TRUE)
     )
     if (!save_optional_cluster_info) {
-    files_to_remove <- c(files_to_remove, paste0(result_path, '.finalMask.mgh')) 
+    files_to_remove <- c(files_to_remove, paste0(result_path, c('.finalMask.mgh','.inputMask.mgh'))) 
       # paste0(result_path, c('.fwhm.dat', '.finalMask.mgh'))) 
     }
 

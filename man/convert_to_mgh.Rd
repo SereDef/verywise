@@ -10,6 +10,7 @@ convert_to_mgh(
   fixed_terms = NULL,
   random_terms = NULL,
   stat_names = c("coef", "se", "p", "-log10p", "resid"),
+  save_resid = FALSE,
   verbose = TRUE
 )
 }
@@ -27,7 +28,11 @@ statistical results.}
 
 \item{stat_names}{Character vector of statistic names to process.
 Default: \code{c("coef", "se","p", "-log10p","resid")}.
-The special name \code{"-log10p"} triggers the on-the-fly p-value transformation.}
+The special names: \code{"-log10p"} and \code{"fdr"} trigger the on-the-fly p-value
+transformations.}
+
+\item{save_resid}{Logical. Keep the backing around to then save residuals as fbm.
+Default: \code{FALSE}.}
 
 \item{verbose}{Logical. Default:\code{TRUE}}
 }
