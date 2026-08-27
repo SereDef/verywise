@@ -289,7 +289,8 @@ ss <- build_supersubject(
   measure = "thickness",
   hemi = "lh",
   fs_template = "fsaverage",
-  n_cores = 4
+  n_cores = 4,
+  save_rds = TRUE # save it so it can later be read 
 )                  
 ```
 
